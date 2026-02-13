@@ -1,9 +1,14 @@
-
 import { motion } from 'framer-motion';
-import { AlertTriangle, ShieldCheck, XCircle, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import { AlertTriangle, ShieldCheck, XCircle } from 'lucide-react';
+import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
 
-export default function JudgmentLayer() {
+interface JudgmentLayerProps {
+    language?: LanguageCode;
+}
+
+export default function JudgmentLayer({ language = 'EN' }: JudgmentLayerProps) {
+    const t = (REPORT_TRANSLATIONS[language]?.landing || REPORT_TRANSLATIONS['EN'].landing).judgment;
+
     return (
         <section className="py-24 bg-[#0a0a0a] relative overflow-hidden">
             {/* Background Elements */}
@@ -21,23 +26,23 @@ export default function JudgmentLayer() {
                     >
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono">
                             <AlertTriangle className="w-3 h-3" />
-                            <span>JUDGMENT LAYER ACTIVE</span>
+                            <span>{t.badge}</span>
                         </div>
 
                         <h2 className="text-3xl md:text-5xl font-bold text-white leading-tight">
-                            We Start with <br />
-                            <span className="text-red-500">What NOT to Do.</span>
+                            {t.title} <br />
+                            <span className="text-red-500">{t.titleHighlight}</span>
                         </h2>
 
                         <div className="space-y-6 text-gray-400 text-lg leading-relaxed">
                             <p>
-                                <strong className="text-white">Why trust a "Yes" if they never say "No"?</strong>
+                                <strong className="text-white">&quot;{t.quote}&quot;</strong>
                             </p>
                             <p>
-                                Before matching you with any treatment, our AI analyzes your pain tolerance, downtime constraints, and skin risk factors to <span className="text-white underline decoration-red-500/30 decoration-2 underline-offset-4">filter out unsafe options first.</span>
+                                {t.desc}
                             </p>
                             <p className="text-sm font-mono text-gray-500 border-l-2 border-gray-800 pl-4">
-                                "하지 말아야 할 시술부터 걸러줍니다 – 통증 내성, 위험 왜곡, 시술 효율 분석."
+                                {t.quoteKorean}
                             </p>
                         </div>
 
@@ -47,8 +52,8 @@ export default function JudgmentLayer() {
                                     <XCircle className="w-6 h-6 text-red-400" />
                                 </div>
                                 <div>
-                                    <h4 className="text-white font-bold text-sm">Contraindicated Procedures Filtered</h4>
-                                    <p className="text-xs text-gray-400">Example: High-energy RF excluded for thin skin types.</p>
+                                    <h4 className="text-white font-bold text-sm">{t.cards.filter.title}</h4>
+                                    <p className="text-xs text-gray-400">{t.cards.filter.desc}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5">
@@ -56,8 +61,8 @@ export default function JudgmentLayer() {
                                     <ShieldCheck className="w-6 h-6 text-emerald-400" />
                                 </div>
                                 <div>
-                                    <h4 className="text-white font-bold text-sm">Safe-Zone Optimization</h4>
-                                    <p className="text-xs text-gray-400">Only protocols matching your safety profile are ranked.</p>
+                                    <h4 className="text-white font-bold text-sm">{t.cards.safe.title}</h4>
+                                    <p className="text-xs text-gray-400">{t.cards.safe.desc}</p>
                                 </div>
                             </div>
                         </div>
@@ -78,7 +83,7 @@ export default function JudgmentLayer() {
                             <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
                                 <div className="flex flex-col">
                                     <span className="text-xs text-gray-500 uppercase tracking-widest">Analysis Report</span>
-                                    <span className="text-white font-bold">Risk Assessment</span>
+                                    <span className="text-white font-bold">{t.mock.title}</span>
                                 </div>
                                 <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
                             </div>
@@ -99,14 +104,14 @@ export default function JudgmentLayer() {
                                 </svg>
 
                                 <div className="text-center relative z-10 bg-black/80 p-2 rounded backdrop-blur">
-                                    <div className="text-3xl font-bold text-red-500">High</div>
-                                    <div className="text-[10px] text-gray-500 uppercase">Downtime Risk</div>
+                                    <div className="text-3xl font-bold text-red-500">{t.mock.level}</div>
+                                    <div className="text-[10px] text-gray-500 uppercase">{t.mock.label}</div>
                                 </div>
                             </div>
 
                             {/* Excluded List */}
                             <div className="space-y-3">
-                                <div className="text-xs text-gray-400 font-mono mb-2">🚫 EXCLUDED OPTIONS</div>
+                                <div className="text-xs text-gray-400 font-mono mb-2">{t.mock.excluded}</div>
                                 <div className="flex justify-between items-center p-3 bg-red-900/10 border border-red-500/20 rounded-lg">
                                     <span className="text-sm text-gray-300">Thermage FLX (Standard)</span>
                                     <span className="text-xs text-red-400 font-mono">PAIN_LIMIT_EXCEEDED</span>

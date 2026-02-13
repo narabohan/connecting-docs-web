@@ -55,7 +55,7 @@ export default function RadarProfile({ data, language }: RadarProfileProps) {
 
             {/* Overlay Analysis */}
             <div className="absolute top-2 right-2 text-xs font-mono text-blue-500 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20">
-                TOLERANCE_ZONE: MATCHED
+                {t.overlay}
             </div>
         </div>
     );

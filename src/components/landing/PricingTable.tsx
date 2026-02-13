@@ -108,7 +108,7 @@ export default function PricingTable({ language = 'EN' }: PricingTableProps) {
                         >
                             {tier.popular && (
                                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full tracking-wider uppercase">
-                                    Most Popular
+                                    {t.mostPopular}
                                 </div>
                             )}
 

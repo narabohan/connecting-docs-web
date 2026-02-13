@@ -3,7 +3,7 @@ import { ArrowRight, Activity, Stethoscope, User } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
-import { cn } from '@/utils/cn'; // Assuming you have a cn utility, if not I will use template literals
+import { cn } from '@/utils/cn';
 
 interface HeroProps {
     language?: LanguageCode;
@@ -15,23 +15,42 @@ export default function Hero({ language = 'EN' }: HeroProps) {
     const [userType, setUserType] = useState<UserType>('patient');
     const [typedText, setTypedText] = useState('');
 
-    // Dynamic text based on user type
-    const fullText = userType === 'patient'
-        ? "Scanning Your Unique Skin Variables..."
-        : "Analyzing Clinical Protocol Assets...";
-
     const t = (REPORT_TRANSLATIONS[language]?.landing || REPORT_TRANSLATIONS['EN'].landing).hero;
 
+    // Dynamic text based on user type from translations
+    const fullText = userType === 'patient'
+        ? t.typing.patient[0]
+        : t.typing.doctor[0];
+
     useEffect(() => {
-        let i = 0;
-        setTypedText(''); // Reset on toggle
-        const interval = setInterval(() => {
-            setTypedText(fullText.slice(0, i + 1));
-            i++;
-            if (i > fullText.length) clearInterval(interval);
-        }, 50);
-        return () => clearInterval(interval);
-    }, [fullText]);
+        let currentText = '';
+        let isDeleting = false;
+        let loopNum = 0;
+        const typingSpeed = 50;
+
+        const handleType = () => {
+            const i = loopNum % 2;
+            const fullTxt = userType === 'patient' ? t.typing.patient[i] : t.typing.doctor[i];
+
+            if (isDeleting) {
+                currentText = fullTxt.substring(0, currentText.length - 1);
+            } else {
+                currentText = fullTxt.substring(0, currentText.length + 1);
+            }
+
+            setTypedText(currentText);
+
+            if (!isDeleting && currentText === fullTxt) {
+                setTimeout(() => isDeleting = true, 2000); // Pause at end
+            } else if (isDeleting && currentText === '') {
+                isDeleting = false;
+                loopNum++;
+            }
+        };
+
+        const timer = setInterval(handleType, typingSpeed);
+        return () => clearInterval(timer);
+    }, [userType, language, t]);
 
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#050505] pt-20">
@@ -65,7 +84,7 @@ export default function Hero({ language = 'EN' }: HeroProps) {
                                 )}
                             >
                                 <User className="w-4 h-4" />
-                                I am a Patient
+                                {t.toggle.patient}
                             </button>
                             <button
                                 onClick={() => setUserType('doctor')}
@@ -77,7 +96,7 @@ export default function Hero({ language = 'EN' }: HeroProps) {
                                 )}
                             >
                                 <Stethoscope className="w-4 h-4" />
-                                I am a Doctor
+                                {t.toggle.doctor}
                             </button>
                         </div>
                     </div>
@@ -90,22 +109,22 @@ export default function Hero({ language = 'EN' }: HeroProps) {
                     <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 tracking-tight leading-tight">
                         {userType === 'patient' ? (
                             <>
-                                Tired of Skin Trial & Error? <br />
+                                {t.dynamicTitle.patient.main} <br />
                                 <span className={cn(
                                     "text-2xl md:text-4xl font-light mt-4 block",
                                     "bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-blue-400"
                                 )}>
-                                    Discover Your AI-Powered Signature Treatment
+                                    {t.dynamicTitle.patient.sub}
                                 </span>
                             </>
                         ) : (
                             <>
-                                Stop Repeating Consults <br />
+                                {t.dynamicTitle.doctor.main} <br />
                                 <span className={cn(
                                     "text-2xl md:text-4xl font-light mt-4 block",
                                     "bg-clip-text text-transparent bg-gradient-to-r from-emerald-200 to-emerald-400"
                                 )}>
-                                    Turn Your Expertise into a VIP Patient Magnet
+                                    {t.dynamicTitle.doctor.sub}
                                 </span>
                             </>
                         )}
@@ -113,14 +132,14 @@ export default function Hero({ language = 'EN' }: HeroProps) {
 
                     <p className="text-lg md:text-xl text-gray-400 max-w-4xl mx-auto mb-2 leading-relaxed font-light">
                         {userType === 'patient'
-                            ? "피부 실험 피로? AI가 안전한 '나만의 시그니처 시술'을 찾아드립니다 – 개인화, 글로벌 연결."
-                            : "반복 상담 피로? 노하우를 VIP 환자 유치 자산으로 바꾸세요."
+                            ? t.dynamicDesc.patient
+                            : t.dynamicDesc.doctor
                         }
                     </p>
                     <p className="text-sm md:text-base text-gray-500 max-w-3xl mx-auto mb-10 font-mono">
                         {userType === 'patient'
-                            ? "From Price Wars to Logic-Driven Choices: Empowering Top 1% Connections."
-                            : "Be the Chef with Signature Courses, Not Just a Menu Seller."
+                            ? t.dynamicSubDesc.patient
+                            : t.dynamicSubDesc.doctor
                         }
                     </p>
 
@@ -138,7 +157,7 @@ export default function Hero({ language = 'EN' }: HeroProps) {
                                     : "bg-emerald-500 text-white hover:bg-emerald-400"
                             )}
                         >
-                            {userType === 'patient' ? "Get My Free Skin Report" : "Inquire Signature Registration"}
+                            {userType === 'patient' ? t.dynamicCta.patient : t.dynamicCta.doctor}
                             <span className="text-xs font-normal opacity-70 ml-1">(Free – Limited Access)</span>
                             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </Link>
@@ -148,15 +167,15 @@ export default function Hero({ language = 'EN' }: HeroProps) {
                     <div className="mt-16 border-t border-white/10 pt-8 flex justify-center gap-12 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
                         <div className="text-center group">
                             <div className="text-3xl font-bold text-white group-hover:text-blue-400 transition-colors">50+</div>
-                            <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">Verified Protocols</div>
+                            <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">{t.stats.protocols}</div>
                         </div>
                         <div className="text-center group">
                             <div className="text-3xl font-bold text-white group-hover:text-emerald-400 transition-colors">98%</div>
-                            <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">Logic Accuracy</div>
+                            <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">{t.stats.accuracy}</div>
                         </div>
                         <div className="text-center group">
                             <div className="text-3xl font-bold text-white group-hover:text-purple-400 transition-colors">RAG</div>
-                            <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">Medical Intelligence</div>
+                            <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">{t.stats.monitoring}</div>
                         </div>
                     </div>
                 </motion.div>
@@ -164,6 +183,3 @@ export default function Hero({ language = 'EN' }: HeroProps) {
         </section>
     );
 }
-
-
-

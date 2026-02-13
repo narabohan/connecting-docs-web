@@ -23,8 +23,8 @@ export default function SolutionCard({
             <div className="min-w-[300px] bg-[#0A0A0A] border border-white/5 rounded-xl p-6 relative overflow-hidden group hover:border-blue-500/30 transition-all">
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-6">
                     <Lock className="w-8 h-8 text-gray-500 mb-2 group-hover:text-blue-500 transition-colors" />
-                    <div className="text-sm font-bold text-gray-400 mb-1">Advanced Protocol</div>
-                    <div className="text-xs text-gray-600">Unlock to view details</div>
+                    <div className="text-sm font-bold text-gray-400 mb-1">{t.locked.title}</div>
+                    <div className="text-xs text-gray-600">{t.locked.desc}</div>
                 </div>
 
                 {/* Background Content (Blurred) */}
@@ -51,7 +51,7 @@ export default function SolutionCard({
                     <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-xs font-bold">
                         {rank}
                     </span>
-                    <span className="text-xs text-gray-400 uppercase tracking-wider">Protocol ID: {id.slice(-4)}</span>
+                    <span className="text-xs text-gray-400 uppercase tracking-wider">{t.protocolId}: {id.slice(-4)}</span>
                 </div>
                 <div className="flex items-center gap-1 bg-blue-500/10 text-blue-400 px-2 py-1 rounded text-xs font-bold border border-blue-500/20">
                     <Award className="w-3 h-3" />

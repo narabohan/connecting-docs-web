@@ -25,7 +25,7 @@ export default function Home() {
 
       <main>
         <Hero language={currentLang} />
-        <JudgmentLayer />
+        <JudgmentLayer language={currentLang} />
         <ForPatients language={currentLang} />
         <ForDoctors language={currentLang} />
         <div id="pricing">
@@ -33,7 +33,7 @@ export default function Home() {
         </div>
       </main>
 
-      <Footer />
+      <Footer language={currentLang} />
     </div>
   )
 }

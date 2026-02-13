@@ -14,7 +14,7 @@ export default function SignUpForm({ defaultType = 'PATIENT', language = 'EN' }:
     const [email, setEmail] = useState('');
     const [name, setName] = useState('');
     const router = useRouter();
-    const t = (REPORT_TRANSLATIONS[language]?.landing || REPORT_TRANSLATIONS['EN'].landing).auth;
+    const t = (REPORT_TRANSLATIONS[language] || REPORT_TRANSLATIONS['EN']).auth;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

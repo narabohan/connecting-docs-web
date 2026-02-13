@@ -6,9 +6,17 @@ export interface TranslationStructure {
     header: {
         title: string;
         export: string;
+        nav: {
+            patients: string;
+            doctors: string;
+            pricing: string;
+            login: string;
+            getReport: string;
+        };
     };
     radar: {
         title: string;
+        overlay: string;
         axes: {
             pain: string;
             downtime: string;
@@ -24,6 +32,8 @@ export interface TranslationStructure {
         title: string;
         subtitle: string;
         match: string;
+        protocolId: string;
+        locked: { title: string; desc: string; };
         upgrade: {
             title: string;
             subtitle: string;
@@ -44,6 +54,30 @@ export interface TranslationStructure {
             cta: string;
             doctors: string;
             stats: { protocols: string; accuracy: string; monitoring: string; };
+            toggle: { patient: string; doctor: string; };
+            typing: { patient: string[]; doctor: string[] };
+            dynamicTitle: { patient: { main: string; sub: string }; doctor: { main: string; sub: string } };
+            dynamicDesc: { patient: string; doctor: string };
+            dynamicSubDesc: { patient: string; doctor: string };
+            dynamicCta: { patient: string; doctor: string };
+        };
+        judgment: {
+            badge: string;
+            title: string;
+            titleHighlight: string;
+            quote: string;
+            desc: string;
+            quoteKorean: string;
+            cards: {
+                filter: { title: string; desc: string; };
+                safe: { title: string; desc: string; };
+            };
+            mock: {
+                title: string;
+                level: string;
+                label: string;
+                excluded: string;
+            }
         };
         patients: {
             title: string;
@@ -59,6 +93,7 @@ export interface TranslationStructure {
             title: string;
             titleHighlight: string;
             description: string;
+            subDescription?: string;
             cards: {
                 upload: { title: string; desc: string; };
                 match: { title: string; desc: string; };
@@ -82,18 +117,24 @@ export interface TranslationStructure {
                     enterprise: { name: string; price: string; period: string; cta: string; features: string[]; missing: string[]; };
                 };
             };
+            mostPopular: string;
         };
-        auth: {
-            title: { patient: string; doctor: string; };
-            subtitle: { patient: string; doctor: string; };
-            toggles: { patient: string; doctor: string; };
-            fields: {
-                name: string;
-                email: { patient: string; doctor: string; };
-            };
-            button: { patient: string; doctor: string; };
-            footer: string;
+    };
+    auth: {
+        title: { patient: string; doctor: string; };
+        subtitle: { patient: string; doctor: string; };
+        toggles: { patient: string; doctor: string; };
+        fields: {
+            name: string;
+            email: { patient: string; doctor: string; };
         };
+        button: { patient: string; doctor: string; };
+        footer: string;
+    };
+    footer: {
+        tagline: string;
+        compliance: { hipaa: string; iso: string; fhir: string; };
+        copyright: string;
     };
 }
 
@@ -105,10 +146,18 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
         },
         header: {
             title: "INTELLIGENCE REPORT",
-            export: "EXPORT PDF"
+            export: "EXPORT PDF",
+            nav: {
+                patients: "For Patients",
+                doctors: "For Doctors",
+                pricing: "Pricing",
+                login: "Log In",
+                getReport: "Get Report"
+            }
         },
         radar: {
             title: "PATIENT CLINICAL PROFILE",
+            overlay: "TOLERANCE_ZONE: MATCHED",
             axes: {
                 pain: "Pain Tolerance",
                 downtime: "Downtime",
@@ -124,6 +173,8 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             title: "Signature Solutions",
             subtitle: "Top matched clinical protocols based on your profile",
             match: "Match",
+            protocolId: "Protocol ID",
+            locked: { title: "Advanced Protocol", desc: "Unlock to view details" },
             upgrade: {
                 title: "Unlock Global Matching",
                 subtitle: "Get access to 500+ verified master protocols and revenue insights.",
@@ -143,7 +194,52 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 subtitle: "AI-Driven Matching for Top 1% Doctors & Lifetime Care. Turn your clinical judgment into tradable assets.",
                 cta: "Get Free Report",
                 doctors: "For Doctors",
-                stats: { protocols: "Protocols", accuracy: "Accuracy", monitoring: "Monitoring" }
+                stats: { protocols: "Protocols", accuracy: "Accuracy", monitoring: "Monitoring" },
+                toggle: { patient: "I am a Patient", doctor: "I am a Doctor" },
+                typing: {
+                    patient: ["Scanning Your Unique Skin Variables...", "Analyzing Clinical Protocol Assets..."],
+                    doctor: ["Analyzing Clinical Protocol Assets...", "Scanning Your Unique Skin Variables..."]
+                },
+                dynamicTitle: {
+                    patient: {
+                        main: "Tired of Skin Trial & Error?",
+                        sub: "Discover Your AI-Powered Signature Treatment"
+                    },
+                    doctor: {
+                        main: "Stop Repeating Consults",
+                        sub: "Turn Your Expertise into a VIP Patient Magnet"
+                    }
+                },
+                dynamicDesc: {
+                    patient: "Skin fatigue? AI finds your safe 'Signature Treatment' – Personalized, Global Connection.",
+                    doctor: "Consultation fatigue? Turn your know-how into assets that attract VIP patients."
+                },
+                dynamicSubDesc: {
+                    patient: "From Price Wars to Logic-Driven Choices: Empowering Top 1% Connections.",
+                    doctor: "Be the Chef with Signature Courses, Not Just a Menu Seller."
+                },
+                dynamicCta: {
+                    patient: "Get My Free Skin Report",
+                    doctor: "Inquire Signature Registration"
+                }
+            },
+            judgment: {
+                badge: "JUDGMENT LAYER ACTIVE",
+                title: "We Start with",
+                titleHighlight: "What NOT to Do.",
+                quote: "Why trust a \"Yes\" if they never say \"No\"?",
+                desc: "Before matching you with any treatment, our AI analyzes your pain tolerance, downtime constraints, and skin risk factors to filter out unsafe options first.",
+                quoteKorean: "\"We filter out what you shouldn't do first – Pain tolerance, risk distortion, efficacy analysis.\"",
+                cards: {
+                    filter: { title: "Contraindicated Procedures Filtered", desc: "Example: High-energy RF excluded for thin skin types." },
+                    safe: { title: "Safe-Zone Optimization", desc: "Only protocols matching your safety profile are ranked." }
+                },
+                mock: {
+                    title: "Risk Assessment",
+                    level: "High",
+                    label: "Downtime Risk",
+                    excluded: "🚫 EXCLUDED OPTIONS"
+                }
             },
             patients: {
                 title: "Stop Guessing.",
@@ -156,13 +252,14 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 }
             },
             doctors: {
-                title: "Join the",
-                titleHighlight: "Global Logic Network",
-                description: "Upload your signature protocols. Let our AI match you with pre-qualified patients who are looking for exactly what you offer.",
+                title: "Signature Logic",
+                titleHighlight: "Assetization",
+                description: "Tired of Repetitive Explanations? Pre-Qualified VIPs Come with Your Reports.",
+                subDescription: "\"Consultation fatigue? VIP patients come ready with your report.\"",
                 cards: {
-                    upload: { title: "Upload Protocols", desc: "Digitize your clinical logic. Define the exact patient parameters that yield your best results." },
-                    match: { title: "AI Matching", desc: "Stop wasting time on consultations with patients who aren't a fit. Our engine filters and educates patients before they even walk in." },
-                    revenue: { title: "Revenue Share", desc: "Earn royalties on your data. If other doctors use your protocols, or if patients purchase recommended home care, you get paid." }
+                    upload: { title: "Upload Protocol Asset", desc: "Digitize your unique treatment combinations. We verify and turn them into tradable logic assets." },
+                    match: { title: "Patient-Logic Match", desc: "Our RAG engine matches your logic to patient skin data. No more random walk-ins." },
+                    revenue: { title: "Build VIP Fanbase", desc: "Be the Chef with Signature Courses. Patients come for *your* logic, not just lowest price." }
                 },
                 cta: "Apply for Access"
             },
@@ -223,19 +320,25 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                             missing: []
                         }
                     }
-                }
-            },
-            auth: {
-                title: { patient: "Start Your Journey", doctor: "Join the Network" },
-                subtitle: { patient: "Get 3 Free Clinical Reports & AI Matching", doctor: "Upload Signature Solutions & Get Matched" },
-                toggles: { patient: "Patient", doctor: "Doctor" },
-                fields: {
-                    name: "Full Name",
-                    email: { patient: "Email Address", doctor: "Professional Email" }
                 },
-                button: { patient: "Get My Free Report", doctor: "Apply for Access" },
-                footer: "By joining, you agree to our Privacy Policy and HIPAA Compliance terms."
+                mostPopular: "Most Popular"
             }
+        },
+        auth: {
+            title: { patient: "Start Your Journey", doctor: "Join the Network" },
+            subtitle: { patient: "Get 3 Free Clinical Reports & AI Matching", doctor: "Upload Signature Solutions & Get Matched" },
+            toggles: { patient: "Patient", doctor: "Doctor" },
+            fields: {
+                name: "Full Name",
+                email: { patient: "Email Address", doctor: "Professional Email" }
+            },
+            button: { patient: "Get My Free Report", doctor: "Apply for Access" },
+            footer: "By joining, you agree to our Privacy Policy and HIPAA Compliance terms."
+        },
+        footer: {
+            tagline: "Exclusively for High-End Seekers. We value clinical logic over discount coupons.",
+            compliance: { hipaa: "HIPAA Compliant", iso: "ISO 27001", fhir: "FHIR Standard" },
+            copyright: "Connecting Docs. Architecting the Standard of Global Medical Aesthetics. Based in Seoul, Connected Globally."
         }
     },
     KO: {
@@ -245,10 +348,18 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
         },
         header: {
             title: "인텔리전스 리포트",
-            export: "PDF 내보내기"
+            export: "PDF 내보내기",
+            nav: {
+                patients: "환자용",
+                doctors: "의사용",
+                pricing: "요금제",
+                login: "로그인",
+                getReport: "리포트 받기"
+            }
         },
         radar: {
             title: "환자 임상 프로필",
+            overlay: "허용 범위: 매칭 완료",
             axes: {
                 pain: "통증 허용도",
                 downtime: "회복 기간",
@@ -264,6 +375,8 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             title: "추천 시술 솔루션",
             subtitle: "고객님의 프로필에 최적화된 상위 임상 프로토콜",
             match: "일치도",
+            protocolId: "프로토콜 ID",
+            locked: { title: "고급 프로토콜", desc: "잠금 해제하여 상세 보기" },
             upgrade: {
                 title: "글로벌 매칭 잠금 해제",
                 subtitle: "500개 이상의 검증된 마스터 프로토콜과 수익 분석 데이터에 액세스하세요.",
@@ -283,7 +396,52 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 subtitle: "상위 1% 의사를 위한 AI 기반 매칭 및 평생 케어. 당신의 임상적 판단을 자산으로 만드세요.",
                 cta: "무료 리포트 받기",
                 doctors: "의사 전용",
-                stats: { protocols: "프로토콜", accuracy: "정확도", monitoring: "모니터링" }
+                stats: { protocols: "프로토콜", accuracy: "정확도", monitoring: "모니터링" },
+                toggle: { patient: "저는 환자입니다", doctor: "저는 의사입니다" },
+                typing: {
+                    patient: ["고유한 피부 변수 스캔 중...", "임상 프로토콜 자산 분석 중..."],
+                    doctor: ["임상 프로토콜 자산 분석 중...", "고유한 피부 변수 스캔 중..."]
+                },
+                dynamicTitle: {
+                    patient: {
+                        main: "피부과 시행착오, 지치셨나요?",
+                        sub: "AI가 찾아주는 '나만의 시그니처 시술'"
+                    },
+                    doctor: {
+                        main: "반복되는 상담, 지치셨나요?",
+                        sub: "당신의 노하우를 VIP 환자를 부르는 자산으로 만드세요"
+                    }
+                },
+                dynamicDesc: {
+                    patient: "피부 실험은 그만. AI가 안전하고 검증된 솔루션만 매칭해드립니다.",
+                    doctor: "단순 진료를 넘어, 당신의 로직을 찾는 준비된 환자를 만나세요."
+                },
+                dynamicSubDesc: {
+                    patient: "최저가 경쟁이 아닌, 로직 기반의 최적의 선택.",
+                    doctor: "메뉴판 판매자가 아닌, 시그니처 코스를 제공하는 셰프가 되세요."
+                },
+                dynamicCta: {
+                    patient: "무료 피부 리포트 받기",
+                    doctor: "시그니처 등록 문의"
+                }
+            },
+            judgment: {
+                badge: "판단 레이어 활성화",
+                title: "우리는 먼저",
+                titleHighlight: "하지 말아야 할 것을 거릅니다.",
+                quote: "\"No\"라고 말하지 않는 \"Yes\"를 믿을 수 있나요?",
+                desc: "치료를 매칭하기 전, 통증 허용도, 다운타임, 피부 위험 요소를 분석하여 안전하지 않은 옵션부터 필터링합니다.",
+                quoteKorean: "\"위험 요소를 먼저 제거합니다 – 통증, 왜곡 위험, 효율성 분석.\"",
+                cards: {
+                    filter: { title: "금기 시술 필터링", desc: "예: 얇은 피부 타입에 고에너지 RF 제외." },
+                    safe: { title: "안전 구간 최적화", desc: "안전 프로필에 부합하는 프로토콜만 순위가 매겨집니다." }
+                },
+                mock: {
+                    title: "위험 평가",
+                    level: "높음",
+                    label: "다운타임 위험",
+                    excluded: "🚫 제외된 옵션"
+                }
             },
             patients: {
                 title: "추측은 그만.",
@@ -296,15 +454,16 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 }
             },
             doctors: {
-                title: "글로벌 로직 네트워크에",
-                titleHighlight: "참여하세요",
-                description: "당신의 시그니처 프로토콜을 업로드하세요. 우리의 AI가 당신이 제공하는 서비스에 딱 맞는 사전 검증된 환자와 매칭해 드립니다.",
+                title: "시그니처 로직",
+                titleHighlight: "자산화",
+                description: "반복적인 설명에 지치셨나요? 리포트를 통해 미리 검증된 VIP 환자를 만나보세요.",
+                subDescription: "\"반복 설명 피로? 준비된 VIP 환자가 원장님 리포트 들고 찾아옵니다.\"",
                 cards: {
-                    upload: { title: "프로토콜 업로드", desc: "임상 로직을 디지털화하세요. 최상의 결과를 낳는 정확한 환자 파라미터를 정의하세요." },
-                    match: { title: "AI 매칭", desc: "맞지 않는 환자와의 상담으로 시간을 낭비하지 마세요. 엔진이 내원 전 환자를 필터링하고 교육합니다." },
-                    revenue: { title: "수익 공유", desc: "데이터에 대한 로열티를 받으세요. 다른 의사가 당신의 프로토콜을 사용하거나 환자가 홈케어 제품을 구매하면 수익을 얻습니다." }
+                    upload: { title: "프로토콜 자산 업로드", desc: "나만의 시술 조합을 디지털화하세요. 검증을 거쳐 거래 가능한 로직 자산으로 만들어 드립니다." },
+                    match: { title: "환자-로직 매칭", desc: "RAG 엔진이 환자의 피부 데이터와 원장님의 로직을 매칭합니다. 불필요한 상담은 이제 그만." },
+                    revenue: { title: "VIP 팬덤 구축", desc: "시그니처 코스의 셰프가 되세요. 환자는 최저가가 아닌 당신의 '로직'을 찾아옵니다." }
                 },
-                cta: "Apply for Access"
+                cta: "접근 권한 신청"
             },
             pricing: {
                 title: "요금제 선택",
@@ -363,19 +522,25 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                             missing: []
                         }
                     }
-                }
-            },
-            auth: {
-                title: { patient: "여정을 시작하세요", doctor: "네트워크 가입" },
-                subtitle: { patient: "3가지 무료 임상 리포트 및 AI 매칭 받기", doctor: "시그니처 솔루션 업로드 및 매칭 받기" },
-                toggles: { patient: "환자", doctor: "의사" },
-                fields: {
-                    name: "성함",
-                    email: { patient: "이메일 주소", doctor: "병원/업무용 이메일" }
                 },
-                button: { patient: "무료 리포트 확인", doctor: "가입 신청" },
-                footer: "가입 시 개인정보 처리방침 및 HIPAA 규정에 동의한 것으로 간주됩니다."
+                mostPopular: "인기 플랜"
             }
+        },
+        auth: {
+            title: { patient: "여정을 시작하세요", doctor: "네트워크 가입" },
+            subtitle: { patient: "3가지 무료 임상 리포트 및 AI 매칭 받기", doctor: "시그니처 솔루션 업로드 및 매칭 받기" },
+            toggles: { patient: "환자", doctor: "의사" },
+            fields: {
+                name: "성함",
+                email: { patient: "이메일 주소", doctor: "병원/업무용 이메일" }
+            },
+            button: { patient: "무료 리포트 확인", doctor: "가입 신청" },
+            footer: "가입 시 개인정보 처리방침 및 HIPAA 규정에 동의한 것으로 간주됩니다."
+        },
+        footer: {
+            tagline: "상위 1%를 위한 선택. 우리는 할인 쿠폰보다 임상적 로직을 가치 있게 여깁니다.",
+            compliance: { hipaa: "HIPAA 준수", iso: "ISO 27001 인증", fhir: "FHIR 표준" },
+            copyright: "Connecting Docs. 글로벌 메디컬 에스테틱의 기준을 설계합니다. 서울 본사, 글로벌 네트워크."
         }
     },
     JP: {
@@ -385,10 +550,18 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
         },
         header: {
             title: "インテリジェンスレポート",
-            export: "PDFエクスポート"
+            export: "PDFエクスポート",
+            nav: {
+                patients: "患者の方へ",
+                doctors: "医師の方へ",
+                pricing: "料金プラン",
+                login: "ログイン",
+                getReport: "レポート取得"
+            }
         },
         radar: {
             title: "患者臨床プロファイル",
+            overlay: "許容範囲: マッチング完了",
             axes: {
                 pain: "痛みの許容度",
                 downtime: "ダウンタイム",
@@ -404,6 +577,8 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             title: "推奨施術ソリューション",
             subtitle: "お客様のプロファイルに最適化されたトップ臨床プロトコル",
             match: "マッチ度",
+            protocolId: "プロトコルID",
+            locked: { title: "高度なプロトコル", desc: "ロック解除して詳細を表示" },
             upgrade: {
                 title: "グローバルマッチングのロック解除",
                 subtitle: "500以上の検証済みマスタープロトコルと収益分析データにアクセスできます。",
@@ -423,7 +598,52 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 subtitle: "トップ1%の医師のためのAIマッチングと生涯ケア。あなたの臨床的判断を資産に変えましょう。",
                 cta: "無料レポートを取得",
                 doctors: "医師専用",
-                stats: { protocols: "プロトコル", accuracy: "精度", monitoring: "モニタリング" }
+                stats: { protocols: "プロトコル", accuracy: "精度", monitoring: "モニタリング" },
+                toggle: { patient: "私は患者です", doctor: "私は医師です" },
+                typing: {
+                    patient: ["独自の肌変数をスキャン中...", "臨床プロトコル資産を分析中..."],
+                    doctor: ["臨床プロトコル資産を分析中...", "独自の肌変数をスキャン中..."]
+                },
+                dynamicTitle: {
+                    patient: {
+                        main: "肌の試行錯誤に疲れましたか？",
+                        sub: "AIが見つける「あなただけのシグネチャー施術」"
+                    },
+                    doctor: {
+                        main: "繰り返しのカウンセリングに疲れましたか？",
+                        sub: "あなたのノウハウをVIP患者を引き付ける資産に変えましょう"
+                    }
+                },
+                dynamicDesc: {
+                    patient: "肌の実験はもう終わり。AIが安全で検証済みのソリューションだけをマッチングします。",
+                    doctor: "単純な診療を超えて、あなたのロジックを求める準備された患者に出会いましょう。"
+                },
+                dynamicSubDesc: {
+                    patient: "価格競争ではなく、ロジックに基づいた最適な選択。",
+                    doctor: "メニューの売り手ではなく、シグネチャーコースを提供するシェフになりましょう。"
+                },
+                dynamicCta: {
+                    patient: "無料肌レポートを受け取る",
+                    doctor: "シグネチャー登録の問い合わせ"
+                }
+            },
+            judgment: {
+                badge: "判断レイヤーアクティブ",
+                title: "私たちはまず",
+                titleHighlight: "すべきでないことを除外します。",
+                quote: "「No」と言わない「Yes」を信じられますか？",
+                desc: "治療をマッチングする前に、AIは痛みの許容度、ダウンタイムの制約、肌のリスク要因を分析し、安全でないオプションを最初に除外します。",
+                quoteKorean: "「リスク要因を最初に除去します – 痛み、リスクの歪み、効率性分析。」",
+                cards: {
+                    filter: { title: "禁忌施術のフィルタリング", desc: "例：薄い肌タイプには高エネルギーRFを除外。" },
+                    safe: { title: "安全ゾーンの最適化", desc: "安全プロファイルに一致するプロトコルのみがランク付けされます。" }
+                },
+                mock: {
+                    title: "リスク評価",
+                    level: "高",
+                    label: "ダウンタイムリスク",
+                    excluded: "🚫 除外されたオプション"
+                }
             },
             patients: {
                 title: "推測はやめて。",
@@ -436,15 +656,16 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 }
             },
             doctors: {
-                title: "グローバルロジックネットワークに",
-                titleHighlight: "参加しましょう",
-                description: "シグネチャープロトコルをアップロードしてください。当社のAIが、あなたが提供するサービスに最適な事前審査済みの患者とマッチングします。",
+                title: "シグネチャーロジック",
+                titleHighlight: "資産化",
+                description: "繰り返しの説明に疲れましたか？レポートを通じて事前に検証されたVIP患者に出会いましょう。",
+                subDescription: "「カウンセリング疲れ？VIP患者はあなたのレポートを持ってやってきます。」",
                 cards: {
-                    upload: { title: "プロトコルアップロード", desc: "臨床ロジックをデジタル化します。最良の結果を生む正確な患者パラメータを定義してください。" },
-                    match: { title: "AIマッチング", desc: "適合しない患者との相談に時間を無駄にしないでください。エンジンが来院前に患者をフィルタリングし、教育します。" },
-                    revenue: { title: "収益シェア", desc: "データに対するロイヤリティを受け取ります。他の医師があなたのプロトコルを使用したり、患者がホームケア製品を購入したりすると収益が得られます。" }
+                    upload: { title: "プロトコル資産のアップロード", desc: "独自の治療の組み合わせをデジタル化します。検証を経て取引可能なロジック資産にします。" },
+                    match: { title: "患者-ロジックマッチング", desc: "RAGエンジンが患者の肌データとあなたのロジックをマッチングします。無駄なカウンセリングはもう終わり。" },
+                    revenue: { title: "VIPファンベースの構築", desc: "シグネチャーコースのシェフになりましょう。患者は最安値ではなく、あなたの「ロジック」を求めてやってきます。" }
                 },
-                cta: "Apply for Access"
+                cta: "アクセス権の申請"
             },
             pricing: {
                 title: "プランの選択",
@@ -503,19 +724,25 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                             missing: []
                         }
                     }
-                }
-            },
-            auth: {
-                title: { patient: "旅を始めましょう", doctor: "ネットワーク参加" },
-                subtitle: { patient: "3つの無料臨床レポートとAIマッチングを取得", doctor: "シグネチャーソリューションをアップロードしてマッチング" },
-                toggles: { patient: "患者", doctor: "医師" },
-                fields: {
-                    name: "氏名",
-                    email: { patient: "メールアドレス", doctor: "業務用メールアドレス" }
                 },
-                button: { patient: "無料レポートを確認", doctor: "参加申請" },
-                footer: "参加することにより、プライバシーポリシーおよびHIPAAコンプライアンス規約に同意したものとみなされます。"
+                mostPopular: "一番人気"
             }
+        },
+        auth: {
+            title: { patient: "旅を始めましょう", doctor: "ネットワーク参加" },
+            subtitle: { patient: "3つの無料臨床レポートとAIマッチングを取得", doctor: "シグネチャーソリューションをアップロードしてマッチング" },
+            toggles: { patient: "患者", doctor: "医師" },
+            fields: {
+                name: "氏名",
+                email: { patient: "メールアドレス", doctor: "業務用メールアドレス" }
+            },
+            button: { patient: "無料レポートを確認", doctor: "参加申請" },
+            footer: "参加することにより、プライバシーポリシーおよびHIPAAコンプライアンス規約に同意したものとみなされます。"
+        },
+        footer: {
+            tagline: "ハイエンドな求道者のために。私たちは割引クーポンよりも臨床ロジックを重視します。",
+            compliance: { hipaa: "HIPAA準拠", iso: "ISO 27001認証", fhir: "FHIR標準" },
+            copyright: "Connecting Docs. グローバルメディカルエステティックの基準を構築。ソウル拠点、グローバル展開。"
         }
     },
     CN: {
@@ -525,10 +752,18 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
         },
         header: {
             title: "智能报告",
-            export: "导出PDF"
+            export: "导出PDF",
+            nav: {
+                patients: "患者专区",
+                doctors: "医生专区",
+                pricing: "价格方案",
+                login: "登录",
+                getReport: "获取报告"
+            }
         },
         radar: {
             title: "患者临床档案",
+            overlay: "耐受区域：已匹配",
             axes: {
                 pain: "疼痛耐受度",
                 downtime: "恢复期",
@@ -544,6 +779,8 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             title: "推荐治疗方案",
             subtitle: "基于您档案的最佳匹配临床方案",
             match: "匹配度",
+            protocolId: "方案 ID",
+            locked: { title: "高级方案", desc: "解锁查看详情" },
             upgrade: {
                 title: "解锁全球匹配",
                 subtitle: "访问500+经过验证的大师级方案及收益分析数据。",
@@ -563,7 +800,52 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 subtitle: "专为前1%医生打造的AI匹配及终身护理。将您的临床判断转化为可交易资产。",
                 cta: "获取免费报告",
                 doctors: "医生专用",
-                stats: { protocols: "方案", accuracy: "准确率", monitoring: "监控" }
+                stats: { protocols: "方案", accuracy: "准确率", monitoring: "监控" },
+                toggle: { patient: "我是患者", doctor: "我是医生" },
+                typing: {
+                    patient: ["正在扫描您独特的皮肤变量...", "正在分析临床方案资产..."],
+                    doctor: ["正在分析临床方案资产...", "正在扫描您独特的皮肤变量..."]
+                },
+                dynamicTitle: {
+                    patient: {
+                        main: "厌倦了皮肤试错？",
+                        sub: "发现AI驱动的“专属签名治疗”"
+                    },
+                    doctor: {
+                        main: "不想再重复咨询？",
+                        sub: "将您的专业知识转化为吸引VIP患者的磁铁"
+                    }
+                },
+                dynamicDesc: {
+                    patient: "皮肤疲劳？AI为您通过个性化和全球连接找到安全的“签名治疗”。",
+                    doctor: "咨询疲劳？将您的专有技术转化为吸引VIP患者的资产。"
+                },
+                dynamicSubDesc: {
+                    patient: "从价格战到逻辑驱动的选择：赋能前1%的连接。",
+                    doctor: "成为拥有签名课程的主厨，而不仅仅是菜单推销员。"
+                },
+                dynamicCta: {
+                    patient: "获取我的免费皮肤报告",
+                    doctor: "咨询签名注册"
+                }
+            },
+            judgment: {
+                badge: "判断层已激活",
+                title: "我们先从",
+                titleHighlight: "不该做什么开始。",
+                quote: "如果他们从不说“不”，你为什么要相信“是”？",
+                desc: "在为您匹配任何治疗之前，我们的AI会分析您的疼痛耐受度、恢复期限制和皮肤风险因素，首先过滤掉不安全的选项。",
+                quoteKorean: "“我们首先过滤掉您不应该做的事情——痛觉耐受度、风险扭曲、疗效分析。”",
+                cards: {
+                    filter: { title: "已过滤的禁忌手术", desc: "示例：薄皮类型排除高能射频。" },
+                    safe: { title: "安全区优化", desc: "仅对符合您安全档案的方案进行排名。" }
+                },
+                mock: {
+                    title: "风险评估",
+                    level: "高",
+                    label: "恢复期风险",
+                    excluded: "🚫 已排除的选项"
+                }
             },
             patients: {
                 title: "停止猜测。",
@@ -576,19 +858,21 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 }
             },
             doctors: {
-                title: "加入",
-                titleHighlight: "全球逻辑网络",
-                description: "上传您的签名方案。让我们的AI为您匹配正在寻找您所提供服务的预审患者。",
+                title: "签名逻辑",
+                titleHighlight: "资产化",
+                description: "厌倦了重复解释？预审过的VIP带着您的报告而来。",
+                subDescription: "“咨询疲劳？VIP患者带着您的报告准备好了。”",
                 cards: {
-                    upload: { title: "上传方案", desc: "数字化您的临床逻辑。定义产生最佳效果的精确患者参数。" },
-                    match: { title: "AI匹配", desc: "不要在不合适的患者咨询上浪费时间。引擎在患者进门前就对其进行过滤和教育。" },
-                    revenue: { title: "收益共享", desc: "赚取数据版税。如果其他医生使用您的方案，或者患者购买推荐的家庭护理产品，您将获得收益。" }
+                    upload: { title: "上传方案资产", desc: "将您独特的治疗组合数字化。我们进行验证并将其转化为可交易的逻辑资产。" },
+                    match: { title: "患者-逻辑匹配", desc: "我们的RAG引擎将您的逻辑与患者皮肤数据匹配。不再有随意的上门客。" },
+                    revenue: { title: "建立VIP粉丝群", desc: "成为拥有签名课程的主厨。患者是为了*您的*逻辑而来，而不仅仅是最低价格。" }
                 },
-                cta: "Apply for Access"
+                cta: "申请访问"
             },
             pricing: {
                 title: "选择您的方案",
                 subtitle: "无论您是追求完美的患者，还是实现完美的医生，我们要为您准备了计划。",
+                mostPopular: "最受欢迎",
                 toggles: { patient: "患者", doctor: "医生" },
                 tiers: {
                     patient: {
@@ -644,18 +928,23 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                         }
                     }
                 }
-            },
-            auth: {
-                title: { patient: "开始您的旅程", doctor: "加入网络" },
-                subtitle: { patient: "获取3份免费临床报告及AI匹配", doctor: "上传签名解决方案并获得匹配" },
-                toggles: { patient: "患者", doctor: "医生" },
-                fields: {
-                    name: "姓名",
-                    email: { patient: "电子邮件地址", doctor: "工作电子邮件" }
-                },
-                button: { patient: "获取免费报告", doctor: "申请访问" },
-                footer: "加入即表示您同意我们的隐私政策和HIPAA合规条款。"
             }
+        },
+        auth: {
+            title: { patient: "开始您的旅程", doctor: "加入网络" },
+            subtitle: { patient: "获取3份免费临床报告及AI匹配", doctor: "上传签名解决方案并获得匹配" },
+            toggles: { patient: "患者", doctor: "医生" },
+            fields: {
+                name: "姓名",
+                email: { patient: "电子邮件地址", doctor: "工作电子邮件" }
+            },
+            button: { patient: "获取免费报告", doctor: "申请访问" },
+            footer: "加入即表示您同意我们的隐私政策和HIPAA合规条款。"
+        },
+        footer: {
+            tagline: "专为高端追求者打造。我们重视临床逻辑胜过折扣券。",
+            compliance: { hipaa: "符合HIPAA", iso: "ISO 27001认证", fhir: "FHIR标准" },
+            copyright: "Connecting Docs. 构建全球医美标准。总部位于首尔，连接全球。"
         }
     }
 };

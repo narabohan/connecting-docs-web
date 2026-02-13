@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Globe, ChevronDown, Check } from 'lucide-react';
 import { useState } from 'react';
-import { LanguageCode } from '@/utils/translations';
+import { LanguageCode, REPORT_TRANSLATIONS } from '@/utils/translations';
 
 const LANGUAGES = [
     { code: 'EN', label: 'English' },
@@ -29,13 +29,13 @@ export default function Header({ currentLang, onLangChange }: HeaderProps) {
                 {/* Navigation (Desktop) */}
                 <nav className="hidden md:flex items-center gap-8">
                     <Link href="#signup" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">
-                        For Patients
+                        {REPORT_TRANSLATIONS[currentLang].header.nav.patients}
                     </Link>
                     <Link href="#doctors" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">
-                        For Doctors
+                        {REPORT_TRANSLATIONS[currentLang].header.nav.doctors}
                     </Link>
                     <Link href="#pricing" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">
-                        Pricing
+                        {REPORT_TRANSLATIONS[currentLang].header.nav.pricing}
                     </Link>
                 </nav>
 
@@ -74,14 +74,14 @@ export default function Header({ currentLang, onLangChange }: HeaderProps) {
                     <div className="h-4 w-px bg-white/10 mx-2" />
 
                     <Link href="/login" className="text-sm font-bold text-white hover:text-blue-400 transition-colors hidden sm:block">
-                        Log In
+                        {REPORT_TRANSLATIONS[currentLang].header.nav.login}
                     </Link>
 
                     <Link
                         href="#signup"
                         className="px-5 py-2 text-sm font-bold text-black bg-white rounded-full hover:bg-gray-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)]"
                     >
-                        Get Report
+                        {REPORT_TRANSLATIONS[currentLang].header.nav.getReport}
                     </Link>
                 </div>
             </div>
