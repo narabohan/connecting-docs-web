@@ -165,8 +165,5 @@ export default function Hero({ language = 'EN' }: HeroProps) {
     );
 }
 
-// Utility for failing gracefully if user doesn't have a cn function
-function cn(...classes: (string | undefined | null | false)[]) {
-    return classes.filter(Boolean).join(' ');
-}
+
 
