@@ -15,6 +15,7 @@ export interface PatientRecord {
         q2_risk_flags_MASTER?: string;
         d_age_MASTER?: string;
         d_gender_MASTER?: string;
+        q_treatment_locations?: string[]; // Array of strings (e.g., "Forehead", "Cheek")
 
         // Raw Fields (for fallback/coalescing)
         q6_pain_tolerance_EN?: string;

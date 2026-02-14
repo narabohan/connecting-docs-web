@@ -13,44 +13,9 @@ type UserType = 'patient' | 'doctor';
 
 export default function Hero({ language = 'EN' }: HeroProps) {
     const [userType, setUserType] = useState<UserType>('patient');
-    const [typedText, setTypedText] = useState('');
 
     const t = (REPORT_TRANSLATIONS[language]?.landing || REPORT_TRANSLATIONS['EN'].landing).hero;
 
-    // Dynamic text based on user type from translations
-    const fullText = userType === 'patient'
-        ? t.typing.patient[0]
-        : t.typing.doctor[0];
-
-    useEffect(() => {
-        let currentText = '';
-        let isDeleting = false;
-        let loopNum = 0;
-        const typingSpeed = 50;
-
-        const handleType = () => {
-            const i = loopNum % 2;
-            const fullTxt = userType === 'patient' ? t.typing.patient[i] : t.typing.doctor[i];
-
-            if (isDeleting) {
-                currentText = fullTxt.substring(0, currentText.length - 1);
-            } else {
-                currentText = fullTxt.substring(0, currentText.length + 1);
-            }
-
-            setTypedText(currentText);
-
-            if (!isDeleting && currentText === fullTxt) {
-                setTimeout(() => isDeleting = true, 2000); // Pause at end
-            } else if (isDeleting && currentText === '') {
-                isDeleting = false;
-                loopNum++;
-            }
-        };
-
-        const timer = setInterval(handleType, typingSpeed);
-        return () => clearInterval(timer);
-    }, [userType, language, t]);
 
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#050505] pt-20">
@@ -143,9 +108,15 @@ export default function Hero({ language = 'EN' }: HeroProps) {
                         }
                     </p>
 
-                    <div className="font-mono text-sm text-blue-300 mb-10 h-6">
-                        &gt; {typedText}<span className="animate-pulse">_</span>
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 1, duration: 1 }}
+                        className="font-mono text-sm text-blue-300 mb-10 h-6 flex items-center justify-center gap-2"
+                    >
+                        <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                        {t.floatingText || "Discover the 'Glass Skin' answer you didn't know existed."}
+                    </motion.div>
 
                     <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
                         <Link

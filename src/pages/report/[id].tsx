@@ -5,6 +5,7 @@ import RadarProfile from '@/components/report/RadarProfile';
 import LogicTerminal from '@/components/report/LogicTerminal';
 import SolutionCard from '@/components/report/SolutionCard';
 import RiskAssessment from '@/components/report/RiskAssessment';
+import SkinSimulationContainer from '@/components/simulation/SkinSimulationContainer';
 import { Loader2, Download, Lock } from 'lucide-react';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
 
@@ -140,6 +141,11 @@ export default function ReportPage() {
                             </button>
                         </div>
                     </div>
+                </section>
+
+                {/* Skin Simulation Section (Phase 8) */}
+                <section className="mb-12">
+                    <SkinSimulationContainer language={language} simulationData={data?.patient?.simulationData} />
                 </section>
 
                 {/* Bottom Section: Risk Assessment */}

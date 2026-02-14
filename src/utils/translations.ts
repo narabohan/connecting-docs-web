@@ -40,6 +40,29 @@ export interface TranslationStructure {
             button: string;
         };
     };
+
+    simulation: {
+        title: string;
+        subtitle: string;
+        constraints: {
+            pain: { title: string; options: string[] };
+            downtime: { title: string; options: string[] };
+            budget: { title: string; options: string[] };
+        };
+        radar: {
+            title: string;
+            lifting: string;
+            firmness: string;
+            texture: string;
+            glow: string;
+            safety: string;
+        };
+        save: string;
+        badge: string;
+        evaluation: string;
+        retry: string;
+        finalCall: string;
+    };
     risks: {
         title: string;
         safe: string;
@@ -60,6 +83,7 @@ export interface TranslationStructure {
             dynamicDesc: { patient: string; doctor: string };
             dynamicSubDesc: { patient: string; doctor: string };
             dynamicCta: { patient: string; doctor: string };
+            floatingText: string;
         };
         judgment: {
             badge: string;
@@ -67,17 +91,25 @@ export interface TranslationStructure {
             titleHighlight: string;
             quote: string;
             desc: string;
-            quoteKorean: string;
-            cards: {
-                filter: { title: string; desc: string; };
-                safe: { title: string; desc: string; };
+            cta: string;
+            simulator: {
+                inputTitle: string;
+                outputTitle: string;
+                sliders: {
+                    pain: string;
+                    downtime: string;
+                    budget: string;
+                    sessions: string;
+                    speed: string;
+                };
+                radar: {
+                    lifting: string;
+                    firmness: string;
+                    texture: string;
+                    glow: string;
+                    safety: string;
+                };
             };
-            mock: {
-                title: string;
-                level: string;
-                label: string;
-                excluded: string;
-            }
         };
         patients: {
             title: string;
@@ -181,6 +213,37 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 button: "Upgrade to Premium"
             }
         },
+        simulation: {
+            title: "Personalized Skin Blueprint",
+            subtitle: "Simulate your optimal skin potential by adjusting constraints. We prove the 'safest best' logic for you.",
+            constraints: {
+                pain: {
+                    title: "Pain Tolerance",
+                    options: ["Low Pain & Rest", "Moderate & Balance", "High Energy & Change"]
+                },
+                downtime: {
+                    title: "Downtime",
+                    options: ["Zero", "Mild (1-3 Days)", "Intensive (5 Days+)"]
+                },
+                budget: {
+                    title: "Budget",
+                    options: ["Economy", "Standard", "Premium"]
+                }
+            },
+            radar: {
+                title: "Achievable Ideal Skin",
+                lifting: "Lifting",
+                firmness: "Firmness",
+                texture: "Texture",
+                glow: "Skin Glow",
+                safety: "Safety & Integrity"
+            },
+            save: "Save This Blueprint",
+            badge: "Glass Skin Unlocked",
+            evaluation: "Does this diagnostic accurately solve your concerns?",
+            retry: "Would you like to adjust pain or budget conditions to see possibilities?",
+            finalCall: "Save this report as 'Best Choice' and book consultation"
+        },
         risks: {
             title: "RISK ASSESSMENT PROTOCOL",
             safe: "SAFE",
@@ -202,17 +265,17 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 },
                 dynamicTitle: {
                     patient: {
-                        main: "Tired of Skin Trial & Error?",
-                        sub: "Discover Your AI-Powered Signature Treatment"
+                        main: "Unlock Your Glass Skin Radiance",
+                        sub: "Simulate and Design Your Ideal Glow"
                     },
                     doctor: {
-                        main: "Stop Repeating Consults",
-                        sub: "Turn Your Expertise into a VIP Patient Magnet"
+                        main: "Medical Intelligence v2.0",
+                        sub: "Turn Clinical Judgment into Tradable Assets"
                     }
                 },
                 dynamicDesc: {
-                    patient: "Skin fatigue? AI finds your safe 'Signature Treatment' – Personalized, Global Connection.",
-                    doctor: "Consultation fatigue? Turn your know-how into assets that attract VIP patients."
+                    patient: "Experience the Triple-Linked Skin Simulation. Visualize how Pain, Downtime, and Budget shape your ideal result.",
+                    doctor: "Billionaire OS v2.1 Applied. Architecting the Standard of Global Medical Aesthetics."
                 },
                 dynamicSubDesc: {
                     patient: "From Price Wars to Logic-Driven Choices: Empowering Top 1% Connections.",
@@ -221,24 +284,33 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 dynamicCta: {
                     patient: "Get My Free Skin Report",
                     doctor: "Inquire Signature Registration"
-                }
+                },
+                floatingText: "Discover the 'Glass Skin' answer you didn't know existed."
             },
             judgment: {
-                badge: "JUDGMENT LAYER ACTIVE",
-                title: "We Start with",
-                titleHighlight: "What NOT to Do.",
-                quote: "Why trust a \"Yes\" if they never say \"No\"?",
-                desc: "Before matching you with any treatment, our AI analyzes your pain tolerance, downtime constraints, and skin risk factors to filter out unsafe options first.",
-                quoteKorean: "\"We filter out what you shouldn't do first – Pain tolerance, risk distortion, efficacy analysis.\"",
-                cards: {
-                    filter: { title: "Contraindicated Procedures Filtered", desc: "Example: High-energy RF excluded for thin skin types." },
-                    safe: { title: "Safe-Zone Optimization", desc: "Only protocols matching your safety profile are ranked." }
-                },
-                mock: {
-                    title: "Risk Assessment",
-                    level: "High",
-                    label: "Downtime Risk",
-                    excluded: "🚫 EXCLUDED OPTIONS"
+                badge: "v2.0 SYSTEM ONLINE",
+                title: "Your skin is not a testing ground.",
+                titleHighlight: "Design your outcome before the treatment.",
+                desc: "Exhausted by marketing hype and factory-style consultations? Don't let your face be an experiment. We analyze your clinical variables to find the 'Safe-Optimal' for you. Choose a logic-driven solution that suits your skin, not just a price tag.",
+                quote: "We say the 'Honest No' to protect you. If a treatment doesn't fit your skin logic, we simply don't recommend it.",
+                cta: "Start My Blueprint",
+                simulator: {
+                    inputTitle: "Set Your Constraints",
+                    outputTitle: "Achievable Ideal Skin",
+                    sliders: {
+                        pain: "Pain Tolerance",
+                        downtime: "Downtime",
+                        budget: "Budget Range",
+                        sessions: "Desired Sessions",
+                        speed: "Result Speed"
+                    },
+                    radar: {
+                        lifting: "Lifting & Contour",
+                        firmness: "Firmness & Density",
+                        texture: "Texture Refinement",
+                        glow: "Skin Glow & Radiance",
+                        safety: "Safety & Barrier"
+                    }
                 }
             },
             patients: {
@@ -383,6 +455,37 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 button: "프리미엄 업그레이드"
             }
         },
+        simulation: {
+            title: "나만의 맞춤 피부 설계",
+            subtitle: "제약 조건을 조절하여 당신의 최적 피부 잠재력을 실시간으로 시뮬레이션하세요. 단순히 무엇을 할지가 아니라, 당신의 조건에서 '가장 안전한 최상'이 무엇인지 증명합니다.",
+            constraints: {
+                pain: {
+                    title: "통증 허용도",
+                    options: ["저통증 & 휴식", "중등도 & 밸런스", "고강도 & 변화"]
+                },
+                downtime: {
+                    title: "회복 기간",
+                    options: ["즉시 일상 복귀", "가벼운 붓기와 붉은기 (1-3일)", "집중 회복 필요 (5일 이상)"]
+                },
+                budget: {
+                    title: "가용 예산",
+                    options: ["실속형", "표준형", "프리미엄"]
+                }
+            },
+            radar: {
+                title: "달성 가능한 이상향",
+                lifting: "윤곽 (Lifting)",
+                firmness: "탄력 (Firmness)",
+                texture: "피부결 (Texture)",
+                glow: "속광 (Glow)",
+                safety: "안전성 (Safety)"
+            },
+            save: "설계 저장하기",
+            badge: "글래스 스킨 잠금 해제",
+            evaluation: "이 진단 결과가 당신의 고민을 정확히 해결했나요?",
+            retry: "통증이나 예산 조건을 조정하여 다른 가능성을 확인하시겠습니까?",
+            finalCall: "이 리포트를 '최적의 선택'으로 저장하고 상담 예약하기"
+        },
         risks: {
             title: "위험성 평가 프로토콜",
             safe: "안전",
@@ -391,7 +494,7 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
         },
         landing: {
             hero: {
-                badge: "시스템 글로벌: 온라인",
+                badge: "SYSTEM GLOBAL: 온라인",
                 title: "당신만의 K-에스테틱 여정을 시작하세요",
                 subtitle: "상위 1% 의사를 위한 AI 기반 매칭 및 평생 케어. 당신의 임상적 판단을 자산으로 만드세요.",
                 cta: "무료 리포트 받기",
@@ -404,43 +507,52 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 },
                 dynamicTitle: {
                     patient: {
-                        main: "피부과 시행착오, 지치셨나요?",
-                        sub: "AI가 찾아주는 '나만의 시그니처 시술'"
+                        main: "장비 이름이 아닌 의사의 '로직'을 선택하는 시대",
+                        sub: "커넥팅닥스가 K-뷰티의 새로운 기준을 만듭니다"
                     },
                     doctor: {
-                        main: "반복되는 상담, 지치셨나요?",
-                        sub: "당신의 노하우를 VIP 환자를 부르는 자산으로 만드세요"
+                        main: "가격 경쟁의 늪에서 벗어나",
+                        sub: "원장님만의 '시그니처 솔루션'으로 독보적인 팬덤을 구축하세요"
                     }
                 },
                 dynamicDesc: {
-                    patient: "피부 실험은 그만. AI가 안전하고 검증된 솔루션만 매칭해드립니다.",
-                    doctor: "단순 진료를 넘어, 당신의 로직을 찾는 준비된 환자를 만나세요."
+                    patient: "아픈 건 싫고, 예산은 한정적이라면? 통증부터 비용까지—나의 조건에 맞춘 '최적의 시술 시나리오'를 한눈에 확인하세요.",
+                    doctor: "단순한 홍보가 아닙니다. 원장님의 임상 로직을 디지털 IP로 자산화하여, 준비된 VIP 환자에게 직접 전달합니다. 시그니처 코스요리를 내는 셰프가 되어 보세요."
                 },
                 dynamicSubDesc: {
-                    patient: "최저가 경쟁이 아닌, 로직 기반의 최적의 선택.",
-                    doctor: "메뉴판 판매자가 아닌, 시그니처 코스를 제공하는 셰프가 되세요."
+                    patient: "가격표에 내 얼굴을 맞추지 마세요. 데이터가 증명하는 '나만을 위한 유일한 처방'을 선택하세요. 최저가 검색 대신 의학적 확신을 드립니다.",
+                    doctor: "원장님의 시술 노하우, 이제 병원 벽을 넘어 전 세계 VIP 환자를 위한 '디지털 자산'이 됩니다."
                 },
                 dynamicCta: {
-                    patient: "무료 피부 리포트 받기",
-                    doctor: "시그니처 등록 문의"
-                }
+                    patient: "나만의 인생 시술 설계하기",
+                    doctor: "시그니처 자산 등록하기"
+                },
+                floatingText: "내 피부가 가질 수 있는 가장 투명한 빛, 당신도 몰랐던 '글래스 스킨'의 정답을 찾아보세요."
             },
             judgment: {
-                badge: "판단 레이어 활성화",
-                title: "우리는 먼저",
-                titleHighlight: "하지 말아야 할 것을 거릅니다.",
-                quote: "\"No\"라고 말하지 않는 \"Yes\"를 믿을 수 있나요?",
-                desc: "치료를 매칭하기 전, 통증 허용도, 다운타임, 피부 위험 요소를 분석하여 안전하지 않은 옵션부터 필터링합니다.",
-                quoteKorean: "\"위험 요소를 먼저 제거합니다 – 통증, 왜곡 위험, 효율성 분석.\"",
-                cards: {
-                    filter: { title: "금기 시술 필터링", desc: "예: 얇은 피부 타입에 고에너지 RF 제외." },
-                    safe: { title: "안전 구간 최적화", desc: "안전 프로필에 부합하는 프로토콜만 순위가 매겨집니다." }
-                },
-                mock: {
-                    title: "위험 평가",
-                    level: "높음",
-                    label: "다운타임 위험",
-                    excluded: "🚫 제외된 옵션"
+                badge: "v2.0 SYSTEM ONLINE",
+                title: "피부는 실험실이 아닙니다.",
+                titleHighlight: "시술 전, 데이터로 먼저 '피팅'해 보세요.",
+                desc: "수많은 마케팅 노이즈와 3분도 안 되는 짧은 상담 시간에 지치셨나요? 커넥팅독스는 당신의 피부 두께와 리스크 수용도를 분석해 가장 안전한 '최적'을 찾아냅니다. 비싼 시술이 아닌, 당신의 피부 로직에 맞는 정답을 선택하세요.",
+                quote: "우리는 당신의 안전을 위해 '정직한 No'를 말합니다. 내 피부에 맞지 않는 시술은 결코 정답이 될 수 없기 때문입니다.",
+                cta: "내 피부 설계 시작하기",
+                simulator: {
+                    inputTitle: "나의 시술 조건 설정",
+                    outputTitle: "달성 가능한 이상향",
+                    sliders: {
+                        pain: "통증 허용치",
+                        downtime: "회복 기간",
+                        budget: "예산 범위",
+                        sessions: "시술 횟수",
+                        speed: "효과 발현"
+                    },
+                    radar: {
+                        lifting: "윤곽/리프팅",
+                        firmness: "탄력/밀도",
+                        texture: "피부결/모공",
+                        glow: "속광/광채",
+                        safety: "안전성/피부 보호"
+                    }
                 }
             },
             patients: {
@@ -585,6 +697,37 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 button: "プレミアムにアップグレード"
             }
         },
+        simulation: {
+            title: "あなただけのカスタマイズ肌設計",
+            subtitle: "制約条件を調整して、あなたの最適な肌の可能性をリアルタイムでシミュレーションします。単に何をするかではなく、あなたの条件で「最も安全な最善」が何であるかを証明します。",
+            constraints: {
+                pain: {
+                    title: "痛みの許容度",
+                    options: ["低刺激 & 休息", "中程度 & バランス", "高出力 & 変化"]
+                },
+                downtime: {
+                    title: "ダウンタイム",
+                    options: ["なし", "軽度 (1-3日)", "集中ケア (5日以上)"]
+                },
+                budget: {
+                    title: "予算範囲",
+                    options: ["エコノミー", "スタンダード", "プレミアム"]
+                }
+            },
+            radar: {
+                title: "達成可能な理想像",
+                lifting: "輪郭",
+                firmness: "弾力",
+                texture: "キメ",
+                glow: "内側からのツヤ",
+                safety: "安全性"
+            },
+            save: "設計を保存",
+            badge: "グラススキン解除",
+            evaluation: "この診断結果はあなたの悩みを正確に解決しましたか？",
+            retry: "痛みや予算の条件を調整して、他の可能性を確認しますか？",
+            finalCall: "このレポートを「最適な選択」として保存し、カウンセリングを予約する"
+        },
         risks: {
             title: "リスク評価プロトコル",
             safe: "安全",
@@ -606,16 +749,16 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 },
                 dynamicTitle: {
                     patient: {
-                        main: "肌の試行錯誤に疲れましたか？",
-                        sub: "AIが見つける「あなただけのシグネチャー施術」"
+                        main: "肌の正解を探す旅、",
+                        sub: "AIと共にデザインしましょう"
                     },
                     doctor: {
-                        main: "繰り返しのカウンセリングに疲れましたか？",
-                        sub: "あなたのノウハウをVIP患者を引き付ける資産に変えましょう"
+                        main: "「先生のこだわり」をデジタル資産に。",
+                        sub: "実力で選ばれるメディカルプラットフォーム"
                     }
                 },
                 dynamicDesc: {
-                    patient: "肌の実験はもう終わり。AIが安全で検証済みのソリューションだけをマッチングします。",
+                    patient: "「痛み・ダウンタイム・予算」3つの変数で描く、理想の肌シミュレーション。",
                     doctor: "単純な診療を超えて、あなたのロジックを求める準備された患者に出会いましょう。"
                 },
                 dynamicSubDesc: {
@@ -625,24 +768,33 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 dynamicCta: {
                     patient: "無料肌レポートを受け取る",
                     doctor: "シグネチャー登録の問い合わせ"
-                }
+                },
+                floatingText: "あなたの肌が持つことのできる最も透明な光、あなたも知らなかった「グラススキン」の正解を見つけてください。"
             },
             judgment: {
-                badge: "判断レイヤーアクティブ",
-                title: "私たちはまず",
-                titleHighlight: "すべきでないことを除外します。",
-                quote: "「No」と言わない「Yes」を信じられますか？",
-                desc: "治療をマッチングする前に、AIは痛みの許容度、ダウンタイムの制約、肌のリスク要因を分析し、安全でないオプションを最初に除外します。",
-                quoteKorean: "「リスク要因を最初に除去します – 痛み、リスクの歪み、効率性分析。」",
-                cards: {
-                    filter: { title: "禁忌施術のフィルタリング", desc: "例：薄い肌タイプには高エネルギーRFを除外。" },
-                    safe: { title: "安全ゾーンの最適化", desc: "安全プロファイルに一致するプロトコルのみがランク付けされます。" }
-                },
-                mock: {
-                    title: "リスク評価",
-                    level: "高",
-                    label: "ダウンタイムリスク",
-                    excluded: "🚫 除外されたオプション"
+                badge: "v2.0 SYSTEM ONLINE",
+                title: "お肌に試行錯誤はいりません。",
+                titleHighlight: "データで導き出す、あなただけの「美の設計図」。",
+                desc: "SNSの噂や短すぎるカウンセリングに不安を感じていませんか？AIがあなたの肌質や予算に合わせ、「失敗しない選択」を可視化します。もう迷わない、確信に基づいた美容を。",
+                quote: "「NO」と言えるのが、本当のプロフェッショナル。 あなたのリスクを避けるための、誠実な診断を提供します。",
+                cta: "私の肌設計を始める",
+                simulator: {
+                    inputTitle: "施術条件の設定",
+                    outputTitle: "達成可能な理想像",
+                    sliders: {
+                        pain: "痛みの許容度",
+                        downtime: "ダウンタイム",
+                        budget: "予算範囲",
+                        sessions: "施術回数",
+                        speed: "効果の現れ方"
+                    },
+                    radar: {
+                        lifting: "輪郭・リフトアップ",
+                        firmness: "弾力・密度",
+                        texture: "キメ・毛穴",
+                        glow: "内側からのツヤ",
+                        safety: "安全性・バリア機能"
+                    }
                 }
             },
             patients: {
@@ -787,6 +939,37 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 button: "升级至高级版"
             }
         },
+        simulation: {
+            title: "个性化皮肤设计蓝图",
+            subtitle: "调整约束条件，实时模拟您的最佳皮肤潜力。不仅仅是做什么，而是证明在您的条件下什么是“最安全的最优解”。",
+            constraints: {
+                pain: {
+                    title: "疼痛耐受度",
+                    options: ["低痛感 & 休息", "适度刺激 & 平衡", "高能量 & 改变"]
+                },
+                downtime: {
+                    title: "恢复期",
+                    options: ["零恢复期", "轻微 (1-3天)", "密集恢复 (5天以上)"]
+                },
+                budget: {
+                    title: "预算范围",
+                    options: ["经济型", "标准型", "尊贵型"]
+                }
+            },
+            radar: {
+                title: "可达成的理想状态",
+                lifting: "轮廓",
+                firmness: "紧致",
+                texture: "肤质",
+                glow: "光泽",
+                safety: "安全护屏"
+            },
+            save: "保存此设计方案",
+            badge: "水光肌成就解锁",
+            evaluation: "此诊断结果是否准确解决了您的困扰？",
+            retry: "您想调整疼痛或预算条件以查看其他可能性吗？",
+            finalCall: "将此报告保存为“最佳选择”并预约专家咨询"
+        },
         risks: {
             title: "风险评估协议",
             safe: "安全",
@@ -808,16 +991,16 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 },
                 dynamicTitle: {
                     patient: {
-                        main: "厌倦了皮肤试错？",
-                        sub: "发现AI驱动的“专属签名治疗”"
+                        main: "拒绝盲从，开启“私享皮肤设计”",
+                        sub: "AI为您精准匹配全球前1%的招牌方案"
                     },
                     doctor: {
-                        main: "不想再重复咨询？",
-                        sub: "将您的专业知识转化为吸引VIP患者的磁铁"
+                        main: "让医生的临床经验成为“数字资产”",
+                        sub: "告别价格战，用专业逻辑筛选全球顶级VIP"
                     }
                 },
                 dynamicDesc: {
-                    patient: "皮肤疲劳？AI为您通过个性化和全球连接找到安全的“签名治疗”。",
+                    patient: "疼痛、恢复期、预算——三重维度实时模拟，预见您的理想肌肤。",
                     doctor: "咨询疲劳？将您的专有技术转化为吸引VIP患者的资产。"
                 },
                 dynamicSubDesc: {
@@ -827,24 +1010,33 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 dynamicCta: {
                     patient: "获取我的免费皮肤报告",
                     doctor: "咨询签名注册"
-                }
+                },
+                floatingText: "发现您未曾知晓的“水光肌”答案。"
             },
             judgment: {
-                badge: "判断层已激活",
-                title: "我们先从",
-                titleHighlight: "不该做什么开始。",
-                quote: "如果他们从不说“不”，你为什么要相信“是”？",
-                desc: "在为您匹配任何治疗之前，我们的AI会分析您的疼痛耐受度、恢复期限制和皮肤风险因素，首先过滤掉不安全的选项。",
-                quoteKorean: "“我们首先过滤掉您不应该做的事情——痛觉耐受度、风险扭曲、疗效分析。”",
-                cards: {
-                    filter: { title: "已过滤的禁忌手术", desc: "示例：薄皮类型排除高能射频。" },
-                    safe: { title: "安全区优化", desc: "仅对符合您安全档案的方案进行排名。" }
-                },
-                mock: {
-                    title: "风险评估",
-                    level: "高",
-                    label: "恢复期风险",
-                    excluded: "🚫 已排除的选项"
+                badge: "v2.0 SYSTEM ONLINE",
+                title: "您的皮肤不是试验场。",
+                titleHighlight: "治疗前，先用数据进行‘预演’。",
+                desc: "厌倦了营销噱头和流水线式咨询？不要拿自己的脸做实验。我们分析您的临床变量，为您找到‘安全且最优’的方案。选择符合您皮肤逻辑的方案，而不仅仅是看价格。",
+                quote: "为了您的安全，我们会诚实地说‘不’。如果方案不符合您的皮肤逻辑，我们绝不推荐。",
+                cta: "开始我的皮肤设计",
+                simulator: {
+                    inputTitle: "设定您的治疗条件",
+                    outputTitle: "可达成的理想状态",
+                    sliders: {
+                        pain: "疼痛耐受度",
+                        downtime: "恢复期",
+                        budget: "预算范围",
+                        sessions: "期望疗程次数",
+                        speed: "见效速度"
+                    },
+                    radar: {
+                        lifting: "轮廓提拉",
+                        firmness: "紧致密度",
+                        texture: "肤质毛孔",
+                        glow: "焕采光泽",
+                        safety: "安全护屏"
+                    }
                 }
             },
             patients: {

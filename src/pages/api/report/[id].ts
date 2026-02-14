@@ -58,6 +58,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             primaryGoal = "Skin Improvement";
         }
 
+        const secondaryGoals = pFields.q1_goal_secondary_MASTER ? [pFields.q1_goal_secondary_MASTER] : [];
+        const locations = pFields.q_treatment_locations || [];
+
         // 2. Fetch Knowledge Base
         const [protocols, indications, doctors] = await Promise.all([
             base('Protocol_block').select().all(),
@@ -152,10 +155,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const tDowntime = downtimeTolerance || (lang === 'KO' ? '일상 복귀 가능' : 'manageable');
 
         const reasonWhy = template
-            .replace('{skin}', tSkin)
-            .replace('{pain}', tPain)
-            .replace('{goal}', tGoal)
-            .replace('{downtime}', tDowntime);
+            .replace('{skin}', String(tSkin))
+            .replace('{pain}', String(tPain))
+            .replace('{goal}', String(tGoal))
+            .replace('{downtime}', String(tDowntime));
 
 
         // Response Construction
@@ -172,7 +175,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     { subject: 'Efficacy', A: 90, fullMark: 100 },
                     { subject: 'Skin Fit', A: 95, fullMark: 100 },
                     { subject: 'Budget', A: 70, fullMark: 100 },
-                ] // Mock logic for now
+                ],
+                simulationData: {
+                    primaryIndication: primaryGoal,
+                    secondaryIndication: secondaryGoals[0] || null, // Just take first for now
+                    locations: locations
+                }
             },
             logic: {
                 terminalText: reasonWhy,

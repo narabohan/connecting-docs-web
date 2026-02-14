@@ -1,8 +1,9 @@
+// Force Rebuild v2
 import Head from 'next/head';
 import { useState } from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/landing/Hero';
-import JudgmentLayer from '@/components/landing/JudgmentLayer';
+import SkinSimulationContainer from '@/components/simulation/SkinSimulationContainer';
 import ForPatients from '@/components/landing/ForPatients';
 import ForDoctors from '@/components/landing/ForDoctors';
 import PricingTable from '@/components/landing/PricingTable';
@@ -25,7 +26,7 @@ export default function Home() {
 
       <main>
         <Hero language={currentLang} />
-        <JudgmentLayer language={currentLang} />
+        <SkinSimulationContainer language={currentLang} />
         <ForPatients language={currentLang} />
         <ForDoctors language={currentLang} />
         <div id="pricing">
