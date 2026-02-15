@@ -63,6 +63,23 @@ export interface TranslationStructure {
         retry: string;
         finalCall: string;
     };
+    curation: {
+        title: string;
+        ranking: {
+            rank1: { title: string; combo: string; reason: string; };
+            rank2: { title: string; combo: string; reason: string; };
+            rank3: { title: string; combo: string; reason: string; };
+        };
+        modal: {
+            logicTitle: string;
+            logicDesc: string;
+            visualTitle: string;
+            layersTitle: string;
+            radarTitle: string;
+            doctorTitle: string;
+            doctorCta: string;
+        };
+    };
     risks: {
         title: string;
         safe: string;
@@ -243,6 +260,35 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             evaluation: "Does this diagnostic accurately solve your concerns?",
             retry: "Would you like to adjust pain or budget conditions to see possibilities?",
             finalCall: "Save this report as 'Best Choice' and book consultation"
+        },
+        curation: {
+            title: "Your skin is not a testing ground. Discover your curated signature solutions.",
+            ranking: {
+                rank1: {
+                    title: "Glass Skin Booster",
+                    combo: "MNRF + Exosome",
+                    reason: "Microneedling creates channels for exosomes to penetrate, while RF tightens deep tissue. A dual-layer approach for ultimate glow."
+                },
+                rank2: {
+                    title: "InMode V-Line (Fat Killing)",
+                    combo: "InMode FX + Jawline Botox",
+                    reason: "High-voltage pulse permanently destroys fat cells, while RF tightens the skin. Botox relaxes the muscle for a sharp V-line."
+                },
+                rank3: {
+                    title: "Total Skin Solution",
+                    combo: "Genius + LaseMD",
+                    reason: "A complete overhaul: Genius rebuilds deep collagen, while LaseMD resurfaces the epidermis. The gold standard for texture and pores."
+                }
+            },
+            modal: {
+                logicTitle: "Clinical Logic Analysis",
+                logicDesc: "This solution targets the deep SMAS layer for lifting while simultaneously hydrating the dermis. The synergy creates a 'Glass Skin' effect that standalone treatments cannot achieve.",
+                visualTitle: "Target Exploration",
+                layersTitle: "Depth Penetration",
+                radarTitle: "Projected Outcome",
+                doctorTitle: "Top 3 Doctors for this Logic",
+                doctorCta: "Consult with this Doctor (Send My Blueprint)"
+            }
         },
         risks: {
             title: "RISK ASSESSMENT PROTOCOL",
@@ -486,6 +532,35 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             retry: "통증이나 예산 조건을 조정하여 다른 가능성을 확인하시겠습니까?",
             finalCall: "이 리포트를 '최적의 선택'으로 저장하고 상담 예약하기"
         },
+        curation: {
+            title: "피부는 실험실이 아닙니다. 당신을 위한 최적의 정답을 먼저 확인하세요.",
+            ranking: {
+                rank1: {
+                    title: "글래스 스킨 부스터",
+                    combo: "MNRF + 엑소좀",
+                    reason: "미세 바늘이 엑소좀 침투 경로를 열고, 고주파가 심부 조직을 조입니다. 광채와 탄력을 동시에 잡는 듀얼 레이어 솔루션."
+                },
+                rank2: {
+                    title: "인모드 V라인 (지방 파괴)",
+                    combo: "인모드 FX + 사각턱 보톡스",
+                    reason: "고전압 펄스로 지방 세포를 영구 파괴하고 고주파로 탄력을 더합니다. 보톡스로 근육을 축소해 날렵한 V라인을 완성합니다."
+                },
+                rank3: {
+                    title: "토탈 스킨 솔루션",
+                    combo: "지니어스 + 라셈드",
+                    reason: "완벽한 피부 리셋: 지니어스가 깊은 콜라겐을 재생하고 라셈드가 표피를 매끄럽게 합니다. 모공과 흉터를 위한 골드 스탠다드."
+                }
+            },
+            modal: {
+                logicTitle: "임상 로직 분석",
+                logicDesc: "이 솔루션은 깊은 SMAS 층을 타겟팅하여 리프팅 효과를 주면서, 동시에 진피층에 수분을 공급합니다. 단독 시술로는 얻을 수 없는 '유리알 광채' 시너지를 창출합니다.",
+                visualTitle: "타겟 탐색",
+                layersTitle: "침투 깊이",
+                radarTitle: "예상 결과",
+                doctorTitle: "이 로직을 시술하는 Top 3 의료진",
+                doctorCta: "이 원장님께 상담 신청 (블루프린트 전송)"
+            }
+        },
         risks: {
             title: "위험성 평가 프로토콜",
             safe: "안전",
@@ -728,6 +803,35 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             retry: "痛みや予算の条件を調整して、他の可能性を確認しますか？",
             finalCall: "このレポートを「最適な選択」として保存し、カウンセリングを予約する"
         },
+        curation: {
+            title: "お肌に試行錯誤はいりません。あなたに最適化された正解を今すぐ確認。",
+            ranking: {
+                rank1: {
+                    title: "水光ガラス肌",
+                    combo: "ウルセラ + スキンブースター",
+                    reason: "真皮層の再生とSMAS層の収縮の完璧な調和。"
+                },
+                rank2: {
+                    title: "Vライン形成",
+                    combo: "インモードFX + エラボトックス",
+                    reason: "非侵襲的な脂肪除去と筋肉の弛緩で実現するシャープな輪郭。"
+                },
+                rank3: {
+                    title: "毛穴・キメリセット",
+                    combo: "ポテンツァ + エクソソーム",
+                    reason: "フラクショナルエネルギーによる毛穴縮小と傷跡の再生。"
+                }
+            },
+            modal: {
+                logicTitle: "臨床ロジック分析",
+                logicDesc: "このソリューションは、深いSMAS層をターゲットにしてリフティング効果を与えながら、同時に真皮層に水分を供給します。単独施術では得られない「水光」シナジーを生み出します。",
+                visualTitle: "ターゲット探索",
+                layersTitle: "浸透深度",
+                radarTitle: "予想結果",
+                doctorTitle: "このロジックを施術するTop 3医師",
+                doctorCta: "この医師に相談する (青写真を送信)"
+            }
+        },
         risks: {
             title: "リスク評価プロトコル",
             safe: "安全",
@@ -969,6 +1073,35 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             evaluation: "此诊断结果是否准确解决了您的困扰？",
             retry: "您想调整疼痛或预算条件以查看其他可能性吗？",
             finalCall: "将此报告保存为“最佳选择”并预约专家咨询"
+        },
+        curation: {
+            title: "皮肤不是实验室。立即获取为您精准定制的方案。",
+            ranking: {
+                rank1: {
+                    title: "水光玻璃肌",
+                    combo: "超声刀 (Ulthera) + 水光针",
+                    reason: "真皮层再生与筋膜层收缩的完美结合。"
+                },
+                rank2: {
+                    title: "V脸轮廓",
+                    combo: "InMode FX + 下颌角肉毒素",
+                    reason: "非侵入式溶脂与肌肉放松，打造精致下颌线。"
+                },
+                rank3: {
+                    title: "毛孔/痘坑重置",
+                    combo: "Potenza + 外泌体",
+                    reason: "点阵射频能量同时实现毛孔缩小与疤痕修复。"
+                }
+            },
+            modal: {
+                logicTitle: "临床逻辑分析",
+                logicDesc: "该方案针对深层SMAS层进行提拉，同时为真皮层补充水分。这种协同效应创造了单项治疗无法实现的“水光玻璃肌”效果。",
+                visualTitle: "靶点探索",
+                layersTitle: "渗透深度",
+                radarTitle: "预期结果",
+                doctorTitle: "执行此逻辑的 Top 3 医生",
+                doctorCta: "咨询此医生 (发送蓝图)"
+            }
         },
         risks: {
             title: "风险评估协议",
