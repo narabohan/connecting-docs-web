@@ -1,4 +1,4 @@
-import SignUpForm from '../auth/SignUpForm';
+import SignupForm from '../auth/SignupForm';
 import { Scan, Database, Shield } from 'lucide-react';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
 
@@ -56,8 +56,10 @@ export default function ForPatients({ language = 'EN' }: ForPatientsProps) {
                 </div>
 
                 {/* Right: Sign Up Form */}
-                <div className="flex justify-center">
-                    <SignUpForm defaultType="PATIENT" language={language} />
+                <div className="flex justify-center w-full">
+                    <div className="w-full max-w-md bg-white p-6 rounded-xl">
+                        <SignupForm role="patient" />
+                    </div>
                 </div>
             </div>
         </section>

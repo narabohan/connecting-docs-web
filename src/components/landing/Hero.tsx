@@ -5,14 +5,21 @@ import { useState, useEffect } from 'react';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
 import { cn } from '@/utils/cn';
 
+// import DiagnosisWizard, { WizardData } from './DiagnosisWizard'; // Moved to index.tsx
+import { WizardData } from './DiagnosisWizard';
+
 interface HeroProps {
     language?: LanguageCode;
+    onDiagnosisComplete?: (data: WizardData) => void;
+    onStartAnalysis?: () => void;
 }
 
 type UserType = 'patient' | 'doctor';
 
-export default function Hero({ language = 'EN' }: HeroProps) {
+export default function Hero({ language = 'EN', onDiagnosisComplete, onStartAnalysis }: HeroProps) {
     const [userType, setUserType] = useState<UserType>('patient');
+    // const [isWizardOpen, setIsWizardOpen] = useState(false); // State lifted to parent
+
 
     const t = (REPORT_TRANSLATIONS[language]?.landing || REPORT_TRANSLATIONS['EN'].landing).hero;
 
@@ -119,19 +126,31 @@ export default function Hero({ language = 'EN' }: HeroProps) {
                     </motion.div>
 
                     <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
-                        <Link
-                            href={userType === 'patient' ? "#signup" : "#doctors"}
-                            className={cn(
-                                "group px-8 py-4 rounded-full font-bold text-lg transition-all flex items-center gap-2 shadow-xl hover:shadow-2xl hover:-translate-y-1",
-                                userType === 'patient'
-                                    ? "bg-white text-black hover:bg-gray-100"
-                                    : "bg-emerald-500 text-white hover:bg-emerald-400"
-                            )}
-                        >
-                            {userType === 'patient' ? t.dynamicCta.patient : t.dynamicCta.doctor}
-                            <span className="text-xs font-normal opacity-70 ml-1">(Free – Limited Access)</span>
-                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                        </Link>
+                        {userType === 'patient' ? (
+                            <button
+                                onClick={onStartAnalysis}
+                                className={cn(
+                                    "group px-8 py-4 rounded-full font-bold text-lg transition-all flex items-center gap-2 shadow-xl hover:shadow-2xl hover:-translate-y-1",
+                                    "bg-white text-black hover:bg-gray-100"
+                                )}
+                            >
+                                {t.dynamicCta.patient}
+                                <span className="text-xs font-normal opacity-70 ml-1">(Free AI Analysis)</span>
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                        ) : (
+                            <Link
+                                href="#doctors"
+                                className={cn(
+                                    "group px-8 py-4 rounded-full font-bold text-lg transition-all flex items-center gap-2 shadow-xl hover:shadow-2xl hover:-translate-y-1",
+                                    "bg-emerald-500 text-white hover:bg-emerald-400"
+                                )}
+                            >
+                                {t.dynamicCta.doctor}
+                                <span className="text-xs font-normal opacity-70 ml-1">(Join Network)</span>
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                        )}
 
                     </div>
 
@@ -151,6 +170,8 @@ export default function Hero({ language = 'EN' }: HeroProps) {
                     </div>
                 </motion.div>
             </div>
-        </section>
+
+            {/* Wizard Moved Layout */}
+        </section >
     );
 }

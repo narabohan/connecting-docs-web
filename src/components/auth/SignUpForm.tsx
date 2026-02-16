@@ -1,114 +1,125 @@
-import { useState } from 'react';
-import { Loader2, CheckCircle, User, Stethoscope } from 'lucide-react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
 
-interface SignUpFormProps {
-    defaultType?: 'PATIENT' | 'DOCTOR';
-    language?: LanguageCode;
+interface SignupFormProps {
+    role: 'patient' | 'doctor';
 }
 
-export default function SignUpForm({ defaultType = 'PATIENT', language = 'EN' }: SignUpFormProps) {
-    const [userType, setUserType] = useState<'PATIENT' | 'DOCTOR'>(defaultType);
-    const [loading, setLoading] = useState(false);
-    const [email, setEmail] = useState('');
-    const [name, setName] = useState('');
+const SignupForm: React.FC<SignupFormProps> = ({ role }) => {
     const router = useRouter();
-    const t = (REPORT_TRANSLATIONS[language] || REPORT_TRANSLATIONS['EN']).auth;
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
+        setError(null);
 
-        // Simulation of API Call
-        setTimeout(() => {
-            console.log(`Signed up as ${userType}:`, { name, email });
-            setLoading(false);
-            if (userType === 'PATIENT') {
-                router.push(`/report/rec19n3q79xI4YLQD?lang=${language}`);
-            } else {
-                alert("Doctor Application Received. We will contact you.");
+        const formData = new FormData(e.currentTarget);
+        const data = Object.fromEntries(formData.entries());
+
+        // Process Modality Tags for Doctors (Multi-select)
+        if (role === 'doctor') {
+            const specialties = formData.getAll('specialties');
+            data.specialties = specialties as any;
+        }
+
+        // Include role in payload
+        const payload = { ...data, role };
+
+        try {
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await res.json();
+
+            if (!res.ok) {
+                throw new Error(result.error || 'Registration failed');
             }
-        }, 1500);
+
+            // Success - Redirect or Show Message
+            // alert('Registration Successful!'); // Removed alert for smoother flow
+            if (role === 'patient') {
+                router.push('/?start_wizard=true');
+            } else {
+                router.push('/doctor/onboarding');
+            }
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <div className="w-full max-w-md bg-[#0A0A0A] border border-white/10 rounded-2xl p-8 relative overflow-hidden">
-            {/* Toggle Switch */}
-            <div className="flex bg-white/5 p-1 rounded-lg mb-8 relative">
-                <div
-                    className={`absolute inset-y-1 w-[calc(50%-4px)] bg-blue-600 rounded-md transition-all duration-300 ${userType === 'DOCTOR' ? 'left-[calc(50%+4px)]' : 'left-1'}`}
-                />
-                <button
-                    onClick={() => setUserType('PATIENT')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md relative z-10 transition-colors ${userType === 'PATIENT' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
-                >
-                    <User className="w-4 h-4" />
-                    {t.toggles.patient}
-                </button>
-                <button
-                    onClick={() => setUserType('DOCTOR')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md relative z-10 transition-colors ${userType === 'DOCTOR' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
-                >
-                    <Stethoscope className="w-4 h-4" />
-                    {t.toggles.doctor}
-                </button>
+        <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
+            {/* Common Fields */}
+            <div>
+                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <input required name="name" type="text" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2 border" />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <input required name="email" type="email" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2 border" />
             </div>
 
-            <div className="mb-6 text-center">
-                <h3 className="text-2xl font-bold text-white mb-2">
-                    {userType === 'PATIENT' ? t.title.patient : t.title.doctor}
-                </h3>
-                <p className="text-sm text-gray-400">
-                    {userType === 'PATIENT' ? t.subtitle.patient : t.subtitle.doctor}
-                </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Patient Specific: Password (MVP) */}
+            {role === 'patient' && (
                 <div>
-                    <label className="block text-xs font-mono text-gray-500 mb-1 uppercase">{t.fields.name}</label>
-                    <input
-                        type="text"
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
-                        placeholder={userType === 'PATIENT' ? "Jane Doe" : "Dr. John Smith"}
-                    />
+                    <label className="block text-sm font-medium text-gray-700">Password</label>
+                    <input required name="password" type="password" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2 border" />
                 </div>
-                <div>
-                    <label className="block text-xs font-mono text-gray-500 mb-1 uppercase">
-                        {userType === 'PATIENT' ? t.fields.email.patient : t.fields.email.doctor}
-                    </label>
-                    <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
-                        placeholder="you@example.com"
-                    />
-                </div>
+            )}
 
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-lg transition-all flex items-center justify-center gap-2 mt-4"
-                >
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
-                    {userType === 'PATIENT' ? t.button.patient : t.button.doctor}
-                </button>
-            </form>
+            {/* Doctor Specific Fields */}
+            {role === 'doctor' && (
+                <>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Hospital Name</label>
+                        <input required name="hospital_name" type="text" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2 border" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">License Number</label>
+                        <input required name="license_number" type="text" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2 border" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Country</label>
+                        <select name="country" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2 border">
+                            <option value="South Korea (KR)">South Korea (KR)</option>
+                            <option value="Japan (JP)">Japan (JP)</option>
+                            <option value="China (CN)">China (CN)</option>
+                            <option value="USA (US)">USA (US)</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Key Modalities (Select all that apply)</label>
+                        <div className="space-y-2">
+                            {["Lifting (Ulthera/Thermage)", "Pigmentation (Pico/Toning)", "Injectables (Botox/Filler)", "Skin Booster (Rejuran/Exosome)", "Anti-Aging", "Acne/Scars"].map((tag) => (
+                                <div key={tag} className="flex items-center">
+                                    <input name="specialties" type="checkbox" value={tag} className="h-4 w-4 text-black border-gray-300 rounded focus:ring-black" />
+                                    <label className="ml-2 block text-sm text-gray-900">{tag}</label>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </>
+            )}
 
-            <div className="mt-6 text-center">
-                <p className="text-xs text-gray-500">
-                    {t.footer}
-                </p>
-            </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
 
-            {/* Decorative Elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[50px] pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-teal-500/10 blur-[50px] pointer-events-none" />
-        </div>
+            <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50"
+            >
+                {loading ? 'Processing...' : (role === 'patient' ? 'Sign Up' : 'Apply for Registration')}
+            </button>
+        </form>
     );
-}
+};
+
+export default SignupForm;

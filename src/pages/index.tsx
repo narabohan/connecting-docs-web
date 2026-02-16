@@ -1,6 +1,5 @@
-// Force Rebuild v2
 import Head from 'next/head';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/landing/Hero';
 import SignatureRanking from '@/components/curation/SignatureRanking';
@@ -11,14 +10,34 @@ import PricingTable from '@/components/landing/PricingTable';
 import Footer from '@/components/Footer';
 import { LanguageCode } from '@/utils/translations';
 
+import { WizardData } from '@/components/landing/DiagnosisWizard';
+import DiagnosisWizard from '@/components/landing/DiagnosisWizard';
+import { useRouter } from 'next/router';
+
 export default function Home() {
+  const router = useRouter();
   const [currentLang, setCurrentLang] = useState<LanguageCode>('EN');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRank, setSelectedRank] = useState<1 | 2 | 3 | null>(null);
+  const [wizardData, setWizardData] = useState<WizardData | null>(null);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+
+  useEffect(() => {
+    if (router.query.start_wizard) {
+      setIsWizardOpen(true);
+      // Optional: clear query param
+      // router.replace('/', undefined, { shallow: true });
+    }
+  }, [router.query]);
 
   const handleSelectSolution = (rank: 1 | 2 | 3) => {
     setSelectedRank(rank);
     setIsModalOpen(true);
+  };
+
+  const handleDiagnosisComplete = (data: WizardData) => {
+    setWizardData(data);
+    setIsModalOpen(true); // Open modal to trigger analysis
   };
 
   return (
@@ -33,8 +52,19 @@ export default function Home() {
       <Header currentLang={currentLang} onLangChange={setCurrentLang} />
 
       <main>
-        <Hero language={currentLang} />
+        <Hero language={currentLang} onDiagnosisComplete={handleDiagnosisComplete} onStartAnalysis={() => setIsWizardOpen(true)} />
         <SignatureRanking language={currentLang} onSelectSolution={handleSelectSolution} />
+
+        {/* Diagnosis Wizard (Lifted) */}
+        <DiagnosisWizard
+          isOpen={isWizardOpen}
+          onClose={() => setIsWizardOpen(false)}
+          onComplete={(data) => {
+            handleDiagnosisComplete(data);
+            setIsWizardOpen(false);
+          }}
+          language={currentLang}
+        />
 
         {/* Deep Dive Modal */}
         <DeepDiveModal
@@ -42,6 +72,7 @@ export default function Home() {
           onClose={() => setIsModalOpen(false)}
           rank={selectedRank}
           language={currentLang}
+          tallyData={wizardData}
         />
 
         <ForPatients language={currentLang} />
