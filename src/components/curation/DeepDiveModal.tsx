@@ -1,12 +1,13 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
-import { X, ArrowRight, CheckCircle, Shield, Award, Sparkles, Loader2, RefreshCw } from 'lucide-react';
+import { X, ArrowRight, CheckCircle, Shield, Award, Sparkles, Loader2, RefreshCw, Download, Sliders, Settings2, MapPin, Star, Stethoscope, ChevronRight } from 'lucide-react';
 import FaceMannequin from '@/components/simulation/FaceMannequin';
 import SkinLayerSection from '@/components/simulation/SkinLayerSection';
 import LiveRadar from '@/components/simulation/LiveRadar';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { jsPDF } from 'jspdf';
 
 interface DeepDiveModalProps {
     isOpen: boolean;
@@ -35,18 +36,38 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Matching State
+    const [matches, setMatches] = useState<any[]>([]);
+    const [matchLoading, setMatchLoading] = useState(false);
+
+    // Tuning State
+    const [isTuning, setIsTuning] = useState(false);
+    const [tuningParams, setTuningParams] = useState({
+        painTolerance: 'Moderate',
+        downtimeTolerance: 'Short (2-3 days)',
+        budget: 'Standard'
+    });
+
     // Fetch Analysis when Modal Opens
     useEffect(() => {
         if (isOpen && rank && tallyData) {
-            fetchAnalysis();
+            // Initialize tuning params from tallyData if available
+            if (tallyData) {
+                setTuningParams({
+                    painTolerance: tallyData.painTolerance || 'Moderate',
+                    downtimeTolerance: tallyData.downtimeTolerance || 'Short (2-3 days)',
+                    budget: tallyData.budget || 'Standard'
+                });
+            }
+            fetchAnalysis(tallyData);
         } else if (isOpen && rank && !tallyData) {
             // Static mode: No API call needed, UI uses rankInfo
             setAnalysisData(null);
         }
     }, [isOpen, rank, tallyData]);
 
-    const fetchAnalysis = async () => {
-        if (!tallyData) return;
+    const fetchAnalysis = async (requestData: any) => {
+        if (!requestData) return;
 
         setLoading(true);
         setError(null);
@@ -55,7 +76,7 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    ...tallyData,
+                    ...requestData,
                     userId: user?.id,
                     userEmail: user?.email
                 }),
@@ -65,12 +86,97 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
 
             const result = await res.json();
             setAnalysisData(result);
+
+            // Fetch Matches if reportId exists
+            if (result.reportId) {
+                fetchMatches(result.reportId);
+            }
         } catch (err) {
             console.error(err);
             setError("Failed to load AI analysis. Showing standard protocol.");
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchMatches = async (reportId: string) => {
+        setMatchLoading(true);
+        try {
+            const res = await fetch('/api/engine/match', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reportId })
+            });
+            const data = await res.json();
+            setMatches(data.matches || []);
+
+            // Trigger Email (Mock)
+            if (data.matches && data.matches.length > 0) {
+                fetch('/api/email/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: 'patient@example.com', // Mock recipient
+                        subject: 'Your ConnectingDocs Analysis & Matches',
+                        data: {
+                            reportId: reportId,
+                            matchCount: data.matches.length,
+                            topMatch: data.matches[0].doctorName
+                        }
+                    })
+                }).catch(err => console.error("Email trigger failed", err));
+            }
+        } catch (e) {
+            console.error("Match fetch failed", e);
+        } finally {
+            setMatchLoading(false);
+        }
+    };
+
+    const handleReTune = () => {
+        // Merge original tallyData with new tuning params
+        const newRequest = {
+            ...tallyData,
+            ...tuningParams
+        };
+        fetchAnalysis(newRequest);
+        setIsTuning(false);
+    };
+
+    const handleDownloadPDF = () => {
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFontSize(20);
+        doc.text("Connecting Docs - Clinical Report", 20, 20);
+
+        doc.setFontSize(12);
+        doc.text(`Generated for: ${user?.email || 'Guest'}`, 20, 30);
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 36);
+
+        // Protocol
+        if (displayData) {
+            doc.setFontSize(16);
+            doc.setTextColor(0, 100, 200);
+            doc.text(`Recommended Protocol: ${displayData.protocolName}`, 20, 50);
+
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            const splitReason = doc.splitTextToSize(`Clinical Logic: ${displayData.reason}`, 170);
+            doc.text(splitReason, 20, 60);
+
+            // Specs
+            let yPos = 60 + (splitReason.length * 5) + 10;
+            doc.text(`Downtime: ${displayData.downtime || 'N/A'}`, 20, yPos);
+            doc.text(`Pain Level: ${displayData.painLevel}/3`, 20, yPos + 6);
+        }
+
+        // Footer
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text("This report is generated by AI Key Doctor Logic.", 20, 280);
+
+        doc.save("ConnectingDocs_Report.pdf");
     };
 
     if (!isOpen || !rank || !t) return null;
@@ -88,6 +194,7 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
         radar: { lifting: aiRankData.score, firmness: 80, texture: 70, glow: 60, safety: 90 },
         protocolName: aiRankData.protocol,
         reason: aiRankData.reason,
+        downtime: aiRankData.downtime,
         painLevel: aiRankData.pain === 'High' ? 3 : aiRankData.pain === 'Moderate' ? 2 : 1
     } : {
         // Fallback to Static Data from Translations
@@ -97,6 +204,7 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
         radar: { lifting: 85, firmness: 80, texture: 75, glow: 70, safety: 95 },
         protocolName: rankInfo.title + " (" + rankInfo.combo + ")",
         reason: rankInfo.reason,
+        downtime: "N/A",
         painLevel: 2
     };
 
@@ -139,10 +247,85 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                 {loading ? "Claude AI is reviewing your skin profile to build a custom protocol." : (displayData.reason || rankInfo.reason)}
                             </p>
                         </div>
-                        <button onClick={onClose} className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors">
-                            <X className="w-6 h-6" />
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setIsTuning(!isTuning)}
+                                className={`p-2 rounded-full transition-colors ${isTuning ? 'bg-cyan-500 text-black' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                                title="Tune Protocol"
+                            >
+                                <Settings2 className="w-6 h-6" />
+                            </button>
+                            <button
+                                onClick={handleDownloadPDF}
+                                className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors"
+                                title="Download PDF"
+                            >
+                                <Download className="w-6 h-6" />
+                            </button>
+                            <button onClick={onClose} className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
                     </div>
+
+                    {/* Tuning Panel */}
+                    <AnimatePresence>
+                        {isTuning && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="bg-[#111116] border-b border-white/10 overflow-hidden"
+                            >
+                                <div className="p-6 grid md:grid-cols-4 gap-6 items-end">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Pain Tolerance</label>
+                                        <select
+                                            value={tuningParams.painTolerance}
+                                            onChange={(e) => setTuningParams(prev => ({ ...prev, painTolerance: e.target.value }))}
+                                            className="w-full bg-black/50 border border-white/20 rounded-lg p-2 text-white text-sm focus:border-cyan-500 outline-none"
+                                        >
+                                            <option value="Low">Low (Sensitive)</option>
+                                            <option value="Moderate">Moderate</option>
+                                            <option value="High">High (Strong)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Downtime</label>
+                                        <select
+                                            value={tuningParams.downtimeTolerance}
+                                            onChange={(e) => setTuningParams(prev => ({ ...prev, downtimeTolerance: e.target.value }))}
+                                            className="w-full bg-black/50 border border-white/20 rounded-lg p-2 text-white text-sm focus:border-cyan-500 outline-none"
+                                        >
+                                            <option value="None">None (Immediate)</option>
+                                            <option value="Short (2-3 days)">Short (2-3 days)</option>
+                                            <option value="Long (1 week+)">Long (1 week+)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Budget</label>
+                                        <select
+                                            value={tuningParams.budget}
+                                            onChange={(e) => setTuningParams(prev => ({ ...prev, budget: e.target.value }))}
+                                            className="w-full bg-black/50 border border-white/20 rounded-lg p-2 text-white text-sm focus:border-cyan-500 outline-none"
+                                        >
+                                            <option value="Economy">Economy</option>
+                                            <option value="Standard">Standard</option>
+                                            <option value="Premium">Premium</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        onClick={handleReTune}
+                                        disabled={loading}
+                                        className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                                    >
+                                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                                        Update Protocol
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     {/* Scrollable Content */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -260,7 +443,69 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Matched Doctors Section */}
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                        <div className="w-1 h-5 bg-blue-500 rounded-full" />
+                                        Top Matched Specialists
+                                    </h3>
+
+                                    {matchLoading ? (
+                                        <div className="p-8 text-center text-gray-500 border border-white/5 rounded-2xl bg-white/5">
+                                            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                                            Running Clinical Match...
+                                        </div>
+                                    ) : matches.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {matches.map((doc, idx) => (
+                                                <div key={idx} className="group relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/50 rounded-xl p-4 transition-all duration-300">
+                                                    {/* Badge */}
+                                                    {doc.score >= 90 && (
+                                                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-yellow-300/30 flex items-center gap-1">
+                                                            <Star className="w-3 h-3 fill-white" />
+                                                            {doc.score}% MATCH
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex justify-between items-start mb-3">
+                                                        <div>
+                                                            <h4 className="font-bold text-white text-base">{doc.doctorName}</h4>
+                                                            <div className="flex items-center gap-1 text-gray-400 text-xs mt-0.5">
+                                                                <MapPin className="w-3 h-3" />
+                                                                {doc.hospitalName}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="text-cyan-400 font-bold text-sm tracking-wide">{doc.solutionTitle}</div>
+                                                            <div className="text-gray-500 text-xs">{doc.priceRange}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Match Details */}
+                                                    <div className="space-y-1 mb-3">
+                                                        {doc.matchDetails.slice(0, 2).map((detail: string, i: number) => (
+                                                            <div key={i} className="flex items-start gap-2 text-xs text-gray-300">
+                                                                <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5 flex-shrink-0" />
+                                                                {detail}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    <button className="w-full py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-bold rounded-lg border border-cyan-500/30 transition-colors flex items-center justify-center gap-1 group-hover:text-cyan-300">
+                                                        View Clinical Profile <ChevronRight className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="p-6 text-center text-gray-500 border border-white/5 rounded-2xl bg-white/5 text-sm">
+                                            No direct matches found yet. Our network is expanding.
+                                        </div>
+                                    )}
+                                </div>
                             </div>
+
                         )}
                     </div>
 
@@ -278,6 +523,6 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                     </div>
                 </div>
             </motion.div>
-        </AnimatePresence>
+        </AnimatePresence >
     );
 }

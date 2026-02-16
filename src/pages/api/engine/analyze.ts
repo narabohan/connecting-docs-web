@@ -173,7 +173,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 }
 
                 if (userId) {
-                    await base('Reports').create([
+                    const reportRecords = await base('Reports').create([
                         {
                             fields: {
                                 User: [userId],
@@ -183,7 +183,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             }
                         }
                     ]);
-                    console.log(`[REPORT] Saved for ${data.userEmail}`);
+                    const reportId = reportRecords[0].id;
+                    console.log(`[REPORT] Saved for ${data.userEmail} (ID: ${reportId})`);
+
+                    // Inject reportId into result so frontend can use it for matching
+                    (result as any).reportId = reportId;
+
+                    // --- MOCK EMAIL TRIGGER ---
+                    const userName = 'Patient'; // Ideally fetch name from User record if available, or just use generic
+
+                    const emailContent = `
+===========================================================
+[EMAIL MOCK] Sending to: ${data.userEmail}
+Subject: [Connecting Docs] Your Personal Skin Analysis Report 📄
+
+Hello ${userName},
+
+Based on your ${data.skinType} skin profile and concerns about ${data.areas.join(', ')},
+our AI Clinical Engine has generated a personalized treatment plan.
+
+🏆 Top Recommendation: ${result.rank1.protocol}
+💡 Why? ${result.rank1.reason}
+
+View your full interactive report and customize your plan here:
+👉 ${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/report/${reportId}
+
+(This is an automated message from Connecting Docs)
+===========================================================
+`;
+                    console.log(emailContent);
+                    // --------------------------
                 }
             } catch (dbError) {
                 console.error("Failed to save report to Airtable:", dbError);

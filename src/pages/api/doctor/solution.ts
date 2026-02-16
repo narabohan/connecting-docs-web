@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { email, title, concept, description, machines, downtime, pain, price } = req.body;
+    const { email, title, concept, description, machines, downtime, pain, price, skin_boosters, injection_methods, treatment_focus } = req.body;
 
     if (!email || !title) {
         return res.status(400).json({ error: 'Missing required fields' });
@@ -28,7 +28,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const doctorId = doctorRecords[0].id;
 
         // 2. Create Signature Solution Record
-        // Ensure "Signature_Solutions" table exists in Airtable with these fields
         await base('Signature_Solutions').create([
             {
                 fields: {
@@ -37,6 +36,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     Concept: concept,
                     Description: description,
                     Devices: machines, // Text field
+                    Skin_Boosters: skin_boosters, // New Field
+                    Injection_Methods: injection_methods, // New Field
+                    Treatment_Focus: treatment_focus, // New Field
                     Downtime: downtime, // Single select
                     Pain_Level: pain,    // Single select
                     Price_Range: price,
