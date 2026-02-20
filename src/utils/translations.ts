@@ -162,8 +162,9 @@ export interface TranslationStructure {
                 };
                 doctor: {
                     basic: { name: string; price: string; period: string; cta: string; features: string[]; missing: string[]; };
-                    partner: { name: string; price: string; period: string; cta: string; features: string[]; missing: string[]; };
-                    enterprise: { name: string; price: string; period: string; cta: string; features: string[]; missing: string[]; };
+                    standard: { name: string; price: string; period: string; cta: string; features: string[]; missing: string[]; };
+                    premium: { name: string; price: string; period: string; cta: string; features: string[]; missing: string[]; };
+                    platinum: { name: string; price: string; period: string; cta: string; features: string[]; missing: string[]; };
                 };
             };
             mostPopular: string;
@@ -392,49 +393,57 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                             price: "$0",
                             period: "/forever",
                             cta: "Start Free",
-                            features: ["3 AI Clinical Reports", "Basic Skin Scoring", "Standard Matching", "Community Support"],
-                            missing: ["Home Care Integration", "Re-Visit Tracking", "Concierge Booking"]
+                            features: ["3 AI Clinical Reports", "Basic Skin Score", "Standard Matching", "Community Support"],
+                            missing: ["Booking System", "Risk Analysis", "AI Pre/Post-care Chatbot"]
                         },
                         standard: {
                             name: "Standard",
-                            price: "$9.99",
+                            price: "$9.90",
                             period: "/month",
                             cta: "Upgrade",
-                            features: ["Unlimited Reports", "Detailed Risk Analysis", "Home Care Integration", "Priority Matching", "Quarterly Skin Audit"],
-                            missing: ["Concierge Booking"]
+                            features: ["12 Reports/Month", "Detailed Risk Analysis", "Clinic Booking System", "Priority Matching", "Quarterly Skin Audit"],
+                            missing: ["AI Pre/Post-care Chatbot", "VIP Priority Booking"]
                         },
                         premium: {
                             name: "Premium",
-                            price: "$29.99",
+                            price: "$29.00",
                             period: "/month",
                             cta: "Go Premium",
-                            features: ["Everything in Standard", "Concierge Booking", "VIP Clinic Access", "1:1 Doctor Chat", "Annual Genetic Test"],
+                            features: ["Unlimited Reports", "VIP Priority Booking", "AI Pre/Post-care Chatbot", "1:1 Doctor Chat", "Full Risk Analysis"],
                             missing: []
                         }
                     },
                     doctor: {
                         basic: {
                             name: "Basic",
-                            price: "Free",
-                            period: "",
-                            cta: "Join Network",
-                            features: ["List Profile", "Upload 1 Signature Solution", "5 Leads / Month"],
-                            missing: ["Unlimited Matching", "Dev Support", "Data Licensing"]
+                            price: "$0",
+                            period: "/forever",
+                            cta: "Join Free",
+                            features: ["1 Signature Solution (Basic tier)", "Profile Listing", "Standard Search Exposure"],
+                            missing: ["Standard/VIP Solutions", "4-Language Localization", "Top-Tier Exposure"]
                         },
-                        partner: {
-                            name: "Partner",
-                            price: "$199",
+                        standard: {
+                            name: "Standard",
+                            price: "$299",
                             period: "/month",
-                            cta: "Partner Up",
-                            features: ["Unlimited Matching", "Upload 5 Solutions", "Dev Support", "Verified Badge", "Priority Listing"],
-                            missing: ["Reasoning OS Access", "Data Licensing"]
+                            cta: "Start Standard",
+                            features: ["3 Solutions (Basic + Standard + VIP)", "4-Language Auto-Localization", "Verified Badge", "Priority Listing", "Patient Analytics"],
+                            missing: ["Top-Tier Search Exposure", "Enhanced VIP Solution Detail", "Global VIP Network"]
                         },
-                        enterprise: {
-                            name: "Enterprise",
-                            price: "$499",
+                        premium: {
+                            name: "Premium",
+                            price: "$599",
                             period: "/month",
-                            cta: "Contact Sales",
-                            features: ["Everything in Partner", "Reasoning OS Access", "Data Licensing", "Custom API Access", "White Label Reports"],
+                            cta: "Go Premium",
+                            features: ["5 Solutions incl. Enhanced VIP", "Top-Tier Search Exposure", "Enhanced VIP Solution Detail Page", "Dedicated Patient Concierge", "Full Demographics Analytics"],
+                            missing: ["Unlimited Solutions", "Global VIP Network Membership"]
+                        },
+                        platinum: {
+                            name: "Platinum",
+                            price: "$1,499+",
+                            period: "/month",
+                            cta: "Contact Us",
+                            features: ["Unlimited Signature Solutions", "Global VIP Continuous Care Network", "Dedicated Global Account Manager", "Custom API & White Label", "Data Licensing"],
                             missing: []
                         }
                     }
@@ -663,49 +672,57 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                             price: "₩0",
                             period: "/평생",
                             cta: "무료 시작",
-                            features: ["3 AI Clinical Reports", "Basic Skin Scoring", "Standard Matching", "Community Support"],
-                            missing: ["Home Care Integration", "Re-Visit Tracking", "Concierge Booking"]
+                            features: ["3회 AI 임상 리포트", "기본 피부 점수", "표준 매칭", "커뮤니티 지원"],
+                            missing: ["예약 시스템", "리스크 분석", "AI 케어 챗봇"]
                         },
                         standard: {
                             name: "스탠다드",
-                            price: "₩12,000",
+                            price: "₩13,000",
                             period: "/월",
                             cta: "업그레이드",
-                            features: ["Unlimited Reports", "Detailed Risk Analysis", "Home Care Integration", "Priority Matching", "Quarterly Skin Audit"],
-                            missing: ["Concierge Booking"]
+                            features: ["월 12회 리포트", "상세 리스크 분석", "클리닉 예약 시스템", "우선 매칭", "분기별 피부 감사"],
+                            missing: ["AI 케어 챗봇", "VIP 우선 예약"]
                         },
                         premium: {
                             name: "프리미엄",
-                            price: "₩36,000",
+                            price: "₩39,000",
                             period: "/월",
                             cta: "프리미엄 전환",
-                            features: ["Everything in Standard", "Concierge Booking", "VIP Clinic Access", "1:1 Doctor Chat", "Annual Genetic Test"],
+                            features: ["무제한 리포트", "VIP 우선 예약", "AI 시술 전후 케어 챗봇", "1:1 의사 채팅", "전체 리스크 분석"],
                             missing: []
                         }
                     },
                     doctor: {
                         basic: {
                             name: "베이직",
-                            price: "무료",
-                            period: "",
-                            cta: "네트워크 가입",
-                            features: ["List Profile", "Upload 1 Signature Solution", "5 Leads / Month"],
-                            missing: ["Unlimited Matching", "Dev Support", "Data Licensing"]
+                            price: "₩0",
+                            period: "/평생",
+                            cta: "무료 가입",
+                            features: ["시그니처 솔루션 1건 등록 (Basic 등급)", "프로필 등록", "표준 검색 노출"],
+                            missing: ["Standard/VIP 솔루션", "4개국어 자동 현지화", "최상위 노출"]
                         },
-                        partner: {
-                            name: "파트너",
-                            price: "₩250,000",
+                        standard: {
+                            name: "스탠다드",
+                            price: "₩400,000",
                             period: "/월",
-                            cta: "파트너 신청",
-                            features: ["Unlimited Matching", "Upload 5 Solutions", "Dev Support", "Verified Badge", "Priority Listing"],
-                            missing: ["Reasoning OS Access", "Data Licensing"]
+                            cta: "스탠다드 시작",
+                            features: ["솔루션 3건 (Basic+Standard+VIP)", "4개국어 자동 현지화", "인증 뱃지", "우선 리스팅", "환자 분석 데이터"],
+                            missing: ["최상위 검색 노출", "VIP 솔루션 강화 상세페이지", "글로벌 VIP 네트워크"]
                         },
-                        enterprise: {
-                            name: "엔터프라이즈",
-                            price: "₩600,000",
+                        premium: {
+                            name: "프리미엄",
+                            price: "₩800,000",
                             period: "/월",
-                            cta: "영업팀 문의",
-                            features: ["Everything in Partner", "Reasoning OS Access", "Data Licensing", "Custom API Access", "White Label Reports"],
+                            cta: "프리미엄 전환",
+                            features: ["솔루션 5건 (Enhanced VIP 포함)", "최상위 검색 노출", "VIP 솔루션 강화 상세페이지", "전담 환자 컨시어지", "전체 인구통계 분석"],
+                            missing: ["무제한 솔루션", "글로벌 VIP 네트워크 멤버십"]
+                        },
+                        platinum: {
+                            name: "플래티넘",
+                            price: "₩2,000,000+",
+                            period: "/월",
+                            cta: "문의하기",
+                            features: ["무제한 시그니처 솔루션", "글로벌 VIP 지속 케어 네트워크", "전담 글로벌 어카운트 매니저", "커스텀 API & 화이트 레이블", "데이터 라이선싱"],
                             missing: []
                         }
                     }
@@ -957,26 +974,34 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                     doctor: {
                         basic: {
                             name: "ベーシック",
-                            price: "無料",
-                            period: "",
-                            cta: "ネットワーク参加",
-                            features: ["List Profile", "Upload 1 Signature Solution", "5 Leads / Month"],
-                            missing: ["Unlimited Matching", "Dev Support", "Data Licensing"]
+                            price: "¥0",
+                            period: "/永久",
+                            cta: "無料参加",
+                            features: ["シグネチャーソリューション1件登録（Basic枠）", "プロフィール掲載", "標準検索掲載"],
+                            missing: ["Standard/VIPソリューション", "4言語自動ローカライズ", "最上位掲載"]
                         },
-                        partner: {
-                            name: "パートナー",
-                            price: "¥25,000",
+                        standard: {
+                            name: "スタンダード",
+                            price: "¥45,000",
                             period: "/月",
-                            cta: "パートナー申請",
-                            features: ["Unlimited Matching", "Upload 5 Solutions", "Dev Support", "Verified Badge", "Priority Listing"],
-                            missing: ["Reasoning OS Access", "Data Licensing"]
+                            cta: "スタンダード開始",
+                            features: ["3件ソリューション（Basic+Standard+VIP）", "4言語自動ローカライズ", "認証バッジ", "優先掲載", "患者分析データ"],
+                            missing: ["最上位検索掲載", "VIPソリューション強化詳細ページ", "グローバルVIPネットワーク"]
                         },
-                        enterprise: {
-                            name: "エンタープライズ",
-                            price: "¥60,000",
+                        premium: {
+                            name: "プレミアム",
+                            price: "¥90,000",
                             period: "/月",
-                            cta: "営業に問い合わせ",
-                            features: ["Everything in Partner", "Reasoning OS Access", "Data Licensing", "Custom API Access", "White Label Reports"],
+                            cta: "プレミアムへ",
+                            features: ["5件ソリューション（Enhanced VIP含む）", "最上位検索掲載", "VIPソリューション強化詳細ページ", "専任患者コンシェルジュ", "全人口統計分析"],
+                            missing: ["無制限ソリューション", "グローバルVIPネットワーク"]
+                        },
+                        platinum: {
+                            name: "プラチナ",
+                            price: "¥225,000+",
+                            period: "/月",
+                            cta: "お問い合わせ",
+                            features: ["無制限シグネチャーソリューション", "グローバルVIP継続ケアネットワーク", "専任グローバルアカウントマネージャー", "カスタムAPI & ホワイトラベル", "データライセンシング"],
                             missing: []
                         }
                     }
@@ -1229,26 +1254,34 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                     doctor: {
                         basic: {
                             name: "基础版",
-                            price: "免费",
-                            period: "",
-                            cta: "加入网络",
-                            features: ["List Profile", "Upload 1 Signature Solution", "5 Leads / Month"],
-                            missing: ["Unlimited Matching", "Dev Support", "Data Licensing"]
+                            price: "¥0",
+                            period: "/永久",
+                            cta: "免费加入",
+                            features: ["注册1个标志性方案（基础档）", "个人资料展示", "标准搜索曝光"],
+                            missing: ["Standard/VIP方案", "四语言自动本地化", "顶级曝光"]
                         },
-                        partner: {
-                            name: "合伙人",
-                            price: "¥1,400",
+                        standard: {
+                            name: "标准版",
+                            price: "¥2,100",
                             period: "/月",
-                            cta: "申请合伙",
-                            features: ["Unlimited Matching", "Upload 5 Solutions", "Dev Support", "Verified Badge", "Priority Listing"],
-                            missing: ["Reasoning OS Access", "Data Licensing"]
+                            cta: "开始标准版",
+                            features: ["3个方案（Basic+Standard+VIP）", "四语言自动本地化", "认证徽章", "优先列表", "患者分析数据"],
+                            missing: ["顶级搜索曝光", "VIP方案强化详情页", "全球VIP网络"]
                         },
-                        enterprise: {
-                            name: "企业版",
-                            price: "¥3,500",
+                        premium: {
+                            name: "高级版",
+                            price: "¥4,200",
                             period: "/月",
-                            cta: "联系销售",
-                            features: ["Everything in Partner", "Reasoning OS Access", "Data Licensing", "Custom API Access", "White Label Reports"],
+                            cta: "升级高级版",
+                            features: ["5个方案（含Enhanced VIP）", "顶级搜索曝光", "VIP方案强化详情页", "专属患者礼宾服务", "全人口统计分析"],
+                            missing: ["无限方案", "全球VIP网络会员"]
+                        },
+                        platinum: {
+                            name: "白金版",
+                            price: "¥10,500+",
+                            period: "/月",
+                            cta: "联系我们",
+                            features: ["无限标志性方案", "全球VIP持续护理网络", "专属全球客户经理", "定制API & 白标", "数据授权"],
                             missing: []
                         }
                     }

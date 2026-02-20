@@ -1,149 +1,158 @@
-import { Check, X } from 'lucide-react';
 import { useState } from 'react';
+import { Check, X, Zap } from 'lucide-react';
+import { cn } from '@/utils/cn';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
+import { useAuth } from '@/context/AuthContext';
 
 interface PricingTableProps {
     language?: LanguageCode;
 }
 
 export default function PricingTable({ language = 'EN' }: PricingTableProps) {
-    const [view, setView] = useState<'PATIENT' | 'DOCTOR'>('PATIENT');
+    const { user } = useAuth();
+    const defaultView = user?.role === 'doctor' ? 'DOCTOR' : 'PATIENT';
+    const [view, setView] = useState<'PATIENT' | 'DOCTOR'>(defaultView);
+
     const t = (REPORT_TRANSLATIONS[language]?.landing || REPORT_TRANSLATIONS['EN'].landing).pricing;
 
-    // We map the structure to the same array format as before for rendering
-    const TIERS = {
-        PATIENT: [
-            {
-                ...t.tiers.patient.free,
-                popular: false
-            },
-            {
-                ...t.tiers.patient.standard,
-                popular: true
-            },
-            {
-                ...t.tiers.patient.premium,
-                popular: false
-            }
-        ],
-        DOCTOR: [
-            {
-                ...t.tiers.doctor.basic,
-                popular: false
-            },
-            {
-                ...t.tiers.doctor.partner,
-                popular: true
-            },
-            {
-                ...t.tiers.doctor.enterprise,
-                popular: false
-            }
-        ]
-    };
+    const patientTiers = [
+        t.tiers.patient.free,
+        t.tiers.patient.standard,
+        t.tiers.patient.premium,
+    ];
 
-    const handleUpgrade = async (tier: any) => {
-        // Skip for free tiers
-        if (tier.price === '$0' || tier.price === 'Free' || tier.price === '₩0' || tier.price === '무료' || tier.price === '¥0' || tier.price === '免费') {
-            window.location.href = '#signup';
-            return;
-        }
+    const doctorTiers = [
+        t.tiers.doctor.basic,
+        t.tiers.doctor.standard,
+        t.tiers.doctor.premium,
+        t.tiers.doctor.platinum,
+    ];
 
-        try {
-            const response = await fetch('/api/create-checkout-session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    priceId: 'price_mock_id', // Would be real Stripe Price ID
-                    tierName: tier.name,
-                }),
-            });
+    const activeTiers = view === 'PATIENT' ? patientTiers : doctorTiers;
 
-            const data = await response.json();
-            if (data.url) {
-                window.location.href = data.url;
-            } else {
-                console.error('Billing Error:', data.message);
-                alert('Billing System Offline (Sandbox Mode)');
-            }
-        } catch (error) {
-            console.error('Network Error:', error);
-            alert('Connection Error');
-        }
-    };
+    // Mark "most popular" tier index (standard for patient, premium for doctor)
+    const popularIndex = view === 'PATIENT' ? 1 : 2;
 
     return (
-        <section className="py-24 bg-[#050505]">
-            <div className="container mx-auto px-6">
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">{t.title}</h2>
-                    <p className="text-gray-400 max-w-2xl mx-auto mb-8">
-                        {t.subtitle}
-                    </p>
+        <section className="py-24 bg-[#050505] relative overflow-hidden">
+            {/* Background accent */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-950/20 via-transparent to-transparent pointer-events-none" />
 
-                    {/* Toggle */}
-                    <div className="inline-flex bg-white/5 p-1 rounded-full border border-white/10">
+            <div className="container mx-auto px-6 relative z-10">
+                {/* Header */}
+                <div className="text-center mb-12">
+                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">{t.title}</h2>
+                    <p className="text-gray-400 max-w-2xl mx-auto">{t.subtitle}</p>
+                </div>
+
+                {/* Role Toggle */}
+                <div className="flex justify-center mb-12">
+                    <div className="flex bg-white/5 border border-white/10 rounded-full p-1">
                         <button
                             onClick={() => setView('PATIENT')}
-                            className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${view === 'PATIENT' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                            className={cn(
+                                'px-6 py-2.5 rounded-full text-sm font-bold transition-all',
+                                view === 'PATIENT'
+                                    ? 'bg-white text-black shadow-lg'
+                                    : 'text-gray-400 hover:text-white'
+                            )}
                         >
                             {t.toggles.patient}
                         </button>
                         <button
                             onClick={() => setView('DOCTOR')}
-                            className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${view === 'DOCTOR' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                            className={cn(
+                                'px-6 py-2.5 rounded-full text-sm font-bold transition-all',
+                                view === 'DOCTOR'
+                                    ? 'bg-white text-black shadow-lg'
+                                    : 'text-gray-400 hover:text-white'
+                            )}
                         >
                             {t.toggles.doctor}
                         </button>
                     </div>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                    {TIERS[view].map((tier, i) => (
-                        <div
-                            key={i}
-                            className={`relative bg-[#0A0A0A] border rounded-2xl p-8 flex flex-col transition-all hover:-translate-y-2 ${tier.popular ? 'border-blue-500 shadow-blue-500/20 shadow-xl' : 'border-white/10 hover:border-gray-600'}`}
-                        >
-                            {tier.popular && (
-                                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full tracking-wider uppercase">
-                                    {t.mostPopular}
-                                </div>
-                            )}
-
-                            <div className="mb-6">
-                                <h3 className="text-xl font-bold text-white mb-2">{tier.name}</h3>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-4xl font-bold text-white">{tier.price}</span>
-                                    <span className="text-sm text-gray-500">{tier.period}</span>
-                                </div>
-                            </div>
-
-                            <div className="flex-1 space-y-4 mb-8">
-                                {tier.features.map((feature, j) => (
-                                    <div key={j} className="flex items-start gap-3 text-sm text-gray-300">
-                                        <Check className="w-5 h-5 text-blue-500 shrink-0" />
-                                        <span>{feature}</span>
-                                    </div>
-                                ))}
-                                {tier.missing.map((feature, k) => (
-                                    <div key={k} className="flex items-start gap-3 text-sm text-gray-600">
-                                        <X className="w-5 h-5 text-gray-700 shrink-0" />
-                                        <span>{feature}</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <button
-                                onClick={() => handleUpgrade(tier)}
-                                className={`w-full py-4 rounded-xl font-bold transition-colors ${tier.popular ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'}`}
+                {/* Pricing Cards */}
+                <div className={cn(
+                    'grid gap-6',
+                    view === 'PATIENT'
+                        ? 'md:grid-cols-3 max-w-4xl'
+                        : 'md:grid-cols-2 lg:grid-cols-4 max-w-7xl',
+                    'mx-auto'
+                )}>
+                    {activeTiers.map((tier, i) => {
+                        const isPopular = i === popularIndex;
+                        return (
+                            <div
+                                key={tier.name}
+                                className={cn(
+                                    'relative rounded-2xl p-6 flex flex-col transition-all duration-300 hover:-translate-y-1',
+                                    isPopular
+                                        ? 'border-2 border-blue-500 bg-gradient-to-b from-blue-950/40 to-[#0f0f17] shadow-2xl shadow-blue-900/20'
+                                        : 'border border-white/10 bg-gradient-to-b from-[#0f0f17] to-[#0a0a0f]'
+                                )}
                             >
-                                {tier.cta}
-                            </button>
-                        </div>
-                    ))}
+                                {isPopular && (
+                                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center gap-1 whitespace-nowrap">
+                                        <Zap className="w-3 h-3" /> {t.mostPopular}
+                                    </div>
+                                )}
+
+                                {/* Tier info */}
+                                <div className="mb-6">
+                                    <h3 className="text-lg font-bold text-white mb-1">{tier.name}</h3>
+                                    <div className="flex items-end gap-1 mt-3">
+                                        <span className="text-3xl font-black text-white">{tier.price}</span>
+                                        {tier.period && (
+                                            <span className="text-gray-400 text-sm mb-0.5">{tier.period}</span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* CTA */}
+                                <button className={cn(
+                                    'w-full py-3 rounded-xl font-bold text-sm mb-6 transition-all',
+                                    isPopular
+                                        ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/30'
+                                        : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'
+                                )}>
+                                    {tier.cta}
+                                </button>
+
+                                {/* Features */}
+                                <div className="flex-1 space-y-3">
+                                    {tier.features.map((f, fi) => (
+                                        <div key={fi} className="flex items-start gap-2.5">
+                                            <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center mt-0.5 shrink-0">
+                                                <Check className="w-2.5 h-2.5 text-blue-400" />
+                                            </div>
+                                            <span className="text-sm text-gray-300 leading-snug">{f}</span>
+                                        </div>
+                                    ))}
+                                    {tier.missing?.map((f, fi) => (
+                                        <div key={fi} className="flex items-start gap-2.5">
+                                            <div className="w-4 h-4 rounded-full bg-white/5 flex items-center justify-center mt-0.5 shrink-0">
+                                                <X className="w-2.5 h-2.5 text-gray-600" />
+                                            </div>
+                                            <span className="text-sm text-gray-600 leading-snug line-through">{f}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
+
+                {/* Doctor-specific note */}
+                {view === 'DOCTOR' && (
+                    <p className="text-center text-xs text-gray-600 mt-8">
+                        {language === 'KO' ? '✓ 베이직은 영구 무료  ✓ 언제든지 업그레이드  ✓ 계약 없음' :
+                            language === 'JP' ? '✓ ベーシックは永久無料  ✓ いつでもアップグレード  ✓ 契約なし' :
+                                language === 'CN' ? '✓ 基础版永久免费  ✓ 随时升级  ✓ 无合同' :
+                                    '✓ Basic is free forever  ✓ Upgrade anytime  ✓ No contracts'}
+                    </p>
+                )}
             </div>
         </section>
     );

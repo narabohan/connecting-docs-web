@@ -49,20 +49,21 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
     });
 
     // Fetch Analysis when Modal Opens
+    // Fetch Analysis when Modal Opens
     useEffect(() => {
-        if (isOpen && rank && tallyData) {
-            // Initialize tuning params from tallyData if available
+        if (isOpen) {
             if (tallyData) {
+                // Initialize tuning params from tallyData if available
                 setTuningParams({
                     painTolerance: tallyData.painTolerance || 'Moderate',
                     downtimeTolerance: tallyData.downtimeTolerance || 'Short (2-3 days)',
                     budget: tallyData.budget || 'Standard'
                 });
+                fetchAnalysis(tallyData);
+            } else if (rank) {
+                // Static mode: No API call needed, UI uses rankInfo
+                setAnalysisData(null);
             }
-            fetchAnalysis(tallyData);
-        } else if (isOpen && rank && !tallyData) {
-            // Static mode: No API call needed, UI uses rankInfo
-            setAnalysisData(null);
         }
     }, [isOpen, rank, tallyData]);
 
@@ -179,12 +180,13 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
         doc.save("ConnectingDocs_Report.pdf");
     };
 
-    if (!isOpen || !rank || !t) return null;
+    if (!isOpen || (!rank && !tallyData) || !t) return null;
 
-    const rankInfo = t.ranking[`rank${rank}` as keyof typeof t.ranking];
+    const effectiveRank = rank || 1;
+    const rankInfo = t?.ranking?.[`rank${effectiveRank}` as keyof typeof t.ranking];
 
     // Determine which data to show (API > Static Translation)
-    const currentRankKey = rank ? `rank${rank}` : 'rank1';
+    const currentRankKey = `rank${effectiveRank}`;
     const aiRankData = analysisData ? analysisData[currentRankKey] : null;
 
     const displayData = aiRankData ? {
@@ -202,8 +204,8 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
         secondaryZones: ['EyeArea'],
         activeLayers: ['SMAS', 'Dermis'],
         radar: { lifting: 85, firmness: 80, texture: 75, glow: 70, safety: 95 },
-        protocolName: rankInfo.title + " (" + rankInfo.combo + ")",
-        reason: rankInfo.reason,
+        protocolName: (rankInfo?.title || "Unknown Protocol") + " (" + (rankInfo?.combo || "Custom") + ")",
+        reason: rankInfo?.reason || "Loading clinical logic...",
         downtime: "N/A",
         painLevel: 2
     };
@@ -236,7 +238,7 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                         <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider text-cyan-400 uppercase border border-cyan-400/30 rounded-full bg-cyan-400/10">
-                                    Curated Solution No.0{rank}
+                                    Curated Solution No.0{effectiveRank}
                                 </span>
                                 {loading && <span className="flex items-center gap-1 text-xs text-blue-400"><Loader2 className="w-3 h-3 animate-spin" /> AI Analyzing...</span>}
                             </div>

@@ -75,7 +75,7 @@ export default function Home() {
           tallyData={wizardData}
         />
 
-        <ForPatients language={currentLang} />
+        <ForPatients language={currentLang} onStartSurvey={() => setIsWizardOpen(true)} />
         <ForDoctors language={currentLang} />
         <div id="pricing">
           <PricingTable language={currentLang} />

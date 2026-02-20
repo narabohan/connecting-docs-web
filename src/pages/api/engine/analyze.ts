@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import Anthropic from '@anthropic-ai/sdk';
 import Airtable from 'airtable';
+import { savePatientLog } from '../intelligence/save-log';
 
 const anthropic = new Anthropic({
     apiKey: process.env.CLAUDE_API_KEY,
@@ -172,6 +173,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     if (userRecords.length > 0) userId = string(userRecords[0].id);
                 }
 
+                let reportId: string | undefined;
+
                 if (userId) {
                     const reportRecords = await base('Reports').create([
                         {
@@ -183,7 +186,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             }
                         }
                     ]);
-                    const reportId = reportRecords[0].id;
+                    reportId = reportRecords[0].id;
                     console.log(`[REPORT] Saved for ${data.userEmail} (ID: ${reportId})`);
 
                     // Inject reportId into result so frontend can use it for matching
@@ -217,6 +220,29 @@ View your full interactive report and customize your plan here:
             } catch (dbError) {
                 console.error("Failed to save report to Airtable:", dbError);
                 // Non-blocking error
+            }
+
+            // Save to Intelligence Hub for Claude analysis
+            try {
+                savePatientLog({
+                    sessionId: (result as any).reportId || `session_${Date.now()}`,
+                    timestamp: new Date().toISOString(),
+                    userId: data.userId,
+                    userEmail: data.userEmail,
+                    tallyData: data,
+                    analysisInput: {
+                        primaryGoal: data.primaryGoal,
+                        secondaryGoal: data.secondaryGoal,
+                        areas: data.areas,
+                        painTolerance: data.painTolerance,
+                        downtimeTolerance: data.downtimeTolerance,
+                        budget: data.budget
+                    },
+                    reportId: (result as any).reportId
+                });
+            } catch (logError) {
+                console.error("Failed to save patient log:", logError);
+                // Non-blocking
             }
         }
 
