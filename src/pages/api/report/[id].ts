@@ -25,6 +25,73 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: 'Missing or invalid Patient ID' });
     }
 
+    // ── DEMO SHORTCUT ───────────────────────────────────────────────
+    if (id === 'demo') {
+        const lang = ((req.query.lang as string) || 'EN').toUpperCase();
+        return res.status(200).json({
+            language: lang,
+            patient: {
+                id: 'demo',
+                name: 'Guest',
+                language: lang,
+                goals: ['Glass Skin', 'Anti-Aging', 'Pore Refinement'],
+                profile: [
+                    { subject: 'Skin Thickness', A: 72, fullMark: 100 },
+                    { subject: 'Pain Tolerance', A: 65, fullMark: 100 },
+                    { subject: 'Downtime', A: 80, fullMark: 100 },
+                    { subject: 'Pigment Risk', A: 55, fullMark: 100 },
+                    { subject: 'Aging Stage', A: 60, fullMark: 100 },
+                ],
+                simulationData: { primaryIndication: 'Glass Skin', secondaryIndication: 'Anti-Aging', locations: ['Full Face'] }
+            },
+            logic: {
+                terminalText: `PATIENT_ANALYSIS: COMPLETE\nRISK_FILTER: ACTIVE\nPROTOCOL_MATCH: 3 candidates found\nBEST_MATCH: Ulthera Deep Lifting [SCORE: 95]\nCLINICAL_EVIDENCE: VALIDATED\nOUTPUT_READY`,
+                risks: [
+                    { level: 'DANGER', factor: 'Melasma', description: 'High-heat laser treatments (CO2, aggressive IPL) are contraindicated due to hyperpigmentation risk.' },
+                    { level: 'CAUTION', factor: 'Sensitive Skin', description: 'HIFU at maximum energy may cause excessive redness. Use moderate settings only.' },
+                    { level: 'SAFE', factor: 'RF Energy', description: 'Radiofrequency-based protocols are fully cleared for your skin type.' },
+                    { level: 'SAFE', factor: 'Exosomes', description: 'Regenerative boosters are ideal complements to your skin barrier needs.' },
+                ]
+            },
+            recommendations: [
+                {
+                    id: 'proto_001',
+                    rank: 1,
+                    name: 'Ulthera Glass Skin Protocol',
+                    matchScore: 95,
+                    composition: ['Ulthera', 'Exosome Boost', 'LaseMD'],
+                    description: 'Triple-layer approach targeting SMAS for deep lifting while simultaneously reinforcing skin barrier. Clinical gold standard for glass skin with anti-aging.',
+                    tags: ['Zero Downtime', 'Low Pain', 'Premium'],
+                    energyDepth: 'smas',
+                    isLocked: false,
+                },
+                {
+                    id: 'proto_002',
+                    rank: 2,
+                    name: 'Genius RF Rebuilder',
+                    matchScore: 88,
+                    composition: ['Genius RF', 'Rejuran Healer', 'Pico Toning'],
+                    description: 'Deep collagen synthesis via microneedling RF combined with PDRN regeneration. Optimal for texture and pore refinement without significant downtime.',
+                    tags: ['1-2 Day Downtime', 'Moderate Pain', 'Standard'],
+                    energyDepth: 'dermis',
+                    isLocked: false,
+                },
+                {
+                    id: 'proto_003',
+                    rank: 3,
+                    name: 'InMode V-Line Sculptor',
+                    matchScore: 81,
+                    composition: ['InMode FX', 'Jaw Botox', 'Potenza'],
+                    description: 'High-voltage pulse permanently reduces volume while RF tightens surrounding tissue. Precisely designed for contour and V-line definition.',
+                    tags: ['3-5 Day Downtime', 'Moderate Pain', 'Standard'],
+                    energyDepth: 'hypodermis',
+                    isLocked: false,
+                }
+            ]
+        });
+    }
+    // ── END DEMO ─────────────────────────────────────────────────────
+
     try {
         // 1. Fetch Patient Data
         const patientRecord = await base('Patients_v1').find(id) as unknown as PatientRecord;

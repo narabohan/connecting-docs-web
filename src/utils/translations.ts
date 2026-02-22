@@ -186,6 +186,64 @@ export interface TranslationStructure {
         compliance: { hipaa: string; iso: string; fhir: string; };
         copyright: string;
     };
+    report?: {
+        hero: {
+            score: string;
+            scoreLabel: string;
+            subtitle: string;
+            matrixTitle: string;
+            toleranceZone: string;
+            badges: { protocol: string; risk: string; logic: string };
+            axes: {
+                thickness: string;
+                pain: string;
+                downtime: string;
+                pigment: string;
+                aging: string;
+            };
+        };
+        trafficLight: {
+            title: string;
+            danger: string;
+            caution: string;
+            safe: string;
+            dangerSub: string;
+            cautionSub: string;
+            safeSub: string;
+        };
+        sliders: {
+            title: string;
+            subtitle: string;
+            pain: string;
+            downtime: string;
+            days: string;
+            painLabels: string[];
+            downtimeLabels: string[];
+            scoreLabel: string;
+        };
+        skinLayer: {
+            title: string;
+            epidermis: string;
+            dermis: string;
+            hypodermis: string;
+            smas: string;
+            depth: string;
+        };
+        modal: {
+            title: string;
+            subtitle: string;
+            emailPlaceholder: string;
+            button: string;
+            verifying: string;
+            success: string;
+            terms: string;
+            benefits: string[];
+        };
+        footer: {
+            cta: string;
+            locked: string;
+        };
+    };
 }
 
 export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
@@ -466,6 +524,47 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             tagline: "Exclusively for High-End Seekers. We value clinical logic over discount coupons.",
             compliance: { hipaa: "HIPAA Compliant", iso: "ISO 27001", fhir: "FHIR Standard" },
             copyright: "Connecting Docs. Architecting the Standard of Global Medical Aesthetics. Based in Seoul, Connected Globally."
+        },
+        report: {
+            hero: {
+                score: "ALIGNMENT SCORE",
+                scoreLabel: "Clinical Match",
+                subtitle: "Pre-Consulting Intelligence Report",
+                matrixTitle: "CLINICAL PROFILE MATRIX",
+                toleranceZone: "TOLERANCE_ZONE: MATCHED ✓",
+                badges: { protocol: "PROTOCOL MATCH", risk: "RISK FILTERED", logic: "LOGIC VERIFIED" },
+                axes: { thickness: "Skin Thickness", pain: "Pain Tolerance", downtime: "Downtime", pigment: "Pigment Risk", aging: "Aging Stage" },
+            },
+            trafficLight: {
+                title: "RISK FILTER PROTOCOL",
+                danger: "CONTRAINDICATED", caution: "PROCEED WITH CAUTION", safe: "CLEARED FOR TREATMENT",
+                dangerSub: "These procedures are not recommended for your skin profile.",
+                cautionSub: "These may be used under strict monitoring conditions.",
+                safeSub: "Fully matched and cleared for your skin logic.",
+            },
+            sliders: {
+                title: "WHAT-IF SIMULATOR",
+                subtitle: "Adjust tolerance parameters to recalculate your optimal match.",
+                pain: "Pain Tolerance", downtime: "Downtime Acceptance", days: "days",
+                painLabels: ["Minimal", "Moderate", "High"],
+                downtimeLabels: ["Zero", "1-3 Days", "5+ Days"],
+                scoreLabel: "Projected Score",
+            },
+            skinLayer: {
+                title: "ENERGY PENETRATION DEPTH",
+                epidermis: "Epidermis", dermis: "Dermis", hypodermis: "Hypodermis", smas: "SMAS Layer", depth: "Target depth",
+            },
+            modal: {
+                title: "Unlock Your Master Profile",
+                subtitle: "Get personalized doctor recommendations + instant consultation booking.",
+                emailPlaceholder: "Enter your email address",
+                button: "Unlock & Book Consultation",
+                verifying: "VERIFYING...",
+                success: "Access Granted! Redirecting to your full profile...",
+                terms: "By submitting, you agree to our Privacy Policy.",
+                benefits: ["Top 3 Matched Master Doctors", "Full Clinical Risk Breakdown", "Instant Booking System", "Personalized Pre-Care Guide"],
+            },
+            footer: { cta: "🔒 Unlock Master Profile & Book", locked: "View full personalized recommendations" },
         }
     },
     KO: {
@@ -745,6 +844,47 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             tagline: "상위 1%를 위한 선택. 우리는 할인 쿠폰보다 임상적 로직을 가치 있게 여깁니다.",
             compliance: { hipaa: "HIPAA 준수", iso: "ISO 27001 인증", fhir: "FHIR 표준" },
             copyright: "Connecting Docs. 글로벌 메디컬 에스테틱의 기준을 설계합니다. 서울 본사, 글로벌 네트워크."
+        },
+        report: {
+            hero: {
+                score: "매칭 스코어",
+                scoreLabel: "임상 매칭도",
+                subtitle: "사전 상담 인텔리전스 리포트",
+                matrixTitle: "임상 프로파일 매트릭스",
+                toleranceZone: "허용 범위: 일치 ✓",
+                badges: { protocol: "프로토콜 매칭", risk: "위험 필터 완료", logic: "로직 검증됨" },
+                axes: { thickness: "피부 두께", pain: "통증 허용도", downtime: "회복 기간", pigment: "색소 위험도", aging: "노화 단계" },
+            },
+            trafficLight: {
+                title: "위험 필터 프로토콜",
+                danger: "금기", caution: "주의 필요", safe: "시술 가능",
+                dangerSub: "해당 시술은 고객님의 피부 프로필에 권장되지 않습니다.",
+                cautionSub: "엄격한 모니터링 하에 사용 가능합니다.",
+                safeSub: "고객님의 피부 로직에 완전히 부합합니다.",
+            },
+            sliders: {
+                title: "가상 시뮬레이터",
+                subtitle: "허용 파라미터를 조정하여 최적 매칭을 재계산하세요.",
+                pain: "통증 허용도", downtime: "다운타임 허용도", days: "일",
+                painLabels: ["최소", "보통", "높음"],
+                downtimeLabels: ["제로", "1-3일", "5일 이상"],
+                scoreLabel: "예상 스코어",
+            },
+            skinLayer: {
+                title: "에너지 침투 깊이",
+                epidermis: "표피", dermis: "진피", hypodermis: "피하지방", smas: "SMAS층", depth: "목표 깊이",
+            },
+            modal: {
+                title: "마스터 프로필 잠금 해제",
+                subtitle: "맞춤형 의사 추천 + 즉시 상담 예약을 받아보세요.",
+                emailPlaceholder: "이메일 주소를 입력하세요",
+                button: "잠금 해제 & 상담 예약",
+                verifying: "검증 중...",
+                success: "액세스 승인! 전체 프로필로 리디렉션 중...",
+                terms: "제출 시 개인정보 처리방침에 동의한 것으로 간주됩니다.",
+                benefits: ["상위 3명 매칭 마스터 의사", "전체 임상 위험 분석", "즉시 예약 시스템", "맞춤형 사전 케어 가이드"],
+            },
+            footer: { cta: "🔒 마스터 프로필 잠금 해제 & 예약", locked: "맞춤형 전체 추천 보기" },
         }
     },
     JP: {
@@ -1024,6 +1164,47 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             tagline: "ハイエンドな求道者のために。私たちは割引クーポンよりも臨床ロジックを重視します。",
             compliance: { hipaa: "HIPAA準拠", iso: "ISO 27001認証", fhir: "FHIR標準" },
             copyright: "Connecting Docs. グローバルメディカルエステティックの基準を構築。ソウル拠点、グローバル展開。"
+        },
+        report: {
+            hero: {
+                score: "マッチングスコア",
+                scoreLabel: "臨床マッチング度",
+                subtitle: "事前カウンセリング インテリジェンスレポート",
+                matrixTitle: "臨床プロファイルマトリクス",
+                toleranceZone: "許容ゾーン: 一致 ✓",
+                badges: { protocol: "プロトコル一致", risk: "リスクフィルター完了", logic: "ロジック検証済" },
+                axes: { thickness: "肌の厚み", pain: "痛みの許容度", downtime: "ダウンタイム", pigment: "色素リスク", aging: "エイジング段階" },
+            },
+            trafficLight: {
+                title: "リスクフィルタープロトコル",
+                danger: "禁忌", caution: "要注意", safe: "施術可能",
+                dangerSub: "これらの施術はお客様の肌プロファイルには推奨されません。",
+                cautionSub: "厳格なモニタリング条件下でのみ使用可能です。",
+                safeSub: "お客様の肌ロジックに完全に適合しています。",
+            },
+            sliders: {
+                title: "WHAT-IFシミュレーター",
+                subtitle: "許容パラメータを調整して最適マッチを再計算します。",
+                pain: "痛みの許容度", downtime: "ダウンタイム許容度", days: "日",
+                painLabels: ["最小限", "中程度", "高め"],
+                downtimeLabels: ["なし", "1-3日", "5日以上"],
+                scoreLabel: "予測スコア",
+            },
+            skinLayer: {
+                title: "エネルギー浸透深度",
+                epidermis: "表皮", dermis: "真皮", hypodermis: "皮下脂肪", smas: "SMAS層", depth: "ターゲット深度",
+            },
+            modal: {
+                title: "マスタープロファイルを解除",
+                subtitle: "個別化された医師の推薦 + 即時相談予約を受け取りましょう。",
+                emailPlaceholder: "メールアドレスを入力してください",
+                button: "解除してカウンセリングを予約",
+                verifying: "認証中...",
+                success: "アクセス許可！フルプロファイルにリダイレクト中...",
+                terms: "送信により、プライバシーポリシーに同意したとみなされます。",
+                benefits: ["トップ3マッチング医師", "完全臨床リスク分析", "即時予約システム", "個別事前ケアガイド"],
+            },
+            footer: { cta: "🔒 マスタープロファイル解除＆予約", locked: "カスタマイズされた全推薦を表示" },
         }
     },
     CN: {
@@ -1303,6 +1484,47 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             tagline: "专为高端追求者打造。我们重视临床逻辑胜过折扣券。",
             compliance: { hipaa: "符合HIPAA", iso: "ISO 27001认证", fhir: "FHIR标准" },
             copyright: "Connecting Docs. 构建全球医美标准。总部位于首尔，连接全球。"
+        },
+        report: {
+            hero: {
+                score: "匹配分数",
+                scoreLabel: "临床匹配度",
+                subtitle: "预咨询智能报告",
+                matrixTitle: "临床档案矩阵",
+                toleranceZone: "耐受区间: 匹配 ✓",
+                badges: { protocol: "协议匹配", risk: "风险过滤完成", logic: "逻辑已验证" },
+                axes: { thickness: "皮肤厚度", pain: "疼痛耐受度", downtime: "恢复时间", pigment: "色素风险", aging: "老化阶段" },
+            },
+            trafficLight: {
+                title: "风险过滤协议",
+                danger: "禁忌", caution: "需谨慎", safe: "可进行手术",
+                dangerSub: "这些治疗方法不适合您的皮肤档案。",
+                cautionSub: "在严格监测条件下可使用。",
+                safeSub: "完全匹配您的皮肤逻辑，已清除。",
+            },
+            sliders: {
+                title: "假设模拟器",
+                subtitle: "调整耐受参数以重新计算最优匹配。",
+                pain: "疼痛耐受度", downtime: "停工期接受度", days: "天",
+                painLabels: ["最小", "适中", "较高"],
+                downtimeLabels: ["零", "1-3天", "5天以上"],
+                scoreLabel: "预测分数",
+            },
+            skinLayer: {
+                title: "能量穿透深度",
+                epidermis: "表皮", dermis: "真皮", hypodermis: "皮下组织", smas: "SMAS层", depth: "目标深度",
+            },
+            modal: {
+                title: "解锁您的主档案",
+                subtitle: "获取个性化医生推荐 + 即时预约咨询。",
+                emailPlaceholder: "请输入您的电子邮件地址",
+                button: "解锁并预约咨询",
+                verifying: "验证中...",
+                success: "访问已批准！正在跳转至完整档案...",
+                terms: "提交即表示您同意我们的隐私政策。",
+                benefits: ["匹配前3名主治医师", "完整临床风险分析", "即时预约系统", "个性化术前护理指南"],
+            },
+            footer: { cta: "🔒 解锁主档案并预约", locked: "查看完整个性化推荐" },
         }
     }
 };

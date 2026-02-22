@@ -45,10 +45,11 @@ export default function RadarProfile({ data, language }: RadarProfileProps) {
                     <Radar
                         name="Patient Profile"
                         dataKey="A"
-                        stroke="#3b82f6"
+                        stroke="#00FFFF"
                         strokeWidth={2}
-                        fill="#3b82f6"
-                        fillOpacity={0.3}
+                        fill="#00FFFF"
+                        fillOpacity={0.12}
+                        style={{ filter: 'drop-shadow(0 0 6px rgba(0,255,255,0.5))' }}
                     />
                 </RadarChart>
             </ResponsiveContainer>
