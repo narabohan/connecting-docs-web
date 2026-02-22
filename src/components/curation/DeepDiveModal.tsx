@@ -29,6 +29,7 @@ const SKELETON_DATA = {
 export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyData }: DeepDiveModalProps) {
     const t = (REPORT_TRANSLATIONS[language]?.curation || REPORT_TRANSLATIONS['EN'].curation);
     const tRadar = (REPORT_TRANSLATIONS[language]?.simulation || REPORT_TRANSLATIONS['EN'].simulation).radar;
+    const td = (REPORT_TRANSLATIONS[language]?.deepDive || REPORT_TRANSLATIONS['EN'].deepDive)!;
     const { user } = useAuth();
 
     // State for API Data
@@ -238,15 +239,15 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                         <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider text-cyan-400 uppercase border border-cyan-400/30 rounded-full bg-cyan-400/10">
-                                    Curated Solution No.0{effectiveRank}
+                                    {td.badge} No.0{effectiveRank}
                                 </span>
-                                {loading && <span className="flex items-center gap-1 text-xs text-blue-400"><Loader2 className="w-3 h-3 animate-spin" /> AI Analyzing...</span>}
+                                {loading && <span className="flex items-center gap-1 text-xs text-blue-400"><Loader2 className="w-3 h-3 animate-spin" /> {td.analyzing}</span>}
                             </div>
                             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white tracking-tight">
-                                {loading ? "Analyzing Protocol..." : (displayData.protocolName || rankInfo.title)}
+                                {loading ? td.analyzing : (displayData.protocolName || rankInfo.title)}
                             </h2>
                             <p className="max-w-2xl text-gray-400 text-sm md:text-base leading-relaxed mt-2">
-                                {loading ? "Claude AI is reviewing your skin profile to build a custom protocol." : (displayData.reason || rankInfo.reason)}
+                                {loading ? td.analyzingDesc : (displayData.reason || rankInfo.reason)}
                             </p>
                         </div>
                         <div className="flex items-center gap-3">
@@ -281,27 +282,27 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                             >
                                 <div className="p-6 grid md:grid-cols-4 gap-6 items-end">
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Pain Tolerance</label>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{td.painLevel}</label>
                                         <select
                                             value={tuningParams.painTolerance}
                                             onChange={(e) => setTuningParams(prev => ({ ...prev, painTolerance: e.target.value }))}
                                             className="w-full bg-black/50 border border-white/20 rounded-lg p-2 text-white text-sm focus:border-cyan-500 outline-none"
                                         >
-                                            <option value="Low">Low (Sensitive)</option>
-                                            <option value="Moderate">Moderate</option>
-                                            <option value="High">High (Strong)</option>
+                                            <option value="Low">{td.painOptions[0]}</option>
+                                            <option value="Moderate">{td.painOptions[1]}</option>
+                                            <option value="High">{td.painOptions[2]}</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Downtime</label>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{td.depthPenetration.split(' ')[0]}</label>
                                         <select
                                             value={tuningParams.downtimeTolerance}
                                             onChange={(e) => setTuningParams(prev => ({ ...prev, downtimeTolerance: e.target.value }))}
                                             className="w-full bg-black/50 border border-white/20 rounded-lg p-2 text-white text-sm focus:border-cyan-500 outline-none"
                                         >
-                                            <option value="None">None (Immediate)</option>
-                                            <option value="Short (2-3 days)">Short (2-3 days)</option>
-                                            <option value="Long (1 week+)">Long (1 week+)</option>
+                                            <option value="None">{td.downtimeOptions[0]}</option>
+                                            <option value="Short (2-3 days)">{td.downtimeOptions[1]}</option>
+                                            <option value="Long (1 week+)">{td.downtimeOptions[2]}</option>
                                         </select>
                                     </div>
                                     <div>
@@ -311,9 +312,9 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                             onChange={(e) => setTuningParams(prev => ({ ...prev, budget: e.target.value }))}
                                             className="w-full bg-black/50 border border-white/20 rounded-lg p-2 text-white text-sm focus:border-cyan-500 outline-none"
                                         >
-                                            <option value="Economy">Economy</option>
-                                            <option value="Standard">Standard</option>
-                                            <option value="Premium">Premium</option>
+                                            <option value="Economy">{td.budgetOptions[0]}</option>
+                                            <option value="Standard">{td.budgetOptions[1]}</option>
+                                            <option value="Premium">{td.budgetOptions[2]}</option>
                                         </select>
                                     </div>
                                     <button
@@ -322,7 +323,7 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                         className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                                     >
                                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                                        Update Protocol
+                                        {td.updateProtocol}
                                     </button>
                                 </div>
                             </motion.div>
@@ -334,7 +335,7 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                         {loading ? (
                             <div className="flex flex-col items-center justify-center h-96 gap-4">
                                 <Loader2 className="w-12 h-12 text-cyan-500 animate-spin" />
-                                <p className="text-gray-400">Connecting to Clinical Intelligence Engine...</p>
+                                <p className="text-gray-400">{td.analyzingDesc}</p>
                             </div>
                         ) : (
                             <div className="grid lg:grid-cols-2 gap-0 lg:divide-x divide-white/10">
@@ -345,7 +346,7 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                                 <div className="w-1 h-5 bg-cyan-500 rounded-full" />
-                                                Target Zones
+                                                {td.targetZones}
                                             </h3>
                                         </div>
                                         <div className="relative aspect-[3/4] bg-black/40 rounded-2xl overflow-hidden border border-white/5">
@@ -359,11 +360,11 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                                 <div className="flex gap-4 text-xs">
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-3 h-3 bg-red-500/80 rounded-full animate-pulse" />
-                                                        <span className="text-gray-300">Max Intensity</span>
+                                                        <span className="text-gray-300">{td.maxIntensity}</span>
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-3 h-3 bg-blue-400/80 rounded-full" />
-                                                        <span className="text-gray-300">Collagen Remodeling</span>
+                                                        <span className="text-gray-300">{td.collagenRemodeling}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -374,7 +375,7 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                     <div className="space-y-4">
                                         <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                             <div className="w-1 h-5 bg-purple-500 rounded-full" />
-                                            Depth Penetration
+                                            {td.depthPenetration}
                                         </h3>
                                         <SkinLayerSection
                                             activeLayers={displayData.activeLayers}
@@ -390,7 +391,7 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                     <div className="space-y-4">
                                         <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                             <div className="w-1 h-5 bg-emerald-500 rounded-full" />
-                                            Efficacy Profile
+                                            {td.efficacyProfile}
                                         </h3>
                                         <div className="h-[320px] w-full flex items-center justify-center p-4 bg-black/20 rounded-2xl border border-white/5 overflow-visible">
                                             <LiveRadar data={radarChartData} language={language} />
@@ -409,7 +410,7 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                             </div>
 
                                             <h4 className="text-xl font-bold text-white mb-2 relative z-10">
-                                                Why This Protocol?
+                                                {td.whyProtocol}
                                             </h4>
                                             <p className="text-gray-400 leading-relaxed mb-6 relative z-10">
                                                 {displayData.reason}
@@ -417,13 +418,13 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
 
                                             <div className="grid grid-cols-2 gap-4 relative z-10">
                                                 <div className="p-3 bg-white/5 rounded-lg border border-white/5">
-                                                    <span className="text-xs text-gray-500 uppercase tracking-wider">Estimated Downtime</span>
+                                                    <span className="text-xs text-gray-500 uppercase tracking-wider">{td.estimatedDowntime}</span>
                                                     <div className="text-white font-medium mt-1">
                                                         {aiRankData?.downtime || "Minimal"}
                                                     </div>
                                                 </div>
                                                 <div className="p-3 bg-white/5 rounded-lg border border-white/5">
-                                                    <span className="text-xs text-gray-500 uppercase tracking-wider">Pain Level</span>
+                                                    <span className="text-xs text-gray-500 uppercase tracking-wider">{td.painLevel}</span>
                                                     <div className="flex gap-1 mt-1">
                                                         {[...Array(5)].map((_, i) => (
                                                             <div
@@ -441,7 +442,7 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
 
                                         <div className="flex items-center gap-2 text-xs text-gray-500 justify-end">
                                             <RefreshCw className="w-3 h-3" />
-                                            <span>Powered by Clinical Engine</span>
+                                            <span>{td.poweredBy}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -450,13 +451,13 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                 <div className="space-y-4">
                                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                         <div className="w-1 h-5 bg-blue-500 rounded-full" />
-                                        Top Matched Specialists
+                                        {td.topSpecialists}
                                     </h3>
 
                                     {matchLoading ? (
                                         <div className="p-8 text-center text-gray-500 border border-white/5 rounded-2xl bg-white/5">
                                             <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                                            Running Clinical Match...
+                                            {td.runningMatch}
                                         </div>
                                     ) : matches.length > 0 ? (
                                         <div className="space-y-3">
@@ -502,7 +503,7 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                         </div>
                                     ) : (
                                         <div className="p-6 text-center text-gray-500 border border-white/5 rounded-2xl bg-white/5 text-sm">
-                                            No direct matches found yet. Our network is expanding.
+                                            {td.noMatches}
                                         </div>
                                     )}
                                 </div>
@@ -514,13 +515,13 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                     {/* Footer */}
                     <div className="flex-none p-6 md:p-8 border-t border-white/5 bg-[#0a0a0f] flex justify-between items-center z-20">
                         <div className="text-sm text-gray-500">
-                            * Results may vary. Consultation required.
+                            {td.resultsDisclaimer}
                         </div>
                         <button
                             onClick={onClose}
                             className="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200 transition-colors flex items-center gap-2"
                         >
-                            Close Analysis
+                            {td.closeAnalysis}
                         </button>
                     </div>
                 </div>

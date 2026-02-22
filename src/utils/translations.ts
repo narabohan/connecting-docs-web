@@ -244,6 +244,29 @@ export interface TranslationStructure {
             locked: string;
         };
     };
+    deepDive?: {
+        badge: string;
+        analyzing: string;
+        analyzingDesc: string;
+        targetZones: string;
+        depthPenetration: string;
+        efficacyProfile: string;
+        whyProtocol: string;
+        estimatedDowntime: string;
+        painLevel: string;
+        poweredBy: string;
+        topSpecialists: string;
+        updateProtocol: string;
+        closeAnalysis: string;
+        maxIntensity: string;
+        collagenRemodeling: string;
+        resultsDisclaimer: string;
+        painOptions: string[];
+        downtimeOptions: string[];
+        budgetOptions: string[];
+        noMatches: string;
+        runningMatch: string;
+    };
 }
 
 export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
@@ -565,6 +588,29 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 benefits: ["Top 3 Matched Master Doctors", "Full Clinical Risk Breakdown", "Instant Booking System", "Personalized Pre-Care Guide"],
             },
             footer: { cta: "🔒 Unlock Master Profile & Book", locked: "View full personalized recommendations" },
+        },
+        deepDive: {
+            badge: "Curated Solution",
+            analyzing: "Analyzing Protocol...",
+            analyzingDesc: "Claude AI is reviewing your skin profile to build a custom protocol.",
+            targetZones: "Target Zones",
+            depthPenetration: "Depth Penetration",
+            efficacyProfile: "Efficacy Profile",
+            whyProtocol: "Why This Protocol?",
+            estimatedDowntime: "Estimated Downtime",
+            painLevel: "Pain Level",
+            poweredBy: "Powered by Clinical Engine",
+            topSpecialists: "Top Matched Specialists",
+            updateProtocol: "Update Protocol",
+            closeAnalysis: "Close Analysis",
+            maxIntensity: "Max Intensity",
+            collagenRemodeling: "Collagen Remodeling",
+            resultsDisclaimer: "* Results may vary. Consultation required.",
+            painOptions: ["Low (Sensitive)", "Moderate", "High (Strong)"],
+            downtimeOptions: ["None (Immediate)", "Short (2-3 days)", "Long (1 week+)"],
+            budgetOptions: ["Economy", "Standard", "Premium"],
+            noMatches: "No direct matches found yet. Our network is expanding.",
+            runningMatch: "Running Clinical Match...",
         }
     },
     KO: {
@@ -885,6 +931,29 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 benefits: ["상위 3명 매칭 마스터 의사", "전체 임상 위험 분석", "즉시 예약 시스템", "맞춤형 사전 케어 가이드"],
             },
             footer: { cta: "🔒 마스터 프로필 잠금 해제 & 예약", locked: "맞춤형 전체 추천 보기" },
+        },
+        deepDive: {
+            badge: "큐레이티드 솔루션",
+            analyzing: "프로토콜 분석 중...",
+            analyzingDesc: "AI가 고객님의 피부 프로필을 기반으로 맞춤 프로토콜을 생성하고 있습니다.",
+            targetZones: "타겟 부위",
+            depthPenetration: "침투 깊이",
+            efficacyProfile: "효능 프로파일",
+            whyProtocol: "이 프로토콜을 추천하는 이유",
+            estimatedDowntime: "예상 회복 기간",
+            painLevel: "통증 수준",
+            poweredBy: "임상 엔진 기반",
+            topSpecialists: "최적 매칭 전문의",
+            updateProtocol: "프로토콜 재분석",
+            closeAnalysis: "분석 닫기",
+            maxIntensity: "최대 강도",
+            collagenRemodeling: "콜라겐 리모델링",
+            resultsDisclaimer: "* 결과는 개인에 따라 다를 수 있습니다. 상담 필요.",
+            painOptions: ["저통증 (민감)", "중등도", "고강도 (강함)"],
+            downtimeOptions: ["없음 (즉시 복귀)", "단기 (2-3일)", "장기 (1주 이상)"],
+            budgetOptions: ["실속형", "표준형", "프리미엄"],
+            noMatches: "아직 직접 매칭된 의사가 없습니다. 네트워크를 확장 중입니다.",
+            runningMatch: "임상 매칭 실행 중...",
         }
     },
     JP: {
@@ -1205,6 +1274,29 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 benefits: ["トップ3マッチング医師", "完全臨床リスク分析", "即時予約システム", "個別事前ケアガイド"],
             },
             footer: { cta: "🔒 マスタープロファイル解除＆予約", locked: "カスタマイズされた全推薦を表示" },
+        },
+        deepDive: {
+            badge: "キュレーテッドソリューション",
+            analyzing: "プロトコル分析中...",
+            analyzingDesc: "AIがお客様の肌プロファイルを基にカスタムプロトコルを生成しています。",
+            targetZones: "ターゲット部位",
+            depthPenetration: "浸透深度",
+            efficacyProfile: "有効性プロファイル",
+            whyProtocol: "このプロトコルを選ぶ理由",
+            estimatedDowntime: "予想ダウンタイム",
+            painLevel: "痛みレベル",
+            poweredBy: "臨床エンジン搭載",
+            topSpecialists: "最適マッチング専門医",
+            updateProtocol: "プロトコル再分析",
+            closeAnalysis: "分析を閉じる",
+            maxIntensity: "最大強度",
+            collagenRemodeling: "コラーゲンリモデリング",
+            resultsDisclaimer: "※ 結果は個人によって異なります。要カウンセリング。",
+            painOptions: ["低刺激（敏感肌）", "中程度", "高出力（強め）"],
+            downtimeOptions: ["なし（即日復帰）", "短期（2-3日）", "長期（1週間以上）"],
+            budgetOptions: ["エコノミー", "スタンダード", "プレミアム"],
+            noMatches: "現在直接マッチする医師はいません。ネットワーク拡張中です。",
+            runningMatch: "臨床マッチング実行中...",
         }
     },
     CN: {
@@ -1525,6 +1617,29 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 benefits: ["匹配前3名主治医师", "完整临床风险分析", "即时预约系统", "个性化术前护理指南"],
             },
             footer: { cta: "🔒 解锁主档案并预约", locked: "查看完整个性化推荐" },
+        },
+        deepDive: {
+            badge: "精选方案",
+            analyzing: "正在分析方案...",
+            analyzingDesc: "AI正在根据您的皮肤档案生成定制方案。",
+            targetZones: "目标区域",
+            depthPenetration: "渗透深度",
+            efficacyProfile: "功效档案",
+            whyProtocol: "为何推荐此方案？",
+            estimatedDowntime: "预计恢复期",
+            painLevel: "疼痛程度",
+            poweredBy: "由临床引擎提供支持",
+            topSpecialists: "最优匹配专家",
+            updateProtocol: "更新方案",
+            closeAnalysis: "关闭分析",
+            maxIntensity: "最大强度",
+            collagenRemodeling: "胶原重塑",
+            resultsDisclaimer: "* 效果因人而异。需要专业咨询。",
+            painOptions: ["低痛感（敏感）", "适中", "高能量（强效）"],
+            downtimeOptions: ["无恢复期（即刻复工）", "短期（2-3天）", "长期（1周以上）"],
+            budgetOptions: ["经济型", "标准型", "尊贵型"],
+            noMatches: "暂时没有直接匹配的医生。我们正在扩展网络。",
+            runningMatch: "正在运行临床匹配...",
         }
     }
 };
