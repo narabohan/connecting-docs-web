@@ -51,7 +51,7 @@ export default function PatientDashboard() {
             <div className="flex justify-between items-end mb-12">
                 <div>
                     <h1 className="text-3xl md:text-5xl font-bold mb-4">
-                        Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">{user?.name}</span>
+                        Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">{user?.displayName}</span>
                     </h1>
                     <p className="text-gray-400 max-w-xl">
                         Your clinical intelligence dashboard. Access your past blueprints or start a new deep-dive analysis.

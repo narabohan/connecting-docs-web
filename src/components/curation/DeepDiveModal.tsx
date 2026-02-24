@@ -79,7 +79,7 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...requestData,
-                    userId: user?.id,
+                    userId: user?.uid,
                     userEmail: user?.email
                 }),
             });
@@ -379,7 +379,6 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                         </h3>
                                         <SkinLayerSection
                                             activeLayers={displayData.activeLayers}
-                                            painLevel={displayData.painLevel}
                                             language={language}
                                         />
                                     </div>
