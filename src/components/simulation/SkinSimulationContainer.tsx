@@ -1,10 +1,26 @@
+'use client';
 import { useState, useEffect } from 'react';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
 import ConstraintSelectors from './ConstraintSelectors';
 import LiveRadar from './LiveRadar';
-import MakeFaceMannequin from './FaceMannequin';
+import FaceMannequin from './FaceMannequin';
 import SkinLayerSection from './SkinLayerSection';
-import { Save, Sparkles, RefreshCw, CheckCircle, BrainCircuit } from 'lucide-react';
+import ProtocolSelector from './ProtocolSelector';
+import { RefreshCw, CheckCircle, BrainCircuit, Sparkles } from 'lucide-react';
+
+interface RecommendationProtocol {
+    id: string;
+    rank: number;
+    name: string;
+    matchScore: number;
+    faceZones?: string[];
+    targetLayers?: string | string[];
+    reasonWhy?: {
+        pain_level: string;
+        downtime_level: string;
+        why_suitable: string;
+    };
+}
 
 interface SimulationData {
     primaryIndication: string;
@@ -15,69 +31,58 @@ interface SimulationData {
 interface SkinSimulationContainerProps {
     language: LanguageCode;
     simulationData?: SimulationData;
+    recommendations?: RecommendationProtocol[];
+    onRecalculate?: (pain: string, downtime: string) => void;
+    isRecalculating?: boolean;
 }
 
-export default function SkinSimulationContainer({ language, simulationData }: SkinSimulationContainerProps) {
+export default function SkinSimulationContainer({
+    language,
+    simulationData,
+    recommendations = [],
+    onRecalculate,
+    isRecalculating
+}: SkinSimulationContainerProps) {
     const t = REPORT_TRANSLATIONS[language]?.simulation || REPORT_TRANSLATIONS['EN'].simulation;
 
-    // State: 1 (Low/Economy), 2 (Mid/Standard), 3 (High/Premium)
+    // Gamification sliders: 1 (Low), 2 (Mid), 3 (High)
     const [pain, setPain] = useState(2);
     const [downtime, setDowntime] = useState(2);
     const [budget, setBudget] = useState(2);
 
-    // Derived Logic (Simulation Matrix)
+    // Selected protocol (rank 1, 2, or 3)
+    const [selectedRank, setSelectedRank] = useState(1);
+    const selectedProtocol = recommendations.find(r => r.rank === selectedRank) || recommendations[0];
+
+    // Derived face zones and layers from selected protocol
+    // Priority: API faceZones → goal-based derivation → hardcoded defaults (always shows something)
+    const rawFaceZones: string[] = selectedProtocol?.faceZones?.length
+        ? selectedProtocol.faceZones
+        : (simulationData?.primaryIndication
+            ? deriveZonesFromGoal(simulationData.primaryIndication)
+            : []);
+    // Absolute fallback: show Forehead + Cheek + Jawline if nothing else is available
+    const faceZones: string[] = rawFaceZones.length > 0 ? rawFaceZones : ['Forehead', 'Cheek', 'Jawline'];
+
+    const rawTargetLayers: string[] = parseTargetLayers(selectedProtocol?.targetLayers);
+    const targetLayersForDisplay: string[] = rawTargetLayers.length > 0
+        ? rawTargetLayers
+        : (simulationData?.primaryIndication
+            ? deriveLayersFromGoal(simulationData.primaryIndication)
+            : ['Epidermis', 'Dermis']); // default: show Epidermis + Dermis for any goal
+
+    // Radar state
     const [radarData, setRadarData] = useState<any[]>([]);
-    const [activeLayers, setActiveLayers] = useState<string[]>([]);
-
-    // Zone Logic for Face Mannequin
-    const [primaryZones, setPrimaryZones] = useState<string[]>([]);
-    const [secondaryZones, setSecondaryZones] = useState<string[]>([]);
-
     const [isGlassSkinUnlocked, setIsGlassSkinUnlocked] = useState(false);
 
-    // Helper to map Indication string to Zones and Layers
-    const getIndicationLogic = (indication: string) => {
-        const map: Record<string, { zones: string[], layers: string[] }> = {
-            'Lifting': { zones: ['Jawline', 'Neck'], layers: ['SMAS', 'Muscle'] },
-            'Sagging': { zones: ['Jawline', 'Cheek'], layers: ['SMAS', 'Dermis'] },
-            'Firmness': { zones: ['Cheek'], layers: ['Dermis'] },
-            'Elasticity': { zones: ['Cheek', 'EyeArea'], layers: ['Dermis'] },
-            'Texture': { zones: ['Cheek', 'Forehead'], layers: ['Epidermis'] },
-            'Pores': { zones: ['Nose', 'Cheek'], layers: ['Epidermis'] },
-            'Glow': { zones: ['Forehead', 'Cheek'], layers: ['Epidermis', 'Dermis'] },
-            'Wrinkles': { zones: ['EyeArea', 'Forehead'], layers: ['Dermis'] },
-            'Pigmentation': { zones: ['Cheek', 'EyeArea'], layers: ['Epidermis'] },
-            'Redness': { zones: ['Cheek', 'Nose'], layers: ['Epidermis'] }
-        };
-
-        for (const key in map) {
-            if (indication.toLowerCase().includes(key.toLowerCase())) return map[key];
-        }
-        return { zones: [], layers: [] };
-    };
+    const mapScore = (val: number) => Math.min(100, Math.max(40, 40 + (val - 1) * 30));
 
     useEffect(() => {
-        // --- 1. Radar Calculation (1-3 Scale) ---
-        // Axes: Lifting, Firmness, Texture, Skin Glow, Safety
-
-        // Lifting: High Pain (Energy) + High Budget -> strong lifting
-        const liftingScore = mapScore((pain * 0.6 + budget * 0.4));
-
-        // Firmness: Budget (Volume) + Pain (Energy)
-        const firmnessScore = mapScore((budget * 0.7 + pain * 0.3));
-
-        // Texture: Downtime (Resurfacing) + Budget
-        // Higher downtime typically means stronger resurfacing -> better texture result
-        const textureScore = mapScore((downtime * 0.6 + budget * 0.4));
-
-        // Glow: Low Pain + Low Downtime (Gentle care) is safer, but High Budget (Boosters) adds glow
-        // User logic: "Low Pain/Budget increases Safety and Glow" (Wait, usually boosters cost money/pain? sticking to user request)
-        // User: "Low Pain increases 'Safety' and 'Glow'."
-        const glowScore = mapScore(((4 - pain) * 0.7 + (4 - downtime) * 0.3));
-
-        // Safety: Low Pain + Low Downtime
-        // User logic: "High Pain/Budget ... slightly reduces Safety"
-        const safetyScore = mapScore(((4 - pain) * 0.5 + (4 - downtime) * 0.5));
+        const liftingScore = mapScore(pain * 0.6 + budget * 0.4);
+        const firmnessScore = mapScore(budget * 0.7 + pain * 0.3);
+        const textureScore = mapScore(downtime * 0.6 + budget * 0.4);
+        const glowScore = mapScore((4 - pain) * 0.7 + (4 - downtime) * 0.3);
+        const safetyScore = mapScore((4 - pain) * 0.5 + (4 - downtime) * 0.5);
 
         setRadarData([
             { subject: t.radar.lifting, A: liftingScore, fullMark: 100 },
@@ -87,90 +92,90 @@ export default function SkinSimulationContainer({ language, simulationData }: Sk
             { subject: t.radar.safety, A: safetyScore, fullMark: 100 },
         ]);
 
-        // --- 2. Tally Data Integration (Indications & Locations) ---
-        let calculatedLayers = new Set<string>();
-        let pZones = new Set<string>();
-        let sZones = new Set<string>();
-
-        // A. Apply Manual Input Logic first
-        if (downtime === 1) calculatedLayers.add('Epidermis');
-        if (downtime >= 2 || pain >= 2) calculatedLayers.add('Dermis');
-        if (pain === 3 || budget === 3) {
-            calculatedLayers.add('SMAS');
-            calculatedLayers.add('Muscle');
-        }
-
-        // B. Apply Simulation Data (Tally) overrides/additions
-        if (simulationData) {
-            // Primary Indication
-            if (simulationData.primaryIndication) {
-                const logic = getIndicationLogic(simulationData.primaryIndication);
-                logic.layers.forEach(l => calculatedLayers.add(l));
-                logic.zones.forEach(z => pZones.add(z));
-            }
-            // Secondary Indication
-            if (simulationData.secondaryIndication) {
-                const logic = getIndicationLogic(simulationData.secondaryIndication);
-                logic.layers.forEach(l => calculatedLayers.add(l));
-                logic.zones.forEach(z => sZones.add(z));
-            }
-            // Explicit Locations
-            if (simulationData.locations) {
-                // Map text locations to our simplified zones if needed, or assume they match
-                simulationData.locations.forEach(loc => {
-                    // Simple mapping or direct add if matches our FaceMannequin keys
-                    if (['Forehead', 'Cheek', 'Jawline', 'EyeArea', 'Nose', 'Neck'].includes(loc)) {
-                        pZones.add(loc);
-                    }
-                });
-            }
-        } else {
-            // Fallback for Landing Page (Manual Simulator) - visualize based on "inferred" impact
-            if (liftingScore > 70) pZones.add('Jawline');
-            if (textureScore > 70) pZones.add('Cheek');
-            if (glowScore > 80) pZones.add('Forehead');
-        }
-
-        setActiveLayers(Array.from(calculatedLayers));
-        setPrimaryZones(Array.from(pZones));
-        setSecondaryZones(Array.from(sZones));
-
-        // --- 3. Gamification ---
         const avg = (liftingScore + firmnessScore + textureScore + glowScore + safetyScore) / 5;
         setIsGlassSkinUnlocked(avg > 80);
+    }, [pain, downtime, budget, t]);
 
-    }, [pain, downtime, budget, simulationData, t]);
-
-    // Helper to map 1-3 range to 40-100 radar value
-    const mapScore = (val: number) => {
-        // val is roughly 1 to 3
-        return Math.min(100, Math.max(40, 40 + (val - 1) * 30));
+    const handleRecalculate = () => {
+        if (!onRecalculate) return;
+        const painMap: Record<number, string> = { 1: 'Prefer minimal pain', 2: 'Moderate is okay', 3: 'High tolerance' };
+        const downtimeMap: Record<number, string> = { 1: 'None (Daily life immediately)', 2: 'Short (3–4 days)', 3: 'Long (1 week+)' };
+        onRecalculate(painMap[pain], downtimeMap[downtime]);
     };
 
+    const sectionTitle = language === 'KO' ? '맞춤 피부 블루프린트'
+        : language === 'JP' ? 'パーソナルスキンブループリント'
+            : language === 'CN' ? '个性化皮肤蓝图' : 'Personalized Skin Blueprint';
+
     return (
-        <div className="w-full bg-[#0a0a2a] p-6 lg:p-12 border-t border-white/5 relative overflow-hidden" id="simulation">
-            {/* Background Elements */}
+        <div className="w-full bg-[#0a0a2a] border-t border-white/5 relative overflow-hidden" id="simulation">
+            {/* Background glows */}
             <div className="absolute top-0 right-0 w-1/2 h-full bg-blue-900/5 blur-3xl rounded-full translate-x-1/2 pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-cyan-900/5 blur-3xl rounded-full -translate-x-1/2 pointer-events-none" />
 
-            <div className="relative z-10 container mx-auto">
-                {/* Header */}
-                <div className="text-center mb-12 space-y-4">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-mono mb-2">
+            <div className="relative z-10 container mx-auto px-6 py-10">
+                {/* Section Header */}
+                <div className="text-center mb-8 space-y-3">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-mono">
                         <BrainCircuit className="w-3 h-3" />
-                        AI SIMULATION ENGINE
+                        {sectionTitle.toUpperCase()}
                     </div>
-                    <h2 className="text-3xl md:text-5xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 inline-block">
-                        {t.title}
+                    <h2 className="text-2xl md:text-3xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 inline-block">
+                        {sectionTitle}
                     </h2>
-                    <p className="text-gray-400 max-w-2xl mx-auto text-lg leading-relaxed">{t.subtitle}</p>
                 </div>
 
-                {/* Main Grid */}
-                <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                {/* Part 1: Protocol Selector + Face Map + Skin Layers */}
+                <div className="mb-10">
+                    {/* Protocol Selection Tabs (only show if we have data) */}
+                    {recommendations.length > 0 && (
+                        <ProtocolSelector
+                            protocols={recommendations}
+                            selected={selectedRank}
+                            onSelect={setSelectedRank}
+                            language={language}
+                        />
+                    )}
 
-                    {/* Left: Input Selectors - Col Span 3 */}
-                    <div className="xl:col-span-3">
+                    {/* Visualization Grid — ALWAYS visible */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4" style={{ minHeight: 340 }}>
+                        <FaceMannequin
+                            primaryZones={faceZones}
+                            language={language}
+                            protocolName={selectedProtocol?.name || (recommendations.length === 0 ? (simulationData?.primaryIndication || undefined) : undefined)}
+                        />
+                        <SkinLayerSection
+                            activeLayers={targetLayersForDisplay}
+                            language={language}
+                            protocolName={selectedProtocol?.name}
+                        />
+                    </div>
+
+                    {/* Why this protocol */}
+                    {selectedProtocol?.reasonWhy?.why_suitable && (
+                        <div className="mt-4 rounded-xl px-5 py-3 text-sm font-mono"
+                            style={{ background: 'rgba(0,255,255,0.04)', border: '1px solid rgba(0,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }}>
+                            💡 {selectedProtocol.reasonWhy.why_suitable}
+                        </div>
+                    )}
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-white/5 mb-8" />
+
+                {/* Part 2: What-If Sliders + Radar */}
+                <div className="mb-3 text-center">
+                    <span className="text-[10px] font-mono tracking-[0.2em]" style={{ color: 'rgba(0,255,255,0.5)' }}>
+                        {language === 'KO' ? '조건 변경 시 어떤 시술이 더 가능해지는지 탐색하세요'
+                            : language === 'JP' ? '条件を変えてさらなる可能性を探ってください'
+                                : language === 'CN' ? '调整条件，探索更多可能性'
+                                    : 'Adjust constraints to discover more treatment options'}
+                    </span>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                    {/* Left: Sliders */}
+                    <div className="xl:col-span-4">
                         <ConstraintSelectors
                             pain={pain} setPain={setPain}
                             downtime={downtime} setDowntime={setDowntime}
@@ -179,14 +184,12 @@ export default function SkinSimulationContainer({ language, simulationData }: Sk
                         />
                     </div>
 
-                    {/* Middle: Visuals (Radar + Face) - Col Span 6 */}
-                    <div className="xl:col-span-6 flex flex-col gap-6">
-                        {/* Radar Chart */}
-                        <div className="h-[400px]">
+                    {/* Right: Radar */}
+                    <div className="xl:col-span-8 flex flex-col gap-6">
+                        <div className="h-[320px]">
                             <LiveRadar data={radarData} language={language} />
                         </div>
 
-                        {/* Gamification Notification */}
                         {isGlassSkinUnlocked && (
                             <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex items-center justify-center gap-3 animate-pulse">
                                 <Sparkles className="w-5 h-5 text-emerald-400" />
@@ -194,41 +197,65 @@ export default function SkinSimulationContainer({ language, simulationData }: Sk
                             </div>
                         )}
                     </div>
-
-                    {/* Right: Skin Layers & Face Map - Col Span 3 */}
-                    <div className="xl:col-span-3 flex flex-col gap-6">
-                        <MakeFaceMannequin
-                            primaryZones={primaryZones}
-                            secondaryZones={secondaryZones}
-                            language={language}
-                        />
-                        <SkinLayerSection
-                            activeLayers={activeLayers}
-                            painLevel={pain}
-                            language={language}
-                        />
-                    </div>
                 </div>
 
-                {/* Actions */}
-                <div className="mt-16 text-center space-y-6">
-                    <div className="bg-white/5 rounded-2xl p-6 max-w-2xl mx-auto border border-white/10 backdrop-blur-sm">
-                        <p className="text-gray-300 font-medium mb-4">{t.evaluation}</p>
+                {/* Recalculate CTA */}
+                <div className="mt-10 text-center space-y-4">
+                    <div className="bg-white/5 rounded-2xl p-5 max-w-xl mx-auto border border-white/10 backdrop-blur-sm">
+                        <p className="text-gray-300 font-medium mb-4 text-sm">{t.evaluation}</p>
                         <button
                             onClick={() => { setPain(2); setDowntime(2); setBudget(2); }}
-                            className="text-sm text-cyan-400 hover:text-cyan-300 hover:underline flex items-center justify-center gap-2 mx-auto"
-                        >
+                            className="text-sm text-cyan-400 hover:text-cyan-300 hover:underline flex items-center justify-center gap-2 mx-auto">
                             <RefreshCw className="w-4 h-4" />
                             {t.retry}
                         </button>
                     </div>
 
-                    <button className="bg-white text-black hover:bg-gray-200 px-10 py-4 rounded-full font-bold text-lg transition-transform transform hover:scale-105 flex items-center gap-3 mx-auto shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-                        <CheckCircle className="w-5 h-5" />
-                        {t.finalCall}
+                    <button
+                        onClick={handleRecalculate}
+                        disabled={isRecalculating}
+                        className={`bg-white text-black px-10 py-4 rounded-full font-bold text-base transition-transform transform flex items-center gap-3 mx-auto shadow-[0_0_20px_rgba(255,255,255,0.3)] ${isRecalculating ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200 hover:scale-105'}`}>
+                        {isRecalculating ? <RefreshCw className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
+                        {isRecalculating
+                            ? (language === 'KO' ? '재계산 중...' : language === 'JP' ? '再計算中...' : language === 'CN' ? '重新计算中...' : 'Recalculating...')
+                            : (language === 'KO' ? '조건 적용 후 추천 재계산' : language === 'JP' ? '条件適用して再計算' : language === 'CN' ? '应用条件并重新推荐' : 'Apply & Recalculate Recommendations')}
                     </button>
                 </div>
             </div>
         </div>
     );
+}
+
+// Helper: parse targetLayers from Airtable (can be string, string[], or undefined)
+function parseTargetLayers(raw: string | string[] | undefined): string[] {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    if (typeof raw === 'string') {
+        return raw.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return [];
+}
+
+// Fallback zone derivation from goal string
+function deriveZonesFromGoal(goal: string): string[] {
+    const zones = new Set<string>();
+    if (/lift|sag|jaw|neck|v.line|contour/i.test(goal)) { zones.add('Jawline'); zones.add('Neck'); }
+    if (/firm|elast|cheek|volume/i.test(goal)) zones.add('Cheek');
+    if (/texture|pore|glow|bright|tone|glass/i.test(goal)) { zones.add('Forehead'); zones.add('Cheek'); }
+    if (/wrinkle|frown|forehead/i.test(goal)) { zones.add('EyeArea'); zones.add('Forehead'); }
+    if (/pigment|melasma|spot|redness/i.test(goal)) { zones.add('Cheek'); zones.add('Nose'); }
+    if (/eye/i.test(goal)) zones.add('EyeArea');
+    if (zones.size === 0) { zones.add('Cheek'); zones.add('Forehead'); } // universal fallback
+    return Array.from(zones);
+}
+
+// Fallback skin layer derivation from goal string
+function deriveLayersFromGoal(goal: string): string[] {
+    const layers: string[] = [];
+    if (/lift|sag|jaw|contour|v.line|smas/i.test(goal)) layers.push('SMAS');
+    if (/firm|elast|collagen|dermis/i.test(goal)) layers.push('Dermis');
+    if (/texture|pore|glow|bright|tone|glass|skin/i.test(goal)) layers.push('Epidermis');
+    if (/muscle|jaw|sculpt/i.test(goal)) layers.push('Muscle');
+    if (layers.length === 0) { layers.push('Epidermis'); layers.push('Dermis'); } // fallback
+    return layers;
 }

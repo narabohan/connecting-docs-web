@@ -36,15 +36,15 @@ export default function Dashboard() {
         );
     }
 
-    const isDoctor = user.role === 'doctor' || user.email?.includes('doctor'); // Fallback logic if role missing
+    const isDoctor = user.role === 'doctor'; // use strict role
 
     return (
         <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-cyan-500/30">
-            <Header currentLang={(user.language as any) || 'EN'} onLangChange={() => { }} />
+            <Header currentLang={((user as any).language as any) || 'EN'} onLangChange={() => { }} />
 
             {isDoctor ? <DoctorDashboard /> : <PatientDashboard />}
 
-            <Footer language={user.language || 'EN'} />
+            <Footer language={((user as any).language as any) || 'EN'} />
         </div>
     );
 }

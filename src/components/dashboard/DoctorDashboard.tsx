@@ -111,7 +111,7 @@ export default function DoctorDashboard() {
                             <span className="text-gray-500 text-sm">Member since 2024</span>
                         </div>
                         <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-                            Dr. {user?.name}
+                            Dr. {user?.displayName}
                         </h1>
                         <p className="text-gray-400 max-w-xl text-lg">
                             Track your clinical impact and patient matches.
@@ -223,7 +223,10 @@ export default function DoctorDashboard() {
                                     You have <span className="text-white font-bold">{apiStats.totalMatches}</span> active matches waiting for consultation.
                                 </p>
                             </div>
-                            <button className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-bold text-white transition-colors">
+                            <button
+                                onClick={() => router.push('/doctor/waitlist')}
+                                className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-bold text-white transition-colors"
+                            >
                                 View Waitlist
                             </button>
                         </div>

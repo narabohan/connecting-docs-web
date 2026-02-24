@@ -6,9 +6,10 @@ interface UnlockModalProps {
     isOpen: boolean;
     onClose: () => void;
     language?: LanguageCode;
+    reportId?: string;
 }
 
-export default function UnlockModal({ isOpen, onClose, language = 'EN' }: UnlockModalProps) {
+export default function UnlockModal({ isOpen, onClose, language = 'EN', reportId }: UnlockModalProps) {
     const t = (REPORT_TRANSLATIONS[language] || REPORT_TRANSLATIONS['EN']).report?.modal || {
         title: 'Unlock Your Master Profile',
         subtitle: 'Get personalized doctor recommendations + instant consultation booking.',
@@ -26,12 +27,29 @@ export default function UnlockModal({ isOpen, onClose, language = 'EN' }: Unlock
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email.trim()) return;
+        if (!email.trim() || !reportId) return;
         setLoading(true);
-        await new Promise(r => setTimeout(r, 1200));
-        setSubmitted(true);
-        setLoading(false);
-        setTimeout(() => { onClose(); setSubmitted(false); setEmail(''); }, 2500);
+        try {
+            const res = await fetch('/api/report/unlock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, reportId })
+            });
+            if (res.ok) {
+                setSubmitted(true);
+            } else {
+                console.error("Failed to unlock");
+            }
+        } catch (e) {
+            console.error("Unlock error:", e);
+        } finally {
+            setLoading(false);
+            if (submitted) {
+                setTimeout(() => { onClose(); setSubmitted(false); setEmail(''); }, 2500);
+            } else {
+                setTimeout(() => { onClose(); setSubmitted(false); setEmail(''); }, 2500); // close anyway for mockup
+            }
+        }
     };
 
     if (!isOpen) return null;

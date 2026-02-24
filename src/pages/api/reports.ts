@@ -14,21 +14,60 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-        const records = await base('patient_logs').select({
+        // 1. Users 테이블에서 해당 이메일의 유저 ID 조회
+        const userRecords = await base('Users').select({
             filterByFormula: `{email} = '${email.replace(/'/g, "\\'")}'`,
-            sort: [{ field: 'created_at', direction: 'desc' }],
-            maxRecords: 20,
-        }).all();
+            maxRecords: 1,
+        }).firstPage();
 
-        const reports = records.map(r => ({
-            id: r.id,
-            date: r.fields.created_at || r.fields.Date || '',
-            topRecommendation: r.fields.top_recommendation || r.fields.Top_Recommendation || '',
-            matchScore: r.fields.match_score || r.fields.Match_Score || null,
-            primaryGoal: r.fields.primaryGoal || r.fields.primary_goal || '',
-            skinType: r.fields.skinType || r.fields.skin_type || '',
-            status: r.fields.status || 'completed',
-        }));
+        if (userRecords.length === 0) {
+            return res.status(200).json({ reports: [] });
+        }
+
+        const userId = userRecords[0].id;
+
+        // 2. Reports 테이블에서 해당 유저의 리포트 조회 (FIND로 링크 필드 필터)
+        const records = await base('Reports').select({
+            filterByFormula: `FIND('${userId}', ARRAYJOIN({User}))`,
+            sort: [{ field: 'Created_at', direction: 'desc' }],
+            maxRecords: 20,
+        }).all().catch(async () => {
+            // Created_at 필드가 없을 경우 정렬 없이 재시도
+            return base('Reports').select({
+                filterByFormula: `FIND('${userId}', ARRAYJOIN({User}))`,
+                maxRecords: 20,
+            }).all();
+        });
+
+        const reports = records.map(r => {
+            // Output_JSON에서 top 추천 파싱 시도
+            let topRecommendation = '';
+            let matchScore: number | null = null;
+            let primaryGoal = '';
+            let skinType = '';
+
+            try {
+                const output = JSON.parse(r.fields.Output_JSON as string || '{}');
+                topRecommendation = output.rank1?.protocol || '';
+                matchScore = output.rank1?.score ?? null;
+            } catch { /* ignore */ }
+
+            try {
+                const input = JSON.parse(r.fields.Input_JSON as string || '{}');
+                primaryGoal = input.primaryGoal || '';
+                skinType = input.skinType || '';
+            } catch { /* ignore */ }
+
+            return {
+                id: r.id,
+                date: r.fields.Created_at || r.fields.created_at || '',
+                topRecommendation,
+                matchScore,
+                primaryGoal,
+                skinType,
+                status: (r.fields.Status as string) || 'completed',
+            };
+        });
 
         res.status(200).json({ reports });
     } catch (error: any) {

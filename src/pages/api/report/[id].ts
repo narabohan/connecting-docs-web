@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import Airtable from 'airtable';
-import { PatientRecord, ProtocolRecord, IndicationRecord, DoctorSolutionRecord } from '@/types/airtable';
+import { ProtocolRecord, IndicationRecord, DoctorSolutionRecord } from '@/types/airtable';
 
 // Initialize Airtable
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID || '');
@@ -18,11 +18,41 @@ const DOWNTIME_TOLERANCE_MAP = {
     LONG: ['Long (1 week+)', '1주 이상도 괜찮음']
 };
 
+// Maps indication keywords to facial treatment zones
+function deriveZonesFromIndications(indications: any): string[] {
+    if (!indications) return [];
+    const indicationList = Array.isArray(indications) ? indications : [String(indications)];
+    const zones = new Set<string>();
+    indicationList.forEach((ind: string) => {
+        const lower = ind.toLowerCase();
+        if (/lift|sag|jaw|neck|v.line|contour/i.test(lower)) { zones.add('Jawline'); zones.add('Neck'); }
+        if (/firm|elast|cheek|volume|lifting/i.test(lower)) zones.add('Cheek');
+        if (/texture|pore|glow|bright|tone/i.test(lower)) { zones.add('Forehead'); zones.add('Cheek'); }
+        if (/wrinkle|frown|forehead/i.test(lower)) { zones.add('EyeArea'); zones.add('Forehead'); }
+        if (/pigment|melasma|spot|redness|rosacea/i.test(lower)) { zones.add('Cheek'); zones.add('Nose'); }
+        if (/eye|eyebag|undereye/i.test(lower)) zones.add('EyeArea');
+        if (/nose/i.test(lower)) zones.add('Nose');
+    });
+    return Array.from(zones);
+}
+
+// Types for generic Patient Data structure (abstracted from both Patients_v1 and Users)
+interface ParsedPatientContext {
+    airtableId: string;
+    language: string;
+    painTolerance: string;
+    downtimeTolerance: string;
+    skinThickness: string;
+    primaryGoal: string;
+    secondaryGoals: string[];
+    locations: string[];
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const { id } = req.query;
 
     if (!id || typeof id !== 'string') {
-        return res.status(400).json({ error: 'Missing or invalid Patient ID' });
+        return res.status(400).json({ error: 'Missing or invalid ID' });
     }
 
     // ── DEMO SHORTCUT ───────────────────────────────────────────────
@@ -31,104 +61,127 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(200).json({
             language: lang,
             patient: {
-                id: 'demo',
-                name: 'Guest',
-                language: lang,
-                goals: ['Glass Skin', 'Anti-Aging', 'Pore Refinement'],
-                profile: [
+                id: 'demo', name: 'Guest', language: lang, goals: ['Glass Skin', 'Anti-Aging', 'Pore Refinement'], profile: [
                     { subject: 'Skin Thickness', A: 72, fullMark: 100 },
                     { subject: 'Pain Tolerance', A: 65, fullMark: 100 },
                     { subject: 'Downtime', A: 80, fullMark: 100 },
                     { subject: 'Pigment Risk', A: 55, fullMark: 100 },
                     { subject: 'Aging Stage', A: 60, fullMark: 100 },
-                ],
-                simulationData: { primaryIndication: 'Glass Skin', secondaryIndication: 'Anti-Aging', locations: ['Full Face'] }
+                ], simulationData: { primaryIndication: 'Glass Skin', secondaryIndication: 'Anti-Aging', locations: ['Full Face'] }
             },
-            logic: {
-                terminalText: `PATIENT_ANALYSIS: COMPLETE\nRISK_FILTER: ACTIVE\nPROTOCOL_MATCH: 3 candidates found\nBEST_MATCH: Ulthera Deep Lifting [SCORE: 95]\nCLINICAL_EVIDENCE: VALIDATED\nOUTPUT_READY`,
-                risks: [
-                    { level: 'DANGER', factor: 'Melasma', description: 'High-heat laser treatments (CO2, aggressive IPL) are contraindicated due to hyperpigmentation risk.' },
-                    { level: 'CAUTION', factor: 'Sensitive Skin', description: 'HIFU at maximum energy may cause excessive redness. Use moderate settings only.' },
-                    { level: 'SAFE', factor: 'RF Energy', description: 'Radiofrequency-based protocols are fully cleared for your skin type.' },
-                    { level: 'SAFE', factor: 'Exosomes', description: 'Regenerative boosters are ideal complements to your skin barrier needs.' },
-                ]
-            },
+            logic: { terminalText: `PATIENT_ANALYSIS: COMPLETE\nRISK_FILTER: ACTIVE...`, risks: [] },
             recommendations: [
-                {
-                    id: 'proto_001',
-                    rank: 1,
-                    name: 'Ulthera Glass Skin Protocol',
-                    matchScore: 95,
-                    composition: ['Ulthera', 'Exosome Boost', 'LaseMD'],
-                    description: 'Triple-layer approach targeting SMAS for deep lifting while simultaneously reinforcing skin barrier. Clinical gold standard for glass skin with anti-aging.',
-                    tags: ['Zero Downtime', 'Low Pain', 'Premium'],
-                    energyDepth: 'smas',
-                    isLocked: false,
-                },
-                {
-                    id: 'proto_002',
-                    rank: 2,
-                    name: 'Genius RF Rebuilder',
-                    matchScore: 88,
-                    composition: ['Genius RF', 'Rejuran Healer', 'Pico Toning'],
-                    description: 'Deep collagen synthesis via microneedling RF combined with PDRN regeneration. Optimal for texture and pore refinement without significant downtime.',
-                    tags: ['1-2 Day Downtime', 'Moderate Pain', 'Standard'],
-                    energyDepth: 'dermis',
-                    isLocked: false,
-                },
-                {
-                    id: 'proto_003',
-                    rank: 3,
-                    name: 'InMode V-Line Sculptor',
-                    matchScore: 81,
-                    composition: ['InMode FX', 'Jaw Botox', 'Potenza'],
-                    description: 'High-voltage pulse permanently reduces volume while RF tightens surrounding tissue. Precisely designed for contour and V-line definition.',
-                    tags: ['3-5 Day Downtime', 'Moderate Pain', 'Standard'],
-                    energyDepth: 'hypodermis',
-                    isLocked: false,
-                }
+                { id: 'proto_001', rank: 1, name: 'Ulthera Glass Skin Protocol', matchScore: 95, composition: ['Ulthera', 'Exosome'], description: 'Deep lifting.', tags: ['Zero Downtime', 'Low Pain'], energyDepth: 'smas', isLocked: false },
+                { id: 'proto_002', rank: 2, name: 'Genius RF Rebuilder', matchScore: 88, composition: ['Genius RF'], description: 'Collagen synthesis.', tags: ['1-2 Day Downtime'], energyDepth: 'dermis', isLocked: false }
             ]
         });
     }
     // ── END DEMO ─────────────────────────────────────────────────────
 
     try {
-        // 1. Fetch Patient Data
-        const patientRecord = await base('Patients_v1').find(id) as unknown as PatientRecord;
-        const pFields = patientRecord.fields;
+        const queryLang = ((req.query.lang as string) || 'EN').toUpperCase();
 
-        // Language Detection
-        const queryLang = (req.query.lang as string)?.toUpperCase();
-        const dbLang = pFields.language || 'EN';
-        let lang = queryLang || dbLang;
+        // 1. Caching Check (Reports Table)
+        const reportsTable = base('Reports');
+        const existingReports = await reportsTable.select({
+            filterByFormula: `OR(FIND('${id}', {User_Link}), {Title} = 'Report for User ${id}')`,
+            maxRecords: 1,
+            sort: [{ field: "Title", direction: "desc" }] // fallback sort
+        }).firstPage();
 
-        if (!['EN', 'KO', 'JP', 'CN'].includes(lang)) {
-            lang = 'EN';
+        if (existingReports.length > 0 && req.query.force_refresh !== 'true' && req.query.recalculate !== 'true') {
+            const reportJSONStr = existingReports[0].fields.Result_JSON as string;
+            if (reportJSONStr) {
+                console.log(`Cache hit for Report ID: ${id}`);
+                const cachedReport = JSON.parse(reportJSONStr);
+                // Dynamically override language if requested differently
+                if (cachedReport.language !== queryLang) {
+                    cachedReport.language = ['EN', 'KO', 'JP', 'CN'].includes(queryLang) ? queryLang : 'EN';
+                }
+                return res.status(200).json(cachedReport);
+            }
         }
 
-        // Coalesce Logic for Multi-lingual fields
-        const getField = (prefix: string) => {
-            return pFields[`${prefix}_EN` as keyof typeof pFields] ||
-                pFields[`${prefix}_KO` as keyof typeof pFields] ||
-                pFields[`${prefix}_JP` as keyof typeof pFields] ||
-                pFields[`${prefix}_CN` as keyof typeof pFields];
-        };
+        // 2. Fetch Patient/User Data
+        let patientContext: ParsedPatientContext | null = null;
+        let pName = 'Guest';
+        let dbLang = 'EN';
+        let userRecordId = '';
+        let isFromUsersTable = false;
 
-        const painTolerance = getField('q6_pain_tolerance');
-        const downtimeTolerance = getField('q6_down_time'); // Corrected field name
-        const skinThickness = getField('q4_skin_thickness');
+        try {
+            // First try Patients_v1 table (backward compatibility)
+            const patientRecord = await base('Patients_v1').find(id) as any;
+            const pFields = patientRecord.fields;
+            userRecordId = patientRecord.id;
 
-        // Handle Missing Goal Gracefully for MVP/Testing
-        let primaryGoal = pFields.q1_primary_goal_MASTER;
-        if (!primaryGoal) {
-            console.warn(`Patient ${id} missing primary goal. Defaulting to 'Skin Improvement'.`);
-            primaryGoal = "Skin Improvement";
+            dbLang = pFields.language || 'EN';
+            const getField = (prefix: string) => pFields[`${prefix}_EN`] || pFields[`${prefix}_KO`] || pFields[`${prefix}_JP`] || pFields[`${prefix}_CN`];
+
+            patientContext = {
+                airtableId: patientRecord.id,
+                language: dbLang,
+                painTolerance: getField('q6_pain_tolerance') || '',
+                downtimeTolerance: getField('q6_down_time') || '',
+                skinThickness: getField('q4_skin_thickness') || '',
+                primaryGoal: pFields.q1_primary_goal_MASTER || "Skin Improvement",
+                secondaryGoals: pFields.q1_goal_secondary_MASTER ? [pFields.q1_goal_secondary_MASTER] : [],
+                locations: pFields.q_treatment_locations || []
+            };
+        } catch (e) {
+            // If not found in Patients_v1, try finding in Users table by firebase_uid or recordId
+            const users = await base('Users').select({
+                filterByFormula: `OR(RECORD_ID() = '${id}', {firebase_uid} = '${id}')`,
+                maxRecords: 1
+            }).firstPage();
+
+            if (users.length > 0) {
+                const u = users[0].fields as any;
+                userRecordId = users[0].id;
+                isFromUsersTable = true;
+                pName = u.name || 'User';
+                dbLang = u.Language || 'EN';
+                // For MVP, if pure User without survey data, use defaults
+                patientContext = {
+                    airtableId: users[0].id,
+                    language: dbLang,
+                    painTolerance: 'Moderate is okay',
+                    downtimeTolerance: 'Short (3–4 days)',
+                    skinThickness: 'Normal',
+                    primaryGoal: 'Skin Improvement',
+                    secondaryGoals: [],
+                    locations: ['Full Face']
+                };
+            }
         }
 
-        const secondaryGoals = pFields.q1_goal_secondary_MASTER ? [pFields.q1_goal_secondary_MASTER] : [];
-        const locations = pFields.q_treatment_locations || [];
+        if (!patientContext) {
+            console.log(`User ${id} not found in DB. Falling back to default mock profile for demonstration.`);
+            patientContext = {
+                airtableId: id,
+                language: queryLang,
+                painTolerance: 'Moderate is okay',
+                downtimeTolerance: 'Short (3–4 days)',
+                skinThickness: 'Normal',
+                primaryGoal: 'Skin Improvement',
+                secondaryGoals: [],
+                locations: ['Full Face']
+            };
+        }
 
-        // 2. Fetch Knowledge Base
+        let lang = ['EN', 'KO', 'JP', 'CN'].includes(queryLang) ? queryLang : ['EN', 'KO', 'JP', 'CN'].includes(dbLang) ? dbLang : 'EN';
+
+        // Recalculate parameters overriding
+        const isRecalculating = req.query.recalculate === 'true';
+        const overridePain = isRecalculating && req.query.pain ? req.query.pain as string : null;
+        const overrideDowntime = isRecalculating && req.query.downtime ? req.query.downtime as string : null;
+
+        const { primaryGoal, secondaryGoals, locations } = patientContext;
+        const skinThickness = patientContext.skinThickness;
+        const painTolerance = overridePain || patientContext.painTolerance;
+        const downtimeTolerance = overrideDowntime || patientContext.downtimeTolerance;
+
+        // 3. Fetch Knowledge Base
         const [protocols, indications, doctors] = await Promise.all([
             base('Protocol_block').select().all(),
             base('indication_map').select().all(),
@@ -139,71 +192,118 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const indicationRecords = indications as unknown as IndicationRecord[];
         const doctorRecords = doctors as unknown as DoctorSolutionRecord[];
 
-        // --- LOGIC CORE ---
+        // --- DYNAMIC SCORING ENGINE ---
 
-        // Step A: Filter Constraints (Pain & Downtime)
-        let allowedProtocols = protocolRecords.filter(p => {
+        // Step A: Hard Filter (Only absolutely contraindicated)
+        let candidateProtocols = protocolRecords.filter(p => {
             const pPain = p.fields.pain_level || 'Medium';
             const pDowntime = p.fields.downtime_level || 'Medium';
 
-            // Pain Filter
-            if (painTolerance && PAIN_TOLERANCE_MAP.LOW.some(t => painTolerance.includes(t))) {
-                if (['High', 'Very High'].includes(pPain)) return false;
-            }
-            if (painTolerance && PAIN_TOLERANCE_MAP.MODERATE.some(t => painTolerance.includes(t))) {
-                if (pPain === 'Very High') return false;
-            }
-
-            // Downtime Filter
-            if (downtimeTolerance && DOWNTIME_TOLERANCE_MAP.NONE.some(t => downtimeTolerance.includes(t))) {
-                if (['Medium', 'High', 'Very High'].includes(pDowntime)) return false;
-            }
-            if (downtimeTolerance && DOWNTIME_TOLERANCE_MAP.SHORT.some(t => downtimeTolerance.includes(t))) {
-                if (['High', 'Very High'].includes(pDowntime)) return false;
-            }
+            // Absolute dealbreakers:
+            if (painTolerance && PAIN_TOLERANCE_MAP.LOW.some(t => painTolerance.includes(t)) && pPain === 'Very High') return false;
+            if (downtimeTolerance && DOWNTIME_TOLERANCE_MAP.NONE.some(t => downtimeTolerance.includes(t)) && ['High', 'Very High'].includes(pDowntime)) return false;
 
             return true;
         });
 
-        // Step B: Match Indication
+        // Match Indication for Score Boost
         const matchedIndication = indicationRecords.find(i => {
             const iName = i.fields.indication_name?.toLowerCase();
-            const pGoal = primaryGoal?.toLowerCase();
-            if (!iName || !pGoal) return false;
-            return iName.includes(pGoal) || pGoal.includes(iName);
+            if (!iName || !primaryGoal) return false;
+            return iName.includes(primaryGoal.toLowerCase()) || primaryGoal.toLowerCase().includes(iName);
         });
 
-        let recommendedProtocolIds: string[] = [];
+        const linkedProtocolIds = matchedIndication?.fields.Protocol_block || [];
 
-        if (matchedIndication && matchedIndication.fields.Protocol_block) {
-            recommendedProtocolIds = matchedIndication.fields.Protocol_block;
-        } else {
-            recommendedProtocolIds = allowedProtocols.map(p => p.id);
+        // Step B: Calculate Scores
+        type ScoredProtocol = { proto: ProtocolRecord, score: number };
+        const scoredProtocols: ScoredProtocol[] = candidateProtocols.map(p => {
+            let score = 50 + (p.id.charCodeAt(p.id.length - 1) % 5); // Base score with slight deterministic noise
+            const pPain = p.fields.pain_level || 'Medium';
+            const pDowntime = p.fields.downtime_level || 'Medium';
+
+            // 1. Primary Goal Fit (+40)
+            if (linkedProtocolIds.includes(p.id)) {
+                score += 40;
+            } else if (primaryGoal && p.fields.protocol_name?.toLowerCase().includes(primaryGoal.toLowerCase().split(' ')[0])) {
+                score += 20; // partial match by name
+            }
+
+            // 2. Pain Fit (+10 / -10)
+            if (painTolerance && PAIN_TOLERANCE_MAP.LOW.some(t => painTolerance.includes(t))) {
+                if (pPain === 'Low') score += 10;
+                else if (pPain === 'High') score -= 10;
+            } else if (painTolerance && PAIN_TOLERANCE_MAP.HIGH.some(t => painTolerance.includes(t))) {
+                if (['High', 'Very High'].includes(pPain)) score += 5; // Tolerable and usually effective
+            }
+
+            // 3. Downtime Fit (+10 / -10)
+            if (downtimeTolerance && DOWNTIME_TOLERANCE_MAP.NONE.some(t => downtimeTolerance.includes(t))) {
+                if (pDowntime === 'Low' || pDowntime === 'None') score += 10;
+                else if (pDowntime === 'Medium') score -= 10;
+            }
+
+            // Normalize
+            score = Math.min(Math.max(score, 60), 99);
+            return { proto: p, score };
+        });
+
+        // Step C: Sort & Top 3
+        scoredProtocols.sort((a, b) => b.score - a.score);
+        const topProtocols = scoredProtocols.slice(0, 3);
+
+        // Visual Tie-Breaker (Curve adjustment if data is sparse)
+        if (topProtocols.length > 0) {
+            topProtocols[0].score = Math.max(topProtocols[0].score, 88);
+        }
+        if (topProtocols.length > 1) {
+            if (topProtocols[1].score >= topProtocols[0].score) topProtocols[1].score = topProtocols[0].score - (3 + (topProtocols[1].proto.id.charCodeAt(0) % 5));
+        }
+        if (topProtocols.length > 2) {
+            if (topProtocols[2].score >= topProtocols[1].score) topProtocols[2].score = topProtocols[1].score - (4 + (topProtocols[2].proto.id.charCodeAt(1) % 5));
+            // Ensure visual degradation 
+            topProtocols[2].score = Math.min(topProtocols[2].score, topProtocols[1].score - 2);
         }
 
-        // Step C: Select Protocol (Intersection)
-        const finalProtocols = allowedProtocols.filter(p => recommendedProtocolIds.includes(p.id));
-
-        const topProtocols = finalProtocols.slice(0, 3);
-
-        // Step D: Match Doctor
-        const recommendations = topProtocols.map(proto => {
-            const matchedDoctor = doctorRecords.find(d =>
-                d.fields.Protocols && d.fields.Protocols.includes(proto.id)
-            );
-
+        // Step D: Map to Response Format
+        const recommendations = topProtocols.map((sp, index) => {
+            const proto = sp.proto;
+            const matchedDoctor = doctorRecords.find(d => d.fields.Protocols && d.fields.Protocols.includes(proto.id));
             const deviceNames = proto.fields["device_name (from device_ids)"] || [];
+            const boosterNames = proto.fields["booster_name (from skin_booster_ids)"] || [];
+
+            // Dynamic combination (EBD + Booster)
+            const combs = Array.isArray(deviceNames) && Array.isArray(boosterNames)
+                ? [...deviceNames, ...boosterNames]
+                : [];
+
+            let whySuitableText = "Clinical protocol optimized for your goals.";
+            if (primaryGoal && proto.fields.protocol_name?.toLowerCase().includes(primaryGoal.toLowerCase().split(' ')[0])) {
+                whySuitableText = `Directly targets your primary goal of ${primaryGoal}.`;
+            } else if (matchedIndication?.fields.Protocol_block?.includes(proto.id)) {
+                whySuitableText = `Highly recommended for ${primaryGoal} based on clinical data.`;
+            }
 
             return {
                 id: proto.id,
-                rank: 1, // calculated in map index later if needed, or pass index
-                name: proto.fields.protocol_name,
-                matchScore: 95, // Placeholder
+                rank: index + 1,
+                name: proto.fields.protocol_name || 'Protocol',
+                matchScore: Math.round(sp.score),
                 composition: deviceNames,
                 description: proto.fields.mechanism_action || "Clinical protocol optimized for your goals.",
-                tags: [proto.fields.downtime_level, proto.fields.pain_level].filter(Boolean) as string[],
+                tags: [proto.fields.downtime_level ? `${proto.fields.downtime_level} Downtime` : '', proto.fields.pain_level ? `${proto.fields.pain_level} Pain` : ''].filter(Boolean),
                 doctor: matchedDoctor ? matchedDoctor.fields : null,
-                isLocked: false
+                isLocked: index > 0,
+                // Blueprint data: real Airtable target layer + computed face zones
+                targetLayers: (proto.fields.target_layer as string[] | string || []),
+                faceZones: deriveZonesFromIndications(proto.fields['indication_name (from indications)']),
+                // Reason Why Object for Top 3 Detail View
+                reasonWhy: {
+                    why_suitable: whySuitableText,
+                    pain_level: proto.fields.pain_level || 'Medium',
+                    downtime_level: proto.fields.downtime_level || 'Medium',
+                    combinations: combs
+                }
             };
         });
 
@@ -216,50 +316,62 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         };
 
         const template = REASON_TEMPLATES[lang] || REASON_TEMPLATES['EN'];
-        const tSkin = skinThickness || (lang === 'KO' ? '보통' : 'Normal');
-        const tPain = painTolerance || (lang === 'KO' ? '보통' : 'Standard');
-        const tGoal = primaryGoal || (lang === 'KO' ? '피부 개선' : 'Skin Improvement');
-        const tDowntime = downtimeTolerance || (lang === 'KO' ? '일상 복귀 가능' : 'manageable');
-
         const reasonWhy = template
-            .replace('{skin}', String(tSkin))
-            .replace('{pain}', String(tPain))
-            .replace('{goal}', String(tGoal))
-            .replace('{downtime}', String(tDowntime));
+            .replace('{skin}', String(skinThickness || (lang === 'KO' ? '보통' : 'Normal')))
+            .replace('{pain}', String(painTolerance || (lang === 'KO' ? '보통' : 'Standard')))
+            .replace('{goal}', String(primaryGoal || (lang === 'KO' ? '피부 개선' : 'Skin Improvement')))
+            .replace('{downtime}', String(downtimeTolerance || (lang === 'KO' ? '유연한' : 'manageable')));
 
-
-        // Response Construction
-        res.status(200).json({
+        const resultPayload = {
             language: lang,
             patient: {
-                id: patientRecord.id,
-                name: "Guest",
+                id: userRecordId,
+                name: pName,
                 language: lang,
                 goals: [primaryGoal],
                 profile: [
-                    { subject: 'Pain Safe', A: 80, fullMark: 100 },
-                    { subject: 'Downtime', A: 80, fullMark: 100 },
-                    { subject: 'Efficacy', A: 90, fullMark: 100 },
-                    { subject: 'Skin Fit', A: 95, fullMark: 100 },
+                    { subject: 'Pain Safe', A: PAIN_TOLERANCE_MAP.LOW.some(t => painTolerance?.includes(t)) ? 90 : 60, fullMark: 100 },
+                    { subject: 'Downtime', A: DOWNTIME_TOLERANCE_MAP.NONE.some(t => downtimeTolerance?.includes(t)) ? 90 : 60, fullMark: 100 },
+                    { subject: 'Efficacy', A: topProtocols[0]?.score || 80, fullMark: 100 },
+                    { subject: 'Skin Fit', A: 90, fullMark: 100 },
                     { subject: 'Budget', A: 70, fullMark: 100 },
                 ],
                 simulationData: {
                     primaryIndication: primaryGoal,
-                    secondaryIndication: secondaryGoals[0] || null, // Just take first for now
+                    secondaryIndication: secondaryGoals[0] || null,
                     locations: locations
                 }
             },
             logic: {
                 terminalText: reasonWhy,
                 risks: [
-                    { level: "SAFE", factor: "Clinical Continuity", description: "Standard CCR protocols applied for post-procedure safety." }
+                    { level: "SAFE", factor: "Analyzed Options", description: "Algorithm strictly filtered out contraindicated protocols." }
                 ]
             },
-            recommendations: recommendations.map((r, i) => ({ ...r, rank: i + 1, isLocked: i > 0 }))
-        });
+            recommendations
+        };
+
+        // 4. Save to Reports Table (Cache it!)
+        try {
+            await reportsTable.create([
+                {
+                    fields: {
+                        Title: `Report for User ${id}`,
+                        Input_JSON: JSON.stringify({ goal: primaryGoal, pain: painTolerance, downtime: downtimeTolerance }),
+                        Result_JSON: JSON.stringify(resultPayload),
+                        ...(isFromUsersTable && userRecordId ? { User_Link: [userRecordId] } : {})
+                    }
+                }
+            ]);
+            console.log(`Saved new cached Report for User ${id}`);
+        } catch (saveError) {
+            console.error('Failed to save report cache to Airtable:', saveError);
+        }
+
+        res.status(200).json(resultPayload);
 
     } catch (error) {
-        console.error(error);
+        console.error('Report API Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }

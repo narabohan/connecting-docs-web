@@ -2,20 +2,10 @@ import Head from 'next/head';
 import Navbar from '../../components/Navbar'; // Adjust path if needed
 import SolutionForm from '../../components/doctor/SolutionForm';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { withDoctorGuard } from '@/components/auth/ProtectedRoute';
 
-export default function DoctorOnboarding() {
-    const { user, loading } = useAuth();
-    const router = useRouter();
-
-    useEffect(() => {
-        if (!loading && !user) {
-            router.push('/login');
-        }
-    }, [user, loading, router]);
-
-    if (loading) return null;
+function DoctorOnboarding() {
+    const { user } = useAuth();
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -31,7 +21,7 @@ export default function DoctorOnboarding() {
 
             <main className="max-w-3xl mx-auto py-12 px-6">
                 <div className="mb-8 text-center">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to the Network, Dr. {user?.name}</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to the Network, Dr. {user?.displayName}</h1>
                     <p className="text-gray-600">To complete your profile, please register your primary "Signature Solution".</p>
                 </div>
 
@@ -40,3 +30,5 @@ export default function DoctorOnboarding() {
         </div>
     );
 }
+
+export default withDoctorGuard(DoctorOnboarding);
