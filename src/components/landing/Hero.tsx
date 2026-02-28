@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Activity, Stethoscope, User } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
 import { cn } from '@/utils/cn';
@@ -30,10 +31,13 @@ export default function Hero({ language = 'EN', onDiagnosisComplete, onStartAnal
             <div className="absolute inset-0 z-0">
                 <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/60 to-black/90 z-10" />
                 <div className="absolute inset-0 bg-black/40 z-10" />
-                <img
+                <Image
                     src="/hero-diagram-bg.png"
                     alt="Medical Intelligence Network"
-                    className="w-full h-full object-cover opacity-50"
+                    fill
+                    priority
+                    className="object-cover opacity-50"
+                    sizes="100vw"
                 />
             </div>
 
@@ -156,16 +160,22 @@ export default function Hero({ language = 'EN', onDiagnosisComplete, onStartAnal
 
                     <div className="mt-16 border-t border-white/10 pt-8 flex justify-center gap-12 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
                         <div className="text-center group">
-                            <div className="text-3xl font-bold text-white group-hover:text-blue-400 transition-colors">50+</div>
-                            <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">{t.stats.protocols}</div>
+                            <div className="text-3xl font-bold text-white group-hover:text-blue-400 transition-colors">80+</div>
+                            <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">
+                                {language === 'KO' ? '임상 프로토콜' : language === 'JP' ? '臨床プロトコル' : language === 'CN' ? '临床方案' : 'PROTOCOLS'}
+                            </div>
                         </div>
                         <div className="text-center group">
-                            <div className="text-3xl font-bold text-white group-hover:text-emerald-400 transition-colors">98%</div>
-                            <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">{t.stats.accuracy}</div>
+                            <div className="text-3xl font-bold text-white group-hover:text-emerald-400 transition-colors">4</div>
+                            <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">
+                                {language === 'KO' ? '지원 언어' : language === 'JP' ? '対応言語' : language === 'CN' ? '支持语言' : 'LANGUAGES'}
+                            </div>
                         </div>
                         <div className="text-center group">
-                            <div className="text-3xl font-bold text-white group-hover:text-purple-400 transition-colors">RAG</div>
-                            <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">{t.stats.monitoring}</div>
+                            <div className="text-3xl font-bold text-white group-hover:text-purple-400 transition-colors">5</div>
+                            <div className="text-xs text-gray-500 uppercase tracking-wider mt-1">
+                                {language === 'KO' ? 'AI 모델' : language === 'JP' ? 'AIモデル' : language === 'CN' ? 'AI模型' : 'AI MODELS'}
+                            </div>
                         </div>
                     </div>
                 </motion.div>

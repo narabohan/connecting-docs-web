@@ -80,7 +80,8 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                 body: JSON.stringify({
                     ...requestData,
                     userId: user?.uid,
-                    userEmail: user?.email
+                    userEmail: user?.email,
+                    language,
                 }),
             });
 

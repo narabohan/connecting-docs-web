@@ -4,11 +4,14 @@ import Header from '@/components/Header';
 import Hero from '@/components/landing/Hero';
 import SignatureRanking from '@/components/curation/SignatureRanking';
 import DeepDiveModal from '@/components/curation/DeepDiveModal';
+import HowItWorks from '@/components/HowItWorks';
 import ForPatients from '@/components/landing/ForPatients';
+import SocialProof from '@/components/landing/SocialProof';
 import ForDoctors from '@/components/landing/ForDoctors';
+import AiRoadmap from '@/components/landing/AiRoadmap';
+import FAQ from '@/components/landing/FAQ';
 import PricingTable from '@/components/landing/PricingTable';
 import Footer from '@/components/Footer';
-import AiRoadmap from '@/components/landing/AiRoadmap';
 import AuthModal from '@/components/auth/AuthModal';
 import { LanguageCode } from '@/utils/translations';
 import { useAuth } from '@/context/AuthContext';
@@ -29,14 +32,10 @@ export default function Home() {
 
   useEffect(() => {
     if (router.query.start_wizard) {
-      // Auth gate: require login before opening wizard
-      if (user) {
-        setIsWizardOpen(true);
-      } else {
-        setIsAuthModalOpen(true);
-      }
+      // No auth gate: open wizard directly for all users
+      setIsWizardOpen(true);
     }
-  }, [router.query, user]);
+  }, [router.query]);
 
   const handleSelectSolution = (rank: 1 | 2 | 3) => {
     setSelectedRank(rank);
@@ -48,15 +47,10 @@ export default function Home() {
     setIsModalOpen(true);
   };
 
-  // ── Auth-gated wizard start ────────────────────────────────────────────────
+  // ── Wizard start: No login required to start ────────────────────────────────
+  // Wizard is open to all users. Auth is only required when viewing the saved report.
   const handleStartAnalysis = () => {
-    if (user) {
-      // Already logged in → open wizard directly
-      setIsWizardOpen(true);
-    } else {
-      // Not logged in → show auth modal, then open wizard after login
-      setIsAuthModalOpen(true);
-    }
+    setIsWizardOpen(true);
   };
 
   // When user logs in via AuthModal while trying to start analysis
@@ -74,6 +68,23 @@ export default function Home() {
         <meta name="description" content="Stop Guessing. Start Designing. We translate your skin concerns into data-driven protocols." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
+
+        {/* Open Graph / Social Sharing */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Connecting Docs | The Global Medical Intelligence Platform" />
+        <meta property="og:description" content="Stop Guessing. Start Designing. We translate your skin concerns into data-driven protocols in 4 languages." />
+        <meta property="og:url" content="https://connectingdocs.ai" />
+        <meta property="og:image" content="https://connectingdocs.ai/og-image.png" />
+        <meta property="og:site_name" content="Connecting Docs" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Connecting Docs | AI Skin Treatment Analysis" />
+        <meta name="twitter:description" content="Stop Guessing. Start Designing. Data-driven skin treatment protocols powered by AI." />
+        <meta name="twitter:image" content="https://connectingdocs.ai/og-image.png" />
+
+        {/* Canonical URL */}
+        <link rel="canonical" href="https://connectingdocs.ai" />
       </Head>
 
       <Header currentLang={currentLang} onLangChange={setCurrentLang} />
@@ -82,7 +93,10 @@ export default function Home() {
         <Hero language={currentLang} onDiagnosisComplete={handleDiagnosisComplete} onStartAnalysis={handleStartAnalysis} />
         <SignatureRanking language={currentLang} onSelectSolution={handleSelectSolution} />
 
-        {/* Diagnosis Wizard (Auth-gated) */}
+        {/* How It Works — overview of the 3-step analysis process */}
+        <HowItWorks language={currentLang} />
+
+        {/* Diagnosis Wizard (open to all users) */}
         <DiagnosisWizard
           isOpen={isWizardOpen}
           onClose={() => setIsWizardOpen(false)}
@@ -103,8 +117,18 @@ export default function Home() {
         />
 
         <ForPatients language={currentLang} onStartSurvey={handleStartAnalysis} />
+
+        {/* Social Proof — stats & testimonials */}
+        <SocialProof language={currentLang} />
+
         <ForDoctors language={currentLang} />
-        <AiRoadmap language={currentLang} />
+
+        {/* AI Architecture — visible to logged-in users only (internal details) */}
+        {user && <AiRoadmap language={currentLang} />}
+
+        {/* FAQ — common questions before purchase */}
+        <FAQ language={currentLang} />
+
         <div id="pricing">
           <PricingTable language={currentLang} />
         </div>

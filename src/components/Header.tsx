@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Globe, ChevronDown, Check, LogOut, FileText, User, ChevronUp } from 'lucide-react';
+import { Globe, ChevronDown, Check, LogOut, FileText, User, ChevronUp, Menu, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { LanguageCode, REPORT_TRANSLATIONS } from '@/utils/translations';
 import { useAuth } from '@/context/AuthContext';
@@ -21,6 +21,7 @@ export default function Header({ currentLang, onLangChange }: HeaderProps) {
     const [isLangOpen, setIsLangOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
     const { user, signOut, loading } = useAuth();
@@ -61,6 +62,15 @@ export default function Header({ currentLang, onLangChange }: HeaderProps) {
                             {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.pricing || 'Pricing'}
                         </Link>
                     </nav>
+
+                    {/* Mobile Menu Button */}
+                    <button
+                        className="md:hidden p-2 text-gray-400 hover:text-white transition-colors"
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        aria-label="Toggle mobile menu"
+                    >
+                        {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                    </button>
 
                     {/* Actions */}
                     <div className="flex items-center gap-3">
@@ -170,6 +180,45 @@ export default function Header({ currentLang, onLangChange }: HeaderProps) {
                     </div>
                 </div>
             </header>
+
+            {/* Mobile Navigation Menu */}
+            {isMobileMenuOpen && (
+                <div className="fixed top-20 left-0 right-0 z-40 md:hidden bg-[#0A0A0A]/95 backdrop-blur-md border-b border-white/10 shadow-2xl">
+                    <nav className="container mx-auto px-6 py-4 flex flex-col gap-1">
+                        <Link
+                            href="#patients"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="px-4 py-3 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                        >
+                            {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.patients || 'For Patients'}
+                        </Link>
+                        <Link
+                            href="#doctors"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="px-4 py-3 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                        >
+                            {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.doctors || 'For Doctors'}
+                        </Link>
+                        <Link
+                            href="#pricing"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="px-4 py-3 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                        >
+                            {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.pricing || 'Pricing'}
+                        </Link>
+                        <div className="border-t border-white/10 mt-2 pt-3">
+                            {!user && (
+                                <button
+                                    onClick={() => { setIsAuthModalOpen(true); setIsMobileMenuOpen(false); }}
+                                    className="w-full px-4 py-3 text-sm font-bold text-black bg-white rounded-xl hover:bg-gray-200 transition-colors"
+                                >
+                                    {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.getReport || 'Get Report'}
+                                </button>
+                            )}
+                        </div>
+                    </nav>
+                </div>
+            )}
 
             {/* Auth Modal */}
             <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />

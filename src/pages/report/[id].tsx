@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
-import { Loader2, Download, Lock } from 'lucide-react';
+import { Loader2, Download, Lock, ArrowLeft, Stethoscope } from 'lucide-react';
 
 import AlignmentHero from '@/components/report/AlignmentHero';
 import WhatIfSliders from '@/components/report/WhatIfSliders';
@@ -9,7 +9,9 @@ import TrafficLightRisk from '@/components/report/TrafficLightRisk';
 import Top3Solutions from '@/components/report/Top3Solutions';
 import UnlockModal from '@/components/report/UnlockModal';
 import SkinSimulationContainer from '@/components/simulation/SkinSimulationContainer';
+import DoctorClinicalPanel, { WizardData } from '@/components/report/DoctorClinicalPanel';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
+import { useAuth } from '@/context/AuthContext';
 
 const DEFAULT_RADAR_DATA = [
     { subject: 'Skin Thickness', A: 72, fullMark: 100 },
@@ -29,12 +31,16 @@ const DEFAULT_RISKS = [
 export default function ReportPage() {
     const router = useRouter();
     const { id } = router.query;
+    const { user } = useAuth();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [alignmentScore, setAlignmentScore] = useState(92);
     const [isRecalculating, setIsRecalculating] = useState(false);
+    const [doctorPanelOpen, setDoctorPanelOpen] = useState(true);
+
+    const isDoctor = user?.role === 'doctor';
 
     useEffect(() => {
         if (!id) return;
@@ -61,11 +67,10 @@ export default function ReportPage() {
             if (res.ok) {
                 const json = await res.json();
                 setData(json);
-                // Scroll to top to see new recommendations
                 window.scrollTo({ top: 300, behavior: 'smooth' });
             }
         } catch (error) {
-            console.error("Recalculate failed", error);
+            console.error('Recalculate failed', error);
         } finally {
             setIsRecalculating(false);
         }
@@ -81,7 +86,7 @@ export default function ReportPage() {
                 style={{ background: '#0a0a2a', color: 'white' }}>
                 <Loader2 className="w-12 h-12 animate-spin mb-4" style={{ color: '#00FFFF' }} />
                 <div className="text-sm tracking-widest animate-pulse" style={{ color: 'rgba(0,255,255,0.8)' }}>
-                    {t.loading?.title || 'GENERATING CLINICAL REPORT...'}
+                    {isDoctor ? 'LOADING CLINICAL DATA...' : (t.loading?.title || 'GENERATING CLINICAL REPORT...')}
                 </div>
                 <div className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
                     {t.loading?.subtitle || 'Cross-referencing 847 protocols'}
@@ -106,6 +111,11 @@ export default function ReportPage() {
     const risks = data?.logic?.risks?.length > 0 ? data.logic.risks : DEFAULT_RISKS;
     const recommendations = data?.recommendations || [];
 
+    // Try to parse WizardData from report data
+    const wizardData: WizardData | null = data?.wizardData || data?.patient?.wizardData || null;
+    const patientEmail = data?.patient?.email || '';
+    const matchScore = data?.alignmentScore || alignmentScore;
+
     return (
         <div className="min-h-screen selection:bg-cyan-500/30 font-mono"
             style={{ background: '#0a0a2a', color: 'white' }}>
@@ -126,17 +136,48 @@ export default function ReportPage() {
                 style={{
                     background: 'rgba(10,10,42,0.88)',
                     backdropFilter: 'blur(20px)',
-                    borderBottom: '1px solid rgba(0,255,255,0.08)',
+                    borderBottom: isDoctor ? '1px solid rgba(0,255,180,0.15)' : '1px solid rgba(0,255,255,0.08)',
                 }}>
                 <div className="container mx-auto px-6 h-14 flex items-center justify-between">
-                    <div className="font-bold tracking-tighter text-sm">
-                        Connecting<span style={{ color: '#00FFFF' }}>Docs</span>
-                        <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded font-normal"
-                            style={{ background: 'rgba(0,255,255,0.08)', color: 'rgba(0,255,255,0.6)', border: '1px solid rgba(0,255,255,0.15)' }}>
-                            INTELLIGENCE REPORT
-                        </span>
+                    <div className="flex items-center gap-3">
+                        {/* Back navigation */}
+                        {isDoctor && (
+                            <button
+                                onClick={() => router.push('/doctor/waitlist')}
+                                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                                title="Back to Waitlist"
+                            >
+                                <ArrowLeft className="w-4 h-4 text-gray-400" />
+                            </button>
+                        )}
+                        {!isDoctor && (
+                            <button
+                                onClick={() => router.push('/dashboard')}
+                                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                                title="Back to Dashboard"
+                            >
+                                <ArrowLeft className="w-4 h-4 text-gray-400" />
+                            </button>
+                        )}
+                        <div className="font-bold tracking-tighter text-sm">
+                            Connecting<span style={{ color: '#00FFFF' }}>Docs</span>
+                            <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded font-normal"
+                                style={{ background: 'rgba(0,255,255,0.08)', color: 'rgba(0,255,255,0.6)', border: '1px solid rgba(0,255,255,0.15)' }}>
+                                {isDoctor ? 'DOCTOR VIEW' : 'INTELLIGENCE REPORT'}
+                            </span>
+                        </div>
                     </div>
                     <div className="flex items-center gap-4">
+                        {isDoctor && (
+                            <button
+                                className="text-xs font-mono transition-colors flex items-center gap-1 px-3 py-1 rounded-lg border"
+                                style={{ color: '#00FFB4', borderColor: 'rgba(0,255,180,0.2)', background: 'rgba(0,255,180,0.05)' }}
+                                onClick={() => setDoctorPanelOpen(!doctorPanelOpen)}
+                            >
+                                <Stethoscope className="w-3.5 h-3.5" />
+                                {doctorPanelOpen ? 'Hide' : 'Show'} Clinical Panel
+                            </button>
+                        )}
                         <button className="text-xs font-mono transition-colors flex items-center gap-1"
                             style={{ color: 'rgba(255,255,255,0.4)' }}
                             onClick={() => window.print()}>
@@ -152,6 +193,20 @@ export default function ReportPage() {
             </header>
 
             <main className="container mx-auto px-6 pt-20 pb-28">
+
+                {/* ── Doctor Clinical Panel (shown above standard report) ── */}
+                {isDoctor && doctorPanelOpen && (
+                    <section className="mb-8 mt-4">
+                        <div className="p-6 rounded-2xl border"
+                            style={{ background: 'rgba(0,15,30,0.8)', borderColor: 'rgba(0,255,180,0.15)' }}>
+                            <DoctorClinicalPanel
+                                wizardData={wizardData}
+                                patientEmail={patientEmail}
+                                score={matchScore}
+                            />
+                        </div>
+                    </section>
+                )}
 
                 {/* ① Section A: Hero — Score Ring + Radar + AI Terminal */}
                 <AlignmentHero
@@ -172,12 +227,12 @@ export default function ReportPage() {
                 {/* ③ Section B: Traffic Light Risk Filter */}
                 <TrafficLightRisk risks={risks} language={language} />
 
-                {/* ④ Section C: Top 3 Signature Solutions — Rank 1 hero + Rank 2/3 grid */}
+                {/* ④ Section C: Top 3 Signature Solutions */}
                 <Top3Solutions
                     recommendations={recommendations}
                     language={language}
                     goals={goals}
-                    onUnlock={() => setIsModalOpen(true)}
+                    onUnlock={() => !isDoctor && setIsModalOpen(true)}
                 />
 
                 {/* ⑤ Skin Simulation */}
@@ -193,30 +248,54 @@ export default function ReportPage() {
 
             </main>
 
-            {/* ── Sticky Footer CTA (Section E) ── */}
-            <div className="fixed bottom-0 left-0 right-0 z-40"
-                style={{ backdropFilter: 'blur(20px)', background: 'rgba(10,10,42,0.95)', borderTop: '1px solid rgba(0,255,255,0.12)' }}>
-                <div className="container mx-auto px-6 py-3 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#00FFFF', boxShadow: '0 0 8px #00FFFF' }} />
-                        <span className="text-xs font-mono hidden sm:block" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                            {rt?.footer?.locked || 'Master Doctor profile & clinic details are ready to unlock'}
-                        </span>
+            {/* ── Sticky Footer CTA — hidden for doctors ── */}
+            {!isDoctor && (
+                <div className="fixed bottom-0 left-0 right-0 z-40"
+                    style={{ backdropFilter: 'blur(20px)', background: 'rgba(10,10,42,0.95)', borderTop: '1px solid rgba(0,255,255,0.12)' }}>
+                    <div className="container mx-auto px-6 py-3 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#00FFFF', boxShadow: '0 0 8px #00FFFF' }} />
+                            <span className="text-xs font-mono hidden sm:block" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                                {rt?.footer?.locked || 'Master Doctor profile & clinic details are ready to unlock'}
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold font-mono transition-all hover:scale-105"
+                            style={{
+                                background: 'linear-gradient(135deg, #00FFFF, #00b4d8)',
+                                color: '#0a0a2a',
+                                boxShadow: '0 0 20px rgba(0,255,255,0.4), 0 0 40px rgba(0,255,255,0.15)',
+                                animation: 'pulse-glow 2s ease-in-out infinite',
+                            }}>
+                            <Lock className="w-3.5 h-3.5" />
+                            {rt?.footer?.cta || '🔒 Unlock Master Profile & Book'}
+                        </button>
                     </div>
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold font-mono transition-all hover:scale-105"
-                        style={{
-                            background: 'linear-gradient(135deg, #00FFFF, #00b4d8)',
-                            color: '#0a0a2a',
-                            boxShadow: '0 0 20px rgba(0,255,255,0.4), 0 0 40px rgba(0,255,255,0.15)',
-                            animation: 'pulse-glow 2s ease-in-out infinite',
-                        }}>
-                        <Lock className="w-3.5 h-3.5" />
-                        {rt?.footer?.cta || '🔒 Unlock Master Profile & Book'}
-                    </button>
                 </div>
-            </div>
+            )}
+
+            {/* ── Doctor Footer Bar ── */}
+            {isDoctor && (
+                <div className="fixed bottom-0 left-0 right-0 z-40"
+                    style={{ backdropFilter: 'blur(20px)', background: 'rgba(0,10,20,0.95)', borderTop: '1px solid rgba(0,255,180,0.12)' }}>
+                    <div className="container mx-auto px-6 py-3 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <Stethoscope className="w-4 h-4 text-emerald-400" />
+                            <span className="text-xs font-mono text-emerald-400 font-bold">Doctor Mode Active</span>
+                            <span className="text-xs text-gray-500">Patient: {patientEmail || patientName}</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => router.push('/doctor/waitlist')}
+                                className="px-4 py-1.5 rounded-lg border border-white/15 bg-white/5 text-white text-xs font-bold hover:bg-white/10 transition-colors"
+                            >
+                                ← Waitlist
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <style>{`
                 @keyframes pulse-glow {
@@ -225,13 +304,15 @@ export default function ReportPage() {
                 }
             `}</style>
 
-            {/* Email Capture Modal */}
-            <UnlockModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                language={language}
-                reportId={id as string}
-            />
+            {/* Email Capture Modal — patient only */}
+            {!isDoctor && (
+                <UnlockModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    language={language}
+                    reportId={id as string}
+                />
+            )}
         </div>
     );
 }

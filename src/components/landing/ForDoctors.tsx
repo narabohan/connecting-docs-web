@@ -56,12 +56,12 @@ export default function ForDoctors({ language = 'EN' }: ForDoctorsProps) {
                 </div>
 
                 <div className="mt-16">
-                    <Link
-                        href="#signup"
+                    <a
+                        href="mailto:hello@connectingdocs.ai"
                         className="inline-flex items-center justify-center px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-colors"
                     >
                         {t.cta}
-                    </Link>
+                    </a>
                 </div>
             </div>
         </section>

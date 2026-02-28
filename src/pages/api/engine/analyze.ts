@@ -144,6 +144,7 @@ type AnalysisRequest = {
     careHabits: string[];
     userId?: string;
     userEmail?: string;
+    language?: 'KO' | 'EN' | 'CN' | 'JP';
 };
 
 // ─── Main Handler ─────────────────────────────────────────────────────────────
@@ -290,6 +291,23 @@ OUTPUT (valid JSON only, no markdown wrapper):
                             },
                         }),
                     }).catch(e => console.error('[EMAIL] Failed to send report email:', e));
+
+                    // ─── Phase 1.3: Trigger Admin Notification Webhook (Make/n8n) ──
+                    if (process.env.MAKE_WEBHOOK_URL) {
+                        fetch(process.env.MAKE_WEBHOOK_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                event: 'new_report_generated',
+                                userEmail: data.userEmail,
+                                reportId,
+                                topProtocol: result.rank1?.protocol,
+                                primaryGoal: data.primaryGoal,
+                                expectedRevenue: data.budget,
+                                language: data.language ?? 'EN',
+                            }),
+                        }).catch(e => console.error('[WEBHOOK] Failed to trigger Make.com webhook:', e));
+                    }
                 }
             } catch (dbError) {
                 console.error("Failed to save report to Airtable:", dbError);
