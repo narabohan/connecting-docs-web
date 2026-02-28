@@ -1,0 +1,582 @@
+import { motion, AnimatePresence } from 'framer-motion';
+import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
+import { X, ArrowRight, CheckCircle, Shield, Award, Sparkles, Loader2, RefreshCw, Download, Sliders, Settings2, MapPin, Star, Stethoscope, ChevronRight, Activity, Target } from 'lucide-react';
+import FaceMannequin from '@/components/simulation/FaceMannequin';
+import SkinLayerSection from '@/components/simulation/SkinLayerSection';
+import LiveRadar from '@/components/simulation/LiveRadar';
+import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { jsPDF } from 'jspdf';
+
+interface DeepDiveModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    rank: 1 | 2 | 3 | null;
+    language: LanguageCode;
+    tallyData?: any; // Pass Tally data for analysis
+}
+
+// Fallback Data (Skeleton)
+const SKELETON_DATA = {
+    primaryZones: [],
+    secondaryZones: [],
+    activeLayers: [],
+    painLevel: 0,
+    radar: { lifting: 0, firmness: 0, texture: 0, glow: 0, safety: 0 }
+};
+
+export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyData }: DeepDiveModalProps) {
+    const t = (REPORT_TRANSLATIONS[language]?.curation || REPORT_TRANSLATIONS['EN'].curation);
+    const tRadar = (REPORT_TRANSLATIONS[language]?.simulation || REPORT_TRANSLATIONS['EN'].simulation).radar;
+    const td = (REPORT_TRANSLATIONS[language]?.deepDive || REPORT_TRANSLATIONS['EN'].deepDive)!;
+    const { user } = useAuth();
+
+    // State for API Data
+    const [analysisData, setAnalysisData] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Matching State
+    const [matches, setMatches] = useState<any[]>([]);
+    const [matchLoading, setMatchLoading] = useState(false);
+
+    // Tuning State
+    const [isTuning, setIsTuning] = useState(false);
+    const [tuningParams, setTuningParams] = useState({
+        painTolerance: 'Moderate',
+        downtimeTolerance: 'Short (2-3 days)',
+        budget: 'Standard'
+    });
+
+    // Fetch Analysis when Modal Opens
+    // Fetch Analysis when Modal Opens
+    useEffect(() => {
+        if (isOpen) {
+            if (tallyData) {
+                // Initialize tuning params from tallyData if available
+                setTuningParams({
+                    painTolerance: tallyData.painTolerance || 'Moderate',
+                    downtimeTolerance: tallyData.downtimeTolerance || 'Short (2-3 days)',
+                    budget: tallyData.budget || 'Standard'
+                });
+                fetchAnalysis(tallyData);
+            } else if (rank) {
+                // Static mode: No API call needed, UI uses rankInfo
+                setAnalysisData(null);
+            }
+        }
+    }, [isOpen, rank, tallyData]);
+
+    const fetchAnalysis = async (requestData: any) => {
+        if (!requestData) return;
+
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await fetch('/api/engine/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...requestData,
+                    userId: user?.uid,
+                    userEmail: user?.email,
+                    language,
+                }),
+            });
+
+            if (!res.ok) throw new Error("Analysis Failed");
+
+            const result = await res.json();
+            setAnalysisData(result);
+
+            // Fetch Matches if reportId exists
+            if (result.reportId) {
+                fetchMatches(result.reportId);
+            }
+        } catch (err) {
+            console.error(err);
+            setError("Failed to load AI analysis. Showing standard protocol.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchMatches = async (reportId: string) => {
+        setMatchLoading(true);
+        try {
+            const res = await fetch('/api/engine/match', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reportId })
+            });
+            const data = await res.json();
+            setMatches(data.matches || []);
+
+            // Trigger Email (Mock)
+            if (data.matches && data.matches.length > 0) {
+                fetch('/api/email/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: 'patient@example.com', // Mock recipient
+                        subject: 'Your ConnectingDocs Analysis & Matches',
+                        data: {
+                            reportId: reportId,
+                            matchCount: data.matches.length,
+                            topMatch: data.matches[0].doctorName
+                        }
+                    })
+                }).catch(err => console.error("Email trigger failed", err));
+            }
+        } catch (e) {
+            console.error("Match fetch failed", e);
+        } finally {
+            setMatchLoading(false);
+        }
+    };
+
+    const handleReTune = () => {
+        // Merge original tallyData with new tuning params
+        const newRequest = {
+            ...tallyData,
+            ...tuningParams
+        };
+        fetchAnalysis(newRequest);
+        setIsTuning(false);
+    };
+
+    const handleDownloadPDF = () => {
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFontSize(20);
+        doc.text("Connecting Docs - Clinical Report", 20, 20);
+
+        doc.setFontSize(12);
+        doc.text(`Generated for: ${user?.email || 'Guest'}`, 20, 30);
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 36);
+
+        // Protocol
+        if (displayData) {
+            doc.setFontSize(16);
+            doc.setTextColor(0, 100, 200);
+            doc.text(`Recommended Protocol: ${displayData.protocolName}`, 20, 50);
+
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            const splitReason = doc.splitTextToSize(`Clinical Logic: ${displayData.reason}`, 170);
+            doc.text(splitReason, 20, 60);
+
+            // Specs
+            let yPos = 60 + (splitReason.length * 5) + 10;
+            doc.text(`Downtime: ${displayData.downtime || 'N/A'}`, 20, yPos);
+            doc.text(`Pain Level: ${displayData.painLevel}/3`, 20, yPos + 6);
+        }
+
+        // Footer
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text("This report is generated by AI Key Doctor Logic.", 20, 280);
+
+        doc.save("ConnectingDocs_Report.pdf");
+    };
+
+    if (!isOpen || (!rank && !tallyData) || !t) return null;
+
+    const effectiveRank = rank || 1;
+    const rankInfo = t?.ranking?.[`rank${effectiveRank}` as keyof typeof t.ranking];
+
+    // Determine which data to show (API > Static Translation)
+    const currentRankKey = `rank${effectiveRank}`;
+    const aiRankData = analysisData ? analysisData[currentRankKey] : null;
+
+    const displayData = aiRankData ? {
+        primaryZones: ['Cheek', 'Jawline'], // AI placeholder
+        secondaryZones: ['EyeArea'],
+        activeLayers: ['SMAS', 'Dermis'],
+        radar: { lifting: aiRankData.score, firmness: 80, texture: 70, glow: 60, safety: 90 },
+        protocolName: aiRankData.protocol,
+        reason: aiRankData.reason,
+        downtime: aiRankData.downtime,
+        painLevel: aiRankData.pain === 'High' ? 3 : aiRankData.pain === 'Moderate' ? 2 : 1
+    } : {
+        // Fallback to Static Data from Translations
+        primaryZones: ['Cheek', 'Jawline'],
+        secondaryZones: ['EyeArea'],
+        activeLayers: ['SMAS', 'Dermis'],
+        radar: { lifting: 85, firmness: 80, texture: 75, glow: 70, safety: 95 },
+        protocolName: (rankInfo?.title || "Unknown Protocol") + " (" + (rankInfo?.combo || "Custom") + ")",
+        reason: rankInfo?.reason || "Loading clinical logic...",
+        downtime: "N/A",
+        painLevel: 2
+    };
+
+
+    // Standard Radar Data Construction
+    const radarChartData = [
+        { subject: tRadar.lifting, A: displayData.radar.lifting, fullMark: 100 },
+        { subject: tRadar.firmness, A: displayData.radar.firmness, fullMark: 100 },
+        { subject: tRadar.texture, A: displayData.radar.texture, fullMark: 100 },
+        { subject: tRadar.glow, A: displayData.radar.glow, fullMark: 100 },
+        { subject: tRadar.safety, A: displayData.radar.safety, fullMark: 100 },
+    ];
+
+    return (
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                onClick={onClose}
+            >
+                <div
+                    className="relative w-full max-w-6xl max-h-[90vh] overflow-hidden bg-[#0a0a0f] border border-white/10 rounded-3xl shadow-2xl flex flex-col"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {/* Header */}
+                    <div className="flex-none flex items-start justify-between p-6 md:p-8 bg-[#0a0a0f]/95 backdrop-blur-md border-b border-white/5 z-20">
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider text-cyan-400 uppercase border border-cyan-400/30 rounded-full bg-cyan-400/10">
+                                    {td.badge} No.0{effectiveRank}
+                                </span>
+                                {loading && <span className="flex items-center gap-1 text-xs text-blue-400"><Loader2 className="w-3 h-3 animate-spin" /> {td.analyzing}</span>}
+                            </div>
+                            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white tracking-tight">
+                                {loading ? td.analyzing : (displayData.protocolName || rankInfo.title)}
+                            </h2>
+                            <p className="max-w-2xl text-gray-400 text-sm md:text-base leading-relaxed mt-2">
+                                {loading ? td.analyzingDesc : (displayData.reason || rankInfo.reason)}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setIsTuning(!isTuning)}
+                                className={`p-2 rounded-full transition-colors ${isTuning ? 'bg-cyan-500 text-black' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                                title="Tune Protocol"
+                            >
+                                <Settings2 className="w-6 h-6" />
+                            </button>
+                            <button
+                                onClick={handleDownloadPDF}
+                                className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors"
+                                title="Download PDF"
+                            >
+                                <Download className="w-6 h-6" />
+                            </button>
+                            <button onClick={onClose} className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Tuning Panel */}
+                    <AnimatePresence>
+                        {isTuning && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="bg-[#111116] border-b border-white/10 overflow-hidden"
+                            >
+                                <div className="p-6 grid md:grid-cols-4 gap-6 items-end">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{td.painLevel}</label>
+                                        <select
+                                            value={tuningParams.painTolerance}
+                                            onChange={(e) => setTuningParams(prev => ({ ...prev, painTolerance: e.target.value }))}
+                                            className="w-full bg-black/50 border border-white/20 rounded-lg p-2 text-white text-sm focus:border-cyan-500 outline-none"
+                                        >
+                                            <option value="Low">{td.painOptions[0]}</option>
+                                            <option value="Moderate">{td.painOptions[1]}</option>
+                                            <option value="High">{td.painOptions[2]}</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{td.depthPenetration.split(' ')[0]}</label>
+                                        <select
+                                            value={tuningParams.downtimeTolerance}
+                                            onChange={(e) => setTuningParams(prev => ({ ...prev, downtimeTolerance: e.target.value }))}
+                                            className="w-full bg-black/50 border border-white/20 rounded-lg p-2 text-white text-sm focus:border-cyan-500 outline-none"
+                                        >
+                                            <option value="None">{td.downtimeOptions[0]}</option>
+                                            <option value="Short (2-3 days)">{td.downtimeOptions[1]}</option>
+                                            <option value="Long (1 week+)">{td.downtimeOptions[2]}</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Budget</label>
+                                        <select
+                                            value={tuningParams.budget}
+                                            onChange={(e) => setTuningParams(prev => ({ ...prev, budget: e.target.value }))}
+                                            className="w-full bg-black/50 border border-white/20 rounded-lg p-2 text-white text-sm focus:border-cyan-500 outline-none"
+                                        >
+                                            <option value="Economy">{td.budgetOptions[0]}</option>
+                                            <option value="Standard">{td.budgetOptions[1]}</option>
+                                            <option value="Premium">{td.budgetOptions[2]}</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        onClick={handleReTune}
+                                        disabled={loading}
+                                        className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                                    >
+                                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                                        {td.updateProtocol}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Scrollable Content */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                        {loading ? (
+                            <div className="flex flex-col items-center justify-center h-96 gap-4">
+                                <Loader2 className="w-12 h-12 text-cyan-500 animate-spin" />
+                                <p className="text-gray-400">{td.analyzingDesc}</p>
+                            </div>
+                        ) : (
+                            <div className="grid lg:grid-cols-2 gap-0 lg:divide-x divide-white/10">
+                                {/* Left: Visual Simulation */}
+                                <div className="p-6 md:p-8 space-y-8 bg-[#0a0a0f]">
+                                    {/* Face Map */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                                <div className="w-1 h-5 bg-cyan-500 rounded-full" />
+                                                {td.targetZones}
+                                            </h3>
+                                        </div>
+                                        <div className="relative aspect-[3/4] bg-black/40 rounded-2xl overflow-hidden border border-white/5">
+                                            <FaceMannequin
+                                                primaryZones={displayData.primaryZones}
+                                                secondaryZones={displayData.secondaryZones}
+                                                language={language}
+                                            />
+                                            {/* Overlay Info */}
+                                            <div className="absolute bottom-4 left-4 right-4 p-4 bg-black/60 backdrop-blur-md rounded-xl border border-white/10">
+                                                <div className="flex gap-4 text-xs">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-3 h-3 bg-red-500/80 rounded-full animate-pulse" />
+                                                        <span className="text-gray-300">{td.maxIntensity}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-3 h-3 bg-blue-400/80 rounded-full" />
+                                                        <span className="text-gray-300">{td.collagenRemodeling}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Skin Layers */}
+                                    <div className="space-y-4">
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <div className="w-1 h-5 bg-purple-500 rounded-full" />
+                                            {td.depthPenetration}
+                                        </h3>
+                                        <SkinLayerSection
+                                            activeLayers={displayData.activeLayers}
+                                            language={language}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Right: Clinical Data */}
+                                <div className="p-6 md:p-8 space-y-8 bg-[#0a0a0f/50]">
+                                    {/* Radar Chart */}
+                                    <div className="space-y-4">
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <div className="w-1 h-5 bg-emerald-500 rounded-full" />
+                                            {td.efficacyProfile}
+                                        </h3>
+                                        <div className="h-[320px] w-full flex items-center justify-center p-4 bg-black/20 rounded-2xl border border-white/5 overflow-visible">
+                                            <LiveRadar data={radarChartData} language={language} />
+                                        </div>
+                                    </div>
+
+                                    {/* Clinical Logic - AI Generated (Premium Layout) */}
+                                    <div className="space-y-4">
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <div className="w-1 h-5 bg-[#00FFA0] rounded-full" />
+                                            AI Clinical Reasoning
+                                        </h3>
+                                        <div className="p-6 md:p-8 rounded-3xl bg-[#05050A] border border-[#00FFA0]/20 relative overflow-hidden group shadow-[0_0_30px_rgba(0,240,255,0.05)_inset]">
+                                            {/* Decorative Background grid */}
+                                            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+
+                                            <div className="absolute top-0 right-0 p-6 opacity-5 mix-blend-screen transition-opacity group-hover:opacity-10 pointer-events-none">
+                                                <Sparkles className="w-32 h-32 text-[#00FFA0]" />
+                                            </div>
+
+                                            {/* Header Section */}
+                                            <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6 relative z-10">
+                                                <h4 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-[#00FFA0]/80 tracking-tight">
+                                                    {td.whyProtocol || "Why This Protocol?"}
+                                                </h4>
+                                                <div className="flex gap-2">
+                                                    <span className="px-2.5 py-1 rounded bg-[#00FFA0]/10 border border-[#00FFA0]/30 text-[#00FFA0] text-[10px] font-mono font-bold uppercase tracking-widest flex items-center gap-1.5">
+                                                        <span className="w-1.5 h-1.5 bg-[#00FFA0] rounded-full animate-pulse" />
+                                                        GPT-4o Logic
+                                                    </span>
+                                                    <span className="px-2.5 py-1 rounded bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[10px] font-mono font-bold uppercase tracking-widest">
+                                                        NotebookLM RAG
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* AI Reasoning Body */}
+                                            <div className="relative z-10 space-y-6">
+                                                {/* Simulated Logic Steps */}
+                                                <div className="flex flex-col gap-3">
+                                                    <div className="flex items-start gap-3">
+                                                        <div className="mt-0.5 rounded-full p-1 bg-white/5 border border-white/10 text-[#00FFA0]">
+                                                            <Activity className="w-3.5 h-3.5" />
+                                                        </div>
+                                                        <div>
+                                                            <h5 className="text-[10px] uppercase font-mono tracking-widest text-[#00FFA0] mb-1">Step 1: Clinical Mapping</h5>
+                                                            <p className="text-sm text-slate-300 leading-relaxed font-light">Analyzed cross-interactions between patient profile and {displayData.protocolName} specifications.</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-start gap-3">
+                                                        <div className="mt-0.5 rounded-full p-1 bg-white/5 border border-white/10 text-emerald-400">
+                                                            <Target className="w-3.5 h-3.5" />
+                                                        </div>
+                                                        <div>
+                                                            <h5 className="text-[10px] uppercase font-mono tracking-widest text-emerald-400 mb-1">Step 2: Syndrome Resolution</h5>
+                                                            <p className="text-sm text-slate-300 leading-relaxed font-light">Calculated synergy index for {displayData.activeLayers?.join(' + ') || "Deep Tissue"} combined targeting.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Core Synthesized Reason */}
+                                                <div className="p-5 rounded-2xl bg-black/40 border-l-2 border-[#00FFA0] backdrop-blur-md">
+                                                    <h5 className="text-xs uppercase font-bold text-white/50 mb-2 tracking-wide">Synthesized Conclusion</h5>
+                                                    <p className="text-[#E2E8F0] text-sm leading-loose">
+                                                        {displayData.reason}
+                                                    </p>
+                                                </div>
+
+                                                {/* Footer Stats Grid */}
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="px-4 py-3 bg-white/5 rounded-xl border border-white/5 flex flex-col justify-center">
+                                                        <span className="text-[10px] text-white/40 uppercase tracking-widest font-mono shrink-0 mb-1">
+                                                            {td.estimatedDowntime || "Estimated Downtime"}
+                                                        </span>
+                                                        <div className="text-white font-medium text-sm">
+                                                            {aiRankData?.downtime || "Zero to Minimal"}
+                                                        </div>
+                                                    </div>
+                                                    <div className="px-4 py-3 bg-white/5 rounded-xl border border-white/5 flex flex-col justify-center">
+                                                        <span className="text-[10px] text-white/40 uppercase tracking-widest font-mono shrink-0 mb-1.5">
+                                                            {td.painLevel || "Pain Level"}
+                                                        </span>
+                                                        <div className="flex gap-1">
+                                                            {[...Array(5)].map((_, i) => (
+                                                                <div
+                                                                    key={i}
+                                                                    className={`h-1.5 w-full rounded-full ${i < (aiRankData?.pain === 'High' ? 4 : aiRankData?.pain === 'Moderate' ? 2 : 1)
+                                                                        ? 'bg-gradient-to-r from-rose-500 to-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'
+                                                                        : 'bg-[#1F1F1F]'
+                                                                        }`}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Data Source Disclaimer */}
+                                                <div className="flex items-center gap-2 pt-2 text-[10px] font-mono text-white/30 justify-end">
+                                                    <RefreshCw className="w-3 h-3 text-[#00FFA0]/50" />
+                                                    <span>Verified against {new Date().getFullYear()} Clinical Best Practices</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Matched Doctors Section */}
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                        <div className="w-1 h-5 bg-blue-500 rounded-full" />
+                                        {td.topSpecialists}
+                                    </h3>
+
+                                    {matchLoading ? (
+                                        <div className="p-8 text-center text-gray-500 border border-white/5 rounded-2xl bg-white/5">
+                                            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                                            {td.runningMatch}
+                                        </div>
+                                    ) : matches.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {matches.map((doc, idx) => (
+                                                <div key={idx} className="group relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/50 rounded-xl p-4 transition-all duration-300">
+                                                    {/* Badge */}
+                                                    {doc.score >= 90 && (
+                                                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-yellow-300/30 flex items-center gap-1">
+                                                            <Star className="w-3 h-3 fill-white" />
+                                                            {doc.score}% MATCH
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex justify-between items-start mb-3">
+                                                        <div>
+                                                            <h4 className="font-bold text-white text-base">{doc.doctorName}</h4>
+                                                            <div className="flex items-center gap-1 text-gray-400 text-xs mt-0.5">
+                                                                <MapPin className="w-3 h-3" />
+                                                                {doc.hospitalName}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="text-cyan-400 font-bold text-sm tracking-wide">{doc.solutionTitle}</div>
+                                                            <div className="text-gray-500 text-xs">{doc.priceRange}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Match Details */}
+                                                    <div className="space-y-1 mb-3">
+                                                        {doc.matchDetails.slice(0, 2).map((detail: string, i: number) => (
+                                                            <div key={i} className="flex items-start gap-2 text-xs text-gray-300">
+                                                                <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5 flex-shrink-0" />
+                                                                {detail}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    <button className="w-full py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-bold rounded-lg border border-cyan-500/30 transition-colors flex items-center justify-center gap-1 group-hover:text-cyan-300">
+                                                        View Clinical Profile <ChevronRight className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="p-6 text-center text-gray-500 border border-white/5 rounded-2xl bg-white/5 text-sm">
+                                            {td.noMatches}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex-none p-6 md:p-8 border-t border-white/5 bg-[#0a0a0f] flex justify-between items-center z-20">
+                        <div className="text-sm text-gray-500">
+                            {td.resultsDisclaimer}
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200 transition-colors flex items-center gap-2"
+                        >
+                            {td.closeAnalysis}
+                        </button>
+                    </div>
+                </div>
+            </motion.div>
+        </AnimatePresence >
+    );
+}

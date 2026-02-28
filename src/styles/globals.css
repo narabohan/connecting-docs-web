@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+:root {
+  /* Dark Mode Base - ConnectingDocs High-End System */
+  --background: #050505; 
+  --foreground: #ffffff;
+  
+  /* Brand Colors */
+  --medical-cyan: #00F0FF;
+  --surface-gray: #111111;
+  --border-slate: #1F1F1F;
+  --muted-slate: #888888;
+  
+  /* Layout Gaps */
+  --container-px: 1.5rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-medical-cyan: var(--medical-cyan);
+  --color-surface-gray: var(--surface-gray);
+  --color-border-slate: var(--border-slate);
+  --color-muted-slate: var(--muted-slate);
+  
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  
+  @keyframes scan-down {
+    0% { top: 0; }
+    100% { top: 100%; }
+  }
+
+  --animate-shimmer: shimmer 2s infinite linear;
+  --animate-scan-down: scan-down 8s infinite linear;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.selection\:bg-cyan-500\/30 ::selection {
+  background-color: rgba(6, 182, 212, 0.3);
+}

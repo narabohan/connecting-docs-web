@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connecting Docs | Facial Zone Mapper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono&display=swap');
+        
+        body {
+            background-color: #03060A;
+            color: #E2E8F0;
+            font-family: 'Inter', sans-serif;
+        }
+        .mono { font-family: 'JetBrains+Mono', monospace; }
+        .neon-border { border: 1px solid rgba(0, 240, 255, 0.3); box-shadow: 0 0 15px rgba(0, 240, 255, 0.1); }
+        .neon-text { color: #00F0FF; text-shadow: 0 0 8px rgba(0, 240, 255, 0.5); }
+        .neon-bg { background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.4); }
+        
+        #canvas-container {
+            position: relative;
+            cursor: crosshair;
+            user-select: none;
+        }
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .point { fill: #00F0FF; stroke: white; stroke-width: 1px; }
+        .line { stroke: #00F0FF; stroke-width: 2px; stroke-dasharray: 4; }
+        .polygon { fill: rgba(0, 240, 255, 0.2); stroke: #00F0FF; stroke-width: 2px; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #03060A; }
+        ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00F0FF; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="flex items-center justify-between mb-8 border-b border-white/5 pb-6">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tighter italic uppercase text-white">Facial <span class="neon-text">Zone Mapper</span></h1>
+                <p class="text-xs text-white/40 mono mt-1">INTERNAL PRECISION TOOL V1.0</p>
+            </div>
+            <div class="flex gap-4">
+                <input type="text" id="imgUrl" placeholder="Image URL (Default: face_blueprint.png)" 
+                    class="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm w-80 focus:neon-border outline-none transition-all">
+                <button onclick="updateImage()" class="neon-bg px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-[#00F0FF]/20 transition-all">Load</button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-12 gap-8">
+            <!-- Main Canvas -->
+            <div class="col-span-8 flex flex-col items-center">
+                <div id="canvas-container" class="neon-border rounded-xl overflow-hidden bg-black/40">
+                    <img id="faceImg" src="../images/concepts/face_blueprint.png" class="max-w-full h-auto block opacity-60" onload="initCanvas()">
+                    <svg id="mappingSvg"></svg>
+                </div>
+                <div class="mt-6 flex gap-3">
+                    <button onclick="undoPoint()" class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-xs hover:bg-white/10 transition-all">UNDO POINT</button>
+                    <button onclick="clearCurrent()" class="px-4 py-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-xs hover:bg-red-500/20 transition-all">CLEAR ZONE</button>
+                    <button onclick="copyToClipboard()" class="neon-bg px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest">COPY ALL DATA</button>
+                </div>
+                <p class="mt-4 text-[10px] text-white/30 mono">CLICK: ADD POINT | DOUBLE CLICK: CLOSE POLYGON</p>
+            </div>
+
+            <!-- Controls & Data -->
+            <div class="col-span-4 space-y-6">
+                <!-- Zone Selection -->
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+                    <h3 class="text-xs font-bold text-white/60 mb-4 uppercase tracking-widest mono">1. Active Zone</h3>
+                    <select id="zoneSelect" onchange="switchZone()" class="w-full bg-[#03060A] border border-white/10 rounded-xl px-4 py-3 text-sm focus:neon-border outline-none">
+                        <option value="Forehead">Forehead</option>
+                        <option value="Periorbital">Periorbital</option>
+                        <option value="Cheek">Cheek</option>
+                        <option value="Jawline">Jawline</option>
+                        <option value="Submental">Submental</option>
+                        <option value="Neck">Neck</option>
+                    </select>
+                </div>
+
+                <!-- Live Points Output -->
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-6 h-[400px] flex flex-col">
+                    <h3 class="text-xs font-bold text-white/60 mb-4 uppercase tracking-widest mono">2. Zone Data (JSON)</h3>
+                    <textarea id="dataOutput" readonly class="flex-1 w-full bg-[#03060A] border border-white/10 rounded-xl p-4 text-[10px] mono text-[#00F0FF]/80 resize-none outline-none"></textarea>
+                </div>
+
+                <!-- Export SVG Markup -->
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+                    <h3 class="text-xs font-bold text-white/60 mb-4 uppercase tracking-widest mono">3. SVG Markup</h3>
+                    <div id="svgOutput" class="text-[10px] mono text-white/40 break-all bg-black/40 p-3 rounded-lg border border-white/5">
+                        No zones defined yet.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPoints = [];
+        let allZones = {
+            Forehead: [], Periorbital: [], Cheek: [], Jawline: [], Submental: [], Neck: []
+        };
+        let activeZone = 'Forehead';
+        const container = document.getElementById('canvas-container');
+        const svg = document.getElementById('mappingSvg');
+        const img = document.getElementById('faceImg');
+
+        function initCanvas() {
+            svg.setAttribute('viewBox', `0 0 ${img.naturalWidth} ${img.naturalHeight}`);
+            updateOutput();
+        }
+
+        container.addEventListener('mousedown', (e) => {
+            const rect = img.getBoundingClientRect();
+            const x = Math.round((e.clientX - rect.left) * (img.naturalWidth / rect.width));
+            const y = Math.round((e.clientY - rect.top) * (img.naturalHeight / rect.height));
+            
+            currentPoints.push({x, y});
+            draw();
+        });
+
+        container.addEventListener('dblclick', () => {
+            if (currentPoints.length > 2) {
+                allZones[activeZone] = [...currentPoints];
+                currentPoints = [];
+                draw();
+                updateOutput();
+            }
+        });
+
+        function draw() {
+            svg.innerHTML = '';
+            
+            // Draw completed zones
+            Object.entries(allZones).forEach(([name, pts]) => {
+                if (pts.length > 0) {
+                    const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                    poly.setAttribute('points', pts.map(p => `${p.x},${p.y}`).join(' '));
+                    poly.setAttribute('class', 'polygon');
+                    svg.appendChild(poly);
+                    
+                    // Add Label
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    const avgX = pts.reduce((a, b) => a + b.x, 0) / pts.length;
+                    const avgY = pts.reduce((a, b) => a + b.y, 0) / pts.length;
+                    text.setAttribute('x', avgX);
+                    text.setAttribute('y', avgY);
+                    text.setAttribute('fill', 'white');
+                    text.setAttribute('font-size', '14');
+                    text.setAttribute('font-family', 'JetBrains Mono');
+                    text.setAttribute('text-anchor', 'middle');
+                    text.textContent = name;
+                    svg.appendChild(text);
+                }
+            });
+
+            // Draw current in-progress zone
+            if (currentPoints.length > 0) {
+                currentPoints.forEach(p => {
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', p.x);
+                    circle.setAttribute('cy', p.y);
+                    circle.setAttribute('r', '4');
+                    circle.setAttribute('class', 'point');
+                    svg.appendChild(circle);
+                });
+
+                if (currentPoints.length > 1) {
+                    const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                    polyline.setAttribute('points', currentPoints.map(p => `${p.x},${p.y}`).join(' '));
+                    polyline.setAttribute('class', 'line');
+                    polyline.setAttribute('fill', 'none');
+                    svg.appendChild(polyline);
+                }
+            }
+        }
+
+        function switchZone() {
+            activeZone = document.getElementById('zoneSelect').value;
+            currentPoints = [];
+            draw();
+        }
+
+        function undoPoint() {
+            currentPoints.pop();
+            draw();
+        }
+
+        function clearCurrent() {
+            allZones[activeZone] = [];
+            currentPoints = [];
+            draw();
+            updateOutput();
+        }
+
+        function updateOutput() {
+            const cleanData = {};
+            let svgMarkup = '';
+            
+            Object.entries(allZones).forEach(([name, pts]) => {
+                if (pts.length > 0) {
+                    const pointsStr = pts.map(p => `${p.x},${p.y}`).join(' ');
+                    cleanData[name] = pointsStr;
+                    svgMarkup += `&lt;polygon id="${name}" points="${pointsStr}" /&gt;<br>`;
+                }
+            });
+            
+            document.getElementById('dataOutput').value = JSON.stringify(cleanData, null, 2);
+            document.getElementById('svgOutput').innerHTML = svgMarkup || 'No zones defined yet.';
+        }
+
+        function updateImage() {
+            const url = document.getElementById('imgUrl').value;
+            if (url) {
+                img.src = url;
+            }
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('dataOutput').value;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('All Zone Data copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>
