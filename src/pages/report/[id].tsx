@@ -8,6 +8,7 @@ import WhatIfSliders from '@/components/report/WhatIfSliders';
 import TrafficLightRisk from '@/components/report/TrafficLightRisk';
 import Top3Solutions from '@/components/report/Top3Solutions';
 import UnlockModal from '@/components/report/UnlockModal';
+import PatientProfileSummary from '@/components/report/PatientProfileSummary';
 import SkinSimulationContainer from '@/components/simulation/SkinSimulationContainer';
 import DoctorClinicalPanel, { WizardData } from '@/components/report/DoctorClinicalPanel';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
@@ -39,6 +40,7 @@ export default function ReportPage() {
     const [alignmentScore, setAlignmentScore] = useState(92);
     const [isRecalculating, setIsRecalculating] = useState(false);
     const [doctorPanelOpen, setDoctorPanelOpen] = useState(true);
+    const [selectedProtocol, setSelectedProtocol] = useState<any>(null);
 
     const isDoctor = user?.role === 'doctor';
 
@@ -208,7 +210,16 @@ export default function ReportPage() {
                     </section>
                 )}
 
-                {/* ① Section A: Hero — Score Ring + Radar + AI Terminal */}
+                {/* ① Patient Profile Summary */}
+                {!isDoctor && (
+                    <PatientProfileSummary
+                        patientSummary={data?.patientSummary}
+                        wizardData={data?.wizardData || data?.patient}
+                        language={language}
+                    />
+                )}
+
+                {/* ② Section A: Hero — Score Ring + Radar + AI Terminal */}
                 <AlignmentHero
                     score={alignmentScore}
                     radarData={profileData}
@@ -233,6 +244,8 @@ export default function ReportPage() {
                     language={language}
                     goals={goals}
                     onUnlock={() => !isDoctor && setIsModalOpen(true)}
+                    onSelectProtocol={!isDoctor ? (p) => setSelectedProtocol(p) : undefined}
+                    selectedProtocolId={selectedProtocol?.id}
                 />
 
                 {/* ⑤ Skin Simulation */}
