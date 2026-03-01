@@ -6,7 +6,9 @@ import { Loader2, Download, Lock } from 'lucide-react';
 import AlignmentHero from '@/components/report/AlignmentHero';
 import WhatIfSliders from '@/components/report/WhatIfSliders';
 import TrafficLightRisk from '@/components/report/TrafficLightRisk';
-import Top3Solutions from '@/components/report/Top3Solutions';
+import IntelligenceEngine from '@/components/premium/IntelligenceEngine';
+import SignatureGallery from '@/components/premium/SignatureGallery';
+import SkinBoosterRecommendations from '@/components/curation/SkinBoosterRecommendations';
 import UnlockModal from '@/components/report/UnlockModal';
 import SkinSimulationContainer from '@/components/simulation/SkinSimulationContainer';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
@@ -172,13 +174,16 @@ export default function ReportPage() {
                 {/* ③ Section B: Traffic Light Risk Filter */}
                 <TrafficLightRisk risks={risks} language={language} />
 
-                {/* ④ Section C: Top 3 Signature Solutions — Rank 1 hero + Rank 2/3 grid */}
-                <Top3Solutions
-                    recommendations={recommendations}
+                {/* ④ Premium Intelligence & Curation */}
+                <IntelligenceEngine language={language} />
+
+                <SignatureGallery
                     language={language}
-                    goals={goals}
-                    onUnlock={() => setIsModalOpen(true)}
+                    onStartAnalysis={() => setIsModalOpen(true)}
+                    onViewDeepDive={() => setIsModalOpen(true)}
                 />
+
+                <SkinBoosterRecommendations language={language} />
 
                 {/* ⑤ Skin Simulation */}
                 <section className="mb-8">
