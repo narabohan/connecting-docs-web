@@ -513,16 +513,40 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                     </div>
 
                     {/* Footer */}
-                    <div className="flex-none p-6 md:p-8 border-t border-white/5 bg-[#0a0a0f] flex justify-between items-center z-20">
-                        <div className="text-sm text-gray-500">
+                    <div className="flex-none p-6 md:p-8 border-t border-white/5 bg-[#0a0a0f] flex flex-col sm:flex-row justify-between items-center gap-4 z-20">
+                        <div className="text-sm text-gray-500 text-center sm:text-left">
                             {td.resultsDisclaimer}
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200 transition-colors flex items-center gap-2"
-                        >
-                            {td.closeAnalysis}
-                        </button>
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <button
+                                onClick={onClose}
+                                className="flex-1 sm:flex-none border border-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/5 transition-colors"
+                            >
+                                {td.closeAnalysis}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (user) {
+                                        // If reportId exists, redirect to permanent report page
+                                        if (analysisData?.reportId) {
+                                            window.location.href = `/report/${analysisData.reportId}`;
+                                        } else {
+                                            onClose();
+                                        }
+                                    } else {
+                                        // Trigger Auth Modal via parent
+                                        (window as any).dispatchEvent(new CustomEvent('open-auth-modal'));
+                                        onClose();
+                                    }
+                                }}
+                                className="flex-1 sm:flex-none bg-cyan-500 text-black px-8 py-3 rounded-full font-bold hover:bg-cyan-400 transition-transform active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+                            >
+                                <Shield className="w-5 h-5" />
+                                {language === 'KO' ? '리포트 저장 & 상담 예약' :
+                                    language === 'JP' ? 'レポート保存 & 相談予約' :
+                                        'Save Report & Book'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </motion.div>

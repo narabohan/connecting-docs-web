@@ -393,8 +393,8 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 },
                 dynamicTitle: {
                     patient: {
-                        main: "Unlock Your Glass Skin Radiance",
-                        sub: "Simulate and Design Your Ideal Glow"
+                        main: "Find Your Perfect Skin Treatment in 3 Minutes",
+                        sub: "Free AI Analysis & Expert Matching"
                     },
                     doctor: {
                         main: "Medical Intelligence v2.0",
@@ -736,8 +736,8 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 },
                 dynamicTitle: {
                     patient: {
-                        main: "장비 이름이 아닌 의사의 '로직'을 선택하는 시대",
-                        sub: "커넥팅닥스가 K-뷰티의 새로운 기준을 만듭니다"
+                        main: "3분 만에 찾는 나만의 인생 피부 시술",
+                        sub: "무료 AI 분석 및 전문의 매칭"
                     },
                     doctor: {
                         main: "가격 경쟁의 늪에서 벗어나",

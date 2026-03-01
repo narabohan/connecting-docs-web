@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
-import { Loader2, Download, Lock, ArrowLeft, Stethoscope } from 'lucide-react';
+import { Loader2, Download, Lock, ArrowLeft, Stethoscope, Sparkles } from 'lucide-react';
 
 import AlignmentHero from '@/components/report/AlignmentHero';
 import WhatIfSliders from '@/components/report/WhatIfSliders';
@@ -257,6 +257,37 @@ export default function ReportPage() {
                         onRecalculate={handleRecalculate}
                         isRecalculating={isRecalculating}
                     />
+                </section>
+
+                {/* ⑥ Next Steps / Guidance */}
+                <section className="mb-20">
+                    <div className="p-8 rounded-3xl border border-white/10 bg-gradient-to-br from-black to-[#05051a]">
+                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                            <Sparkles className="w-5 h-5 text-cyan-400" />
+                            {language === 'KO' ? '다음 단계 가이드' : 'Next Steps & Guidance'}
+                        </h3>
+                        <div className="grid md:grid-cols-3 gap-6">
+                            {[
+                                {
+                                    title: language === 'KO' ? '1. 리포트 저장' : '1. Save Report',
+                                    desc: language === 'KO' ? '마스터 프로필을 잠금 해제하여 전체 내용을 소장하세요.' : 'Unlock the Master Profile to save all details securely.'
+                                },
+                                {
+                                    title: language === 'KO' ? '2. 전문가 상담' : '2. Consult Master',
+                                    desc: language === 'KO' ? '매칭된 원장님께 리포트 ID를 공유하고 정밀 상담을 예약하세요.' : 'Share your Report ID with the matched doctor for precise consultation.'
+                                },
+                                {
+                                    title: language === 'KO' ? '3. 프로토콜 적용' : '3. Apply Protocol',
+                                    desc: language === 'KO' ? 'AI가 추천한 장비 조합으로 시술 계획을 확정하고 진행하세요.' : 'Finalize and proceed with the AI-recommended treatment plan.'
+                                }
+                            ].map((step, i) => (
+                                <div key={i} className="p-5 rounded-2xl bg-white/5 border border-white/5">
+                                    <div className="text-cyan-400 font-bold mb-2">{step.title}</div>
+                                    <p className="text-xs text-gray-400 leading-relaxed">{step.desc}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </section>
 
             </main>

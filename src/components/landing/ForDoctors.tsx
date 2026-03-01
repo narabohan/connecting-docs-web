@@ -1,4 +1,4 @@
-import { Network, UploadCloud, TrendingUp } from 'lucide-react';
+import { Network, UploadCloud, TrendingUp, ArrowRight, Users, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
 
@@ -55,13 +55,32 @@ export default function ForDoctors({ language = 'EN' }: ForDoctorsProps) {
                     </div>
                 </div>
 
-                <div className="mt-16">
-                    <a
-                        href="mailto:hello@connectingdocs.ai"
-                        className="inline-flex items-center justify-center px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-colors"
+                {/* Trust bar */}
+                <div className="flex flex-wrap justify-center gap-8 mt-14 mb-10 text-sm text-gray-500">
+                    <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-blue-400" />
+                        <span>{language === 'KO' ? '베타 의사 모집 중' : language === 'JP' ? 'ベータ医師募集中' : language === 'CN' ? '正在招募测试医生' : 'Beta Doctors Being Accepted'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-emerald-400" />
+                        <span>{language === 'KO' ? '온보딩 5분 이내' : language === 'JP' ? 'オンボーディング5分以内' : language === 'CN' ? '5分钟完成注册' : 'Onboarding under 5 minutes'}</span>
+                    </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4">
+                    <Link
+                        href="/doctor/waitlist"
+                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-gray-100 transition-colors shadow-xl group"
                     >
                         {t.cta}
-                    </a>
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                    <Link
+                        href="/doctor/waitlist"
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/15 text-gray-400 hover:text-white hover:border-white/30 rounded-full text-sm transition-colors"
+                    >
+                        {language === 'KO' ? '문의하기' : language === 'JP' ? 'お問い合わせ' : language === 'CN' ? '联系我们' : 'Contact Us'}
+                    </Link>
                 </div>
             </div>
         </section>

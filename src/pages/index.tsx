@@ -53,11 +53,22 @@ export default function Home() {
     setIsWizardOpen(true);
   };
 
+  // Handle global event to open AuthModal
+  useEffect(() => {
+    const handleOpenAuth = () => setIsAuthModalOpen(true);
+    window.addEventListener('open-auth-modal', handleOpenAuth);
+    return () => window.removeEventListener('open-auth-modal', handleOpenAuth);
+  }, []);
+
   // When user logs in via AuthModal while trying to start analysis
   useEffect(() => {
     if (user && isAuthModalOpen) {
       setIsAuthModalOpen(false);
-      setIsWizardOpen(true);
+      // If we already have wizardData, navigate to the report
+      // If not, open the wizard
+      if (!wizardData) {
+        setIsWizardOpen(true);
+      }
     }
   }, [user]);
 

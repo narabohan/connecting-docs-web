@@ -98,7 +98,7 @@ export default function SocialProof({ language = 'EN' }: SocialProofProps) {
                 </motion.div>
 
                 {/* Stats Row */}
-                <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto mb-16">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
                     {STATS.map((stat, i) => (
                         <motion.div
                             key={i}
@@ -106,62 +106,18 @@ export default function SocialProof({ language = 'EN' }: SocialProofProps) {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: i * 0.1 }}
-                            className="text-center"
+                            className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-8 text-center hover:border-blue-500/30 transition-all group"
                         >
-                            <div className={`w-12 h-12 ${stat.bg} rounded-xl flex items-center justify-center mx-auto mb-3`}>
-                                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                            <div className={`w-14 h-14 ${stat.bg} rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform`}>
+                                <stat.icon className={`w-6 h-6 ${stat.color}`} />
                             </div>
-                            <div className={`text-3xl font-black ${stat.color} mb-1`}>{stat.value}</div>
-                            <div className="text-xs text-gray-600 uppercase tracking-wider">
+                            <div className={`text-4xl font-black ${stat.color} mb-2 tracking-tight`}>{stat.value}</div>
+                            <div className="text-sm text-gray-400 font-medium uppercase tracking-widest">
                                 {stat.label[lang] || stat.label.EN}
                             </div>
                         </motion.div>
                     ))}
                 </div>
-
-                {/* Testimonials */}
-                <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                    {TESTIMONIALS.map((t, i) => (
-                        <motion.div
-                            key={i}
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: i * 0.1 }}
-                            className="bg-[#0A0A0A] border border-white/8 rounded-2xl p-6 hover:border-white/15 transition-colors"
-                        >
-                            {/* Stars */}
-                            <div className="flex gap-0.5 mb-4">
-                                {Array.from({ length: t.rating }).map((_, si) => (
-                                    <Star key={si} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                                ))}
-                            </div>
-
-                            {/* Quote */}
-                            <p className="text-sm text-gray-400 leading-relaxed mb-5 italic">
-                                &ldquo;{t.quote[lang] || t.quote.EN}&rdquo;
-                            </p>
-
-                            {/* Author */}
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-xs font-bold text-white">
-                                    {t.name[0]}
-                                </div>
-                                <div>
-                                    <p className="text-xs font-semibold text-white">{t.name}</p>
-                                    <p className="text-xs text-gray-600">{t.role[lang] || t.role.EN}</p>
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
-
-                {/* Disclaimer */}
-                <p className="text-center text-xs text-gray-700 mt-8">
-                    {language === 'KO' ? '* 위 후기는 예시 데이터입니다. 실제 베타 유저 후기로 교체 예정입니다.' :
-                        '* Testimonials shown are illustrative. Real beta user reviews will be added soon.'}
-                </p>
-
             </div>
         </section>
     );

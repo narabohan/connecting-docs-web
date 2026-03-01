@@ -75,10 +75,10 @@ export default function PricingTable({ language = 'EN' }: PricingTableProps) {
 
                 {/* Pricing Cards */}
                 <div className={cn(
-                    'grid gap-6',
+                    'grid gap-4 md:gap-6',
                     view === 'PATIENT'
-                        ? 'md:grid-cols-3 max-w-4xl'
-                        : 'md:grid-cols-2 lg:grid-cols-4 max-w-7xl',
+                        ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-w-5xl'
+                        : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 max-w-7xl',
                     'mx-auto'
                 )}>
                     {activeTiers.map((tier, i) => {
