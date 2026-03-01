@@ -180,7 +180,7 @@ export default function DoctorDashboard({ language }: DoctorDashboardProps) {
     });
     const [loadingStats, setLoadingStats] = useState(true);
 
-    const t = LABELS[language] || LABELS.EN;
+    const t = LABELS[language as keyof typeof LABELS] || LABELS.EN;
 
     useEffect(() => {
         if (user?.email) {
@@ -445,7 +445,7 @@ export default function DoctorDashboard({ language }: DoctorDashboardProps) {
                             <div className="space-y-3">
                                 <p className="text-xs text-gray-400 leading-relaxed">{t.earnDesc}</p>
                                 <div className="space-y-2">
-                                    {t.earnItems.map((item, i) => (
+                                    {t.earnItems.map((item: {label: string; pts: string}, i: number) => (
                                         <div key={i} className="flex items-center justify-between text-xs">
                                             <span className="text-gray-400">{item.label}</span>
                                             <span className="text-yellow-400 font-bold font-mono">{item.pts}</span>

@@ -123,7 +123,7 @@ export default function PatientDashboard({ language }: PatientDashboardProps) {
     const [fetching, setFetching] = useState(true);
     const [copiedId, setCopiedId] = useState<string | null>(null);
 
-    const t = LABELS[language] || LABELS.EN;
+    const t = LABELS[language as keyof typeof LABELS] || LABELS.EN;
 
     useEffect(() => {
         if (user?.email) {

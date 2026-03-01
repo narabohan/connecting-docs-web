@@ -750,6 +750,7 @@ export default function DoctorClinicalPanel({ wizardData, doctorDevices = [], pa
                                     const isRF = device.toLowerCase().includes('rf') || device.toLowerCase().includes('thermage') || device.toLowerCase().includes('morpheus');
                                     const areaMatch = areaDeviceLogic.some(a => a.devices.some(d => d.name.toLowerCase().includes(device.toLowerCase().substring(0, 5))));
 
+                                    const painOK = ['moderate', 'high', 'veryHigh'].includes(painTolerance);
                                     let compat: 'suitable' | 'caution' | 'contraindicated' = 'suitable';
                                     let reason = '현재 환자 프로파일과 기본 적합';
 
@@ -766,8 +767,6 @@ export default function DoctorClinicalPanel({ wizardData, doctorDevices = [], pa
                                         compat = 'suitable';
                                         reason = '환자 관심 부위와 직접 매칭';
                                     }
-
-                                    const painOK = ['moderate', 'high', 'veryHigh'].includes(painTolerance);
 
                                     return (
                                         <div key={device} className={`flex items-center justify-between p-3 rounded-lg border ${
