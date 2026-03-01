@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ message: 'Method Not Allowed' });
     }
 
-    const { email, reportId } = req.body;
+    const { email, reportId, selectedProtocolId } = req.body;
 
     if (!email || !reportId) {
         return res.status(400).json({ message: 'Email and reportId are required' });
@@ -71,7 +71,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         let score = 0;
 
         if (recommendations.length > 0) {
-            const topRec = recommendations[0];
+            const topRec = selectedProtocolId
+                ? recommendations.find((r: any) => r.id === selectedProtocolId) || recommendations[0]
+                : recommendations[0];
+
             score = topRec.matchScore || 0;
             const proto = topRec.proto || {};
             // Assuming proto links to doctor directly via User_Link or Doctor_Link

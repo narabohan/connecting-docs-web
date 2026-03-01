@@ -57,7 +57,7 @@ export default function ForDoctors({ language = 'EN' }: ForDoctorsProps) {
 
                 <div className="mt-16">
                     <Link
-                        href="#signup"
+                        href="/doctor/waitlist"
                         className="inline-flex items-center justify-center px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-colors"
                     >
                         {t.cta}

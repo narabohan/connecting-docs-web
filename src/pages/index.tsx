@@ -67,8 +67,8 @@ export default function Home() {
   return (
     <div className="bg-[#050505] min-h-screen text-slate-50 font-sans selection:bg-cyan-500/30 selection:text-white scroll-smooth relative">
       <Head>
-        <title>Connecting Docs | The Global Medical Intelligence Platform</title>
-        <meta name="description" content="Stop Guessing. Start Designing. We translate your skin concerns into data-driven protocols." />
+        <title>ConnectingDocs | Find Your Perfect Skin Treatment in 3 Minutes</title>
+        <meta name="description" content="Find Your Perfect Skin Treatment in 3 Minutes — Free AI Analysis. Stop Guessing. Start Designing." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -113,6 +113,7 @@ export default function Home() {
           rank={selectedRank}
           language={currentLang}
           tallyData={wizardData}
+          onSaveReport={() => setIsAuthModalOpen(true)}
         />
 
         <ForPatients language={currentLang} onStartSurvey={handleStartAnalysis} />

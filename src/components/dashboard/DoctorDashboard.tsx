@@ -138,6 +138,31 @@ export default function DoctorDashboard() {
                 </div>
             </div>
 
+            {/* Upgrade CTA Banner (Show when 1 solution exists) */}
+            {solutions.length === 1 && (
+                <div className="mb-8 relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 p-6 shadow-2xl">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+                    <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="text-2xl">🌍</span>
+                                <h3 className="text-xl font-bold text-white">Unlock Global VIP Patient Matching</h3>
+                            </div>
+                            <p className="text-white/90 text-sm max-w-2xl">
+                                Register <strong>3+ solutions</strong> to activate global matching and attract VIP patients worldwide.
+                                Customize your patient mix: <span className="font-bold">Entry</span> (high-volume), <span className="font-bold">Standard</span> (signature), <span className="font-bold">VIP</span> (premium).
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => router.push('/#pricing')}
+                            className="flex-shrink-0 bg-white text-blue-600 px-6 py-3 rounded-full font-bold hover:bg-gray-100 transition-all shadow-lg"
+                        >
+                            View Plans
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="flex justify-between items-end mb-8">
                 <div>
                     <h2 className="text-2xl font-bold flex items-center gap-2">
@@ -145,7 +170,25 @@ export default function DoctorDashboard() {
                         Signature Solutions
                     </h2>
                     {solutions.length > 0 && (
-                        <p className="text-sm text-gray-500 mt-1">{solutions.length} solution{solutions.length > 1 ? 's' : ''} active</p>
+                        <div className="flex items-center gap-3 mt-1">
+                            <p className="text-sm text-gray-500">{solutions.length} solution{solutions.length > 1 ? 's' : ''} active</p>
+                            <div className="flex gap-1">
+                                {['Entry', 'Standard', 'VIP'].map(tier => {
+                                    const count = solutions.filter(s => s.tier === tier).length;
+                                    if (count === 0) return null;
+                                    const colors: Record<string, string> = {
+                                        'Entry': 'bg-green-500/20 text-green-400',
+                                        'Standard': 'bg-blue-500/20 text-blue-400',
+                                        'VIP': 'bg-yellow-500/20 text-yellow-400'
+                                    };
+                                    return (
+                                        <span key={tier} className={`text-xs px-2 py-0.5 rounded-full ${colors[tier]}`}>
+                                            {count} {tier}
+                                        </span>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     )}
                 </div>
                 <button

@@ -7,6 +7,7 @@ import { cn } from '@/utils/cn';
 
 interface IntelligenceEngineProps {
     readonly language: LanguageCode;
+    recommendations?: any[];
 }
 
 const MOCK_DEVICES = [
@@ -112,13 +113,31 @@ const MOCK_DEVICES = [
     }
 ];
 
-export default function IntelligenceEngine({ language }: IntelligenceEngineProps) {
+export default function IntelligenceEngine({ language, recommendations }: IntelligenceEngineProps) {
     const [selectedDeviceIndex, setSelectedDeviceIndex] = useState(0);
 
     const t = (REPORT_TRANSLATIONS[language]?.landing || REPORT_TRANSLATIONS['EN'].landing).judgment;
     const dt = t.deviceSuitability;
 
-    const selectedDevice = MOCK_DEVICES[selectedDeviceIndex];
+    const devices = recommendations?.length ? recommendations.map((r, i) => ({
+        name: r.composition?.length > 0 ? r.composition.join(' + ') : r.name,
+        targetArea: r.faceZones?.length > 0 ? r.faceZones.join(" / ") : "Full Face",
+        layer: r.targetLayers?.length > 0 ? (Array.isArray(r.targetLayers) ? r.targetLayers.join(" & ") : r.targetLayers) : "Deep Dermis",
+        pain: r.reasonWhy?.pain_level?.toLowerCase() || "medium",
+        downtime: r.reasonWhy?.downtime_level?.toLowerCase() || "medium",
+        suitability: r.matchScore || 85,
+        status: (r.matchScore || 85) >= 90 ? "suitable" : (r.matchScore || 85) >= 75 ? "caution" : "unsuitable",
+        radar: {
+            pain: 50 + (i * 15),
+            skinFit: 100 + (r.matchScore ? (r.matchScore / 2) : 40),
+            aging: 90 + (i * 20),
+            efficacy: r.matchScore ? r.matchScore + 20 : 120,
+            pigment: 40 + (i * 10),
+            budget: 80 + (i * 20)
+        }
+    })) : MOCK_DEVICES;
+
+    const selectedDevice = devices[selectedDeviceIndex] || MOCK_DEVICES[0];
 
     const clinicalData = [
         { subject: REPORT_TRANSLATIONS[language]?.radar?.axes?.pain || 'Pain', A: selectedDevice.radar.pain, fullMark: 150 },
@@ -270,11 +289,11 @@ export default function IntelligenceEngine({ language }: IntelligenceEngineProps
                                         Device AI Match
                                     </h3>
                                 </div>
-                                <span className="text-xs text-[#888888] font-mono">Found {MOCK_DEVICES.length} Matches</span>
+                                <span className="text-xs text-[#888888] font-mono">Found {devices.length} Matches</span>
                             </div>
 
                             <div className="overflow-y-auto pr-2 flex-1 space-y-4 scrollbar-thin scrollbar-thumb-[#1F1F1F] scrollbar-track-transparent">
-                                {MOCK_DEVICES.map((device, index) => {
+                                {devices.map((device, index) => {
                                     const statusStyle = getStatusColor(device.status);
                                     const isSelected = selectedDeviceIndex === index;
 

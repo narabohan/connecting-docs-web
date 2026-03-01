@@ -248,22 +248,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return { proto: p, score };
         });
 
-        // Step C: Sort & Top 3
+        // Step C: Advanced Sorting & Selection Logic
         scoredProtocols.sort((a, b) => b.score - a.score);
-        const topProtocols = scoredProtocols.slice(0, 3);
 
-        // Visual Tie-Breaker (Curve adjustment if data is sparse)
-        if (topProtocols.length > 0) {
-            topProtocols[0].score = Math.max(topProtocols[0].score, 88);
+        // 1. Rank 1: Best Match (Direct top scorer)
+        const rank1 = scoredProtocols[0];
+
+        // 2. Rank 2: Trending & Safe (e.g., Titanium Lifting / Inmode) for Low Downtime/Pain
+        let rank2 = scoredProtocols.find(p => p.proto.id !== rank1?.proto.id && (p.proto.fields.protocol_name?.toLowerCase().includes('titanium') || p.proto.fields.protocol_name?.toLowerCase().includes('티타늄') || p.proto.fields.protocol_name?.toLowerCase().includes('inmode')));
+
+        // Fallback if no specific trending device is found, or if user tolerance is high
+        if (!rank2 || (painTolerance && PAIN_TOLERANCE_MAP.HIGH.some(t => painTolerance.includes(t)))) {
+            rank2 = scoredProtocols.find(p => p.proto.id !== rank1?.proto.id);
         }
-        if (topProtocols.length > 1) {
-            if (topProtocols[1].score >= topProtocols[0].score) topProtocols[1].score = topProtocols[0].score - (3 + (topProtocols[1].proto.id.charCodeAt(0) % 5));
+
+        // 3. Rank 3: Trade-off (Higher efficacy, slightly more pain/downtime)
+        let rank3 = scoredProtocols.find(p =>
+            p.proto.id !== rank1?.proto.id &&
+            p.proto.id !== rank2?.proto.id &&
+            (['High', 'Very High'].includes(p.proto.fields.pain_level as string) || ['High', 'Very High'].includes(p.proto.fields.downtime_level as string))
+        );
+
+        // Fallback for Rank 3
+        if (!rank3) {
+            rank3 = scoredProtocols.find(p => p.proto.id !== rank1?.proto.id && p.proto.id !== rank2?.proto.id);
         }
-        if (topProtocols.length > 2) {
-            if (topProtocols[2].score >= topProtocols[1].score) topProtocols[2].score = topProtocols[1].score - (4 + (topProtocols[2].proto.id.charCodeAt(1) % 5));
-            // Ensure visual degradation 
-            topProtocols[2].score = Math.min(topProtocols[2].score, topProtocols[1].score - 2);
-        }
+
+        const topProtocols = [rank1, rank2, rank3].filter(Boolean) as typeof scoredProtocols;
 
         // Step D: Map to Response Format
         const recommendations = topProtocols.map((sp, index) => {
@@ -307,20 +318,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             };
         });
 
-        // Step E: Reason Why Generation
-        const REASON_TEMPLATES: Record<string, string> = {
-            EN: "Based on your sensitivity ({skin}) and preference for {pain} pain levels, we selected treatments that focus on {goal} while respecting your request for {downtime} downtime.",
-            KO: "고객님의 피부 민감도({skin})와 통증 선호도({pain})를 고려하여, {downtime} 다운타임 내에서 {goal} 개선 효과를 극대화할 수 있는 시술을 엄선했습니다.",
-            JP: "お客様の肌の敏感さ({skin})と痛みの許容度({pain})に基づき、{downtime}のダウンタイムで{goal}に焦点を当てた治療法を選定しました。",
-            CN: "基于您的皮肤敏感度({skin})和疼痛耐受度({pain})，我们选择了专注于{goal}的治疗方案，同时满足您对{downtime}恢复期的要求。"
-        };
+        // Step E: Reason Why Generation (Rule-based hybrid engine)
+        const generateReasonWhy = () => {
+            const r1Name = recommendations[0]?.name || 'the primary treatment';
+            const r2Name = recommendations[1]?.name || 'a trending option';
+            const r3Name = recommendations[2]?.name || 'an intensive option';
 
-        const template = REASON_TEMPLATES[lang] || REASON_TEMPLATES['EN'];
-        const reasonWhy = template
-            .replace('{skin}', String(skinThickness || (lang === 'KO' ? '보통' : 'Normal')))
-            .replace('{pain}', String(painTolerance || (lang === 'KO' ? '보통' : 'Standard')))
-            .replace('{goal}', String(primaryGoal || (lang === 'KO' ? '피부 개선' : 'Skin Improvement')))
-            .replace('{downtime}', String(downtimeTolerance || (lang === 'KO' ? '유연한' : 'manageable')));
+            if (lang === 'KO') {
+                return `환자님의 임상 데이터(통증 허용도: ${painTolerance || '보통'}, 회복 기간: ${downtimeTolerance || '보통'})를 종합 분석한 결과입니다.\n\n1순위로 추천드리는 [${r1Name}]은 환자님의 최우선 목표인 '${primaryGoal}' 개선에 임상적 적합도가 가장 높습니다. 추가로, 최근 트렌디하게 각광받으며 부담 없이 시술 가능한 [${r2Name}]을 2순위로 제안합니다.\n\n만약 약간의 다운타임을 더 감수하더라도 확실하고 강력한 피부 개선(Trade-off)을 원하신다면 3순위인 [${r3Name}] 시술도 훌륭한 대안이 될 수 있습니다. 각 시술의 구체적인 로직 프로파일을 아래에서 확인해보세요.`;
+            }
+            if (lang === 'JP') {
+                return `患者様の臨床データ（痛みの許容度：${painTolerance || '普通'}、ダウンタイム：${downtimeTolerance || '普通'}）を総合的に分析した結果です。\n\n第1位としてお勧めする[${r1Name}]は、患者様の最優先目標である「${primaryGoal}」の改善に最も高い臨床的適合性を示しています。さらに、最近トレンドとして注目され、負担なく施術可能な[${r2Name}]を第2位として提案します。\n\nもし、少しのダウンタイムを許容しても、確実で強力な肌の改善（トレードオフ）をご希望の場合は、第3位の[${r3Name}]も素晴らしい選択肢となります。以下の各施術の具体的なロジックプロファイルをご確認ください。`;
+            }
+            // English & default fallback
+            return `Based on your clinical data (Pain tolerance: ${painTolerance || 'Medium'}, Downtime: ${downtimeTolerance || 'Medium'}), we have analyzed your profile.\n\nOur top recommendation, [${r1Name}], provides the highest clinical match for your primary goal of '${primaryGoal}'. Additionally, we suggest [${r2Name}] as a highly trending, low-burden alternative.\n\nIf you are willing to accept slightly more downtime for maximum efficacy (a clinical trade-off), [${r3Name}] is an excellent intensive option. Review the detailed logic profile for each below.`;
+        }
+
+        const reasonWhy = generateReasonWhy();
 
         const resultPayload = {
             language: lang,

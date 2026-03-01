@@ -5,6 +5,7 @@ import { cn } from '@/utils/cn';
 
 interface SkinBoosterRecommendationsProps {
     language: LanguageCode;
+    recommendations?: any[];
 }
 
 // Temporary data until translations are fully updated
@@ -66,7 +67,21 @@ const COMBINATIONS = [
     }
 ];
 
-export default function SkinBoosterRecommendations({ language }: SkinBoosterRecommendationsProps) {
+export default function SkinBoosterRecommendations({ language, recommendations }: SkinBoosterRecommendationsProps) {
+    const apiBoosters = recommendations?.length ? recommendations.map((r, i) => ({
+        id: r.id,
+        name: r.name + " Booster Combo",
+        combo: r.composition?.join(' + ') || r.name,
+        effect: r.reasonWhy?.why_suitable || 'Deep Hydration & Regeneration',
+        method: r.tags?.[0] || 'Targeted Injection',
+        pain: r.reasonWhy?.pain_level || 'Medium',
+        painScore: String(r.reasonWhy?.pain_level).toLowerCase().includes('high') ? 8 : String(r.reasonWhy?.pain_level).toLowerCase().includes('low') ? 3 : 5,
+        icon: [Droplets, Target, ShieldCheck, Sparkles, Syringe][i % 5],
+        color: ['from-blue-400 to-cyan-500', 'from-amber-400 to-orange-500', 'from-emerald-400 to-teal-500', 'from-purple-400 to-pink-500', 'from-cyan-300 to-blue-400'][i % 5]
+    })) : undefined;
+
+    const displayBoosters = apiBoosters && apiBoosters.length > 0 ? apiBoosters : COMBINATIONS;
+
     return (
         <section className="relative py-24 bg-[#050505] overflow-hidden">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-cyan-900/10 blur-[120px] rounded-full opacity-50 pointer-events-none" />
@@ -91,7 +106,7 @@ export default function SkinBoosterRecommendations({ language }: SkinBoosterReco
                 </motion.div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 max-w-7xl mx-auto">
-                    {COMBINATIONS.map((item, index) => (
+                    {displayBoosters.map((item, index) => (
                         <motion.div
                             key={item.id}
                             initial={{ opacity: 0, y: 30 }}
@@ -119,7 +134,7 @@ export default function SkinBoosterRecommendations({ language }: SkinBoosterReco
                                 <div className="space-y-4">
                                     <div>
                                         <span className="text-[10px] uppercase font-mono text-slate-500 tracking-wider block mb-1">Expected Effect</span>
-                                        <p className="text-sm text-slate-300 font-medium">{item.effect}</p>
+                                        <p className="text-sm text-slate-300 font-medium line-clamp-2">{item.effect}</p>
                                     </div>
                                     <div>
                                         <span className="text-[10px] uppercase font-mono text-slate-500 tracking-wider block mb-1">Injection Method</span>

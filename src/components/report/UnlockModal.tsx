@@ -7,9 +7,10 @@ interface UnlockModalProps {
     onClose: () => void;
     language?: LanguageCode;
     reportId?: string;
+    selectedProtocolId?: string | null;
 }
 
-export default function UnlockModal({ isOpen, onClose, language = 'EN', reportId }: UnlockModalProps) {
+export default function UnlockModal({ isOpen, onClose, language = 'EN', reportId, selectedProtocolId }: UnlockModalProps) {
     const t = (REPORT_TRANSLATIONS[language] || REPORT_TRANSLATIONS['EN']).report?.modal || {
         title: 'Unlock Your Master Profile',
         subtitle: 'Get personalized doctor recommendations + instant consultation booking.',
@@ -33,7 +34,7 @@ export default function UnlockModal({ isOpen, onClose, language = 'EN', reportId
             const res = await fetch('/api/report/unlock', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, reportId })
+                body: JSON.stringify({ email, reportId, selectedProtocolId })
             });
             if (res.ok) {
                 setSubmitted(true);

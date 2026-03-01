@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
-import { X, ArrowRight, CheckCircle, Shield, Award, Sparkles, Loader2, RefreshCw, Download, Sliders, Settings2, MapPin, Star, Stethoscope, ChevronRight, Activity, Target } from 'lucide-react';
+import { X, ArrowRight, CheckCircle, Shield, Award, Sparkles, Loader2, RefreshCw, Download, Sliders, Settings2, MapPin, Star, Stethoscope, ChevronRight, Activity, Target, Save } from 'lucide-react';
 import FaceMannequin from '@/components/simulation/FaceMannequin';
 import SkinLayerSection from '@/components/simulation/SkinLayerSection';
 import LiveRadar from '@/components/simulation/LiveRadar';
@@ -15,6 +15,7 @@ interface DeepDiveModalProps {
     rank: 1 | 2 | 3 | null;
     language: LanguageCode;
     tallyData?: any; // Pass Tally data for analysis
+    onSaveReport?: () => void;
 }
 
 // Fallback Data (Skeleton)
@@ -26,7 +27,7 @@ const SKELETON_DATA = {
     radar: { lifting: 0, firmness: 0, texture: 0, glow: 0, safety: 0 }
 };
 
-export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyData }: DeepDiveModalProps) {
+export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyData, onSaveReport }: DeepDiveModalProps) {
     const t = (REPORT_TRANSLATIONS[language]?.curation || REPORT_TRANSLATIONS['EN'].curation);
     const tRadar = (REPORT_TRANSLATIONS[language]?.simulation || REPORT_TRANSLATIONS['EN'].simulation).radar;
     const td = (REPORT_TRANSLATIONS[language]?.deepDive || REPORT_TRANSLATIONS['EN'].deepDive)!;
@@ -564,16 +565,54 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                     </div>
 
                     {/* Footer */}
-                    <div className="flex-none p-6 md:p-8 border-t border-white/5 bg-[#0a0a0f] flex justify-between items-center z-20">
-                        <div className="text-sm text-gray-500">
-                            {td.resultsDisclaimer}
-                        </div>
-                        <button
-                            onClick={onClose}
-                            className="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200 transition-colors flex items-center gap-2"
-                        >
-                            {td.closeAnalysis}
-                        </button>
+                    <div className="flex-none p-6 md:p-8 border-t border-white/5 bg-[#0a0a0f] z-20">
+                        {!user ? (
+                            /* Not Logged In - Upgrade CTA */
+                            <div className="bg-gradient-to-r from-cyan-600 to-blue-600 rounded-2xl p-6 text-center">
+                                <div className="flex items-center justify-center gap-2 mb-3">
+                                    <Sparkles className="w-5 h-5 text-white" />
+                                    <h3 className="text-lg font-bold text-white">Save Your Full Report & Get Matched</h3>
+                                </div>
+                                <p className="text-white/90 text-sm mb-4 max-w-2xl mx-auto">
+                                    Create a free account to save this analysis, track your skin journey, and get matched with top doctors worldwide.
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                                    <button
+                                        onClick={() => {
+                                            onClose();
+                                            if (onSaveReport) onSaveReport();
+                                        }}
+                                        className="bg-white text-blue-600 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 shadow-lg"
+                                    >
+                                        <Star className="w-4 h-4" />
+                                        Save Report & Create Account (Free)
+                                    </button>
+                                    <button
+                                        onClick={onClose}
+                                        className="bg-white/10 text-white px-6 py-3 rounded-full font-medium hover:bg-white/20 transition-colors"
+                                    >
+                                        Close Preview
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            /* Logged In - Simple Save */
+                            <div className="flex justify-between items-center">
+                                <div className="text-sm text-gray-500">
+                                    {td.resultsDisclaimer}
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        onClose();
+                                        if (onSaveReport) onSaveReport();
+                                    }}
+                                    className="bg-white text-black px-8 py-3 rounded-full font-bold hover:bg-gray-200 transition-colors flex items-center gap-2"
+                                >
+                                    <Save className="w-4 h-4" />
+                                    {td.closeAnalysis}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </motion.div>

@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
-import { Loader2, Download, Lock } from 'lucide-react';
+import { Loader2, Download, Lock, Activity, Stethoscope } from 'lucide-react';
 
 import AlignmentHero from '@/components/report/AlignmentHero';
 import WhatIfSliders from '@/components/report/WhatIfSliders';
@@ -11,7 +11,9 @@ import SignatureGallery from '@/components/premium/SignatureGallery';
 import SkinBoosterRecommendations from '@/components/curation/SkinBoosterRecommendations';
 import UnlockModal from '@/components/report/UnlockModal';
 import SkinSimulationContainer from '@/components/simulation/SkinSimulationContainer';
+import DoctorClinicalPanel from '@/components/doctor/DoctorClinicalPanel';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
+import { generatePatientPDF, generateDoctorPDF } from '@/utils/pdfGenerator';
 
 const DEFAULT_RADAR_DATA = [
     { subject: 'Skin Thickness', A: 72, fullMark: 100 },
@@ -35,8 +37,12 @@ export default function ReportPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedProtocolId, setSelectedProtocolId] = useState<string | null>(null);
     const [alignmentScore, setAlignmentScore] = useState(92);
     const [isRecalculating, setIsRecalculating] = useState(false);
+
+    // Check if the current viewer is a doctor
+    const isDoctor = router.query.role === 'doctor';
 
     useEffect(() => {
         if (!id) return;
@@ -108,6 +114,55 @@ export default function ReportPage() {
     const risks = data?.logic?.risks?.length > 0 ? data.logic.risks : DEFAULT_RISKS;
     const recommendations = data?.recommendations || [];
 
+    // PDF Download Handler
+    const handleDownloadPDF = () => {
+        if (isDoctor) {
+            // Generate Doctor Clinical PDF
+            generateDoctorPDF({
+                patientName,
+                language,
+                patientProfile: {
+                    primaryIndication: data?.patient?.simulationData?.primaryIndication || goals[0] || 'Not specified',
+                    secondaryIndication: data?.patient?.simulationData?.secondaryIndication || goals[1] || 'Not specified',
+                    painTolerance: data?.patient?.painTolerance || 'Not specified',
+                    downtimeTolerance: data?.patient?.downtimeTolerance || 'Not specified',
+                    skinThickness: data?.patient?.skinThickness,
+                },
+                riskFactors: {
+                    hasMelasma: data?.patient?.has_melasma,
+                    acneStatus: data?.patient?.acne_type,
+                    poreType: data?.patient?.pore_type,
+                },
+                recommendations: recommendations.map((rec: any) => ({
+                    rank: rec.rank,
+                    name: rec.name,
+                    matchScore: rec.matchScore,
+                    composition: rec.composition || [],
+                    description: rec.description,
+                    targetLayers: rec.targetLayers,
+                    faceZones: rec.faceZones,
+                })),
+                clinicalSummary: logicText,
+            });
+        } else {
+            // Generate Patient Summary PDF
+            generatePatientPDF({
+                patientName,
+                language,
+                clinicalSummary: logicText,
+                recommendations: recommendations.map((rec: any) => ({
+                    rank: rec.rank,
+                    name: rec.name,
+                    matchScore: rec.matchScore,
+                    composition: rec.composition || [],
+                    description: rec.description,
+                    tags: rec.tags || [],
+                })),
+                alignmentScore,
+            });
+        }
+    };
+
     return (
         <div className="min-h-screen selection:bg-cyan-500/30 font-mono"
             style={{ background: '#0a0a2a', color: 'white' }}>
@@ -131,17 +186,27 @@ export default function ReportPage() {
                     borderBottom: '1px solid rgba(0,255,255,0.08)',
                 }}>
                 <div className="container mx-auto px-6 h-14 flex items-center justify-between">
-                    <div className="font-bold tracking-tighter text-sm uppercase">
-                        Connecting<span style={{ color: '#00FFA0' }}>Docs</span>
-                        <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded font-normal"
-                            style={{ background: 'rgba(0,255,160,0.08)', color: 'rgba(0,255,160,0.6)', border: '1px solid rgba(0,255,160,0.15)' }}>
-                            INTELLIGENCE REPORT
-                        </span>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => router.push(isDoctor ? '/doctor/waitlist' : '/dashboard')}
+                            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/60 hover:text-white"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                        </button>
+                        <div className="font-bold tracking-tighter text-sm uppercase hidden sm:block">
+                            Connecting<span style={{ color: '#00FFA0' }}>Docs</span>
+                            <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded font-normal"
+                                style={{ background: 'rgba(0,255,160,0.08)', color: 'rgba(0,255,160,0.6)', border: '1px solid rgba(0,255,160,0.15)' }}>
+                                INTELLIGENCE REPORT
+                            </span>
+                        </div>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button className="text-xs font-mono transition-colors flex items-center gap-1"
+                        <button className="text-xs font-mono transition-colors flex items-center gap-1 hover:text-white"
                             style={{ color: 'rgba(255,255,255,0.4)' }}
-                            onClick={() => window.print()}>
+                            onClick={handleDownloadPDF}>
                             <Download className="w-3.5 h-3.5" /> Export PDF
                         </button>
                         <div className="h-3 w-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
@@ -155,6 +220,10 @@ export default function ReportPage() {
 
             <main className="container mx-auto px-6 pt-20 pb-28">
 
+                {isDoctor && (
+                    <DoctorClinicalPanel data={data} language={language} />
+                )}
+
                 {/* ① Section A: Hero — Score Ring + Radar + AI Terminal */}
                 <AlignmentHero
                     score={alignmentScore}
@@ -163,6 +232,24 @@ export default function ReportPage() {
                     terminalText={logicText}
                     patientName={patientName}
                 />
+
+                {/* ①-2 Clinical Analysis Summary (Reason Why) */}
+                {logicText && (
+                    <section className="mb-12 mt-6">
+                        <div className="bg-[#111111] border border-[#00FFA0]/20 rounded-2xl p-6 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-[#00FFA0]" />
+                            <div className="flex items-center gap-2 mb-4">
+                                <Activity className="w-5 h-5 text-[#00FFA0]" />
+                                <h3 className="text-white font-bold text-lg font-mono tracking-tighter uppercase italic">
+                                    Clinical Analysis Summary
+                                </h3>
+                            </div>
+                            <div className="text-slate-300 leading-relaxed font-sans text-sm md:text-base whitespace-pre-line">
+                                {logicText}
+                            </div>
+                        </div>
+                    </section>
+                )}
 
                 {/* ② Section D: What-If Sliders */}
                 <WhatIfSliders
@@ -175,15 +262,20 @@ export default function ReportPage() {
                 <TrafficLightRisk risks={risks} language={language} />
 
                 {/* ④ Premium Intelligence & Curation */}
-                <IntelligenceEngine language={language} />
+                <IntelligenceEngine language={language} recommendations={recommendations} />
 
                 <SignatureGallery
                     language={language}
+                    recommendations={recommendations}
                     onStartAnalysis={() => setIsModalOpen(true)}
-                    onViewDeepDive={() => setIsModalOpen(true)}
+                    onViewDeepDive={(rank) => {
+                        const sel = recommendations[rank - 1]?.id || null;
+                        setSelectedProtocolId(sel);
+                        setIsModalOpen(true);
+                    }}
                 />
 
-                <SkinBoosterRecommendations language={language} />
+                <SkinBoosterRecommendations language={language} recommendations={recommendations} />
 
                 {/* ⑤ Skin Simulation */}
                 <section className="mb-8">
@@ -196,6 +288,35 @@ export default function ReportPage() {
                     />
                 </section>
 
+                {/* ⑥ How to Use This Report (Patient Only) */}
+                {!isDoctor && t.usageGuide && (
+                    <section className="mb-12 mt-16 max-w-4xl mx-auto">
+                        <div className="bg-[#111111] border border-[#00FFA0]/30 rounded-2xl p-6 lg:p-8 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#00FFA0]/5 rounded-bl-full pointer-events-none" />
+                            <h2 className="text-[#00FFA0] text-xl md:text-2xl font-bold font-mono uppercase tracking-tight mb-8">
+                                {t.usageGuide.title}
+                            </h2>
+                            <div className="space-y-6">
+                                {[
+                                    { icon: <Activity className="w-5 h-5" />, title: t.usageGuide.step1.title, desc: t.usageGuide.step1.desc },
+                                    { icon: <Stethoscope className="w-5 h-5" />, title: t.usageGuide.step2.title, desc: t.usageGuide.step2.desc },
+                                    { icon: <Lock className="w-5 h-5" />, title: t.usageGuide.step3.title, desc: t.usageGuide.step3.desc }
+                                ].map((step, idx) => (
+                                    <div key={idx} className="flex gap-4 items-start">
+                                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#00FFA0]/10 border border-[#00FFA0]/30 flex items-center justify-center text-[#00FFA0]">
+                                            {step.icon}
+                                        </div>
+                                        <div>
+                                            <h4 className="text-white font-bold font-mono text-[15px] mb-1">{step.title}</h4>
+                                            <p className="text-slate-400 text-sm leading-relaxed">{step.desc}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+                )}
+
             </main>
 
             {/* ── Sticky Footer CTA (Section E) ── */}
@@ -205,7 +326,9 @@ export default function ReportPage() {
                     <div className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#00FFA0', boxShadow: '0 0 8px #00FFA0' }} />
                         <span className="text-xs font-mono hidden sm:block" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                            {rt?.footer?.locked || 'Master Doctor profile & clinic details are ready to unlock'}
+                            {isDoctor
+                                ? 'Patient profile & contact preferences are ready'
+                                : (rt?.footer?.locked || 'Master Doctor profile & clinic details are ready to unlock')}
                         </span>
                     </div>
                     <button
@@ -218,7 +341,9 @@ export default function ReportPage() {
                             animation: 'pulse-glow 2s ease-in-out infinite',
                         }}>
                         <Lock className="w-3.5 h-3.5" />
-                        {rt?.footer?.cta || '🔒 Unlock Master Profile & Book'}
+                        {isDoctor
+                            ? 'Connect with Patient'
+                            : (rt?.footer?.cta || '🔒 Unlock Master Profile & Book')}
                     </button>
                 </div>
             </div>
@@ -228,14 +353,48 @@ export default function ReportPage() {
                     0%, 100% { box-shadow: 0 0 20px rgba(0,255,255,0.4), 0 0 40px rgba(0,255,255,0.15); }
                     50% { box-shadow: 0 0 30px rgba(0,255,255,0.7), 0 0 60px rgba(0,255,255,0.3); }
                 }
+                
+                /* Sensible Korean line breaks */
+                p, h1, h2, h3, h4, h5, h6, span, div {
+                    word-break: keep-all;
+                    overflow-wrap: break-word;
+                }
+
+                @media print {
+                    header, .fixed.bottom-0, .fixed.z-40, button { display: none !important; }
+                    body, .min-h-screen, main { background: #fff !important; color: #000 !important; margin: 0 !important; padding: 0 !important; }
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                        color-adjust: exact !important;
+                    }
+                    /* Reversing dark mode for clear print */
+                    .bg-\[\#0a0a2a\], .bg-\[\#050505\], .bg-\[\#02050A\] { background-color: #fff !important; }
+                    .bg-\[\#111111\] { background-color: #f8f9fa !important; border: 1px solid #e5e7eb !important; box-shadow: none !important; }
+                    .border-\[\#1F1F1F\], .border-\[\#00FFA0\]\\/20, .border-\[\#00FFA0\]\\/30 { border-color: #e5e7eb !important; }
+                    
+                    /* Text legibility */
+                    .text-white { color: #000 !important; }
+                    .text-slate-300 { color: #1f2937 !important; }
+                    .text-slate-400 { color: #374151 !important; }
+                    .text-slate-500 { color: #4b5563 !important; }
+                    
+                    /* Block splitting prevention */
+                    section, .grid > div { break-inside: avoid; page-break-inside: avoid; }
+                    
+                    /* Reduce huge margins/paddings */
+                    .py-24, .py-32, .pt-20, .pb-28 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+                    .mb-20, .mb-16, .mb-12 { margin-bottom: 2rem !important; }
+                }
             `}</style>
 
-            {/* Email Capture Modal */}
+            {/* Email Capture & Doctor Connect Modal */}
             <UnlockModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={() => { setIsModalOpen(false); setSelectedProtocolId(null); }}
                 language={language}
                 reportId={id as string}
+                selectedProtocolId={selectedProtocolId}
             />
         </div>
     );

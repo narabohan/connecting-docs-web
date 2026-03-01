@@ -75,11 +75,10 @@ export default function PricingTable({ language = 'EN' }: PricingTableProps) {
 
                 {/* Pricing Cards */}
                 <div className={cn(
-                    'grid gap-6',
+                    'gap-6 mx-auto scrollbar-hide',
                     view === 'PATIENT'
-                        ? 'md:grid-cols-3 max-w-4xl'
-                        : 'md:grid-cols-2 lg:grid-cols-4 max-w-7xl',
-                    'mx-auto'
+                        ? 'grid md:grid-cols-3 max-w-4xl'
+                        : 'flex overflow-x-auto snap-x snap-mandatory md:grid md:grid-cols-2 lg:grid-cols-4 max-w-7xl pb-8 md:pb-0 px-4 md:px-0 -mx-4 md:mx-auto'
                 )}>
                     {activeTiers.map((tier, i) => {
                         const isPopular = i === popularIndex;
@@ -87,10 +86,11 @@ export default function PricingTable({ language = 'EN' }: PricingTableProps) {
                             <div
                                 key={tier.name}
                                 className={cn(
-                                    'relative rounded-2xl p-6 flex flex-col transition-all duration-300 hover:-translate-y-1',
+                                    'relative rounded-2xl p-6 flex flex-col transition-all duration-300',
+                                    view === 'DOCTOR' ? 'shrink-0 w-[85vw] snap-center md:w-auto' : '',
                                     isPopular
-                                        ? 'border-2 border-blue-500 bg-gradient-to-b from-blue-950/40 to-[#0f0f17] shadow-2xl shadow-blue-900/20'
-                                        : 'border border-white/10 bg-gradient-to-b from-[#0f0f17] to-[#0a0a0f]'
+                                        ? 'border-2 border-blue-500 bg-gradient-to-b from-blue-950/40 to-[#0f0f17] shadow-2xl shadow-blue-900/20 md:-translate-y-2'
+                                        : 'border border-white/10 bg-gradient-to-b from-[#0f0f17] to-[#0a0a0f] hover:-translate-y-1'
                                 )}
                             >
                                 {isPopular && (

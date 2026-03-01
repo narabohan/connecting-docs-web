@@ -78,7 +78,7 @@ export default function Hero({ language = 'EN', onDiagnosisComplete, onStartAnal
                         <span>v2.0 SYSTEM ONLINE</span>
                     </div>
 
-                    <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 tracking-tight leading-tight">
+                    <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 tracking-tight leading-tight break-keep whitespace-pre-line">
                         {userType === 'patient' ? (
                             <>
                                 {t.dynamicTitle.patient.main} <br />
@@ -102,7 +102,7 @@ export default function Hero({ language = 'EN', onDiagnosisComplete, onStartAnal
                         )}
                     </h1>
 
-                    <p className="text-lg md:text-xl text-gray-400 max-w-4xl mx-auto mb-2 leading-relaxed font-light">
+                    <p className="text-lg md:text-xl text-gray-400 max-w-4xl mx-auto mb-2 leading-relaxed font-light break-keep whitespace-pre-line">
                         {userType === 'patient'
                             ? t.dynamicDesc.patient
                             : t.dynamicDesc.doctor

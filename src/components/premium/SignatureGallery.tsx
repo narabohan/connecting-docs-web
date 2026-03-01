@@ -6,11 +6,12 @@ import { useAuth } from '@/context/AuthContext';
 
 interface SignatureGalleryProps {
   language: LanguageCode;
+  recommendations?: any[];
   onStartAnalysis?: () => void;
   onViewDeepDive?: (rank: 1 | 2 | 3) => void;
 }
 
-// Temporary Mock Data representing high-end equipment matching
+// Fallback Mock Data representing high-end equipment matching
 const MOCK_PROTOCOLS = [
   {
     id: 'p1',
@@ -50,7 +51,7 @@ const MOCK_PROTOCOLS = [
   }
 ];
 
-export default function SignatureGallery({ language, onStartAnalysis, onViewDeepDive }: SignatureGalleryProps) {
+export default function SignatureGallery({ language, recommendations, onStartAnalysis, onViewDeepDive }: SignatureGalleryProps) {
   const { user } = useAuth();
   const t = REPORT_TRANSLATIONS[language]?.deepDive || REPORT_TRANSLATIONS['EN'].deepDive;
 
@@ -61,6 +62,19 @@ export default function SignatureGallery({ language, onStartAnalysis, onViewDeep
       onStartAnalysis?.();
     }
   };
+
+  const protocols = recommendations?.length ? recommendations.map((r, idx) => ({
+    id: r.id,
+    name: r.name,
+    description: r.description,
+    category: r.tags?.[0] || 'Premium Protocol',
+    painLevel: r.reasonWhy?.pain_level || 'Medium',
+    downtime: r.reasonWhy?.downtime_level || 'None',
+    devices: r.composition || [],
+    benefits: [r.reasonWhy?.why_suitable || "Optimized for your skin profile."],
+    gradient: idx === 0 ? "from-cyan-900 via-slate-900 to-black" : idx === 1 ? "from-indigo-900 via-slate-900 to-black" : "from-fuchsia-900/40 via-slate-900 to-black",
+    image: `/images/protocols/thermage-exo.png` // Fallback image wrapper
+  })) : MOCK_PROTOCOLS;
 
   return (
     <section className="py-24 bg-[#050505] relative overflow-hidden">
@@ -104,7 +118,7 @@ export default function SignatureGallery({ language, onStartAnalysis, onViewDeep
 
         {/* Gallery Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {MOCK_PROTOCOLS.map((protocol, index) => (
+          {protocols.map((protocol, index) => (
             <motion.div
               key={protocol.id}
               initial={{ opacity: 0, y: 30 }}
@@ -149,7 +163,7 @@ export default function SignatureGallery({ language, onStartAnalysis, onViewDeep
 
                 {/* Device Tags */}
                 <div className="flex flex-wrap gap-2 mb-8">
-                  {protocol.devices.map((device, i) => (
+                  {protocol.devices.map((device: string, i: number) => (
                     <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#050505] border border-[#1F1F1F]">
                       <Zap className="w-3.5 h-3.5 text-[#00F0FF]" />
                       <span className="text-xs font-medium text-slate-300">{device}</span>
@@ -159,7 +173,7 @@ export default function SignatureGallery({ language, onStartAnalysis, onViewDeep
 
                 {/* Benefits List */}
                 <ul className="space-y-3 mb-8">
-                  {protocol.benefits.map((benefit, i) => (
+                  {protocol.benefits.map((benefit: string, i: number) => (
                     <li key={i} className="flex items-start gap-3">
                       <CheckCircle className="w-4 h-4 text-[#00F0FF]/80 mt-0.5 shrink-0" />
                       <span className="text-sm text-slate-300">{benefit}</span>

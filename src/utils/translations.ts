@@ -270,6 +270,12 @@ export interface TranslationStructure {
             locked: string;
         };
     };
+    usageGuide?: {
+        title: string;
+        step1: { title: string; desc: string };
+        step2: { title: string; desc: string };
+        step3: { title: string; desc: string };
+    };
     deepDive?: {
         badge: string;
         analyzing: string;
@@ -419,8 +425,8 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 },
                 dynamicTitle: {
                     patient: {
-                        main: "Unlock Your Glass Skin",
-                        sub: "The Data-Driven K-Beauty Revolution"
+                        main: "Find Your Perfect Skin Treatment",
+                        sub: "in 3 Minutes"
                     },
                     doctor: {
                         main: "Systematize Your Expertise",
@@ -428,8 +434,8 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                     }
                 },
                 dynamicDesc: {
-                    patient: "Tired of price shopping? Discover protocol combinations tailored to your pain tolerance, downtime, and budget. The safest match for your skin condition.",
-                    doctor: "Package your signature combinations into digital assets. Patients don't buy machines; they buy your proven logic and results."
+                    patient: "Free AI Analysis. Don't look for the cheapest machine. Find the Master who understands your clinical logic.",
+                    doctor: "The Global Medical Intelligence Platform. Connect with patients actively seeking your specific protocols and expertise."
                 },
                 dynamicCta: {
                     patient: "Start My Evaluation",
@@ -638,6 +644,21 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             },
             footer: { cta: "🔒 Unlock Master Profile & Book", locked: "View full personalized recommendations" },
         },
+        usageGuide: {
+            title: "📋 How to Use This Report",
+            step1: {
+                title: "1. Review AI Insights",
+                desc: "Understand the core logic behind the AI-selected combination based on your skin condition and preferences."
+            },
+            step2: {
+                title: "2. Compare Devices & Boosters",
+                desc: "The AI provides a curated selection of devices and skin boosters designed to maximize synergy for your specific needs."
+            },
+            step3: {
+                title: "3. Connect with a Master Doctor",
+                desc: "Your report is your prescription. Unlock the profile of a specialized 'Master Doctor' who can perfectly execute this specific protocol logic on you."
+            }
+        },
         deepDive: {
             badge: "Curated Solution",
             analyzing: "Analyzing Protocol...",
@@ -651,7 +672,7 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             poweredBy: "Powered by Clinical Engine",
             topSpecialists: "Top Matched Specialists",
             updateProtocol: "Recalculate Fit",
-            closeAnalysis: "Close Analysis",
+            closeAnalysis: "Save Report & Create Account",
             maxIntensity: "Max Intensity",
             collagenRemodeling: "Collagen Remodeling",
             resultsDisclaimer: "* Results may vary. Consultation required.",
@@ -785,17 +806,17 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 },
                 dynamicTitle: {
                     patient: {
-                        main: "장비 이름이 아닌 의사의 '로직'을 선택하는 시대",
-                        sub: "커넥팅닥스가 K-뷰티의 기준을 바꿉니다"
+                        main: "내 피부에 딱 맞는 시술 찾기",
+                        sub: "3분 무료 AI 진단"
                     },
                     doctor: {
                         main: "가격 경쟁의 늪에서 벗어나",
-                        sub: "원장님만의 '시그니처 솔루션'을 자산화하세요"
+                        sub: "원장님만의 '시그니처 솔루션'을\n자산화하세요"
                     }
                 },
                 dynamicDesc: {
-                    patient: "아픈 건 싫고, 예산은 한정적이라면? 통증부터 비용까지—나의 조건에 맞춘 '최적의 시술 시나리오'를 한눈에 확인하세요. 가격표에 내 얼굴을 맞추지 말고 내 피부에 맞는 처방을 찾으세요.",
-                    doctor: "단순한 홍보가 아닙니다. 원장님의 임상 로직을 디지털 IP로 자산화하여, 준비된 VIP 환자에게 직접 전달합니다. 시그니처 코스요리를 내는 셰프가 되어 보세요."
+                    patient: "무료 AI 진단. 가장 저렴한 장비만 찾지 마세요. 당신의 임상적 특성을 이해하는 마스터 닥터를 찾아보세요.",
+                    doctor: "오직 결과로 말하는 실력있는 의사들의 플랫폼. 원장님의 임상 로직을 디지털 IP로 자산화하고, 준비된 VIP 환자들과 직접 연결합니다. 코스 요리를 대접하는 셰프가 되어보세요."
                 },
                 dynamicCta: {
                     patient: "내 피부 적합성 설계하기",
@@ -1004,6 +1025,21 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             },
             footer: { cta: "🔒 마스터 프로필 잠금 해제 & 예약", locked: "맞춤형 전체 추천 보기" },
         },
+        usageGuide: {
+            title: "📋 리포트 활용 가이드",
+            step1: {
+                title: "1. AI 추천 로직 확인",
+                desc: "내 피부와 예산, 통증 민감도에 맞춰 이 조합이 왜 최적인지 AI의 분석 로직을 먼저 꼼꼼히 읽어보세요."
+            },
+            step2: {
+                title: "2. 장비 및 부스터 비교 검토",
+                desc: "추천된 메인 강호 장비와 시너지를 낼 수 있는 스킨 부스터의 조합을 확인하세요."
+            },
+            step3: {
+                title: "3. '마스터 닥터'에게 진료 예약",
+                desc: "이 리포트는 일종의 처방전입니다. 이 정교한 로직을 실제로 구현할 수 있는 검증된 '마스터 닥터'를 찾아 상담을 예약하세요."
+            }
+        },
         deepDive: {
             badge: "큐레이티드 솔루션",
             analyzing: "프로토콜 분석 중...",
@@ -1017,7 +1053,7 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             poweredBy: "임상 엔진 기반",
             topSpecialists: "최적 매칭 전문의",
             updateProtocol: "프로토콜 재분석",
-            closeAnalysis: "분석 닫기",
+            closeAnalysis: "리포트 저장 및 계정 생성하기",
             maxIntensity: "최대 강도",
             collagenRemodeling: "콜라겐 리모델링",
             resultsDisclaimer: "* 결과는 개인에 따라 다를 수 있습니다. 상담 필요.",
@@ -1150,11 +1186,11 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                     doctor: ["臨床プロトコル資産を分析中...", "独自の肌変数をスキャン中..."]
                 },
                 dynamicTitle: {
-                    patient: { main: "機器名ではなく医師の「ロジック」を選ぶ時代", sub: "ConnectingDocsがK-Beautyの新しい基準を作ります" },
+                    patient: { main: "あなたに最適な肌治療を", sub: "3分で無料AI診断" },
                     doctor: { main: "価格競争から抜け出し,", sub: "独自の「シグネチャーソリューション」でファンダムを構築" }
                 },
                 dynamicDesc: {
-                    patient: "痛いのは嫌で予算は限られている？痛みの許容度から費用まで—条件に合わせた「最適な施術シナリオ」を一目で確認してください。",
+                    patient: "無料AI診断。一番安い機器を探すのはやめましょう。あなたの臨床ロジックを理解するマスタードクターを見つけてください。",
                     doctor: "単なる広報ではありません。院長の臨床ロジックをデジタルIPとして資産化し、準備されたVIP患者に直接届けます。シグネチャーコース料理を提供するシェフになりましょう。"
                 },
                 dynamicCta: { patient: "私だけの施術設計を始める", doctor: "シグネチャー資産を登録" },
@@ -1361,6 +1397,21 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             },
             footer: { cta: "🔒 マスタープロファイル解除＆予約", locked: "カスタマイズされた全推薦を表示" },
         },
+        usageGuide: {
+            title: "📋 レポートの活用方法",
+            step1: {
+                title: "1. AI インサイトの確認",
+                desc: "あなたの肌の状態と好みに基づき、AIが選んだ組み合わせの背後にある核となるロジックを理解してください。"
+            },
+            step2: {
+                title: "2. 機器とブースターの比較",
+                desc: "AIがあなたの特定のニーズに対する相乗効果を最大化するように設計された、厳選された機器とスキンブースターを提供します。"
+            },
+            step3: {
+                title: "3. マスタードクターに接続",
+                desc: "このレポートはあなたの処方箋です。この特定のプロトコルロジックを完璧に実行できる専門の「マスタードクター」プロファイルをロック解除します。"
+            }
+        },
         deepDive: {
             badge: "キュレーテッドソリューション",
             analyzing: "プロトコル分析中...",
@@ -1374,7 +1425,7 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             poweredBy: "臨床エンジン搭載",
             topSpecialists: "最適マッチング専門医",
             updateProtocol: "プロトコル再分析",
-            closeAnalysis: "分析を閉じる",
+            closeAnalysis: "レポートを保存してアカウントを作成",
             maxIntensity: "最大強度",
             collagenRemodeling: "コラーゲンリモデリング",
             resultsDisclaimer: "※ 結果は個人によって異なります。要カウンセリング。",
@@ -1507,11 +1558,11 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                     doctor: ["正在分析临床方案资产...", "正在扫描您独特的皮肤变量..."]
                 },
                 dynamicTitle: {
-                    patient: { main: "超越设备名称的医生「逻辑」时代", sub: "ConnectingDocs正在建立K-Beauty新标准" },
+                    patient: { main: "寻找最适合您的皮肤治疗", sub: "3分钟免费AI分析" },
                     doctor: { main: "摆脱价格战泥潭", sub: "用独家「招牌方案」建立死忠粉" }
                 },
                 dynamicDesc: {
-                    patient: "怕痛且预算有限？从痛感到费用—一目了然地查看符合您条件的「最佳施术方案」。",
+                    patient: "免费AI分析。不要只找最便宜的设备。找到理解您临床逻辑的大师。",
                     doctor: "这不仅仅是宣传。将院长的临床逻辑转化为数字IP，直接对接已准备好的VIP患者。成为提供招牌套餐的大厨吧。"
                 },
                 dynamicCta: { patient: "开始我的专属施术设计", doctor: "注册招牌资产" },
@@ -1718,6 +1769,21 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             },
             footer: { cta: "🔒 解锁主档案并预约", locked: "查看完整个性化推荐" },
         },
+        usageGuide: {
+            title: "📋 如何使用此报告",
+            step1: {
+                title: "1. 审查AI见解",
+                desc: "了解基于您的皮肤状况和偏好，AI选择该组合背后的核心逻辑。"
+            },
+            step2: {
+                title: "2. 比较设备和助推器",
+                desc: "AI提供一系列精选的设备和皮肤助推器，旨在最大化满足您特定需求的协同效应。"
+            },
+            step3: {
+                title: "3. 联系专家医生",
+                desc: "您的报告就是您的处方。解锁能为您完美执行此特定方案逻辑的专科“专家医生”档案。"
+            }
+        },
         deepDive: {
             badge: "精选方案",
             analyzing: "正在分析方案...",
@@ -1731,7 +1797,7 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             poweredBy: "由临床引擎提供支持",
             topSpecialists: "最优匹配专家",
             updateProtocol: "更新方案",
-            closeAnalysis: "关闭分析",
+            closeAnalysis: "保存报告并创建账户",
             maxIntensity: "最大强度",
             collagenRemodeling: "胶原重塑",
             resultsDisclaimer: "* 效果因人而异。需要专业咨询。",
