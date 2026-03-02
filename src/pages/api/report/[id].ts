@@ -206,45 +206,102 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return true;
         });
 
-        // Match Indication for Score Boost
-        const matchedIndication = indicationRecords.find(i => {
-            const iName = i.fields.indication_name?.toLowerCase();
+        // Match Indication for Score Boost - More flexible matching
+        const matchedIndications = indicationRecords.filter(i => {
+            const iName = i.fields.indication_name?.toLowerCase() || '';
             if (!iName || !primaryGoal) return false;
-            return iName.includes(primaryGoal.toLowerCase()) || primaryGoal.toLowerCase().includes(iName);
+
+            const goalLower = primaryGoal.toLowerCase();
+            const goalKeywords = goalLower.split(/[\s-_]+/);
+
+            // Check for any keyword match
+            return goalKeywords.some(keyword => iName.includes(keyword) || keyword.includes(iName)) ||
+                iName.includes(goalLower) ||
+                goalLower.includes(iName);
         });
 
-        const linkedProtocolIds = matchedIndication?.fields.Protocol_block || [];
+        // Collect all linked protocol IDs from matched indications
+        const linkedProtocolIds = Array.from(new Set(
+            matchedIndications.flatMap(ind => ind.fields.Protocol_block || [])
+        ));
 
-        // Step B: Calculate Scores
+        console.log(`[RECOMMENDATION ENGINE] Primary Goal: "${primaryGoal}", Matched ${matchedIndications.length} indications, ${linkedProtocolIds.length} linked protocols`);
+
+        // Step B: Calculate Scores with better diversity
         type ScoredProtocol = { proto: ProtocolRecord, score: number };
-        const scoredProtocols: ScoredProtocol[] = candidateProtocols.map(p => {
-            let score = 50 + (p.id.charCodeAt(p.id.length - 1) % 5); // Base score with slight deterministic noise
+        const scoredProtocols: ScoredProtocol[] = candidateProtocols.map((p, index) => {
+            // Base score with more randomness for diversity
+            let score = 50 + (p.id.charCodeAt(p.id.length - 1) % 10) + (index % 3) * 2;
             const pPain = p.fields.pain_level || 'Medium';
             const pDowntime = p.fields.downtime_level || 'Medium';
+            const pName = p.fields.protocol_name?.toLowerCase() || '';
 
-            // 1. Primary Goal Fit (+40)
+            // 1. Primary Goal Fit (+40 for exact match, +30 for strong match, +15 for keyword match)
             if (linkedProtocolIds.includes(p.id)) {
                 score += 40;
-            } else if (primaryGoal && p.fields.protocol_name?.toLowerCase().includes(primaryGoal.toLowerCase().split(' ')[0])) {
-                score += 20; // partial match by name
+                console.log(`  ✓ Protocol "${p.fields.protocol_name}" matched via indication_map (+40)`);
+            } else if (primaryGoal) {
+                const goalLower = primaryGoal.toLowerCase();
+                const goalKeywords = goalLower.split(/[\s-_]+/).filter(k => k.length > 3);
+
+                // Check protocol name for goal keywords
+                const matchedKeywords = goalKeywords.filter(keyword => pName.includes(keyword));
+                if (matchedKeywords.length > 0) {
+                    const keywordBonus = Math.min(matchedKeywords.length * 10, 30);
+                    score += keywordBonus;
+                    console.log(`  ~ Protocol "${p.fields.protocol_name}" keyword match (${matchedKeywords.join(', ')}) (+${keywordBonus})`);
+                }
+
+                // Check indication names linked to this protocol
+                const protocolIndications = p.fields['indication_name (from indications)'] || [];
+                const indicationMatch = Array.isArray(protocolIndications) && protocolIndications.some((ind: any) => {
+                    const indLower = String(ind).toLowerCase();
+                    return goalKeywords.some(keyword => indLower.includes(keyword));
+                });
+                if (indicationMatch) {
+                    score += 15;
+                    console.log(`  ~ Protocol "${p.fields.protocol_name}" indication match (+15)`);
+                }
             }
 
-            // 2. Pain Fit (+10 / -10)
+            // 2. Pain Fit (+15 / -40 for rigorous differentiation)
             if (painTolerance && PAIN_TOLERANCE_MAP.LOW.some(t => painTolerance.includes(t))) {
-                if (pPain === 'Low') score += 10;
-                else if (pPain === 'High') score -= 10;
+                if (pPain === 'Low' || pPain === 'Very Low' || pPain === 'None') {
+                    score += 20;
+                } else if (pPain === 'High' || pPain === 'Very High' || pPain === 'Medium') {
+                    score -= 40; // Massive penalty for high/medium pain if user wants low
+                }
             } else if (painTolerance && PAIN_TOLERANCE_MAP.HIGH.some(t => painTolerance.includes(t))) {
-                if (['High', 'Very High'].includes(pPain)) score += 5; // Tolerable and usually effective
+                if (['High', 'Very High'].includes(pPain)) {
+                    score += 10; // Tolerable and usually effective
+                }
             }
 
-            // 3. Downtime Fit (+10 / -10)
+            // 3. Downtime Fit (+15 / -40 for rigorous differentiation)
             if (downtimeTolerance && DOWNTIME_TOLERANCE_MAP.NONE.some(t => downtimeTolerance.includes(t))) {
-                if (pDowntime === 'Low' || pDowntime === 'None') score += 10;
-                else if (pDowntime === 'Medium') score -= 10;
+                if (pDowntime === 'Low' || pDowntime === 'None' || pDowntime === 'Very Low') {
+                    score += 20;
+                } else if (pDowntime === 'High' || pDowntime === 'Very High' || pDowntime === 'Medium') {
+                    score -= 40; // Massive penalty for downtime if user wants none
+                }
+            } else if (downtimeTolerance && DOWNTIME_TOLERANCE_MAP.LONG.some(t => downtimeTolerance.includes(t))) {
+                if (['High', 'Very High'].includes(pDowntime)) {
+                    score += 8; // User can tolerate downtime for better results
+                }
             }
 
-            // Normalize
-            score = Math.min(Math.max(score, 60), 99);
+            // 4. Device Diversity Bonus - favor different device types
+            const deviceNames = p.fields["device_name (from device_ids)"] || [];
+            const hasLaser = Array.isArray(deviceNames) && deviceNames.some((d: any) => String(d).toLowerCase().includes('laser'));
+            const hasRF = Array.isArray(deviceNames) && deviceNames.some((d: any) => String(d).toLowerCase().match(/rf|radio|genius|inmode|thermage/));
+            const hasHIFU = Array.isArray(deviceNames) && deviceNames.some((d: any) => String(d).toLowerCase().match(/hifu|ulther|ultraformer|doublo/));
+
+            if (hasLaser) score += 3;
+            if (hasRF) score += 5; // RF is popular and safe
+            if (hasHIFU) score += 4;
+
+            // Normalize to 55-98 range (wider range for more diversity)
+            score = Math.min(Math.max(score, 55), 98);
             return { proto: p, score };
         });
 
@@ -291,7 +348,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             let whySuitableText = "Clinical protocol optimized for your goals.";
             if (primaryGoal && proto.fields.protocol_name?.toLowerCase().includes(primaryGoal.toLowerCase().split(' ')[0])) {
                 whySuitableText = `Directly targets your primary goal of ${primaryGoal}.`;
-            } else if (matchedIndication?.fields.Protocol_block?.includes(proto.id)) {
+            } else if (matchedIndications.some(ind => ind.fields.Protocol_block?.includes(proto.id))) {
                 whySuitableText = `Highly recommended for ${primaryGoal} based on clinical data.`;
             }
 

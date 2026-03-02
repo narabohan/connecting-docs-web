@@ -14,7 +14,6 @@ interface WaitlistItem {
     solutionId: string;
     createdAt: string;
     reportId?: string;
-    // Mocking expanded profile data from survey
     primaryObject?: string;
     riskFactors?: string[];
 }
@@ -120,12 +119,16 @@ function DoctorWaitlist() {
                                         <div className="bg-white/5 px-3 py-1.5 rounded text-xs font-mono text-gray-300">
                                             Match Score: <span className="text-white font-bold">{item.score}%</span>
                                         </div>
-                                        <div className="bg-white/5 px-3 py-1.5 rounded text-xs font-mono text-gray-300">
-                                            Primary Object: <span className="text-[#00FFA0] font-bold">Lifting & Tightening</span>
-                                        </div>
-                                        <div className="bg-[#FFA000]/10 border border-[#FFA000]/20 px-3 py-1.5 rounded text-xs font-mono text-[#FFA000]">
-                                            Risk: Melasma History
-                                        </div>
+                                        {item.primaryObject && (
+                                            <div className="bg-white/5 px-3 py-1.5 rounded text-xs font-mono text-gray-300">
+                                                Primary Goal: <span className="text-[#00FFA0] font-bold">{item.primaryObject}</span>
+                                            </div>
+                                        )}
+                                        {item.riskFactors && item.riskFactors.map(risk => (
+                                            <div key={risk} className="bg-[#FFA000]/10 border border-[#FFA000]/20 px-3 py-1.5 rounded text-xs font-mono text-[#FFA000]">
+                                                Risk: {risk}
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-3">

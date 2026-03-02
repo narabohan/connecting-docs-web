@@ -13,7 +13,7 @@ import UnlockModal from '@/components/report/UnlockModal';
 import SkinSimulationContainer from '@/components/simulation/SkinSimulationContainer';
 import DoctorClinicalPanel from '@/components/doctor/DoctorClinicalPanel';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
-import { generatePatientPDF, generateDoctorPDF } from '@/utils/pdfGenerator';
+
 
 const DEFAULT_RADAR_DATA = [
     { subject: 'Skin Thickness', A: 72, fullMark: 100 },
@@ -36,7 +36,8 @@ export default function ReportPage() {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
+    const [isSimulationModalOpen, setIsSimulationModalOpen] = useState(false);
     const [selectedProtocolId, setSelectedProtocolId] = useState<string | null>(null);
     const [alignmentScore, setAlignmentScore] = useState(92);
     const [isRecalculating, setIsRecalculating] = useState(false);
@@ -116,50 +117,16 @@ export default function ReportPage() {
 
     // PDF Download Handler
     const handleDownloadPDF = () => {
+        // Automatically print background colors and UI styling using the browser's high-fidelity print engine.
+        window.print();
+    };
+
+    const openDeepDive = (selId: string | null) => {
+        setSelectedProtocolId(selId);
         if (isDoctor) {
-            // Generate Doctor Clinical PDF
-            generateDoctorPDF({
-                patientName,
-                language,
-                patientProfile: {
-                    primaryIndication: data?.patient?.simulationData?.primaryIndication || goals[0] || 'Not specified',
-                    secondaryIndication: data?.patient?.simulationData?.secondaryIndication || goals[1] || 'Not specified',
-                    painTolerance: data?.patient?.painTolerance || 'Not specified',
-                    downtimeTolerance: data?.patient?.downtimeTolerance || 'Not specified',
-                    skinThickness: data?.patient?.skinThickness,
-                },
-                riskFactors: {
-                    hasMelasma: data?.patient?.has_melasma,
-                    acneStatus: data?.patient?.acne_type,
-                    poreType: data?.patient?.pore_type,
-                },
-                recommendations: recommendations.map((rec: any) => ({
-                    rank: rec.rank,
-                    name: rec.name,
-                    matchScore: rec.matchScore,
-                    composition: rec.composition || [],
-                    description: rec.description,
-                    targetLayers: rec.targetLayers,
-                    faceZones: rec.faceZones,
-                })),
-                clinicalSummary: logicText,
-            });
+            setIsSimulationModalOpen(true);
         } else {
-            // Generate Patient Summary PDF
-            generatePatientPDF({
-                patientName,
-                language,
-                clinicalSummary: logicText,
-                recommendations: recommendations.map((rec: any) => ({
-                    rank: rec.rank,
-                    name: rec.name,
-                    matchScore: rec.matchScore,
-                    composition: rec.composition || [],
-                    description: rec.description,
-                    tags: rec.tags || [],
-                })),
-                alignmentScore,
-            });
+            setIsUnlockModalOpen(true);
         }
     };
 
@@ -267,26 +234,16 @@ export default function ReportPage() {
                 <SignatureGallery
                     language={language}
                     recommendations={recommendations}
-                    onStartAnalysis={() => setIsModalOpen(true)}
+                    onStartAnalysis={() => setIsUnlockModalOpen(true)}
                     onViewDeepDive={(rank) => {
                         const sel = recommendations[rank - 1]?.id || null;
-                        setSelectedProtocolId(sel);
-                        setIsModalOpen(true);
+                        openDeepDive(sel);
                     }}
                 />
 
                 <SkinBoosterRecommendations language={language} recommendations={recommendations} />
 
-                {/* ⑤ Skin Simulation */}
-                <section className="mb-8">
-                    <SkinSimulationContainer
-                        language={language}
-                        simulationData={data?.patient?.simulationData}
-                        recommendations={recommendations}
-                        onRecalculate={handleRecalculate}
-                        isRecalculating={isRecalculating}
-                    />
-                </section>
+                {/* <SkinSimulationContainer> intentional omission: User requested that face layers should only appear when expanding specific solutions in the modal */}
 
                 {/* ⑥ How to Use This Report (Patient Only) */}
                 {!isDoctor && t.usageGuide && (
@@ -332,7 +289,7 @@ export default function ReportPage() {
                         </span>
                     </div>
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => setIsUnlockModalOpen(true)}
                         className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold font-mono transition-all hover:scale-105"
                         style={{
                             background: 'linear-gradient(135deg, #00FFA0, #00d480)',
@@ -368,16 +325,17 @@ export default function ReportPage() {
                         print-color-adjust: exact !important;
                         color-adjust: exact !important;
                     }
-                    /* Reversing dark mode for clear print */
-                    .bg-\[\#0a0a2a\], .bg-\[\#050505\], .bg-\[\#02050A\] { background-color: #fff !important; }
-                    .bg-\[\#111111\] { background-color: #f8f9fa !important; border: 1px solid #e5e7eb !important; box-shadow: none !important; }
+                    /* Remove dark mode inversion so the PDF exactly mirrors the neo-cybernetic UI */
+                    .bg-\[\#0a0a2a\], .bg-\[\#050505\], .bg-\[\#02050A\] { background-color: #050505 !important; }
+                    .bg-\[\#111111\] { background-color: #111111 !important; border: 1px solid rgba(0,255,160,0.3) !important; box-shadow: none !important; }
+
                     .border-\[\#1F1F1F\], .border-\[\#00FFA0\]\\/20, .border-\[\#00FFA0\]\\/30 { border-color: #e5e7eb !important; }
                     
-                    /* Text legibility */
-                    .text-white { color: #000 !important; }
-                    .text-slate-300 { color: #1f2937 !important; }
-                    .text-slate-400 { color: #374151 !important; }
-                    .text-slate-500 { color: #4b5563 !important; }
+                    /* Text legibility retention */
+                    .text-white { color: #ffffff !important; }
+                    .text-slate-300 { color: #cbd5e1 !important; }
+                    .text-slate-400 { color: #94a3b8 !important; }
+                    .text-slate-500 { color: #64748b !important; }
                     
                     /* Block splitting prevention */
                     section, .grid > div { break-inside: avoid; page-break-inside: avoid; }
@@ -390,12 +348,35 @@ export default function ReportPage() {
 
             {/* Email Capture & Doctor Connect Modal */}
             <UnlockModal
-                isOpen={isModalOpen}
-                onClose={() => { setIsModalOpen(false); setSelectedProtocolId(null); }}
+                isOpen={isUnlockModalOpen}
+                onClose={() => { setIsUnlockModalOpen(false); setSelectedProtocolId(null); }}
                 language={language}
                 reportId={id as string}
                 selectedProtocolId={selectedProtocolId}
             />
+
+            {/* Deep Dive / Simulation Modal */}
+            {isSimulationModalOpen && selectedProtocolId && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl shrink-0"
+                    onClick={(e) => { if (e.target === e.currentTarget) setIsSimulationModalOpen(false) }}>
+                    <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#0a0a0f] border border-[#00FFA0]/20 shadow-[0_0_60px_rgba(0,255,160,0.1)] custom-scrollbar">
+                        <div className="sticky top-0 right-0 left-0 bg-transparent flex justify-end p-4 z-10 pointer-events-none">
+                            <button onClick={() => setIsSimulationModalOpen(false)} className="pointer-events-auto p-2 rounded-full bg-black/50 border border-white/10 hover:border-[#00FFA0]/50 text-white transition-all">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+                        </div>
+                        <div className="-mt-12">
+                            <SkinSimulationContainer
+                                language={language}
+                                simulationData={data?.patient?.simulationData}
+                                recommendations={recommendations}
+                                onRecalculate={handleRecalculate}
+                                isRecalculating={isRecalculating}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
