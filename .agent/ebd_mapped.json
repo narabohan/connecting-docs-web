@@ -1,0 +1,135 @@
+[
+    {
+        "category_id": "ERYAG",
+        "survey_primary_match": "Texture refinement",
+        "survey_secondary_match": "Acne/Scar improvement",
+        "risk_flag_trigger": "",
+        "concern_area_trigger": ""
+    },
+    {
+        "category_id": "MN_RF",
+        "survey_primary_match": "Acne scar",
+        "survey_secondary_match": "Texture/Roughness, Skin quality/Glow, Tightening, Pore",
+        "risk_flag_trigger": "Active Acne, Acne/post-inflammatory",
+        "concern_area_trigger": "Pores/texture"
+    },
+    {
+        "category_id": "FRAC_1550",
+        "survey_primary_match": "Tightening",
+        "survey_secondary_match": "Pore, Texture/Roughness",
+        "risk_flag_trigger": "",
+        "concern_area_trigger": ""
+    },
+    {
+        "category_id": "PICO",
+        "survey_primary_match": "Dermal pigmentation",
+        "survey_secondary_match": "Tattoo removal, Tone",
+        "risk_flag_trigger": "Melasma/pigmentation risk",
+        "concern_area_trigger": ""
+    },
+    {
+        "category_id": "FRAC_1927",
+        "survey_primary_match": "Resurfacing (Non-ablative)",
+        "survey_secondary_match": "Tone, Skin quality/Glow, Texture/Roughness",
+        "risk_flag_trigger": "",
+        "concern_area_trigger": ""
+    },
+    {
+        "category_id": "IPL",
+        "survey_primary_match": "Tone",
+        "survey_secondary_match": "Epidermal pigmentation, Vascular (diffuse redness)",
+        "risk_flag_trigger": "",
+        "concern_area_trigger": ""
+    },
+    {
+        "category_id": "CO2",
+        "survey_primary_match": "Resurfacing (Ablative)",
+        "survey_secondary_match": "Acne scar, Texture/Roughness",
+        "risk_flag_trigger": "",
+        "concern_area_trigger": ""
+    },
+    {
+        "category_id": "LP_532_1064",
+        "survey_primary_match": "Vascular (diffuse redness)",
+        "survey_secondary_match": "Tone, Vascular (telangiectasia/spot vessels)",
+        "risk_flag_trigger": "Rosacea/vascular",
+        "concern_area_trigger": ""
+    },
+    {
+        "category_id": "HIFU",
+        "survey_primary_match": "Lifting",
+        "survey_secondary_match": "Contour/Jawline definition, Tightening",
+        "risk_flag_trigger": "",
+        "concern_area_trigger": "Jawline/lower face"
+    },
+    {
+        "category_id": "Diode laser",
+        "survey_primary_match": "Hair removal",
+        "survey_secondary_match": "Tightening",
+        "risk_flag_trigger": "",
+        "concern_area_trigger": ""
+    },
+    {
+        "category_id": "PDL",
+        "survey_primary_match": "Vascular (diffuse redness)",
+        "survey_secondary_match": "Vascular (telangiectasia/spot vessels)",
+        "risk_flag_trigger": "Rosacea/vascular",
+        "concern_area_trigger": ""
+    },
+    {
+        "category_id": "SKIN_BOOSTER",
+        "survey_primary_match": "Skin quality/Glow",
+        "survey_secondary_match": "Tone, Texture/Roughness",
+        "risk_flag_trigger": "",
+        "concern_area_trigger": ""
+    },
+    {
+        "category_id": "LED",
+        "survey_primary_match": "Recovery/Wound healing",
+        "survey_secondary_match": "Skin quality/Glow",
+        "risk_flag_trigger": "",
+        "concern_area_trigger": ""
+    },
+    {
+        "category_id": "BODY_CONTOUR",
+        "survey_primary_match": "Body",
+        "survey_secondary_match": "Contour/Jawline definition",
+        "risk_flag_trigger": "",
+        "concern_area_trigger": ""
+    },
+    {
+        "category_id": "BI_MULTI_RF",
+        "survey_primary_match": "Contour/Jawline definition",
+        "survey_secondary_match": "Tightening, Body",
+        "risk_flag_trigger": "",
+        "concern_area_trigger": "Jawline/lower face"
+    },
+    {
+        "category_id": "MONO_RF",
+        "survey_primary_match": "Tightening",
+        "survey_secondary_match": "Contour/Jawline definition, Skin quality/Glow",
+        "risk_flag_trigger": "",
+        "concern_area_trigger": "Midface volume, Eye area"
+    },
+    {
+        "category_id": "Q_SWITCH",
+        "survey_primary_match": "Tone",
+        "survey_secondary_match": "Melasma (risk-aware), Epidermal pigmentation, Tattoo removal",
+        "risk_flag_trigger": "Melasma/pigmentation risk",
+        "concern_area_trigger": ""
+    },
+    {
+        "category_id": "LP_755_1064",
+        "survey_primary_match": "Hair removal",
+        "survey_secondary_match": "Vascular (telangiectasia/spot vessels), Skin quality/Glow, Tone, Epidermal pigmentation",
+        "risk_flag_trigger": "Rosacea/vascular",
+        "concern_area_trigger": ""
+    },
+    {
+        "category_id": "HIFES",
+        "survey_primary_match": "Facial Lifting",
+        "survey_secondary_match": "Wrinkle Reduction, Jawline Definition, Cheek Contouring",
+        "risk_flag_trigger": "",
+        "concern_area_trigger": "Midface volume, Jawline/lower face"
+    }
+]

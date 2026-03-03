@@ -1,344 +1,487 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import Anthropic from '@anthropic-ai/sdk';
 import Airtable from 'airtable';
 import { savePatientLog } from '../intelligence/save-log';
+import {
+    AnalysisResponseV2,
+    CategoryRankResult,
+    BoosterDeliveryItem,
+    SupportingCareItem,
+    DeviceSummary,
+    RadarScoreData,
+    RiskFlagData
+} from '@/types/airtable';
 
-// ─── Clients ─────────────────────────────────────────────────────────────────
-const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID!);
 
-// ─── Protocol Pool Type ───────────────────────────────────────────────────────
-type ProtocolRecord = {
-    id: string;
-    name: string;
-    painLevel: string;
-    downtimeLevel: string;
-    targetLayer: string[];
-    boosters: string[];
-    devices: string[];
-    sessionsTotal: number;
-    sessionInterval: string;
-    notes: string;
-    isSigniture: boolean;
-};
+// ─── TABLE IDs ────────────────────────────────────────────────────────────────
+const TBL_INDICATION_MAP = 'tbl4xrXM1kllfQSMS';
 
-// ─── Load Protocol Pool from Airtable ────────────────────────────────────────
-async function loadProtocolPool(): Promise<ProtocolRecord[]> {
-    try {
-        const records = await base('Protocol_block').select({
-            fields: [
-                'protocol_name', 'pain_level', 'downtime_level',
-                'target_layer', 'booster_name (from skin_booster_ids)',
-                'device_name (from device_ids)', 'sequence_steps',
-                'sessions_total', 'session_interval_weeks', 'notes',
-                'is_signiture_solution'
-            ]
-        }).all();
+// ─── Interfaces ────────────────────────────────────────────────────────────────
 
-        return records.map(r => ({
-            id: r.id,
-            name: String(r.get('protocol_name') || ''),
-            painLevel: String(r.get('pain_level') || 'Medium'),
-            downtimeLevel: String(r.get('downtime_level') || 'Low'),
-            targetLayer: (r.get('target_layer') as string[] || []),
-            boosters: (r.get('booster_name (from skin_booster_ids)') as string[] || []),
-            devices: (r.get('device_name (from device_ids)') as string[] || []),
-            sessionsTotal: Number(r.get('sessions_total') || 3),
-            sessionInterval: String(r.get('session_interval_weeks') || '4 weeks (1M)'),
-            notes: String(r.get('notes') || ''),
-            isSigniture: Boolean(r.get('is_signiture_solution')),
-        })).filter(p => p.name.length > 0);
-    } catch (err) {
-        console.error('[PROTOCOL_POOL] Failed to load from Airtable:', err);
-        return [];
-    }
-}
-
-// ─── Rule-Based Pre-Filter ───────────────────────────────────────────────────
-const PAIN_ORDER = ['None', 'Very Low', 'Low', 'Medium', 'High', 'Very High'];
-const DOWNTIME_ORDER = ['None', 'Very Low', 'Low', 'Medium', 'High', 'Very High'];
-
-function filterProtocols(protocols: ProtocolRecord[], data: AnalysisRequest): ProtocolRecord[] {
-    const painMap: Record<string, string> = {
-        'Low': 'Low', 'low': 'Low',
-        'Medium': 'Medium', 'medium': 'Medium',
-        'High': 'High', 'high': 'High'
-    };
-    const dtMap: Record<string, string> = {
-        'None': 'None', 'none': 'None',
-        'Low': 'Low', 'low': 'Low',
-        'Medium': 'Medium', 'medium': 'Medium',
-        'High': 'High', 'high': 'High'
-    };
-    const maxPain = painMap[data.painTolerance] || 'High';
-    const maxDt = dtMap[data.downtimeTolerance] || 'Medium';
-    const maxPainIdx = PAIN_ORDER.indexOf(maxPain);
-    const maxDtIdx = DOWNTIME_ORDER.indexOf(maxDt);
-
-    return protocols.filter(p => {
-        const pIdx = PAIN_ORDER.indexOf(p.painLevel);
-        const dIdx = DOWNTIME_ORDER.indexOf(p.downtimeLevel);
-        return (pIdx === -1 || pIdx <= maxPainIdx) && (dIdx === -1 || dIdx <= maxDtIdx);
-    });
-}
-
-// ─── Fallback Mock (uses real Airtable protocol names) ───────────────────────
-const MOCK_RESPONSE = {
-    rank1: {
-        protocol: "MNRF + Exosome (Glass Skin Booster)",
-        score: 91,
-        reason: "MNRF micro-channels maximize Exosome growth factor delivery, addressing pore refinement, glow and skin regeneration simultaneously.",
-        downtime: "Low (1-3 days redness)",
-        pain: "Medium",
-        airtableId: "rec5hdvZhPb9AKek6",
-        boosters: ["Exosome (ASCE+)"],
-        devices: ["Potenza"],
-        sessions: 3
-    },
-    rank2: {
-        protocol: "Rejuvelook (Rejuran + Juvelook Layering)",
-        score: 85,
-        reason: "Korea's top booster combo: Rejuran repairs barrier while Juvelook adds structural collagen and hydration HA.",
-        downtime: "Low",
-        pain: "Medium",
-        airtableId: "reciuh4vqppdirQu7",
-        boosters: ["Rejuran Healer", "Juvelook"],
-        devices: [],
-        sessions: 4
-    },
-    rank3: {
-        protocol: "LaseMD Ultra + Skinvive (Glow Genesis)",
-        score: 79,
-        reason: "Lunch-time protocol: LaseMD MTZ channels deliver FDA-approved Skinvive HA for 6-month lasting glass skin glow.",
-        downtime: "Low",
-        pain: "Low",
-        airtableId: "recOZuAXwBMeJqPEi",
-        boosters: ["Skinvive"],
-        devices: ["LaseMD Ultra"],
-        sessions: 4
-    }
-};
-
-// ─── Analysis Request Type ─────────────────────────────────────────────────────
-type AnalysisRequest = {
-    age: string;
-    gender: string;
-    country: string;
-    primaryGoal: string;
-    secondaryGoal: string;
-    risks: string[];
-    acneStatus?: string;
-    pigmentType?: string[];
-    areas: string[];
-    poreType?: string;
-    priorityArea?: string;
-    skinType: string;
-    treatmentStyle: string;
-    volumePreference?: string;
-    painTolerance: string;
-    downtimeTolerance: string;
+interface SurveySignals {
+    // canonical signals from survey — maps directly to indication_map.canonical_signal
+    canonicalSignals: string[];        // all survey signals (primary + secondary + risks)
+    primarySignals: string[];          // from primaryGoal → ebd_mapped survey_primary_match
+    secondarySignals: string[];        // from secondaryGoal
+    riskSignals: string[];             // from risks array
+    painTolerance: number;             // 1–5
+    downtimeTolerance: number;         // 0–3
     budget: string;
-    frequency: string;
-    treatmentHistory: string[];
-    historySatisfaction?: string;
-    careHabits: string[];
-    userId?: string;
-    userEmail?: string;
-    language?: 'KO' | 'EN' | 'CN' | 'JP';
+    hasThinSkin: boolean;
+    hasVolumeConcern: boolean;
+    rawLanguage: string;
+}
+
+interface EBDCategoryRecord {
+    category_id: string;
+    category_display_name: string;
+    avg_pain_level: string;
+    avg_downtime: string;
+    thin_skin_fit: string;
+    fat_loss_risk: string;
+    volume_effect: string;
+    recommended_sessions: number;
+    session_interval_weeks: number;
+    preferred_booster_roles: string;
+    recommended_supporting_care: string[];
+    booster_pairing_note_KO?: string;
+    booster_pairing_note_EN?: string;
+    airtable_record_id: string;
+}
+
+// ─── Survey goal → canonical signal mapping ───────────────────────────────────
+// WizardData.primaryGoal values mapped to indication_map canonical_signal strings
+const GOAL_TO_CANONICAL: Record<string, string[]> = {
+    // Smooth Texture / Pore / Roughness
+    'Smooth Texture': ['Texture refinement', 'Pore / texture'],
+    'Texture/Roughness': ['Texture refinement'],
+    'Pore': ['Pore / texture'],
+    // Glow / Brightening
+    'Glow': ['Brightening / radiance', 'Skin quality / glow'],
+    'Skin quality/Glow': ['Brightening / radiance', 'Skin quality / glow'],
+    'Brightening': ['Brightening / radiance'],
+    // Tone / Pigmentation
+    'Tone': ['Brightening / radiance', 'Melasma / pigmentation risk'],
+    'Pigmentation': ['Melasma / pigmentation risk'],
+    'Melasma': ['Melasma / pigmentation risk'],
+    // Tightening / Lifting
+    'Tightening': ['Contouring / lifting'],
+    'Lifting': ['Contouring / lifting'],
+    'Contour/Jawline definition': ['Contouring / lifting'],
+    // Acne / Scars
+    'Acne scar': ['Acne / scar improvement'],
+    'Acne/Scar improvement': ['Acne / scar improvement'],
+    'Acne': ['Acne / scar improvement'],
+    // Skin Barrier / Sensitive
+    'Sensitive': ['Sensitive / barrier damage'],
+    'Hydration': ['Skin quality / glow', 'Sensitive / barrier damage'],
+    'Skin quality': ['Skin quality / glow'],
+    // Vascular / Redness
+    'Redness': ['Rosacea / vascular'],
+    'Vascular': ['Rosacea / vascular'],
+    // Eye Area
+    'Eye area': ['Eye area / Fine lines'],
+    // Volume
+    'Volume loss': ['Midface volume', 'Contouring / lifting'],
+    'Body': ['Body contouring'],
 };
+
+function mapGoalToCanonical(goal: string): string[] {
+    if (!goal) return [];
+    // exact match
+    if (GOAL_TO_CANONICAL[goal]) return GOAL_TO_CANONICAL[goal];
+    // partial match
+    const key = Object.keys(GOAL_TO_CANONICAL).find(k => goal.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(goal.toLowerCase()));
+    return key ? GOAL_TO_CANONICAL[key] : [goal];
+}
+
+function parseSurveySignals(body: any): SurveySignals {
+    const painMap: Record<string, number> = { 'Low': 2, 'Medium': 3, 'High': 4 };
+    const dtMap: Record<string, number> = { 'None': 0, 'Low': 1, 'Short': 1, 'Medium': 2, 'High': 3 };
+
+    const primarySignals = mapGoalToCanonical(body.primaryGoal || '');
+    const secondarySignals = mapGoalToCanonical(body.secondaryGoal || '');
+    const riskSignals = (Array.isArray(body.risks) ? body.risks : []).flatMap(mapGoalToCanonical);
+
+    return {
+        canonicalSignals: [...new Set([...primarySignals, ...secondarySignals, ...riskSignals])],
+        primarySignals,
+        secondarySignals,
+        riskSignals,
+        painTolerance: painMap[body.painTolerance] ?? 3,
+        downtimeTolerance: dtMap[body.downtimeTolerance] ?? 2,
+        budget: body.budget || 'Mid',
+        hasThinSkin: body.skinType === 'Thin' || String(body.q4_skin_thickness_MASTER || '').includes('Thin'),
+        hasVolumeConcern: body.volumePreference === 'Focus on Fat Loss' || !!body.q3_vol_logic_MASTER,
+        rawLanguage: body.language || 'EN',
+    };
+}
+
+// ─── indication_map bridge ─────────────────────────────────────────────────────
+
+interface IndicationMapEntry {
+    canonical_signal: string;
+    category_ids: string[];  // parsed from comma-separated recommended_category_ids
+}
+
+async function fetchIndicationMap(): Promise<IndicationMapEntry[]> {
+    const records = await base(TBL_INDICATION_MAP).select({
+        fields: ['canonical_signal', 'recommended_category_ids']
+    }).all();
+
+    return records
+        .map(r => ({
+            canonical_signal: String(r.get('canonical_signal') || '').trim(),
+            category_ids: String(r.get('recommended_category_ids') || '')
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean)
+        }))
+        .filter(e => e.canonical_signal && e.category_ids.length > 0);
+}
+
+interface CategoryScoreContext {
+    // How many times this category_id was matched across all indication_map entries
+    primaryHitCount: number;   // matched by primarySignals
+    secondaryHitCount: number;   // matched by secondarySignals
+}
+
+function buildCategoryScoreContext(
+    indicationMap: IndicationMapEntry[],
+    survey: SurveySignals
+): Map<string, CategoryScoreContext> {
+    const map = new Map<string, CategoryScoreContext>();
+
+    const getOrCreate = (id: string): CategoryScoreContext => {
+        if (!map.has(id)) map.set(id, { primaryHitCount: 0, secondaryHitCount: 0 });
+        return map.get(id)!;
+    };
+
+    for (const entry of indicationMap) {
+        const isPrimary = survey.primarySignals.some(s =>
+            s.toLowerCase() === entry.canonical_signal.toLowerCase()
+        );
+        const isSecondary = !isPrimary && survey.secondarySignals.some(s =>
+            s.toLowerCase() === entry.canonical_signal.toLowerCase()
+        );
+
+        if (isPrimary) {
+            for (const catId of entry.category_ids) {
+                getOrCreate(catId).primaryHitCount++;
+            }
+        } else if (isSecondary) {
+            for (const catId of entry.category_ids) {
+                getOrCreate(catId).secondaryHitCount++;
+            }
+        }
+    }
+
+    return map;
+}
+
+// ─── Scoring ──────────────────────────────────────────────────────────────────
+
+const PAIN_SCORE: Record<string, number> = {
+    'None': 1, 'Very Low': 1.5, 'Low': 2, 'Medium': 3, 'High': 4, 'Very High': 5
+};
+
+function scoreCategory(
+    category: EBDCategoryRecord,
+    survey: SurveySignals,
+    scoreCtx: Map<string, CategoryScoreContext>
+): number {
+    let score = 0;
+    const ctx = scoreCtx.get(category.category_id);
+
+    // [A] Indication Match via indication_map bridge (53pt max)
+    const primaryHits = ctx?.primaryHitCount ?? 0;
+    const secondaryHits = ctx?.secondaryHitCount ?? 0;
+
+    score += primaryHits >= 1 ? 35 : 0;
+    score += Math.min(secondaryHits * 9, 18);
+
+    // [B] Pain tolerance fit (12pt)
+    const painScore = PAIN_SCORE[category.avg_pain_level] || 3;
+    const painFit = Math.max(0, 5 - Math.abs(painScore - survey.painTolerance));
+    score += Math.round((painFit / 5) * 12);
+
+    // [B2] Downtime fit (8pt)
+    const downtimeLevels = ['None', 'Short (≤3d)', 'Medium (4–7d)', 'Long (≥8d)', 'Low', 'High'];
+    const dIdx = Math.min(Math.max(downtimeLevels.indexOf(category.avg_downtime), 0), 3);
+    score += dIdx <= survey.downtimeTolerance ? 8 : Math.max(0, 8 - (dIdx - survey.downtimeTolerance) * 3);
+
+    // [C] Budget flat 10pt (budget_tier field not in schema)
+    score += 10;
+
+    // [D] Skin Adjustments
+    if (category.thin_skin_fit === 'Good' && survey.hasThinSkin) score += 6;
+    if (category.thin_skin_fit === 'Contra' && survey.hasThinSkin) score -= 20;
+    if (category.fat_loss_risk === 'High' && survey.hasVolumeConcern) score -= 8;
+    if (category.volume_effect === 'Increase' && survey.hasVolumeConcern) score += 6;
+
+    return Math.max(0, Math.min(score, 100));
+}
+
+// ─── Fetchers ─────────────────────────────────────────────────────────────────
+
+async function fetchEBDCategories(): Promise<EBDCategoryRecord[]> {
+    const records = await base('EBD_Category').select({
+        fields: [
+            'category_id', 'category_display_name',
+            'avg_pain_level', 'avg_downtime', 'thin_skin_fit', 'fat_loss_risk',
+            'volume_effect', 'recommended_sessions', 'session_interval_weeks', 'preferred_booster_roles',
+            'recommended_supporting_care', 'booster_pairing_note_KO', 'booster_pairing_note_EN',
+            'contraindicated_conditions'
+        ]
+    }).all();
+
+    return records.map(r => ({
+        category_id: String(r.get('category_id') || r.id),
+        category_display_name: String(r.get('category_display_name') || ''),
+        avg_pain_level: String(r.get('avg_pain_level') || ''),
+        avg_downtime: String(r.get('avg_downtime') || ''),
+        thin_skin_fit: String(r.get('thin_skin_fit') || ''),
+        fat_loss_risk: String(r.get('fat_loss_risk') || ''),
+        volume_effect: String(r.get('volume_effect') || ''),
+        recommended_sessions: Number(r.get('recommended_sessions') || 1),
+        session_interval_weeks: Number(r.get('session_interval_weeks') || 4),
+        preferred_booster_roles: String(r.get('preferred_booster_roles') || ''),
+        recommended_supporting_care: (r.get('recommended_supporting_care') as string[]) || [],
+        booster_pairing_note_KO: r.get('booster_pairing_note_KO') as string,
+        booster_pairing_note_EN: r.get('booster_pairing_note_EN') as string,
+        airtable_record_id: r.id,
+    }));
+}
+
+function checkRiskFlag(survey: SurveySignals): RiskFlagData {
+    const hasPigment = survey.primarySignals.some(s => s.includes('Melasma') || s.includes('pigment'));
+    const hasAcne = survey.primarySignals.some(s => s.includes('Acne') || s.includes('scar'));
+
+    if (hasPigment) return { triggered: true, reason_KO: '기미/색소 악화 위험이 있어 색소 치료를 우선 권장합니다.', reason_EN: 'Pigmentation risk detected; pigment-stabilizing treatment prioritized.' };
+    if (hasAcne) return { triggered: true, reason_KO: '활성 여드름/염증이 있어 항염증 치료를 우선 권장합니다.', reason_EN: 'Acne/inflammation detected; anti-inflammatory treatment prioritized.' };
+    return { triggered: false };
+}
+
+function isContraindicated(category: EBDCategoryRecord, survey: SurveySignals): boolean {
+    if (category.thin_skin_fit === 'Contra' && survey.hasThinSkin) return true;
+    return false;
+}
+
+function calculateRadarScore(category: EBDCategoryRecord, survey: SurveySignals): RadarScoreData {
+    return { efficacy: 90, downtime: 85, discomfort: 80, cost_efficiency: 75, maintenance: 85 };
+}
+
+// ─── Booster / Device fetchers ────────────────────────────────────────────────
+
+async function applyInjectableMethodRules(booster: any, survey: SurveySignals): Promise<BoosterDeliveryItem> {
+    const targetLayer = booster.injection_target_layer;
+    const painToleranceStr = ['Very Low', 'Low', 'Medium', 'High', 'Very High', 'Very High'][survey.painTolerance] || 'Medium';
+
+    let rules: any[] = [];
+    try {
+        const ruleRecords = await base('injectable_method_rules').select().all();
+        rules = ruleRecords.map(r => ({
+            target_layer: r.get('target_layer'),
+            patient_pain_tolerance: r.get('patient_pain_tolerance'),
+            safety_flag: r.get('safety_flag'),
+            required_delivery_method_id: (r.get('required_delivery_method_id') as string[])?.[0],
+            delivery_method_name: (r.get('delivery_method_name (from required_delivery_method_id)') as string[])?.[0],
+            typical_pain_level: (r.get('typical_pain_level (from required_delivery_method_id)') as string[])?.[0] || 'Medium',
+            safety_reason_KO: r.get('safety_reason_KO'),
+        }));
+    } catch (e) { console.error('[injectable_method_rules]', e); }
+
+    const matched = rules.filter(r => r.target_layer === targetLayer && (!r.patient_pain_tolerance || r.patient_pain_tolerance === painToleranceStr));
+    const safetyRule = matched.find(r => r.safety_flag === true);
+
+    if (safetyRule) {
+        return { booster_id: booster.booster_id, booster_name: booster.booster_name, canonical_role: booster.canonical_role, injection_target_layer: targetLayer, delivery_method_id: safetyRule.required_delivery_method_id, delivery_name: safetyRule.delivery_method_name || '', delivery_pain_level: safetyRule.typical_pain_level, is_safety_required: true, safety_reason_KO: safetyRule.safety_reason_KO };
+    }
+
+    const recommended = matched.filter(r => !r.safety_flag).sort((a, b) => (PAIN_SCORE[a.typical_pain_level] || 3) - (PAIN_SCORE[b.typical_pain_level] || 3))[0];
+    return { booster_id: booster.booster_id, booster_name: booster.booster_name, canonical_role: booster.canonical_role, injection_target_layer: targetLayer, delivery_method_id: recommended?.required_delivery_method_id || null, delivery_name: recommended?.delivery_method_name || 'Manual Injection', delivery_pain_level: recommended?.typical_pain_level || 'Medium', is_safety_required: false };
+}
+
+async function fetchTopBoosters(categories: EBDCategoryRecord[], survey: SurveySignals): Promise<BoosterDeliveryItem[][]> {
+    const result: BoosterDeliveryItem[][] = [];
+    try {
+        const allBoostersRaw = await base('Skin_booster').select({ fields: ['booster_id', 'booster_name', 'canonical_role', 'injection_target_layer'] }).all();
+        const allBoosters = allBoostersRaw.map(r => ({
+            booster_id: String(r.get('booster_id') || r.id),
+            booster_name: String(r.get('booster_name') || ''),
+            canonical_role: String(r.get('canonical_role') || ''),
+            injection_target_layer: String(r.get('injection_target_layer') || '')
+        }));
+
+        for (const cat of categories) {
+            const roles = cat.preferred_booster_roles ? cat.preferred_booster_roles.split(',').map(s => s.trim()) : [];
+            if (!roles.length) { result.push([]); continue; }
+
+            const matching = allBoosters.filter(b => roles.includes(b.canonical_role));
+            const parsed: BoosterDeliveryItem[] = [];
+            for (const b of matching.slice(0, 2)) {
+                parsed.push(await applyInjectableMethodRules(b, survey));
+            }
+            result.push(parsed);
+        }
+    } catch (e) {
+        console.error('[fetchTopBoosters]', e);
+        for (let i = 0; i < categories.length; i++) result.push([]);
+    }
+    return result;
+}
+
+// EBD_Category doesn't have direct device links currently — returns empty
+async function fetchTopDevices(categories: EBDCategoryRecord[]): Promise<DeviceSummary[][]> {
+    return categories.map(() => []);
+}
+
+function buildRankResult(
+    category: EBDCategoryRecord & { score: number },
+    devices: DeviceSummary[],
+    boosters: BoosterDeliveryItem[],
+    radarScore: RadarScoreData
+): CategoryRankResult {
+    const supportingCare: SupportingCareItem[] = (category.recommended_supporting_care || []).map(id => ({
+        supportcare_id: id,
+        supportcare_name: id,
+        primary_purpose: 'Recovery',
+        canonical_role: 'PostCare',
+    }));
+
+    return {
+        category_id: category.category_id,
+        score: category.score,
+        why_KO: null,
+        why_EN: null,
+        radar: radarScore,
+        top_devices: devices,
+        top_boosters: boosters,
+        booster_pairing_note_KO: category.booster_pairing_note_KO ?? null,
+        booster_pairing_note_EN: category.booster_pairing_note_EN ?? null,
+        recommended_sessions: category.recommended_sessions ?? null,
+        session_interval_weeks: category.session_interval_weeks ?? null,
+        recommended_supporting_care: supportingCare,
+    };
+}
 
 // ─── Main Handler ─────────────────────────────────────────────────────────────
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
-
-    const data = req.body as AnalysisRequest;
-
-    if (!process.env.CLAUDE_API_KEY) {
-        console.error("CLAUDE_API_KEY is missing");
-        return res.status(200).json(MOCK_RESPONSE);
-    }
-
-    // ─── Step 1: Load & Filter Protocol Pool from Airtable ─────────────────
-    const allProtocols = await loadProtocolPool();
-    const filteredProtocols = filterProtocols(allProtocols, data);
-    const eligibleProtocols = filteredProtocols.length >= 3 ? filteredProtocols : allProtocols;
-    console.log(`[ENGINE] Protocols: total=${allProtocols.length} → eligible=${eligibleProtocols.length}`);
-
-    // ─── Step 2: Build Airtable Context for Claude ──────────────────────────
-    const protocolContext = eligibleProtocols.slice(0, 40).map((p, i) => {
-        const b = p.boosters.length > 0 ? p.boosters.join(', ') : 'None';
-        const d = p.devices.length > 0 ? p.devices.join(', ') : 'None';
-        const n = p.notes.length > 120 ? p.notes.substring(0, 120) + '...' : p.notes;
-        return `${i + 1}. [ID:${p.id}] "${p.name}" | Pain:${p.painLevel} | Downtime:${p.downtimeLevel} | ${p.sessionsTotal} sessions\n   Boosters: ${b} | Devices: ${d}\n   ${n}`;
-    }).join('\n\n');
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
-        const pt = data;
-        // ─── Step 3: Inject Airtable Context into Claude Prompt ──────────
-        const systemPrompt = `You are a senior aesthetic dermatologist specializing in Korean medical aesthetics and Asian skin physiology.
+        // 1. Parse survey into canonical signals
+        const survey = parseSurveySignals(req.body);
 
-CRITICAL RULE: Select Top 3 ONLY from the APPROVED PROTOCOL LIST below. Never invent protocol names.
+        console.log('[Engine V2] canonical signals:', survey.primarySignals, survey.secondarySignals);
 
-=== APPROVED PROTOCOLS (Airtable Clinical Database) ===
-${protocolContext}
-=======================================================
+        // 2. Fetch indication_map + EBD_Category in parallel
+        const [indicationMap, allCategories] = await Promise.all([
+            fetchIndicationMap(),
+            fetchEBDCategories(),
+        ]);
 
-PATIENT PROFILE:
-- ${pt.age}, ${pt.gender}, ${pt.country}
-- Primary Goal: ${pt.primaryGoal} | Secondary: ${pt.secondaryGoal}
-- Concerns: ${pt.areas.join(', ')}${pt.priorityArea ? ` (Priority: ${pt.priorityArea})` : ''}
-- Risks: ${pt.risks.join(', ')}${pt.acneStatus ? ` | Acne: ${pt.acneStatus}` : ''}${pt.pigmentType ? ` | Pigment: ${pt.pigmentType.join(', ')}` : ''}
-- Skin: ${pt.skinType}${pt.poreType ? ` | Pores: ${pt.poreType}` : ''} | Style: ${pt.treatmentStyle}
-- Pain Tolerance: ${pt.painTolerance} | Downtime: ${pt.downtimeTolerance} | Budget: ${pt.budget} | Frequency: ${pt.frequency}
-- History: ${pt.treatmentHistory.join(', ')}${pt.historySatisfaction ? ` (Satisfaction: ${pt.historySatisfaction})` : ''}
-- Habits: ${pt.careHabits.join(', ')}
+        // 3. Build score context from indication_map bridge
+        const scoreCtx = buildCategoryScoreContext(indicationMap, survey);
+        console.log('[Engine V2] matched category IDs from indication_map:', [...scoreCtx.keys()]);
 
-RANKING CRITERIA:
-1. Indication match (primary goal alignment)
-2. Safety first (melasma → no aggressive heat lasers; inflammatory acne → anti-inflammatory protocols first; sensitive skin → low energy)
-3. Pain/downtime preference fit
-4. EBD+Booster combos earn bonus for complex multi-concern profiles
-5. Barrier damage/rosacea/sensitivity concerns → Rejuran/Exosome/Re2O protocols rank higher
+        // 4. Risk flag
+        const riskFlag = checkRiskFlag(survey);
 
-OUTPUT (valid JSON only, no markdown wrapper):
-{"rank1":{"protocol":"exact name from list","airtableId":"recXXXXXX","score":90,"reason":"cite specific patient data","downtime":"Low","pain":"Medium","boosters":["Exosome"],"devices":["Potenza"],"sessions":3},"rank2":{...same fields...},"rank3":{...same fields...}}`;
+        // 5. Score + filter + rank
+        const scored = allCategories
+            .map(cat => ({ ...cat, score: scoreCategory(cat, survey, scoreCtx) }))
+            .filter(cat => !isContraindicated(cat, survey))
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3);
 
-        const msg = await anthropic.messages.create({
-            model: "claude-3-haiku-20240307",
-            max_tokens: 1800,
-            temperature: 0.3,
-            system: systemPrompt,
-            messages: [
-                { role: "user", content: "Analyze this patient and select the Top 3 protocols from the approved list." },
-                { role: "assistant", content: "{" }
-            ]
-        });
-
-        console.log('[ENGINE] Claude response received');
-
-        const rawContent = msg.content[0].type === 'text' ? msg.content[0].text : '';
-        const fullJson = "{" + rawContent;
-        const jsonMatch = fullJson.match(/\{[\s\S]*\}/);
-
-        if (!jsonMatch) {
-            throw new Error("Invalid JSON format from Claude");
-        }
-
-        const result = JSON.parse(jsonMatch[0]);
-
-        // ─── Step 4: Save to Airtable (If User Authenticated) ──────────────
-        if (data.userEmail) {
-            try {
-                let userId = data.userId;
-                if (!userId) {
-                    const userRecords = await base('Users').select({
-                        filterByFormula: `{email} = '${data.userEmail}'`,
-                        maxRecords: 1
-                    }).firstPage();
-                    if (userRecords.length > 0) userId = String(userRecords[0].id);
-                }
-
-                let reportId: string | undefined;
-
-                if (userId) {
-                    const reportRecords = await base('Reports').create([
-                        {
-                            fields: {
-                                User: [userId],
-                                Input_JSON: JSON.stringify(data),
-                                Output_JSON: JSON.stringify(result),
-                                Status: 'Completed'
-                            }
-                        }
-                    ]);
-                    reportId = reportRecords[0].id;
-                    console.log(`[REPORT] Saved for ${data.userEmail} (ID: ${reportId})`);
-                    (result as any).reportId = reportId;
-
-                    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-                    const reportUrl = reportId ? `${baseUrl}/report/${reportId}` : baseUrl;
-
-                    const userHtml = `
-                        <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#050505;color:#fff;padding:32px;border-radius:12px">
-                            <h1 style="color:#22d3ee;margin-bottom:8px">Your Skin Analysis Report is Ready 📄</h1>
-                            <p style="color:#9ca3af">Based on your skin profile, our Clinical Intelligence Engine has created your personalized treatment plan.</p>
-                            <hr style="border-color:#1f2937;margin:24px 0"/>
-                            <h2 style="color:#fff;font-size:18px">🏆 Top Recommendation</h2>
-                            <p style="color:#22d3ee;font-size:20px;font-weight:bold">${result.rank1?.protocol || 'Personalized Protocol'}</p>
-                            <p style="color:#9ca3af">${result.rank1?.reason || ''}</p>
-                            <div style="margin-top:24px">
-                                <a href="${reportUrl}" style="background:#22d3ee;color:#000;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block">View Full Report →</a>
-                            </div>
-                            <p style="color:#4b5563;font-size:12px;margin-top:32px">This is an automated message from Connecting Docs</p>
-                        </div>
-                    `;
-
-                    fetch(`${baseUrl}/api/email/send`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            to: data.userEmail,
-                            subject: '[Connecting Docs] Your Personal Skin Analysis Report 📄',
-                            html: userHtml,
-                            data: {
-                                userEmail: data.userEmail,
-                                primaryGoal: data.primaryGoal,
-                                skinType: data.skinType,
-                                topProtocol: result.rank1?.protocol,
-                                reportId,
-                            },
-                        }),
-                    }).catch(e => console.error('[EMAIL] Failed to send report email:', e));
-
-                    // ─── Phase 1.3: Trigger Admin Notification Webhook (Make/n8n) ──
-                    if (process.env.MAKE_WEBHOOK_URL) {
-                        fetch(process.env.MAKE_WEBHOOK_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                event: 'new_report_generated',
-                                userEmail: data.userEmail,
-                                reportId,
-                                topProtocol: result.rank1?.protocol,
-                                primaryGoal: data.primaryGoal,
-                                expectedRevenue: data.budget,
-                                language: data.language ?? 'EN',
-                            }),
-                        }).catch(e => console.error('[WEBHOOK] Failed to trigger Make.com webhook:', e));
-                    }
-                }
-            } catch (dbError) {
-                console.error("Failed to save report to Airtable:", dbError);
-            }
-
-            try {
-                savePatientLog({
-                    sessionId: (result as any).reportId || `session_${Date.now()}`,
-                    timestamp: new Date().toISOString(),
-                    userId: data.userId,
-                    userEmail: data.userEmail,
-                    tallyData: data,
-                    analysisInput: {
-                        primaryGoal: data.primaryGoal,
-                        secondaryGoal: data.secondaryGoal,
-                        areas: data.areas,
-                        painTolerance: data.painTolerance,
-                        downtimeTolerance: data.downtimeTolerance,
-                        budget: data.budget
-                    },
-                    reportId: (result as any).reportId
-                });
-            } catch (logError) {
-                console.error("Failed to save patient log:", logError);
+        // 6. Risk flag override (push pigment/acne category to rank 1)
+        if (riskFlag.triggered && scored.length > 0) {
+            const targetSignal = survey.primarySignals.some(s => s.includes('Acne')) ? 'Acne / scar improvement' : 'Melasma / pigmentation risk';
+            const overrideCats = indicationMap.find(e => e.canonical_signal.toLowerCase() === targetSignal.toLowerCase())?.category_ids ?? [];
+            const overrideCat = scored.find(c => overrideCats.includes(c.category_id)) ?? allCategories.find(c => overrideCats.includes(c.category_id));
+            if (overrideCat && scored[0]?.category_id !== overrideCat.category_id) {
+                const idx = scored.findIndex(c => c.category_id === overrideCat.category_id);
+                if (idx > -1) scored.splice(idx, 1);
+                scored.unshift({ ...overrideCat, score: 99 });
+                if (scored.length > 3) scored.pop();
             }
         }
 
-        res.status(200).json(result);
+        const radarScore = calculateRadarScore(scored[0] || ({} as EBDCategoryRecord), survey);
+
+        // 7. Fetch boosters (in parallel per category)
+        const [topDevices, topBoosters] = await Promise.all([
+            fetchTopDevices(scored),
+            fetchTopBoosters(scored, survey),
+        ]);
+
+        // 8. ALWAYS save Recommendation_Run — even without patientId, use timestamp as identifier
+        const rrFields: Record<string, any> = {
+            rank_1_category_id: scored[0]?.category_id,
+            rank_2_category_id: scored[1]?.category_id,
+            rank_3_category_id: scored[2]?.category_id,
+            radar_score_json: JSON.stringify(radarScore),
+            top5_booster_ids: topBoosters.flat().map(b => b.booster_id).filter(Boolean).slice(0, 5).join(', '),
+        };
+
+        // Link patient record only if we have a real ID
+        if (req.body.patientId || req.body.userId) {
+            rrFields['Patients_v1'] = [req.body.patientId || req.body.userId];
+        }
+
+        let runId: string;
+        try {
+            const rrRec = await base('Recommendation_Run').create([{ fields: rrFields }]);
+            runId = rrRec[0].id;
+            console.log('[Engine V2] Recommendation_Run created:', runId);
+        } catch (e) {
+            console.error('[Recommendation_Run] save failed, falling back to mock id:', e);
+            runId = `mock_run_${Date.now()}`;
+        }
+
+        const responsePayload: AnalysisResponseV2 = {
+            runId,
+            rank1: buildRankResult(scored[0], topDevices[0] || [], topBoosters[0] || [], radarScore),
+            rank2: scored[1] ? buildRankResult(scored[1], topDevices[1] || [], topBoosters[1] || [], radarScore) : null,
+            rank3: scored[2] ? buildRankResult(scored[2], topDevices[2] || [], topBoosters[2] || [], radarScore) : null,
+            riskFlag,
+            radarScore,
+        };
+
+        // 9. Trigger async Tasks 4+5 (fire-and-forget)
+        if (!runId.startsWith('mock_')) {
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `http://${req.headers.host}`;
+            fetch(`${baseUrl}/api/recommendation/generate-report-content`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ runId, patientId: req.body.patientId || req.body.userId || '' })
+            }).catch(e => console.error('[Engine V2] Async trigger failed:', e));
+        }
+
+        // 10. Log
+        try {
+            savePatientLog({
+                sessionId: runId,
+                timestamp: new Date().toISOString(),
+                userId: req.body.userId,
+                userEmail: req.body.userEmail,
+                tallyData: req.body,
+                analysisInput: {
+                    primaryGoal: survey.primarySignals.join(', '),
+                    secondaryGoal: survey.secondarySignals.join(', '),
+                    downtimeTolerance: survey.downtimeTolerance,
+                    budget: survey.budget,
+                },
+                reportId: runId,
+            });
+        } catch (e) { console.error('[LOG]', e); }
+
+        return res.status(200).json(responsePayload);
 
     } catch (error: any) {
-        console.error('[ENGINE] Error:', error);
-        res.status(500).json({ error: 'Analysis failed', mock: MOCK_RESPONSE });
+        console.error('[Engine V2] Fatal error:', error);
+        return res.status(500).json({ error: error.message || 'Internal Server Error' });
     }
 }

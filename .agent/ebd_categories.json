@@ -1,0 +1,220 @@
+[dotenv@17.3.1] injecting env (10) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+[
+  {
+    "category_id": "ERYAG",
+    "category_display_name": "Er:YAG 레이저",
+    "best_primary_indication": "Resurfacing (Ablative)",
+    "secondary_indications": [
+      "Texture / Roughness"
+    ],
+    "contraindicated_conditions": [
+      "Thin skin",
+      "Melasma (risk-aware)"
+    ]
+  },
+  {
+    "category_id": "MN_RF",
+    "category_display_name": "마이크로니들 RF",
+    "best_primary_indication": "Acne scar",
+    "secondary_indications": [
+      "Texture / Roughness",
+      "Skin quality / Glow",
+      "Tightening",
+      "Melasma (risk-aware)",
+      "Contour / Jawline definition",
+      "Pore"
+    ],
+    "notes_internal": "• Primary 설정 논리 (Pore / Acne Scar):\n    ◦ Monopolar RF(써마지 등)의 'Deep Tightening'과 구분하기 위해, 물리적 바늘 삽입을 통한 **'Dermal Remodeling(진피 재생)'**과 **'Texture Improvement(결 개선)'**를 핵심 가치로 설정함.\n    ◦ 단순 리프팅보다는 Coagulation Zone(응고존) 형성을 통한 흉터 재생 및 모공 축소가 임상적으로 더 명확한 차별점임.\n• 경계 조건 (Boundary Conditions):\n    ◦ Volume Effect: 기본적으로 진피 밀도 증가(Increase)로 설정하나, 침투 깊이가 3.0mm를 초과하여 피하지방층(Sub-Q) 타겟 시 지방 위축(Fat Loss) 위험이 발생할 수 있음.\n    ◦ Melasma: 기미 치료(Melasma)는 'Risk-aware' 항목으로 분류. 펄스파(PW) 모드나 비절연 팁을 사용하는 특정 장비(예: Sylfirm X, Quadessy)에 한해 제한적으로 적용됨.\n• Device Layer 분리 포인트:\n    ◦ Energy Control: 임피던스 피드백 유무(Genius/Quadessy vs. Others)에 따라 'Controlled' vs 'Uncontrolled'로 성능 구분 필요\n    ◦ Functional Niche: 약물 전달(Drug Delivery) 특화(Potenza 펌핑팁) 여부와 색소/기저막 타겟(PW Mode) 기능 유무로 하위 분류 가능."
+  },
+  {
+    "category_id": "FRAC_1550",
+    "category_display_name": "프락셔널 1550",
+    "best_primary_indication": "Tightening",
+    "secondary_indications": [
+      "Pore",
+      "Texture / Roughness"
+    ]
+  },
+  {
+    "category_id": "PICO",
+    "category_display_name": "피코 레이저",
+    "best_primary_indication": "Dermal pigmentation",
+    "secondary_indications": [
+      "Tattoo removal",
+      "Tone"
+    ],
+    "contraindicated_conditions": [
+      "Gold Therapy history"
+    ],
+    "notes_internal": "• Primary 설정 논리 (Pigment / Tattoo):\n    ◦ 광기계적(Photomechanical) 효과로 입자를 잘게 부수어 난치성 색소 및 다양한 컬러 문신 제거에 최적.\n• 경계 조건 (Boundary Conditions):\n    ◦ LIOB Downtime: 프락셔널 모드(LIOB) 시술 시 붉은 기와 점상 출혈 발생 가능 (Rejuvenation 목적 시).\n    ◦ Wavelength: 755nm(Melanin 흡수도 높음) vs 1064nm(깊은 침투, 안전성) 선택.\n• Device layer 분리 포인트:\n    ◦ Pulse Duration: True Pico(450ps 이하) vs Sub-nano(700ps 이상) 구분 필요.\n    ◦ Peak Power: 색소 파괴력과 직결되는 피크 파워(GW 단위) 스펙 차이."
+  },
+  {
+    "category_id": "FRAC_1927",
+    "category_display_name": "프락셔널 1927(툴륨)",
+    "best_primary_indication": "Resurfacing (Non-ablative)",
+    "secondary_indications": [
+      "Tone",
+      "Skin quality / Glow",
+      "Texture / Roughness"
+    ],
+    "notes_internal": "• Primary 설정 논리 (Resurfacing - Non-ablative):\n    ◦ 각질층 보존(Non-ablative), 표피/상부 진피 열 손상으로 톤업 및 결 개선. 다운타임 적음 [Source 11, 36, 48].\n• 경계 조건 (Boundary Conditions):\n    ◦ Infection: 미세 딱지(Crust) 형성되므로 시술 직후 감염 주의.\n    ◦ Drug Delivery: 앰플 흡수율이 비약적으로 높아지므로 도포 제품 성분 주의 (방부제 등).\n• Device layer 분리 포인트:\n    ◦ Power: 고출력(치료용) vs 저출력(홈케어/관리용).\n    ◦ Application: 두피/탈모 관리 등 확장성."
+  },
+  {
+    "category_id": "IPL",
+    "category_display_name": "IPL(광치료)",
+    "best_primary_indication": "Tone",
+    "secondary_indications": [
+      "Epidermal pigmentation",
+      "Vascular (diffuse redness)"
+    ],
+    "contraindicated_conditions": [
+      "Melasma (risk-aware)"
+    ],
+    "notes_internal": "• Primary 설정 논리 (Tone / Redness):\n    ◦ 다양한 파장대(Broadband)를 이용해 색소(잡티)와 혈관(홍조)을 동시에 개선하는 가성비 시술.\n• 경계 조건 (Boundary Conditions):\n    ◦ Tiger Marks: 사각형 팁 자국대로 화상/색소 침착 남는 부작용 주의.\n    ◦ Hair: 제모 효과가 있어 눈썹/헤어라인 근처 조사 시 주의.\n• Device layer 분리 포인트:\n    ◦ Filter: 파장 컷오프 필터의 종류 및 교체 편의성.\n    ◦ Pulse Tech: Square Pulse(일정한 에너지) 구현 여부."
+  },
+  {
+    "category_id": "CO2",
+    "category_display_name": "CO2 레이저(박피)",
+    "best_primary_indication": "Resurfacing (Ablative)",
+    "secondary_indications": [
+      "Acne scar",
+      "Texture / Roughness"
+    ],
+    "contraindicated_conditions": [
+      "Isotretinoin use (recent)",
+      "History of Keloid"
+    ],
+    "notes_internal": "• Primary 설정 논리 (Resurfacing - Ablative / Excision):\n    ◦ 수분에 대한 흡수도가 가장 높아 조직을 태워 없애거나(점 제거), 강력한 박피 효과.\n• 경계 조건 (Boundary Conditions):\n    ◦ PIH: 동양인 피부에서 깊은 박피 시 색소 침착 리스크 매우 높음.\n    ◦ Downtime: 진물, 딱지 관리가 1주 이상 필요.\n• Device layer 분리 포인트:\n    ◦ Pulse Shape: Ultra-pulse(주변 열 손상 최소화) vs CW/Super-pulse.\n    ◦ Scanner: 프락셔널 스캔 정밀도."
+  },
+  {
+    "category_id": "LP_532_1064",
+    "category_display_name": "혈관/홍조 레이저(복합)",
+    "best_primary_indication": "Vascular (diffuse redness)",
+    "secondary_indications": [
+      "Vascular (telangiectasia/spot vessels)",
+      "Tone",
+      "Vascular (diffuse redness)"
+    ],
+    "notes_internal": "• Primary 설정 논리 (Redness / Vascular):\n    ◦ 혈색소(Hemoglobin) 흡수도가 높은 532nm/595nm 파장 활용, 안면 홍조 및 표재성 혈관 치료.\n• 경계 조건 (Boundary Conditions):\n    ◦ Absorption: 멜라닌 흡수도도 높아 태닝된 피부나 기미 부위 시술 시 주의 (532nm).\n    ◦ Bruising: 파열(Purpura) 모드 사용 시 멍 발생 (Vbeam 등).\n• Device layer 분리 포인트:\n    ◦ Wavelength: 532nm(KTP) vs 585/595nm(PDL).\n    ◦ Cooling: 사파이어 팁(Contact) vs DCD(Cryo spray)."
+  },
+  {
+    "category_id": "HIFU",
+    "category_display_name": "초음파 리프팅",
+    "best_primary_indication": "Lifting",
+    "secondary_indications": [
+      "Contour / Jawline definition",
+      "Tightening"
+    ],
+    "contraindicated_conditions": [
+      "Thin skin",
+      "Low BMI",
+      "Volume loss concern"
+    ],
+    "notes_internal": "• Primary 설정 논리 (Lifting):\n    ◦ 경쟁 장비(RF 등)가 도달하기 어려운 SMAS 층(4.5mm)에 열 응고점(TCP)을 형성하여 물리적 수축을 유도하는 유일한 비침습 기전임 .\n    ◦ ‘타이트닝’보다는 처진 조직을 끌어올리는 ‘리프팅’으로 포지셔닝해야 차별화 명확함.\n• 경계 조건 (Boundary Conditions):\n    ◦ Fat Loss Risk: 얼굴 살이 없는 환자(Low BMI)나 얇은 피부(Thin skin) 시술 시 볼 패임 주의 필요.\n    ◦ Nerve: 신경 주행 경로(Temporal/Mandibular) 피해서 조사 필수.\n• Device layer 분리 포인트:\n    ◦ Transducer Type: Dot(전통적, 강한 점) vs Linear(선형, 빠른 속도/지방 분해 유리).\n    ◦ Visibility: 초음파 이미징(DeepSEE) 유무(Ulthera vs Others)."
+  },
+  {
+    "category_id": "Diode laser",
+    "category_display_name": "다이오드 레이저\n",
+    "best_primary_indication": "Hair removal",
+    "secondary_indications": [
+      "Tightening"
+    ]
+  },
+  {
+    "category_id": "PDL",
+    "category_display_name": "PDL(펄스다이레이저)",
+    "best_primary_indication": "Vascular (diffuse redness)",
+    "secondary_indications": [
+      "Vascular (telangiectasia/spot vessels)"
+    ]
+  },
+  {
+    "category_id": "SKIN_BOOSTER",
+    "category_display_name": "스킨부스터",
+    "best_primary_indication": "Skin quality / Glow",
+    "secondary_indications": [
+      "Tone",
+      "Texture / Roughness"
+    ]
+  },
+  {
+    "category_id": "LED",
+    "category_display_name": "LED/LLLT",
+    "best_primary_indication": "Recovery / Wound healing",
+    "secondary_indications": [
+      "Skin quality / Glow"
+    ]
+  },
+  {
+    "category_id": "BODY_CONTOUR",
+    "category_display_name": "바디 컨투어링",
+    "best_primary_indication": "Body",
+    "secondary_indications": [
+      "Contour / Jawline definition"
+    ]
+  },
+  {
+    "category_id": "BI_MULTI_RF",
+    "category_display_name": "다극성/표면 RF",
+    "best_primary_indication": "Contour / Jawline definition",
+    "secondary_indications": [
+      "Tightening",
+      "Body"
+    ],
+    "contraindicated_conditions": [
+      "Thin skin",
+      "Low BMI",
+      "Volume loss concern"
+    ],
+    "notes_internal": "• Primary 설정 논리 (Contour / Fat Reduction):\n    ◦ 단순 탄력보다는 진공(Vacuum)으로 지방층을 당겨 고전압/심부 열을 전달, 지방 세포 사멸(Apoptosis) 및 라인 정리에 특화됨.\n• 경계 조건 (Boundary Conditions):\n    ◦ Downtime: 진공 흡입에 의한 멍(Bruising) 발생 가능성 사전 고지 필수 (3~7일).\n    ◦ Skin Contact: 전극과 피부 밀착 불량 시 아크(Arc) 화상 위험.\n• Device layer 분리 포인트:\n    ◦ Energy Target: 지방 파괴용 HVRF(High Voltage RF) 탑재 여부 (InMode FX vs 일반 Multi-polar).\n    ◦ Vacuum: 진공 흡입 기능 유무."
+  },
+  {
+    "category_id": "MONO_RF",
+    "category_display_name": "단극성 고주파",
+    "best_primary_indication": "Tightening",
+    "secondary_indications": [
+      "Contour / Jawline definition",
+      "Skin quality / Glow"
+    ],
+    "notes_internal": "• Primary 설정 논리 (Tightening):\n    ◦ 진피 전층 및 격막(Septum)에 체적 가열(Bulk Heating)을 통해 콜라겐 변성을 유도, 피부를 쫀쫀하게 조이는 것이 핵심.\n    ◦ 즉각적 효과보다 장기적 탄력 개선 및 유지 관리(Maintenance) 성격이 강함.\n• 경계 조건 (Boundary Conditions):\n    ◦ Implant: 전류 흐름 방해/화상 위험으로 금속 임플란트, 심박동기(Pacemaker) 절대 금기.\n    ◦ Cooling: 표피 화상 방지를 위한 가스/워터 쿨링 시스템 정상 작동 필수.\n• Device layer 분리 포인트:\n    ◦ Cooling Method: 가스 쿨링(Thermage - 통증 강, 효과 강) vs 워터 쿨링(Volnewmer - 통증 약, 연속 조사 유리).\n    ◦ Impedance Check: 매 샷 측정(AccuREP, Real-time) vs 시술 전 1회 측정 여부"
+  },
+  {
+    "category_id": "Q_SWITCH",
+    "category_display_name": "큐스위치 레이저",
+    "best_primary_indication": "Tone",
+    "secondary_indications": [
+      "Melasma (risk-aware)",
+      "Tone",
+      "Epidermal pigmentation",
+      "Tattoo removal"
+    ],
+    "notes_internal": "• Primary 설정 논리 (Melasma / Tone):\n    ◦ 오랜 임상으로 검증된 레이저 토닝(Low fluenced multipass)의 표준. 자극 없는 기미 관리에 적합.\n• 경계 조건 (Boundary Conditions):\n    ◦ Hypopigmentation: 과도한 에너지/횟수 시술 시 저색소침착(백반증 등) 위험.\n    ◦ Rebound: 기미 악화 방지를 위해 강한 자극 지양.\n• Device layer 분리 포인트:\n    ◦ Beam Profile: Top-hat 모드의 균일도(Hot spot 유무).\n    ◦ Special Pulse: PTP(Photoacoustic Twin Pulse) 모드 지원 여부."
+  },
+  {
+    "category_id": "LP_755_1064",
+    "category_display_name": "롱펄스 755/1064",
+    "best_primary_indication": "Hair removal",
+    "secondary_indications": [
+      "Vascular (telangiectasia/spot vessels)",
+      "Skin quality / Glow",
+      "Tone",
+      "Epidermal pigmentation"
+    ],
+    "notes_internal": "• Primary 설정 논리 (Hair Removal / Vascular):\n    ◦ 긴 펄스 폭(ms)으로 모낭 및 굵은 혈관(Leg vein)을 태우는 데 효과적.\n• 경계 조건 (Boundary Conditions):\n    ◦ Cooling Failure: 접촉식/가스 쿨링 실패 시 즉각적인 표피 화상 위험 (높은 에너지 사용).\n    ◦ Skin Type: 755nm 파장은 어두운 피부(Fitzpatrick IV-VI) 제모 시 화상 주의.\n• Device layer 분리 포인트:\n    ◦ Spot Size: 대구경(20mm+) 지원 여부(시술 속도 직결).\n    ◦ Beam Delivery: 파이버(Fiber) 방식 vs 아티큘레이티드 암(Articulated Arm)."
+  },
+  {
+    "category_id": "HIFES",
+    "category_display_name": "HIFES + RF (Facial Muscle Stimulation)",
+    "best_primary_indication": "Facial Lifting",
+    "secondary_indications": [
+      "Wrinkle Reduction",
+      "Jawline Definition",
+      "Cheek Contouring"
+    ],
+    "contraindicated_conditions": [
+      "Metal Implants (Face)",
+      "Pacemakers",
+      "Active Infection"
+    ]
+  }
+]

@@ -67,6 +67,8 @@ export interface IndicationRecord {
         concern_domain?: string;
         recommended_device_categories?: string | string[]; // Can be text or array depending on mapping
         Protocol_block?: string[]; // Linked protocols
+        canonical_signal?: string;           // PF-C2
+        recommended_category_ids?: string;   // PF-C3
     };
 }
 
@@ -80,4 +82,134 @@ export interface DoctorSolutionRecord {
         is_signiture_solution?: boolean;
         patient_segment?: string;
     };
+}
+
+export interface EBDCategoryRecord {
+    id: string;
+    fields: {
+        survey_primary_match?: string;
+        survey_secondary_match?: string;
+        risk_flag_trigger?: string;
+        concern_area_trigger?: string;
+        reason_why_EN?: string;
+        reason_why_JP?: string;
+        reason_why_CN?: string;
+        risk_flag_reason_why_KO?: string;
+        risk_flag_reason_why_EN?: string;
+        risk_flag_reason_why_JP?: string;
+        risk_flag_reason_why_CN?: string;
+        category_image?: AirtableAttachment[];
+    };
+}
+
+export interface EBDDeviceRecord {
+    id: string;
+    fields: {
+        budget_tier?: 'Budget' | 'Mid' | 'Premium' | 'Luxury';
+        reason_why_EN?: string;
+        reason_why_JP?: string;
+        reason_why_CN?: string;
+    };
+}
+
+export interface RecommendationRunRecord {
+    id: string;
+    fields: {
+        rank_1_category_id?: string;
+        rank_2_category_id?: string;
+        rank_3_category_id?: string;
+        top10_device_ids?: string;
+        top5_booster_ids?: string;
+        risk_flag_override?: string;
+        special_device_override?: string;
+        radar_score_json?: string;
+        booster_delivery_json?: string;
+        why_cat1_KO?: string;
+        why_cat2_KO?: string;
+        why_cat3_KO?: string;
+        why_cat1_EN?: string;
+        why_cat2_EN?: string;
+        why_cat3_EN?: string;
+    };
+}
+
+export interface DeliveryMethodRecord {
+    id: string;
+    fields: {
+        notes_patient_KO?: string;
+        notes_patient_EN?: string;
+        notes_patient_JP?: string;
+        notes_patient_CN?: string;
+    };
+}
+
+// ─── V2 Engine Types ─────────────────────────────────────────────────────────
+
+export interface RadarScoreData {
+    efficacy: number;
+    downtime: number;
+    discomfort: number;
+    cost_efficiency: number;
+    maintenance: number;
+    // Legacy fields used by LiveRadar (subject/A format)
+    lifting?: number;
+    firmness?: number;
+    texture?: number;
+    glow?: number;
+    safety?: number;
+}
+
+export interface DeviceSummary {
+    device_id: string;
+    device_name: string;
+    pain_modifier?: number | string;
+}
+
+export interface SupportingCareItem {
+    supportcare_id: string;
+    supportcare_name: string;
+    primary_purpose: string;
+    canonical_role: string;
+}
+
+export interface BoosterDeliveryItem {
+    booster_id: string;
+    booster_name: string;
+    canonical_role: string;
+    injection_target_layer: string;
+    delivery_method_id: string | null;
+    delivery_name: string;
+    delivery_pain_level?: string;
+    is_safety_required?: boolean;
+    safety_reason_KO?: string | null;
+}
+
+export interface CategoryRankResult {
+    category_id: string;
+    score: number;
+    why_KO?: string | null;
+    why_EN?: string | null;
+    radar?: RadarScoreData;
+    top_devices: DeviceSummary[];
+    top_boosters: BoosterDeliveryItem[];
+    booster_pairing_note_KO?: string | null;
+    booster_pairing_note_EN?: string | null;
+    recommended_sessions?: number | null;
+    session_interval_weeks?: number | null;
+    recommended_supporting_care?: SupportingCareItem[];
+}
+
+export interface RiskFlagData {
+    triggered: boolean;
+    reason_KO?: string;
+    reason_EN?: string;
+}
+
+export interface AnalysisResponseV2 {
+    runId: string;
+    rank1: CategoryRankResult;
+    rank2: CategoryRankResult | null;
+    rank3: CategoryRankResult | null;
+    riskFlag?: RiskFlagData;
+    radarScore?: RadarScoreData;
 }

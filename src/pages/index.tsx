@@ -17,6 +17,7 @@ import { useAuth } from '@/context/AuthContext';
 import { WizardData } from '@/components/landing/DiagnosisWizard';
 import DiagnosisWizard from '@/components/landing/DiagnosisWizard';
 import { useRouter } from 'next/router';
+import { AnalysisResponseV2 } from '@/types/airtable';
 
 export default function Home() {
   const router = useRouter();
@@ -28,6 +29,7 @@ export default function Home() {
   const [wizardData, setWizardData] = useState<WizardData | null>(null);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [analysisData, setAnalysisData] = useState<AnalysisResponseV2 | null>(null);
 
   useEffect(() => {
     if (router.query.start_wizard) {
@@ -44,9 +46,45 @@ export default function Home() {
     setIsModalOpen(true);
   };
 
-  const handleDiagnosisComplete = (data: WizardData) => {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+
+  const handleDiagnosisComplete = async (data: WizardData) => {
     setWizardData(data);
-    setIsModalOpen(true);
+    setAnalyzeError(null);
+    setIsAnalyzing(true);
+    setIsModalOpen(true); // Open modal immediately — shows skeleton/loading state
+
+    try {
+      const res = await fetch('/api/engine/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          primaryGoal: data.primaryGoal,
+          secondaryGoal: data.secondaryGoal,
+          risks: data.risks,
+          painTolerance: data.painTolerance,
+          downtimeTolerance: data.downtimeTolerance,
+          budget: data.budget,
+          skinType: data.skinType,
+          areas: data.areas,
+          volumePreference: data.volumePreference,
+          language: currentLang,
+          userId: data.email || undefined,
+          userEmail: data.email,
+        }),
+      });
+
+      if (!res.ok) throw new Error(`API ${res.status}`);
+
+      const result = await res.json();
+      setAnalysisData(result); // AnalysisResponseV2 with runId
+    } catch (err: any) {
+      console.error('[analyze] error:', err);
+      setAnalyzeError(err.message);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleStartAnalysis = () => {
@@ -110,10 +148,9 @@ export default function Home() {
         <DeepDiveModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          rank={selectedRank}
+          runId={analysisData?.runId ?? null}
+          analysisData={analysisData ?? undefined}
           language={currentLang}
-          tallyData={wizardData}
-          onSaveReport={() => setIsAuthModalOpen(true)}
         />
 
         <ForPatients language={currentLang} onStartSurvey={handleStartAnalysis} />
