@@ -7,6 +7,8 @@ import { Loader2 } from 'lucide-react';
 import { LanguageCode } from '@/utils/translations';
 import PatientDashboard from '@/components/dashboard/PatientDashboard';
 import DoctorDashboard from '@/components/dashboard/DoctorDashboard';
+import FounderDashboard from '@/components/dashboard/FounderDashboard';
+
 
 export default function Dashboard() {
     const { user, loading } = useAuth();
@@ -35,16 +37,20 @@ export default function Dashboard() {
         );
     }
 
+    const isAdmin = user.email === 'narabohan@gmail.com' || (user as any).role === 'admin';
     const isDoctor = user.role === 'doctor';
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-cyan-500/30">
+        <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-cyan-500/30 pt-20">
             <Header currentLang={currentLang} onLangChange={setCurrentLang} />
 
-            {isDoctor
-                ? <DoctorDashboard language={currentLang} />
-                : <PatientDashboard language={currentLang} />
-            }
+            {isAdmin ? (
+                <FounderDashboard />
+            ) : isDoctor ? (
+                <DoctorDashboard language={currentLang} />
+            ) : (
+                <PatientDashboard language={currentLang} />
+            )}
 
             <Footer language={currentLang} />
         </div>

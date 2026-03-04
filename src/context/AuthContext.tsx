@@ -110,30 +110,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // ── Google OAuth ──────────────────────────────────────────────────────────
     const signInWithGoogle = useCallback(async () => {
-        try {
-            const { auth, googleProvider, signInWithPopup } = await import('@/lib/firebase');
-            await signInWithPopup(auth, googleProvider);
-            // We rely on onAuthStateChanged to catch the login and sync!
+        const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+        if (apiKey && apiKey !== 'YOUR_API_KEY') {
+            try {
+                const { auth, googleProvider, signInWithPopup } = await import('@/lib/firebase');
+                await signInWithPopup(auth, googleProvider);
+                setIsAuthModalOpen(false);
+                pendingAction?.();
+                setPendingAction(null);
+            } catch (err: any) {
+                if (err.code !== 'auth/popup-closed-by-user') throw err;
+            }
+        } else {
+            // Mock Fallback for local testing without Firebase
+            console.warn('Firebase API Key missing. Using Mock Google Login.');
+            saveSession({
+                uid: 'google_mock_123',
+                email: 'narabohan@gmail.com',
+                displayName: 'Narabo (CTO)',
+                photoURL: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Narabo',
+                role: 'patient',
+                provider: 'google'
+            });
             setIsAuthModalOpen(false);
             pendingAction?.();
             setPendingAction(null);
-        } catch (err: any) {
-            if (err.code !== 'auth/popup-closed-by-user') throw err;
         }
-    }, [pendingAction]);
+    }, [pendingAction, saveSession]);
 
     // ── GitHub OAuth ──────────────────────────────────────────────────────────
     const signInWithGithub = useCallback(async () => {
-        try {
-            const { auth, githubProvider, signInWithPopup } = await import('@/lib/firebase');
-            await signInWithPopup(auth, githubProvider);
+        const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+        if (apiKey && apiKey !== 'YOUR_API_KEY') {
+            try {
+                const { auth, githubProvider, signInWithPopup } = await import('@/lib/firebase');
+                await signInWithPopup(auth, githubProvider);
+                setIsAuthModalOpen(false);
+                pendingAction?.();
+                setPendingAction(null);
+            } catch (err: any) {
+                if (err.code !== 'auth/popup-closed-by-user') throw err;
+            }
+        } else {
+            console.warn('Firebase API Key missing. Using Mock GitHub Login.');
+            saveSession({
+                uid: 'github_mock_123',
+                email: 'narabotest@github.com',
+                displayName: 'Narabo Github',
+                role: 'patient',
+                provider: 'github'
+            });
             setIsAuthModalOpen(false);
             pendingAction?.();
             setPendingAction(null);
-        } catch (err: any) {
-            if (err.code !== 'auth/popup-closed-by-user') throw err;
         }
-    }, [pendingAction]);
+    }, [pendingAction, saveSession]);
 
     // ── Email Sign In ─────────────────────────────────────────────────────────
     const signInWithEmail = useCallback(async (email: string, password: string) => {
@@ -141,7 +172,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (apiKey && apiKey !== 'YOUR_API_KEY') {
             const { auth, signInWithEmailAndPassword } = await import('@/lib/firebase');
             await signInWithEmailAndPassword(auth, email, password);
-            // onAuthStateChanged will handle the rest
         } else {
             // Demo fallback
             saveSession({ uid: `demo_${Date.now()}`, email, displayName: email.split('@')[0], role: 'patient', provider: 'demo' });

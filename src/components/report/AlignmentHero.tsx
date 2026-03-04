@@ -206,45 +206,55 @@ export default function AlignmentHero({ score = 92, radarData, language, termina
                 </div>
 
                 {/* ── RIGHT: AI Terminal ── */}
-                <div className="flex flex-col p-7">
-                    <div className="flex items-center gap-2 mb-3">
-                        <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#FF3B30' }} />
-                        <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#FFD60A' }} />
-                        <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#30D158' }} />
-                        <span className="text-[9px] font-mono ml-2" style={{ color: 'rgba(0,255,255,0.4)' }}>
-                            CLINICAL_ANALYSIS.log
-                        </span>
+                <div className="flex flex-col p-7 gap-4">
+                    <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#FF3B30' }} />
+                            <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#FFD60A' }} />
+                            <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#30D158' }} />
+                            <span className="text-[9px] font-mono ml-2" style={{ color: 'rgba(0,255,255,0.4)' }}>
+                                CLINICAL_ANALYSIS.log
+                            </span>
+                        </div>
+                        <div ref={termRef}
+                            className="rounded-xl p-4 overflow-y-auto font-mono text-[11px] leading-relaxed"
+                            style={{
+                                background: 'rgba(0,0,0,0.5)',
+                                border: '1px solid rgba(0,255,255,0.1)',
+                                color: 'rgba(0,255,255,0.75)',
+                                height: '180px',
+                                scrollbarWidth: 'thin',
+                            }}>
+                            {termLines.map((line, i) => (
+                                <div key={i} className="mb-1">
+                                    <span style={{ color: 'rgba(0,255,255,0.35)' }}>{String(i).padStart(2, '0')} </span>
+                                    <span>{line}</span>
+                                </div>
+                            ))}
+                            {/* currently typing line */}
+                            {currentLine < lines.length && (
+                                <div className="mb-1">
+                                    <span style={{ color: 'rgba(0,255,255,0.35)' }}>{String(currentLine).padStart(2, '0')} </span>
+                                    <span>{lines[currentLine].slice(0, currentChar)}</span>
+                                    <span className="animate-pulse" style={{ color: '#00FFFF' }}>█</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    <div ref={termRef}
-                        className="flex-1 rounded-xl p-4 overflow-y-auto font-mono text-[11px] leading-relaxed"
-                        style={{
-                            background: 'rgba(0,0,0,0.5)',
-                            border: '1px solid rgba(0,255,255,0.1)',
-                            color: 'rgba(0,255,255,0.75)',
-                            minHeight: '220px',
-                            maxHeight: '300px',
-                            scrollbarWidth: 'thin',
-                        }}>
-                        {termLines.map((line, i) => (
-                            <div key={i} className="mb-1">
-                                <span style={{ color: 'rgba(0,255,255,0.35)' }}>{String(i).padStart(2, '0')} </span>
-                                <span>{line}</span>
+
+                    {/* Highly Visible AI Summary Block */}
+                    {terminalText && (
+                        <div className="p-4 rounded-xl relative overflow-hidden group/summary animate-in fade-in slide-in-from-bottom-2 duration-700 delay-500"
+                            style={{ background: 'rgba(0,255,255,0.03)', border: '1px solid rgba(0,255,255,0.15)' }}>
+                            <div className="absolute top-0 left-0 w-1 h-full bg-cyan-400" />
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="text-[8px] font-black tracking-widest text-cyan-400 uppercase">A.I. CLINICAL JUDGMENT</span>
                             </div>
-                        ))}
-                        {/* currently typing line */}
-                        {currentLine < lines.length && (
-                            <div className="mb-1">
-                                <span style={{ color: 'rgba(0,255,255,0.35)' }}>{String(currentLine).padStart(2, '0')} </span>
-                                <span>{lines[currentLine].slice(0, currentChar)}</span>
-                                <span className="animate-pulse" style={{ color: '#00FFFF' }}>█</span>
-                            </div>
-                        )}
-                        {currentLine >= lines.length && terminalText && (
-                            <div className="mt-3 pt-3 text-[10px]" style={{ borderTop: '1px solid rgba(0,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>
-                                {terminalText}
-                            </div>
-                        )}
-                    </div>
+                            <p className="text-[11px] text-white/80 leading-relaxed italic line-clamp-4 group-hover/summary:line-clamp-none transition-all duration-300">
+                                "{terminalText}"
+                            </p>
+                        </div>
+                    )}
                 </div>
 
             </div>

@@ -81,3 +81,67 @@ export interface DoctorSolutionRecord {
         patient_segment?: string;
     };
 }
+
+export interface RadarScoreData {
+    efficacy: number;
+    downtime: number;
+    discomfort: number;
+    cost_efficiency: number;
+    maintenance: number;
+}
+
+export interface DeviceSummary {
+    device_id: string;
+    device_name: string;
+    pain_modifier?: number | string;
+}
+
+export interface SupportingCareItem {
+    supportcare_id: string;
+    supportcare_name: string;
+    primary_purpose: string;
+    canonical_role: string;
+}
+
+export interface BoosterDeliveryItem {
+    booster_id: string;
+    booster_name: string;
+    canonical_role: string;
+    injection_target_layer: string;
+    delivery_method_id: string | null;
+    delivery_name: string;
+    delivery_pain_level?: string;
+    is_safety_required?: boolean;
+    safety_reason_KO?: string | null;
+}
+
+export interface CategoryRankResult {
+    category_id: string;
+    score: number;
+    why_KO?: string | null;
+    why_EN?: string | null;
+    radar: RadarScoreData;
+    top_devices: DeviceSummary[];
+    top_boosters: BoosterDeliveryItem[];
+    booster_pairing_note_KO?: string | null;
+    booster_pairing_note_EN?: string | null;
+    recommended_sessions?: number | null;
+    session_interval_weeks?: number | null;
+    recommended_supporting_care?: SupportingCareItem[];
+}
+
+export interface RiskFlagData {
+    triggered: boolean;
+    reason_KO?: string;
+    reason_EN?: string;
+}
+
+export interface AnalysisResponseV2 {
+    runId: string;
+    rank1: CategoryRankResult;
+    rank2: CategoryRankResult | null;
+    rank3: CategoryRankResult | null;
+    riskFlag?: RiskFlagData;
+    radarScore: RadarScoreData;
+}
+

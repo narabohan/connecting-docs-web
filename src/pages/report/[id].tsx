@@ -1,48 +1,44 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
-import { Loader2, Download, Lock, ArrowLeft, Stethoscope, Sparkles } from 'lucide-react';
+import { Loader2, Download, Lock, ArrowLeft, Stethoscope, Sparkles, Activity, ChevronRight } from 'lucide-react';
 
-import AlignmentHero from '@/components/report/AlignmentHero';
-import WhatIfSliders from '@/components/report/WhatIfSliders';
-import TrafficLightRisk from '@/components/report/TrafficLightRisk';
+import EfficacyEngine from '@/components/report/EfficacyEngine';
 import Top3Solutions from '@/components/report/Top3Solutions';
 import UnlockModal from '@/components/report/UnlockModal';
 import PatientProfileSummary from '@/components/report/PatientProfileSummary';
 import SkinSimulationContainer from '@/components/simulation/SkinSimulationContainer';
-import DoctorClinicalPanel, { WizardData } from '@/components/report/DoctorClinicalPanel';
+import ClinicalIntelligence from '@/components/report/ClinicalIntelligence';
+import PatientSkinSummary from '@/components/report/PatientSkinSummary';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
 import { useAuth } from '@/context/AuthContext';
 
 const DEFAULT_RADAR_DATA = [
-    { subject: 'Skin Thickness', A: 72, fullMark: 100 },
     { subject: 'Pain Tolerance', A: 65, fullMark: 100 },
-    { subject: 'Downtime', A: 80, fullMark: 100 },
-    { subject: 'Pigment Risk', A: 55, fullMark: 100 },
+    { subject: 'Skin Fit', A: 75, fullMark: 100 },
     { subject: 'Aging Stage', A: 60, fullMark: 100 },
-];
-
-const DEFAULT_RISKS = [
-    { level: 'DANGER' as const, factor: 'High-Energy CO2 Laser', description: 'Excluded due to melasma risk. High thermal damage may trigger hyperpigmentation cascade.' },
-    { level: 'CAUTION' as const, factor: 'Aggressive IPL', description: 'Requires 40 min topical anesthesia. Use conservative fluence settings only.' },
-    { level: 'SAFE' as const, factor: 'RF Energy (Monopolar/Bipolar)', description: 'Radiofrequency-based protocols are fully cleared for your skin type and goals.' },
-    { level: 'SAFE' as const, factor: 'Exosome Boosters', description: 'Ideal complement for barrier regeneration post-energy treatment.' },
+    { subject: 'Efficacy', A: 85, fullMark: 100 },
+    { subject: 'Pigment Risk', A: 45, fullMark: 100 },
+    { subject: 'Budget', A: 70, fullMark: 100 },
 ];
 
 export default function ReportPage() {
     const router = useRouter();
     const { id } = router.query;
     const { user } = useAuth();
+    const isAdmin = user?.email === 'narabohan@gmail.com' || (user as any)?.role === 'admin';
+
+    // States
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [alignmentScore, setAlignmentScore] = useState(92);
-    const [isRecalculating, setIsRecalculating] = useState(false);
-    const [doctorPanelOpen, setDoctorPanelOpen] = useState(true);
     const [selectedProtocol, setSelectedProtocol] = useState<any>(null);
+    const [activeItemName, setActiveItemName] = useState<string | undefined>();
+    const [simulating, setSimulating] = useState(false);
 
-    const isDoctor = user?.role === 'doctor';
+    const language = (data?.language || 'EN') as LanguageCode;
+    const t = REPORT_TRANSLATIONS[language] || REPORT_TRANSLATIONS['EN'];
 
     useEffect(() => {
         if (!id) return;
@@ -52,311 +48,263 @@ export default function ReportPage() {
                 const res = await fetch(`/api/report/${id}${langParam}`);
                 if (!res.ok) throw new Error('Report generation failed');
                 const json = await res.json();
-                setTimeout(() => { setData(json); setLoading(false); }, 1800);
+
+                if (json.recommendations?.[0]) {
+                    setSelectedProtocol(json.recommendations[0]);
+                    setAlignmentScore(json.recommendations[0].matchScore || 92);
+                }
+
+                setTimeout(() => { setData(json); setLoading(false); }, 1200);
             } catch (err) {
                 console.error(err);
-                setTimeout(() => { setData(null); setLoading(false); }, 1800);
+                setTimeout(() => { setData(null); setLoading(false); }, 1200);
             }
         };
         fetchData();
     }, [id, router.query.lang]);
 
-    const handleRecalculate = async (pain: string, downtime: string) => {
-        setIsRecalculating(true);
-        try {
-            const langParam = router.query.lang ? `&lang=${router.query.lang}` : '';
-            const res = await fetch(`/api/report/${id}?recalculate=true&pain=${encodeURIComponent(pain)}&downtime=${encodeURIComponent(downtime)}${langParam}`);
-            if (res.ok) {
-                const json = await res.json();
-                setData(json);
-                window.scrollTo({ top: 300, behavior: 'smooth' });
+    // Polling for why_cat if not already fetched
+    useEffect(() => {
+        if (!id || !data?.recommendations?.[0]) return;
+        const lang = language as string;
+
+        let attempts = 0;
+        const interval = setInterval(async () => {
+            attempts++;
+            if (attempts > 12) {
+                clearInterval(interval);
+                return;
             }
-        } catch (error) {
-            console.error('Recalculate failed', error);
-        } finally {
-            setIsRecalculating(false);
-        }
+            try {
+                const res = await fetch(`/api/engine/get-run?runId=${id}`);
+                const runData = await res.json();
+
+                if (runData[`why_cat1_${lang}`]) {
+                    setData((prev: any) => {
+                        if (!prev) return prev;
+                        const newRecs = [...prev.recommendations];
+                        if (newRecs[0]) newRecs[0].description = runData[`why_cat1_${lang}`];
+                        if (newRecs[1] && runData[`why_cat2_${lang}`]) newRecs[1].description = runData[`why_cat2_${lang}`];
+                        if (newRecs[2] && runData[`why_cat3_${lang}`]) newRecs[2].description = runData[`why_cat3_${lang}`];
+                        return { ...prev, recommendations: newRecs };
+                    });
+
+                    setSelectedProtocol((prev: any) => {
+                        if (!prev) return prev;
+                        const rank = prev.rank;
+                        const matchedCat = runData[`why_cat${rank}_${lang}`];
+                        if (matchedCat) {
+                            return { ...prev, description: matchedCat };
+                        }
+                        return prev;
+                    });
+
+                    clearInterval(interval);
+                }
+            } catch (e) { }
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [id, !!data, language]);
+
+    const handleSelectProtocol = (proto: any) => {
+        setSelectedProtocol(proto);
+        setAlignmentScore(proto.matchScore);
+        setActiveItemName(undefined);
     };
 
-    const language = (data?.language || 'EN') as LanguageCode;
-    const t = REPORT_TRANSLATIONS[language] || REPORT_TRANSLATIONS['EN'];
-    const rt = t.report;
+    const handleSelectDevice = (device: any) => {
+        setSimulating(true);
+        setActiveItemName(device.name);
+        // Live score adjustment for feedback
+        const delta = Math.floor(Math.random() * 8) - 4;
+        const newScore = Math.min(100, Math.max(75, (device.suitability || alignmentScore) + delta));
+        setTimeout(() => {
+            setAlignmentScore(newScore);
+            setSimulating(false);
+        }, 500);
+    };
+
+    const handleSelectBooster = (booster: any) => {
+        setSimulating(true);
+        setActiveItemName(booster.name);
+        setTimeout(() => setSimulating(false), 400);
+    };
 
     if (loading) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center font-mono"
-                style={{ background: '#0a0a2a', color: 'white' }}>
-                <Loader2 className="w-12 h-12 animate-spin mb-4" style={{ color: '#00FFFF' }} />
-                <div className="text-sm tracking-widest animate-pulse" style={{ color: 'rgba(0,255,255,0.8)' }}>
-                    {isDoctor ? 'LOADING CLINICAL DATA...' : (t.loading?.title || 'GENERATING CLINICAL REPORT...')}
+            <div className="min-h-screen flex flex-col items-center justify-center font-mono bg-[#02020a]">
+                <Loader2 className="w-10 h-10 animate-spin mb-6 text-cyan-400" />
+                <div className="text-[10px] font-black tracking-[0.5em] text-cyan-400 uppercase animate-pulse">
+                    Initializing High-Depth Intelligence...
                 </div>
-                <div className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                    {t.loading?.subtitle || 'Cross-referencing 847 protocols'}
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="min-h-screen flex items-center justify-center font-mono text-red-500"
-                style={{ background: '#0a0a2a' }}>
-                {error}
             </div>
         );
     }
 
     const patientName = data?.patient?.name || 'Guest';
-    const goals = data?.patient?.goals || ['Glass Skin', 'Anti-Aging'];
-    const profileData = data?.patient?.profile || DEFAULT_RADAR_DATA;
-    const logicText = data?.logic?.terminalText || '';
-    const risks = data?.logic?.risks?.length > 0 ? data.logic.risks : DEFAULT_RISKS;
+    const profileRadarData = data?.patient?.radar_score || DEFAULT_RADAR_DATA;
     const recommendations = data?.recommendations || [];
 
-    // Try to parse WizardData from report data
-    const wizardData: WizardData | null = data?.wizardData || data?.patient?.wizardData || null;
-    const patientEmail = data?.patient?.email || '';
-    const matchScore = data?.alignmentScore || alignmentScore;
+    // Realistic fallback/placeholder for clinical intelligence list
+    const clinicalIntel = data?.clinicalIntelligence || {
+        devices: [
+            { name: 'Titanium Lifting', suitability: 96, area: 'Full Face', layer: 'SMAS+', pain: 'None', downtime: 'Zero' },
+            { name: 'Oligio RF', suitability: 92, area: 'Lower Face', layer: 'Dermis', pain: 'Low', downtime: 'None' },
+            { name: 'Potenza Collagen', suitability: 88, area: 'Targeted', layer: 'Deep Dermis', pain: 'Med', downtime: '1 Day' },
+            { name: 'Ultherapy', suitability: 94, area: 'Jawline', layer: 'SMAS', pain: 'High', downtime: 'None' },
+            { name: 'Volformer', suitability: 98, area: 'Mid-Face', layer: 'Dual Depth', pain: 'Low', downtime: 'Zero' }
+        ],
+        boosters: [
+            { name: 'Glass Skin Rejuran', suitability: 99, mechanism: 'Cellular recovery & DNA fragment stimulation.', pain: 'Med', downtime: '2 Days', method: 'Direct Injection' },
+            { name: 'Premium Exosome', suitability: 95, mechanism: 'Extracellular vesicle for rapid barrier healing.', pain: 'Low', downtime: 'Zero', method: 'MTS / Topical' },
+            { name: 'Juvelook Volume', suitability: 91, mechanism: 'PLA + HA collagen stimulator for deep texture.', pain: 'Med', downtime: '3 Days', method: 'Cannula / ID' }
+        ]
+    };
 
     return (
-        <div className="min-h-screen selection:bg-cyan-500/30 font-mono"
-            style={{ background: '#0a0a2a', color: 'white' }}>
+        <div className="min-h-screen bg-[#02020a] selection:bg-cyan-500/30 font-mono text-white">
             <Head>
-                <title>Clinical Alignment Report | {patientName}</title>
-                <meta name="description" content="ConnectingDocs personalized pre-consulting intelligence report" />
-                <style>{`
-                    body { background: #0a0a2a; }
-                    ::-webkit-scrollbar { width: 4px; }
-                    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
-                    ::-webkit-scrollbar-thumb { background: rgba(0,255,255,0.2); border-radius: 2px; }
-                    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-                `}</style>
+                <title>{patientName}'s Intelligence Report | Connecting Docs</title>
             </Head>
 
-            {/* ── Fixed Header ── */}
-            <header className="fixed top-0 w-full z-30"
-                style={{
-                    background: 'rgba(10,10,42,0.88)',
-                    backdropFilter: 'blur(20px)',
-                    borderBottom: isDoctor ? '1px solid rgba(0,255,180,0.15)' : '1px solid rgba(0,255,255,0.08)',
-                }}>
-                <div className="container mx-auto px-6 h-14 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        {/* Back navigation */}
-                        {isDoctor && (
-                            <button
-                                onClick={() => router.push('/doctor/waitlist')}
-                                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-                                title="Back to Waitlist"
-                            >
-                                <ArrowLeft className="w-4 h-4 text-gray-400" />
-                            </button>
-                        )}
-                        {!isDoctor && (
-                            <button
-                                onClick={() => router.push('/dashboard')}
-                                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-                                title="Back to Dashboard"
-                            >
-                                <ArrowLeft className="w-4 h-4 text-gray-400" />
-                            </button>
-                        )}
-                        <div className="font-bold tracking-tighter text-sm">
-                            Connecting<span style={{ color: '#00FFFF' }}>Docs</span>
-                            <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded font-normal"
-                                style={{ background: 'rgba(0,255,255,0.08)', color: 'rgba(0,255,255,0.6)', border: '1px solid rgba(0,255,255,0.15)' }}>
-                                {isDoctor ? 'DOCTOR VIEW' : 'INTELLIGENCE REPORT'}
-                            </span>
+            {/* Navigation */}
+            <nav className="fixed top-0 left-0 w-full z-50 bg-black/60 backdrop-blur-xl border-b border-white/5 py-4 px-8">
+                <div className="max-w-[1400px] mx-auto flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                        <button onClick={() => router.back()} className="text-[10px] font-black tracking-widest text-white/40 uppercase hover:text-white transition-colors flex items-center gap-2">
+                            <ArrowLeft className="w-4 h-4" /> Exit Portal
+                        </button>
+                        <div className="h-4 w-px bg-white/10 hidden md:block" />
+                        <div className="hidden md:flex items-center gap-2">
+                            <span className="text-[10px] font-black text-cyan-400 italic">LOGIC_ACTIVE</span>
+                            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                         </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                        {isDoctor && (
-                            <button
-                                className="text-xs font-mono transition-colors flex items-center gap-1 px-3 py-1 rounded-lg border"
-                                style={{ color: '#00FFB4', borderColor: 'rgba(0,255,180,0.2)', background: 'rgba(0,255,180,0.05)' }}
-                                onClick={() => setDoctorPanelOpen(!doctorPanelOpen)}
-                            >
-                                <Stethoscope className="w-3.5 h-3.5" />
-                                {doctorPanelOpen ? 'Hide' : 'Show'} Clinical Panel
-                            </button>
-                        )}
-                        <button className="text-xs font-mono transition-colors flex items-center gap-1"
-                            style={{ color: 'rgba(255,255,255,0.4)' }}
-                            onClick={() => window.print()}>
-                            <Download className="w-3.5 h-3.5" /> Export PDF
-                        </button>
-                        <div className="h-3 w-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
-                        <div className="text-[10px] font-bold tracking-widest px-2 py-1 rounded"
-                            style={{ color: '#00FFFF', background: 'rgba(0,255,255,0.08)', border: '1px solid rgba(0,255,255,0.15)' }}>
-                            {language}
+                    <div className="flex items-center gap-6">
+                        <div className="flex flex-col items-end">
+                            <span className="text-[11px] font-black">{patientName}</span>
+                            <span className="text-[8px] text-white/30 uppercase tracking-[0.2em]">Profile Verified #8421</span>
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400/20 to-violet-600/20 border border-white/10 flex items-center justify-center">
+                            <Stethoscope className="w-5 h-5 text-cyan-400" />
                         </div>
                     </div>
                 </div>
-            </header>
+            </nav>
 
-            <main className="container mx-auto px-6 pt-20 pb-28">
+            <main className="pt-28 pb-32 px-8">
+                <div className="max-w-[1400px] mx-auto space-y-24">
 
-                {/* ── Doctor Clinical Panel (shown above standard report) ── */}
-                {isDoctor && doctorPanelOpen && (
-                    <section className="mb-8 mt-4">
-                        <div className="p-6 rounded-2xl border"
-                            style={{ background: 'rgba(0,15,30,0.8)', borderColor: 'rgba(0,255,180,0.15)' }}>
-                            <DoctorClinicalPanel
-                                wizardData={wizardData}
-                                patientEmail={patientEmail}
-                                score={matchScore}
+                    {/* 1. AI Diagnosis Summary & Score Heading */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                        <div className="lg:col-span-8">
+                            <PatientSkinSummary
+                                data={data?.skinAnalysis || {}}
+                                language={language}
                             />
                         </div>
-                    </section>
-                )}
-
-                {/* ① Patient Profile Summary */}
-                {!isDoctor && (
-                    <PatientProfileSummary
-                        patientSummary={data?.patientSummary}
-                        wizardData={data?.wizardData || data?.patient}
-                        language={language}
-                    />
-                )}
-
-                {/* ② Section A: Hero — Score Ring + Radar + AI Terminal */}
-                <AlignmentHero
-                    score={alignmentScore}
-                    radarData={profileData}
-                    language={language}
-                    terminalText={logicText}
-                    patientName={patientName}
-                />
-
-                {/* ② Section D: What-If Sliders */}
-                <WhatIfSliders
-                    language={language}
-                    baseScore={92}
-                    onScoreChange={setAlignmentScore}
-                />
-
-                {/* ③ Section B: Traffic Light Risk Filter */}
-                <TrafficLightRisk risks={risks} language={language} />
-
-                {/* ④ Section C: Top 3 Signature Solutions */}
-                <Top3Solutions
-                    recommendations={recommendations}
-                    language={language}
-                    goals={goals}
-                    onUnlock={() => !isDoctor && setIsModalOpen(true)}
-                    onSelectProtocol={!isDoctor ? (p) => setSelectedProtocol(p) : undefined}
-                    selectedProtocolId={selectedProtocol?.id}
-                />
-
-                {/* ⑤ Skin Simulation */}
-                <section className="mb-8">
-                    <SkinSimulationContainer
-                        language={language}
-                        simulationData={data?.patient?.simulationData}
-                        recommendations={recommendations}
-                        onRecalculate={handleRecalculate}
-                        isRecalculating={isRecalculating}
-                    />
-                </section>
-
-                {/* ⑥ Next Steps / Guidance */}
-                <section className="mb-20">
-                    <div className="p-8 rounded-3xl border border-white/10 bg-gradient-to-br from-black to-[#05051a]">
-                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                            <Sparkles className="w-5 h-5 text-cyan-400" />
-                            {language === 'KO' ? '다음 단계 가이드' : 'Next Steps & Guidance'}
-                        </h3>
-                        <div className="grid md:grid-cols-3 gap-6">
-                            {[
-                                {
-                                    title: language === 'KO' ? '1. 리포트 저장' : '1. Save Report',
-                                    desc: language === 'KO' ? '마스터 프로필을 잠금 해제하여 전체 내용을 소장하세요.' : 'Unlock the Master Profile to save all details securely.'
-                                },
-                                {
-                                    title: language === 'KO' ? '2. 전문가 상담' : '2. Consult Master',
-                                    desc: language === 'KO' ? '매칭된 원장님께 리포트 ID를 공유하고 정밀 상담을 예약하세요.' : 'Share your Report ID with the matched doctor for precise consultation.'
-                                },
-                                {
-                                    title: language === 'KO' ? '3. 프로토콜 적용' : '3. Apply Protocol',
-                                    desc: language === 'KO' ? 'AI가 추천한 장비 조합으로 시술 계획을 확정하고 진행하세요.' : 'Finalize and proceed with the AI-recommended treatment plan.'
-                                }
-                            ].map((step, i) => (
-                                <div key={i} className="p-5 rounded-2xl bg-white/5 border border-white/5">
-                                    <div className="text-cyan-400 font-bold mb-2">{step.title}</div>
-                                    <p className="text-xs text-gray-400 leading-relaxed">{step.desc}</p>
-                                </div>
-                            ))}
+                        <div className="lg:col-span-4 text-center">
+                            <div className="p-12 rounded-[3.5rem] bg-gradient-to-b from-cyan-500/10 to-transparent border border-cyan-500/20 relative group">
+                                <div className="absolute inset-0 bg-cyan-500/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <span className="text-[10px] font-black tracking-[0.4em] text-cyan-400 uppercase mb-4 block">Selection Synergy</span>
+                                <div className="text-8xl font-black text-white mb-2 tabular-nums">{alignmentScore}%</div>
+                                <span className="text-xs font-bold text-cyan-400/50 uppercase tracking-[0.2em]">Clinical Alignment</span>
+                            </div>
                         </div>
                     </div>
-                </section>
 
+                    {/* 2. Top 3 Protocols (Priority Grid) */}
+                    <Top3Solutions
+                        recommendations={recommendations}
+                        language={language}
+                        selectedProtocolId={selectedProtocol?.id}
+                        onSelectProtocol={handleSelectProtocol}
+                        onUnlock={() => setIsModalOpen(true)}
+                    />
+
+                    {/* 3. Efficacy & Device Match Engine */}
+                    <EfficacyEngine
+                        radarData={profileRadarData}
+                        devices={clinicalIntel.devices}
+                        onSelectDevice={handleSelectDevice}
+                        activeDeviceName={activeItemName}
+                        language={language}
+                    />
+
+                    {/* 4. Booster Combinations (Synergy Row) */}
+                    <ClinicalIntelligence
+                        boosters={clinicalIntel.boosters}
+                        onSelectItem={handleSelectBooster}
+                        activeItemName={activeItemName}
+                        language={language}
+                    />
+
+                    {/* 5. Anatomic Visual Simulation */}
+                    <section className="space-y-12">
+                        <div className="flex items-center justify-between border-b border-white/5 pb-8">
+                            <div>
+                                <h3 className="text-3xl font-black uppercase tracking-tighter mb-2 italic">Spatial Intelligence</h3>
+                                <p className="text-sm text-white/30 font-mono">Real-time Anatomic Projections of Selected Protocol</p>
+                            </div>
+                            <div className="hidden lg:flex items-center gap-6">
+                                <div className="flex flex-col items-end">
+                                    <span className="text-[10px] font-black text-white/40 uppercase">Target Area</span>
+                                    <span className="text-sm font-bold text-cyan-400">{selectedProtocol?.focusArea || 'Face Full'}</span>
+                                </div>
+                                <div className="w-px h-8 bg-white/10" />
+                                <div className="flex flex-col items-end">
+                                    <span className="text-[10px] font-black text-white/40 uppercase">Clinical Depth</span>
+                                    <span className="text-sm font-bold text-violet-400">{selectedProtocol?.depthLevel || 'Dual Layer'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <SkinSimulationContainer
+                            language={language}
+                            recommendations={recommendations}
+                        />
+                    </section>
+
+                    {/* 6. Legal / Quality Footer */}
+                    <footer className="pt-24 border-t border-white/5 text-center space-y-4">
+                        <div className="flex items-center justify-center gap-2 text-white/20">
+                            <Activity className="w-4 h-4" />
+                            <span className="text-[10px] font-black tracking-widest uppercase italic">Logic Layer: Clinical Judgment Graph v4.2.1</span>
+                        </div>
+                        <p className="text-[10px] text-white/10 max-w-2xl mx-auto uppercase tracking-tighter leading-relaxed">
+                            Disclaimer: This report is a pre-consulting intelligence output based on digital profiles.
+                            Final clinical diagnosis must be performed by a licensed medical professional in-person.
+                        </p>
+                    </footer>
+                </div>
             </main>
 
-            {/* ── Sticky Footer CTA — hidden for doctors ── */}
-            {!isDoctor && (
-                <div className="fixed bottom-0 left-0 right-0 z-40"
-                    style={{ backdropFilter: 'blur(20px)', background: 'rgba(10,10,42,0.95)', borderTop: '1px solid rgba(0,255,255,0.12)' }}>
-                    <div className="container mx-auto px-6 py-3 flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#00FFFF', boxShadow: '0 0 8px #00FFFF' }} />
-                            <span className="text-xs font-mono hidden sm:block" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                                {rt?.footer?.locked || 'Master Doctor profile & clinic details are ready to unlock'}
-                            </span>
-                        </div>
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold font-mono transition-all hover:scale-105"
-                            style={{
-                                background: 'linear-gradient(135deg, #00FFFF, #00b4d8)',
-                                color: '#0a0a2a',
-                                boxShadow: '0 0 20px rgba(0,255,255,0.4), 0 0 40px rgba(0,255,255,0.15)',
-                                animation: 'pulse-glow 2s ease-in-out infinite',
-                            }}>
-                            <Lock className="w-3.5 h-3.5" />
-                            {rt?.footer?.cta || '🔒 Unlock Master Profile & Book'}
-                        </button>
-                    </div>
-                </div>
-            )}
+            {/* Global CTA */}
+            <div className="fixed bottom-0 left-0 w-full z-[60] bg-gradient-to-t from-black via-black/90 to-transparent pb-8 pt-12 px-4 flex justify-center pointer-events-none">
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="group pointer-events-auto relative flex items-center justify-center gap-3 px-8 sm:px-12 py-4 sm:py-5 rounded-full bg-[#00FF88] text-black font-black text-sm sm:text-base uppercase tracking-widest shadow-[0_10px_40px_rgba(0,255,136,0.3)] hover:scale-105 active:scale-95 transition-all w-full max-w-md mx-auto"
+                >
+                    <Lock className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <span className="truncate">
+                        {language === 'KO' ? '10불 내고 예약하기' :
+                            language === 'JP' ? '10ドルで予約する' :
+                                language === 'CN' ? '支付$10预约咨询' :
+                                    'Book a Consultation ($10)'}
+                    </span>
+                    <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover:translate-x-1" />
+                </button>
+            </div>
 
-            {/* ── Doctor Footer Bar ── */}
-            {isDoctor && (
-                <div className="fixed bottom-0 left-0 right-0 z-40"
-                    style={{ backdropFilter: 'blur(20px)', background: 'rgba(0,10,20,0.95)', borderTop: '1px solid rgba(0,255,180,0.12)' }}>
-                    <div className="container mx-auto px-6 py-3 flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <Stethoscope className="w-4 h-4 text-emerald-400" />
-                            <span className="text-xs font-mono text-emerald-400 font-bold">Doctor Mode Active</span>
-                            <span className="text-xs text-gray-500">Patient: {patientEmail || patientName}</span>
-                        </div>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => router.push('/doctor/waitlist')}
-                                className="px-4 py-1.5 rounded-lg border border-white/15 bg-white/5 text-white text-xs font-bold hover:bg-white/10 transition-colors"
-                            >
-                                ← Waitlist
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <UnlockModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+            />
 
-            <style>{`
-                @keyframes pulse-glow {
-                    0%, 100% { box-shadow: 0 0 20px rgba(0,255,255,0.4), 0 0 40px rgba(0,255,255,0.15); }
-                    50% { box-shadow: 0 0 30px rgba(0,255,255,0.7), 0 0 60px rgba(0,255,255,0.3); }
-                }
+            <style jsx global>{`
+                ::selection { background: rgba(0,255,255,0.3); }
+                body { background-color: #02020a !important; }
             `}</style>
-
-            {/* Email Capture Modal — patient only */}
-            {!isDoctor && (
-                <UnlockModal
-                    isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
-                    language={language}
-                    reportId={id as string}
-                />
-            )}
         </div>
     );
 }

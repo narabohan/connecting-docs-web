@@ -5,9 +5,59 @@ import FaceMannequin from '@/components/simulation/FaceMannequin';
 import SkinLayerSection from '@/components/simulation/SkinLayerSection';
 import LiveRadar from '@/components/simulation/LiveRadar';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { jsPDF } from 'jspdf';
+import DeviceDetailModal from '@/components/curation/DeviceDetailModal';
+
+// ─── why_cat 폴링 훅: generate-report-content.ts가 Airtable에 쓰면 표시 ───
+function useWhyCatPolling(runId: string | null, language: LanguageCode) {
+    const [whyCat, setWhyCat] = useState<Record<string, string>>({});
+    const [pollingDone, setPollingDone] = useState(false);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    const stopPolling = useCallback(() => {
+        if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+    }, []);
+
+    useEffect(() => {
+        if (!runId || pollingDone) return;
+        let attempts = 0;
+        const MAX_ATTEMPTS = 12; // 최대 60초 (5초 * 12)
+
+        const poll = async () => {
+            try {
+                attempts++;
+                const res = await fetch(`/api/engine/get-run?runId=${runId}`);
+                if (!res.ok) { if (attempts >= MAX_ATTEMPTS) { stopPolling(); setPollingDone(true); } return; }
+                const data = await res.json();
+
+                // 현재 언어의 rank1 why_cat이 채워지면 전체 가져옴
+                const lang = language as string;
+                const key1 = `why_cat1_${lang}`;
+                if (data[key1]) {
+                    setWhyCat({
+                        rank1: data[`why_cat1_${lang}`] || '',
+                        rank2: data[`why_cat2_${lang}`] || '',
+                        rank3: data[`why_cat3_${lang}`] || '',
+                    });
+                    stopPolling();
+                    setPollingDone(true);
+                } else if (attempts >= MAX_ATTEMPTS) {
+                    stopPolling();
+                    setPollingDone(true);
+                }
+            } catch { if (attempts >= MAX_ATTEMPTS) { stopPolling(); setPollingDone(true); } }
+        };
+
+        intervalRef.current = setInterval(poll, 5000);
+        poll(); // 즉시 1회 실행
+
+        return () => stopPolling();
+    }, [runId, language, pollingDone, stopPolling]);
+
+    return whyCat;
+}
 
 interface DeepDiveModalProps {
     isOpen: boolean;
@@ -37,6 +87,10 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // ── why_cat 폴링: runId는 analyze.ts → reportId로 반환됨 ──
+    const runId = analysisData?.reportId || null;
+    const whyCat = useWhyCatPolling(runId, language);
+
     // Matching State
     const [matches, setMatches] = useState<any[]>([]);
     const [matchLoading, setMatchLoading] = useState(false);
@@ -48,6 +102,49 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
         downtimeTolerance: 'Short (2-3 days)',
         budget: 'Standard'
     });
+
+    // DeviceModal State
+    const [deviceModal, setDeviceModal] = useState<{
+        isOpen: boolean;
+        type: 'device' | 'booster';
+        itemId: string;
+        itemName: string;
+    } | null>(null);
+
+    // AI Copilot Q&A State
+    const [chatOpen, setChatOpen] = useState(false);
+    const [chatQuestion, setChatQuestion] = useState('');
+    const [chatAnswer, setChatAnswer] = useState('');
+    const [chatLoading, setChatLoading] = useState(false);
+
+    const handleAskCopilot = async () => {
+        if (!chatQuestion.trim() || !runId) return;
+        setChatLoading(true);
+        setChatAnswer('');
+        try {
+            const res = await fetch('/api/report-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ runId, question: chatQuestion, language })
+            });
+            const reader = res.body!.getReader();
+            const decoder = new TextDecoder();
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n').filter(l => l.startsWith('data: '));
+                for (const line of lines) {
+                    try {
+                        const payload = JSON.parse(line.replace('data: ', ''));
+                        if (payload.done) break;
+                        if (payload.text) setChatAnswer(prev => prev + payload.text);
+                    } catch { }
+                }
+            }
+        } catch (e) { console.error('[Copilot]', e); }
+        finally { setChatLoading(false); }
+    };
 
     // Fetch Analysis when Modal Opens
     // Fetch Analysis when Modal Opens
@@ -148,38 +245,89 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
 
     const handleDownloadPDF = () => {
         const doc = new jsPDF();
+        const primaryColor = [0, 255, 160]; // ConnectingDocs Green
+        const bgColor = [5, 5, 26];
 
-        // Header
-        doc.setFontSize(20);
-        doc.text("Connecting Docs - Clinical Report", 20, 20);
+        // ── Header Background ──
+        doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+        doc.rect(0, 0, 210, 40, 'F');
 
-        doc.setFontSize(12);
-        doc.text(`Generated for: ${user?.email || 'Guest'}`, 20, 30);
-        doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 36);
+        // ── Logo / Title ──
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.text("CONNECTING DOCS", 20, 20);
 
-        // Protocol
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.text("CLINICAL INTELLIGENCE · SECURE REPORT", 20, 26);
+
+        // ── Metadata ──
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(7);
+        doc.text(`ID: ${analysisData?.reportId || 'PENDING'}`, 150, 18);
+        doc.text(`DATE: ${new Date().toLocaleDateString()}`, 150, 22);
+        doc.text(`USER: ${user?.email || 'GUEST'}`, 150, 26);
+
+        // ── Content ──
         if (displayData) {
-            doc.setFontSize(16);
-            doc.setTextColor(0, 100, 200);
-            doc.text(`Recommended Protocol: ${displayData.protocolName}`, 20, 50);
+            // Rank Badge
+            doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+            doc.roundedRect(20, 50, 40, 6, 1, 1, 'F');
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(7);
+            doc.text(`RANK NO.0${effectiveRank} SELECTION`, 23, 54);
+
+            // Protocol Title
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(22);
+            doc.setFont("helvetica", "bold");
+            doc.text(displayData.protocolName, 20, 65);
+
+            // Divider
+            doc.setDrawColor(230, 230, 230);
+            doc.line(20, 72, 190, 72);
+
+            // Analysis Section
+            doc.setFontSize(10);
+            doc.setTextColor(150, 150, 150);
+            doc.text("AI CLINICAL RATIONALE", 20, 82);
 
             doc.setFontSize(11);
-            doc.setTextColor(0, 0, 0);
-            const splitReason = doc.splitTextToSize(`Clinical Logic: ${displayData.reason}`, 170);
-            doc.text(splitReason, 20, 60);
+            doc.setTextColor(50, 50, 50);
+            doc.setFont("helvetica", "normal");
+            const reason = doc.splitTextToSize(displayData.reason, 170);
+            doc.text(reason, 20, 88);
 
-            // Specs
-            let yPos = 60 + (splitReason.length * 5) + 10;
-            doc.text(`Downtime: ${displayData.downtime || 'N/A'}`, 20, yPos);
-            doc.text(`Pain Level: ${displayData.painLevel}/3`, 20, yPos + 6);
+            // Metrics Box
+            let metricsY = 95 + (reason.length * 5);
+            doc.setFillColor(245, 248, 250);
+            doc.roundedRect(20, metricsY, 170, 25, 2, 2, 'F');
+
+            doc.setFontSize(8);
+            doc.setTextColor(120, 120, 120);
+            doc.text("DOWNTIME", 25, metricsY + 8);
+            doc.text("PAIN LEVEL", 80, metricsY + 8);
+            doc.text("SESSIONS", 135, metricsY + 8);
+
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont("helvetica", "bold");
+            doc.text(displayData.downtime || "Minimal", 25, metricsY + 16);
+            doc.text(`${displayData.painLevel}/3`, 80, metricsY + 16);
+            doc.text("3-5 Sessions", 135, metricsY + 16);
         }
 
-        // Footer
-        doc.setFontSize(10);
-        doc.setTextColor(150);
-        doc.text("This report is generated by AI Key Doctor Logic.", 20, 280);
+        // ── Footer ──
+        doc.setDrawColor(240, 240, 240);
+        doc.line(20, 275, 190, 275);
+        doc.setFontSize(7);
+        doc.setTextColor(180, 180, 180);
+        doc.text("connectingdocs.ai · Global Medical Intelligence Platform", 20, 282);
+        doc.text("Disclaimer: Results based on AI clinical logic. Consult a professional physician.", 120, 282);
 
-        doc.save("ConnectingDocs_Report.pdf");
+        doc.save(`ConnectingDocs_Report_${effectiveRank}.pdf`);
     };
 
     if (!isOpen || (!rank && !tallyData) || !t) return null;
@@ -191,23 +339,27 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
     const currentRankKey = `rank${effectiveRank}`;
     const aiRankData = analysisData ? analysisData[currentRankKey] : null;
 
+    // why_cat: 폴링으로 받은 4개국어 AI 설명, 없으면 aiRankData.reason, 없으면 번역 fallback
+    const aiWhyCat = whyCat[`rank${effectiveRank}`] || '';
+
     const displayData = aiRankData ? {
-        primaryZones: ['Cheek', 'Jawline'], // AI placeholder
-        secondaryZones: ['EyeArea'],
-        activeLayers: ['SMAS', 'Dermis'],
-        radar: { lifting: aiRankData.score, firmness: 80, texture: 70, glow: 60, safety: 90 },
+        primaryZones: tallyData?.areas || ['Cheek', 'Jawline'],
+        secondaryZones: tallyData?.areas?.length > 1 ? [tallyData.areas[1]] : [],
+        activeLayers: aiRankData.protocol?.toLowerCase().includes('hifu') ? ['SMAS', 'Deep Dermis'] : ['Dermis', 'Epidermis'],
+        radar: { lifting: aiRankData.score || 85, firmness: 82, texture: 78, glow: 75, safety: 95 },
         protocolName: aiRankData.protocol,
-        reason: aiRankData.reason,
+        // why_cat AI 설명 우선, 없으면 analyze.ts reason fallback
+        reason: aiWhyCat || aiRankData.reason,
         downtime: aiRankData.downtime,
         painLevel: aiRankData.pain === 'High' ? 3 : aiRankData.pain === 'Moderate' ? 2 : 1
     } : {
         // Fallback to Static Data from Translations
-        primaryZones: ['Cheek', 'Jawline'],
-        secondaryZones: ['EyeArea'],
-        activeLayers: ['SMAS', 'Dermis'],
+        primaryZones: tallyData?.areas || ['Cheek', 'Jawline'],
+        secondaryZones: [],
+        activeLayers: ['Dermis'],
         radar: { lifting: 85, firmness: 80, texture: 75, glow: 70, safety: 95 },
         protocolName: (rankInfo?.title || "Unknown Protocol") + " (" + (rankInfo?.combo || "Custom") + ")",
-        reason: rankInfo?.reason || "Loading clinical logic...",
+        reason: aiWhyCat || rankInfo?.reason || "Loading clinical logic...",
         downtime: "N/A",
         painLevel: 2
     };
@@ -445,71 +597,172 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                             <span>{td.poweredBy}</span>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Matched Doctors Section */}
-                                <div className="space-y-4">
-                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                        <div className="w-1 h-5 bg-blue-500 rounded-full" />
-                                        {td.topSpecialists}
-                                    </h3>
-
-                                    {matchLoading ? (
-                                        <div className="p-8 text-center text-gray-500 border border-white/5 rounded-2xl bg-white/5">
-                                            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                                            {td.runningMatch}
-                                        </div>
-                                    ) : matches.length > 0 ? (
+                                    {/* Top Devices & Boosters */}
+                                    {((aiRankData?.devices || aiRankData?.top_devices)?.length > 0) && (
                                         <div className="space-y-3">
-                                            {matches.map((doc, idx) => (
-                                                <div key={idx} className="group relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/50 rounded-xl p-4 transition-all duration-300">
-                                                    {/* Badge */}
-                                                    {doc.score >= 90 && (
-                                                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-yellow-300/30 flex items-center gap-1">
-                                                            <Star className="w-3 h-3 fill-white" />
-                                                            {doc.score}% MATCH
+                                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                                <div className="w-1 h-4 bg-cyan-500 rounded-full" />
+                                                {language === 'KO' ? '추천 디바이스' : language === 'JP' ? '推奨機器' : language === 'CN' ? '推荐设备' : 'Recommended Devices'}
+                                            </h3>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {(aiRankData.devices || aiRankData.top_devices).slice(0, 2).map((device: any, idx: number) => (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => setDeviceModal({ isOpen: true, type: 'device', itemId: device?.device_id || device?.id || '', itemName: device?.device_name || device?.name || device })}
+                                                        className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/40 rounded-xl text-left transition-all group"
+                                                    >
+                                                        <div className="text-xs font-semibold text-white truncate">{device?.device_name || device?.name || device}</div>
+                                                        <div className="text-[10px] text-cyan-400 mt-1 flex items-center gap-1">
+                                                            {language === 'KO' ? '상세 보기' : language === 'JP' ? '詳細を見る' : language === 'CN' ? '查看详情' : 'View Details'}
+                                                            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                                                         </div>
-                                                    )}
-
-                                                    <div className="flex justify-between items-start mb-3">
-                                                        <div>
-                                                            <h4 className="font-bold text-white text-base">{doc.doctorName}</h4>
-                                                            <div className="flex items-center gap-1 text-gray-400 text-xs mt-0.5">
-                                                                <MapPin className="w-3 h-3" />
-                                                                {doc.hospitalName}
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <div className="text-cyan-400 font-bold text-sm tracking-wide">{doc.solutionTitle}</div>
-                                                            <div className="text-gray-500 text-xs">{doc.priceRange}</div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Match Details */}
-                                                    <div className="space-y-1 mb-3">
-                                                        {doc.matchDetails.slice(0, 2).map((detail: string, i: number) => (
-                                                            <div key={i} className="flex items-start gap-2 text-xs text-gray-300">
-                                                                <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5 flex-shrink-0" />
-                                                                {detail}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-
-                                                    <button className="w-full py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-bold rounded-lg border border-cyan-500/30 transition-colors flex items-center justify-center gap-1 group-hover:text-cyan-300">
-                                                        View Clinical Profile <ChevronRight className="w-3 h-3" />
                                                     </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="p-6 text-center text-gray-500 border border-white/5 rounded-2xl bg-white/5 text-sm">
-                                            {td.noMatches}
+                                                ))}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
                             </div>
-
                         )}
+                    </div>
+
+                    {/* Matched Doctors Section */}
+                    {!loading && (
+                        <div className="p-6 md:p-8 border-t border-white/5 bg-[#0a0a0f]">
+                            <div className="space-y-4 max-w-4xl mx-auto">
+                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                    <div className="w-1 h-5 bg-blue-500 rounded-full" />
+                                    {td.topSpecialists}
+                                </h3>
+
+                                {matchLoading ? (
+                                    <div className="p-8 text-center text-gray-500 border border-white/5 rounded-2xl bg-white/5">
+                                        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                                        {td.runningMatch}
+                                    </div>
+                                ) : matches.length > 0 ? (
+                                    <div className="grid md:grid-cols-2 gap-3">
+                                        {matches.map((doc, idx) => (
+                                            <div key={idx} className="group relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/50 rounded-xl p-4 transition-all duration-300">
+                                                {/* Badge */}
+                                                {doc.score >= 90 && (
+                                                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-yellow-300/30 flex items-center gap-1">
+                                                        <Star className="w-3 h-3 fill-white" />
+                                                        {doc.score}% MATCH
+                                                    </div>
+                                                )}
+
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <div>
+                                                        <h4 className="font-bold text-white text-base">{doc.doctorName}</h4>
+                                                        <div className="flex items-center gap-1 text-gray-400 text-xs mt-0.5">
+                                                            <MapPin className="w-3 h-3" />
+                                                            {doc.hospitalName}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-cyan-400 font-bold text-sm tracking-wide">{doc.solutionTitle}</div>
+                                                        <div className="text-gray-500 text-xs">{doc.priceRange}</div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Match Details */}
+                                                <div className="space-y-1 mb-3">
+                                                    {doc.matchDetails.slice(0, 2).map((detail: string, i: number) => (
+                                                        <div key={i} className="flex items-start gap-2 text-xs text-gray-300">
+                                                            <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5 flex-shrink-0" />
+                                                            {detail}
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                <button className="w-full py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-bold rounded-lg border border-cyan-500/30 transition-colors flex items-center justify-center gap-1 group-hover:text-cyan-300">
+                                                    View Clinical Profile <ChevronRight className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="p-6 text-center text-gray-500 border border-white/5 rounded-2xl bg-white/5 text-sm">
+                                        {td.noMatches}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* AI Copilot Q&A */}
+                    <div className="border-t border-white/5 bg-[#0a0a0f]">
+                        <button
+                            onClick={() => setChatOpen(!chatOpen)}
+                            className="w-full flex items-center justify-between px-6 md:px-8 py-4 text-sm text-gray-400 hover:text-white transition-colors"
+                        >
+                            <span className="flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-cyan-500" />
+                                {language === 'KO' ? 'AI에게 질문하기' : language === 'JP' ? 'AI에に質問する' : language === 'CN' ? '向AI提问' : 'Ask AI Copilot'}
+                            </span>
+                            <ChevronRight className={`w-4 h-4 transition-transform ${chatOpen ? 'rotate-90' : ''}`} />
+                        </button>
+                        <AnimatePresence>
+                            {chatOpen && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <div className="px-6 md:px-8 pb-4 space-y-3">
+                                        {/* 예시 질문 버튼 */}
+                                        <div className="flex flex-wrap gap-2">
+                                            {[
+                                                language === 'KO' ? '이 시술 주의사항은?' : 'What are the contraindications?',
+                                                language === 'KO' ? '회복 기간은 얼마나 되나요?' : 'How long is recovery?',
+                                                language === 'KO' ? '비용은 어느 정도인가요?' : 'What\'s the typical cost?',
+                                            ].map((q, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => { setChatQuestion(q); }}
+                                                    className="px-3 py-1.5 text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-gray-300 transition-colors"
+                                                >
+                                                    {q}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        {/* 입력창 */}
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={chatQuestion}
+                                                onChange={e => setChatQuestion(e.target.value)}
+                                                onKeyDown={e => e.key === 'Enter' && handleAskCopilot()}
+                                                placeholder={language === 'KO' ? '시술에 대해 궁금한 점을 물어보세요...' : 'Ask anything about this treatment...'}
+                                                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/50"
+                                            />
+                                            <button
+                                                onClick={handleAskCopilot}
+                                                disabled={chatLoading || !chatQuestion.trim() || !runId}
+                                                className="px-4 py-2.5 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 text-black font-bold rounded-xl transition-colors flex items-center gap-1.5 text-sm"
+                                            >
+                                                {chatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+                                            </button>
+                                        </div>
+                                        {/* 응답 */}
+                                        {chatAnswer && (
+                                            <div className="p-4 bg-gradient-to-br from-cyan-950/30 to-black border border-cyan-500/20 rounded-xl text-sm text-gray-300 leading-relaxed">
+                                                {chatAnswer}
+                                                {chatLoading && <span className="inline-block w-1.5 h-4 bg-cyan-500 ml-1 animate-pulse rounded-sm" />}
+                                            </div>
+                                        )}
+                                        {!runId && (
+                                            <p className="text-xs text-gray-600">
+                                                {language === 'KO' ? '* 설문 완료 후 AI 코파일럿이 활성화됩니다' : '* Complete the survey to activate AI Copilot'}
+                                            </p>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     {/* Footer */}
@@ -550,6 +803,21 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                     </div>
                 </div>
             </motion.div>
-        </AnimatePresence >
+
+            {deviceModal && (
+                <DeviceDetailModal
+                    isOpen={deviceModal.isOpen}
+                    onClose={() => setDeviceModal(null)}
+                    type={deviceModal.type}
+                    itemId={deviceModal.itemId}
+                    itemName={deviceModal.itemName}
+                    patientContext={{
+                        primaryGoal: tallyData?.primaryGoal || '',
+                        budget: tallyData?.budget || '',
+                        language
+                    }}
+                />
+            )}
+        </AnimatePresence>
     );
 }

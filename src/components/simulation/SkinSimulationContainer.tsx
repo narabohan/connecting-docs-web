@@ -3,8 +3,7 @@ import { useState, useEffect } from 'react';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
 import ConstraintSelectors from './ConstraintSelectors';
 import LiveRadar from './LiveRadar';
-import FaceMannequin from './FaceMannequin';
-import SkinLayerSection from './SkinLayerSection';
+import SpatialBlueprint from './SpatialBlueprint';
 import ProtocolSelector from './ProtocolSelector';
 import { RefreshCw, CheckCircle, BrainCircuit, Sparkles } from 'lucide-react';
 
@@ -137,18 +136,19 @@ export default function SkinSimulationContainer({
                         />
                     )}
 
-                    {/* Visualization Grid — ALWAYS visible */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4" style={{ minHeight: 340 }}>
-                        <FaceMannequin
+                    {/* Unified Spatial Visualization */}
+                    <div className="w-full relative mb-6">
+                        <SpatialBlueprint
                             primaryZones={faceZones}
-                            language={language}
-                            protocolName={selectedProtocol?.name || (recommendations.length === 0 ? (simulationData?.primaryIndication || undefined) : undefined)}
-                        />
-                        <SkinLayerSection
                             activeLayers={targetLayersForDisplay}
                             language={language}
-                            protocolName={selectedProtocol?.name}
                         />
+                        {/* Protocol Name Overlay */}
+                        <div className="absolute top-4 left-6 z-20 pointer-events-none">
+                            <span className="text-[10px] sm:text-xs font-mono tracking-[0.2em] font-bold text-[#00FFA0] bg-black/60 px-4 py-1.5 rounded-full border border-[#00FFA0]/40 backdrop-blur-md shadow-lg">
+                                ◈ {selectedProtocol?.name || (simulationData?.primaryIndication || 'ANALYSIS READY')}
+                            </span>
+                        </div>
                     </div>
 
                     {/* Why this protocol */}

@@ -95,11 +95,12 @@ function normalizeAnalyzeOutput(output: any, wizardData: any) {
             painTolerance: wd.painTolerance,
             downtimeTolerance: wd.downtimeTolerance,
             budget: wd.budget,
-            profile: [
+            radar_score: [
                 { subject: 'Pain Tolerance', A: painScore, fullMark: 100 },
-                { subject: 'Downtime OK', A: dtScore, fullMark: 100 },
-                { subject: 'Efficacy', A: recommendations[0]?.matchScore || 88, fullMark: 100 },
                 { subject: 'Skin Fit', A: 85, fullMark: 100 },
+                { subject: 'Aging Stage', A: 65, fullMark: 100 },
+                { subject: 'Efficacy', A: recommendations[0]?.matchScore || 88, fullMark: 100 },
+                { subject: 'Pigment Risk', A: 45, fullMark: 100 },
                 { subject: 'Budget', A: budgetScore, fullMark: 100 },
             ],
             simulationData: {
@@ -128,24 +129,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             patientSummary: lang === 'KO'
                 ? '피부 개선과 안티에이징을 원하는 데모 환자입니다. 낮은 다운타임과 통증을 선호합니다.'
                 : 'Demo patient seeking skin improvement and anti-aging. Prefers low downtime and pain.',
+            skinAnalysis: {
+                thickness: 'Medium-Thick',
+                sensitivity: 'Stable',
+                primaryConcern: 'Glass Skin / Lifting',
+                clinicalNote: 'Patient exhibits mild sagging in the jawline area and seeks texture improvement (Glass Skin). Collagen synthesis stimulation is recommended.'
+            },
+            clinicalIntelligence: {
+                devices: [
+                    { name: 'Titanium Lifting', suitability: 96, area: 'Full Face', layer: 'SMAS+', pain: 'None', downtime: 'Zero' },
+                    { name: 'Oligio RF', suitability: 92, area: 'Lower Face', layer: 'Dermis', pain: 'Low', downtime: 'None' },
+                    { name: 'Potenza Collagen', suitability: 88, area: 'Targeted', layer: 'Deep Dermis', pain: 'Med', downtime: '1 Day' },
+                    { name: 'Ultherapy', suitability: 94, area: 'Jawline', layer: 'SMAS', pain: 'High', downtime: 'None' },
+                    { name: 'Volformer', suitability: 98, area: 'Mid-Face', layer: 'Dual Depth', pain: 'Low', downtime: 'Zero' }
+                ],
+                boosters: [
+                    { name: 'Glass Skin Rejuran', suitability: 99, mechanism: 'Cellular recovery & DNA fragment stimulation.', pain: 'Med', downtime: '2 Days', method: 'Direct Injection' },
+                    { name: 'Premium Exosome', suitability: 95, mechanism: 'Extracellular vesicle for rapid barrier healing.', pain: 'Low', downtime: 'Zero', method: 'MTS / Topical' },
+                    { name: 'Juvelook Volume', suitability: 91, mechanism: 'PLA + HA collagen stimulator for deep texture.', pain: 'Med', downtime: '3 Days', method: 'Cannula / ID' }
+                ]
+            },
             patient: {
                 id: 'demo', name: 'Guest', language: lang,
                 goals: ['Glass Skin', 'Anti-Aging', 'Pore Refinement'],
                 painTolerance: 'Low', downtimeTolerance: 'None', budget: 'Medium',
-                profile: [
+                radar_score: [
                     { subject: 'Pain Tolerance', A: 30, fullMark: 100 },
-                    { subject: 'Downtime OK', A: 85, fullMark: 100 },
+                    { subject: 'Skin Fit', A: 85, fullMark: 100 },
+                    { subject: 'Aging Stage', A: 65, fullMark: 100 },
                     { subject: 'Efficacy', A: 92, fullMark: 100 },
-                    { subject: 'Skin Fit', A: 88, fullMark: 100 },
+                    { subject: 'Pigment Risk', A: 45, fullMark: 100 },
                     { subject: 'Budget', A: 65, fullMark: 100 },
                 ],
                 simulationData: { primaryIndication: 'Glass Skin', secondaryIndication: 'Anti-Aging', locations: ['Full Face'] }
             },
             logic: { terminalText: `ANALYSIS: COMPLETE\nPATIENT: Demo | GOAL: Glass Skin\nPROTOCOL: Ulthera Glass Skin`, risks: [] },
             recommendations: [
-                { id: 'proto_001', rank: 1, name: 'Ulthera Glass Skin Protocol', matchScore: 95, composition: ['Ulthera', 'Exosome'], devices: ['Ulthera'], boosters: ['Exosome'], description: 'Deep SMAS lifting with zero downtime.', tags: ['Zero Downtime', 'Low Pain'], rankLabel: 'No.1 Clinical Fit', rankRationale: 'Best clinical match for your primary goal.', sessions: 2, isLocked: false, targetLayers: ['smas'], faceZones: ['Cheek', 'Jawline'], reasonWhy: { why_suitable: 'Deep lifting protocol perfect for anti-aging with zero downtime.', pain_level: 'Low', downtime_level: 'None', combinations: ['Ulthera', 'Exosome'] } },
-                { id: 'proto_002', rank: 2, name: 'Titanium Lifting + Skinvive', matchScore: 87, composition: ['Titanium RF', 'Skinvive'], devices: ['Titanium RF'], boosters: ['Skinvive'], description: 'Trending 2025 titanium RF + FDA-approved HA booster.', tags: ['1 Day Downtime', 'Low Pain'], rankLabel: 'No.2 Trending Match', rankRationale: 'Currently trending treatment you\'ve likely heard of.', sessions: 3, isLocked: false, targetLayers: ['dermis'], faceZones: ['Cheek'], reasonWhy: { why_suitable: 'The most talked-about 2025 treatment for glass skin.', pain_level: 'Low', downtime_level: 'Low', combinations: ['Titanium RF', 'Skinvive'] } },
-                { id: 'proto_003', rank: 3, name: 'Genius RF Rebuilder', matchScore: 79, composition: ['Genius RF'], devices: ['Genius RF'], boosters: [], description: 'Deep collagen synthesis for next-level results.', tags: ['2-3 Day Downtime', 'Medium Pain'], rankLabel: 'No.3 Stretch Goal', rankRationale: 'Consider this if you can tolerate medium pain for stronger results.', sessions: 3, isLocked: false, targetLayers: ['dermis'], faceZones: ['Cheek', 'Forehead'], reasonWhy: { why_suitable: 'Higher efficacy option if you can accept slightly more discomfort.', pain_level: 'Medium', downtime_level: 'Medium', combinations: ['Genius RF'] } }
+                { id: 'proto_001', rank: 1, name: 'Ulthera Glass Skin Protocol', matchScore: 95, composition: ['Ulthera', 'Exosome'], devices: ['Ulthera'], boosters: ['Exosome'], description: 'Deep SMAS lifting with zero downtime.', tags: ['Zero Downtime', 'High Pain'], rankLabel: 'No.1 Clinical Fit', rankRationale: 'Best clinical match for your primary goal.', sessions: 2, isLocked: false, targetLayers: ['smas'], focusArea: 'JAWLINE', depthLevel: 'DEEP', reasonWhy: { why_suitable: 'Deep lifting protocol perfect for anti-aging. Requires high pain tolerance.', pain_level: 'High', downtime_level: 'Short', combinations: ['Ulthera', 'Exosome'] } },
+                { id: 'proto_002', rank: 2, name: 'Titanium Lifting + Skinvive', matchScore: 87, composition: ['Titanium RF', 'Skinvive'], devices: ['Titanium RF'], boosters: ['Skinvive'], description: 'Trending 2025 titanium RF + FDA-approved HA booster.', tags: ['1 Day Downtime', 'Low Pain'], rankLabel: 'No.2 Trending Match', rankRationale: 'Currently trending treatment you\'ve likely heard of.', sessions: 3, isLocked: false, targetLayers: ['dermis'], focusArea: 'MIDFACE', depthLevel: 'MEDIUM', reasonWhy: { why_suitable: 'The most talked-about 2025 treatment for glass skin.', pain_level: 'Low', downtime_level: 'Low', combinations: ['Titanium RF', 'Skinvive'] } },
+                { id: 'proto_003', rank: 3, name: 'Genius RF Rebuilder', matchScore: 79, composition: ['Genius RF'], devices: ['Genius RF'], boosters: [], description: 'Deep collagen synthesis for next-level results.', tags: ['2-3 Day Downtime', 'Medium Pain'], rankLabel: 'No.3 Stretch Goal', rankRationale: 'Consider this if you can tolerate medium pain for stronger results.', sessions: 3, isLocked: false, targetLayers: ['dermis'], focusArea: 'FOREHEAD', depthLevel: 'SURFACE', reasonWhy: { why_suitable: 'Higher efficacy option if you can accept slightly more discomfort.', pain_level: 'Medium', downtime_level: 'Medium', combinations: ['Genius RF'] } }
             ]
         });
     }
@@ -345,18 +367,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const deviceNames = (proto.fields["device_name (from device_ids)"] || []) as string[];
             const boosterNames = (proto.fields["booster_name (from skin_booster_ids)"] || []) as string[];
             const combs = [...deviceNames, ...boosterNames];
-            let whySuitableText = 'Clinical protocol optimized for your goals.';
-            if (primaryGoal && proto.fields.protocol_name?.toLowerCase().includes(primaryGoal.toLowerCase().split(' ')[0])) {
-                whySuitableText = `Directly targets your primary goal of ${primaryGoal}.`;
-            } else if (matchedIndication?.fields.Protocol_block?.includes(proto.id)) {
-                whySuitableText = `Highly recommended for ${primaryGoal} based on clinical data.`;
+
+            // Refined Reason-Why Generation
+            let whySuitableText = `${proto.fields.protocol_name} is selected based on clinical logic for ${primaryGoal}.`;
+            if (index === 0) {
+                whySuitableText = `[PRIMARY CHOICE] Optimal match for ${primaryGoal}. Selected as Rank 1 because it balances your ${painTolerance} pain tolerance with high-efficacy clinical results.`;
+            } else if (index === 1) {
+                whySuitableText = `[TRENDING] A highly sought-after combination in 2025. Recommended as Rank 2 for patients seeking ${downtimeTolerance} downtime options with proven satisfaction scores.`;
+            } else {
+                whySuitableText = `[EXTENDED GOAL] Designed for maximum performance. Rank 3 provides a more aggressive alternative for those prioritizing long-term transformation over instant recovery.`;
             }
+
             return {
                 id: proto.id, rank: index + 1,
                 name: proto.fields.protocol_name || 'Protocol',
                 matchScore: Math.round(sp.score),
                 composition: combs, devices: deviceNames, boosters: boosterNames,
-                description: proto.fields.mechanism_action || 'Clinical protocol optimized for your goals.',
+                description: proto.fields.mechanism_action || whySuitableText,
                 tags: [proto.fields.downtime_level ? `${proto.fields.downtime_level} Downtime` : '', proto.fields.pain_level ? `${proto.fields.pain_level} Pain` : ''].filter(Boolean),
                 rankLabel: RANK_LABELS[index],
                 rankRationale: index === 0 ? 'Best clinical match for your profile.' : index === 1 ? 'A trending treatment you may have heard of.' : 'Consider this if you can handle slightly more for better results.',
@@ -377,24 +404,54 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const REASON_TEMPLATES: Record<string, string> = {
             EN: `Based on your sensitivity (${skinThickness}) and preference for ${painTolerance} pain with ${downtimeTolerance} downtime, we identified protocols that maximize results for ${primaryGoal}.`,
             KO: `${skinThickness} 피부 민감도와 ${painTolerance} 통증 허용, ${downtimeTolerance} 다운타임 선호를 기반으로 ${primaryGoal} 개선에 최적화된 프로토콜을 선별했습니다.`,
-            JP: `${skinThickness}の肌感度と${painTolerance}の痛み許容度に基づき、${primaryGoal}に最適なプロトコルを選定しました。`,
+            JP: `${skinThickness}の肌感度と${painTolerance}の痛み許容度に基づき、${primaryGoal}에最適なプロトコルを選定しました。`,
             CN: `根据您的肌肤敏感度(${skinThickness})和疼痛耐受度(${painTolerance})，我们为${primaryGoal}精选了最优方案。`
         };
+
+        const top5Devices = scoredProtocols
+            .filter(sp => (sp.proto.fields["device_name (from device_ids)"] || []).length > 0)
+            .map(sp => ({
+                name: (sp.proto.fields["device_name (from device_ids)"] || [])[0],
+                suitability: Math.round(sp.score),
+                mechanism: sp.proto.fields.mechanism_action || 'N/A',
+                pain: sp.proto.fields.pain_level || 'Medium',
+                downtime: sp.proto.fields.downtime_level || 'Medium'
+            })).slice(0, 5);
+
+        const top5Boosters = scoredProtocols
+            .filter(sp => (sp.proto.fields["booster_name (from skin_booster_ids)"] || []).length > 0)
+            .map(sp => ({
+                name: (sp.proto.fields["booster_name (from skin_booster_ids)"] || [])[0],
+                suitability: Math.round(sp.score - 5),
+                mechanism: sp.proto.fields.mechanism_action || 'N/A'
+            })).slice(0, 5);
 
         const resultPayload = {
             language: lang,
             patientSummary: REASON_TEMPLATES[lang] || REASON_TEMPLATES['EN'],
+            skinAnalysis: {
+                thickness: skinThickness,
+                sensitivity: 'Sensitive-prone',
+                primaryConcern: primaryGoal,
+                secondaryConcern: secondaryGoals[0] || 'N/A',
+                clinicalNote: `Patient presents with ${primaryGoal} as primary concern. Given the ${skinThickness} profile and ${painTolerance} tolerance, energy-based devices should be targeted at ${locations.join(', ')} zones with moderate fluence.`
+            },
+            clinicalIntelligence: {
+                devices: top5Devices,
+                boosters: top5Boosters
+            },
             wizardData: { primaryGoal, secondaryGoal: secondaryGoals[0], painTolerance, downtimeTolerance, areas: locations },
             patient: {
                 id: userRecordId, name: pName, language: lang,
                 goals: [primaryGoal, ...secondaryGoals].filter(Boolean),
                 painTolerance, downtimeTolerance,
                 areas: locations, skinType: skinThickness,
-                profile: [
+                radar_score: [
                     { subject: 'Pain Tolerance', A: PAIN_TOLERANCE_MAP.LOW.some(t => painTolerance?.includes(t)) ? 25 : 65, fullMark: 100 },
-                    { subject: 'Downtime OK', A: DOWNTIME_TOLERANCE_MAP.NONE.some(t => downtimeTolerance?.includes(t)) ? 90 : 55, fullMark: 100 },
-                    { subject: 'Efficacy', A: topProtocols[0]?.score || 80, fullMark: 100 },
-                    { subject: 'Skin Fit', A: 88, fullMark: 100 },
+                    { subject: 'Skin Fit', A: 85, fullMark: 100 },
+                    { subject: 'Aging Stage', A: 65, fullMark: 100 },
+                    { subject: 'Efficacy', A: recommendations[0]?.matchScore || 88, fullMark: 100 },
+                    { subject: 'Pigment Risk', A: 45, fullMark: 100 },
                     { subject: 'Budget', A: 70, fullMark: 100 },
                 ],
                 simulationData: { primaryIndication: primaryGoal, secondaryIndication: secondaryGoals[0] || null, locations }
@@ -407,12 +464,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         };
 
         try {
-            await reportsTable.create([{ fields: {
-                Title: `Report for User ${id}`,
-                Input_JSON: JSON.stringify({ goal: primaryGoal, pain: painTolerance, downtime: downtimeTolerance, areas: locations }),
-                Result_JSON: JSON.stringify(resultPayload),
-                ...(isFromUsersTable && userRecordId ? { User_Link: [userRecordId] } : {})
-            }}]);
+            await reportsTable.create([{
+                fields: {
+                    Title: `Report for User ${id}`,
+                    Input_JSON: JSON.stringify({ goal: primaryGoal, pain: painTolerance, downtime: downtimeTolerance, areas: locations }),
+                    Result_JSON: JSON.stringify(resultPayload),
+                    ...(isFromUsersTable && userRecordId ? { User_Link: [userRecordId] } : {})
+                }
+            }]);
         } catch (saveError) { console.error('Failed to save report cache:', saveError); }
 
         res.status(200).json(resultPayload);

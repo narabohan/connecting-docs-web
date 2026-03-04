@@ -51,11 +51,23 @@ export default function FaceMannequin({ primaryZones, secondaryZones = [], langu
                 )}
             </div>
 
-            {/* SVG Face Map */}
-            <div className="flex-1 flex items-center justify-center p-4 relative">
+            {/* SVG Face Map + Background */}
+            <div className="flex-1 flex items-center justify-center p-4 relative min-h-[300px]">
+                {/* High-Fidelity Background Image */}
+                <div className="absolute inset-0 z-0 opacity-40 mix-blend-screen pointer-events-none">
+                    <img
+                        src="/images/Gemini_Generated_Image_tvx7w3tvx7w3tvx7.png"
+                        alt="Face Anatomy"
+                        className="w-full h-full object-contain"
+                        onError={(e) => (e.currentTarget.style.display = 'none')}
+                    />
+                </div>
+
                 {!hasZones && (
-                    <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <p className="text-[10px] font-mono text-center px-4" style={{ color: 'rgba(255,255,255,0.3)' }}>{noZoneMsg}</p>
+                    <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/20 backdrop-blur-[2px]">
+                        <p className="text-[10px] font-mono text-center px-4 uppercase tracking-widest text-cyan-400/60 animate-pulse">
+                            {noZoneMsg}
+                        </p>
                     </div>
                 )}
 

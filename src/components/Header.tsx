@@ -22,9 +22,21 @@ export default function Header({ currentLang, onLangChange }: HeaderProps) {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [showWelcome, setShowWelcome] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
+    const prevUserRef = useRef<any>(null);
 
     const { user, signOut, loading } = useAuth();
+
+    // Welcome message trigger
+    useEffect(() => {
+        if (!loading && user && !prevUserRef.current) {
+            setShowWelcome(true);
+            const timer = setTimeout(() => setShowWelcome(false), 5000);
+            return () => clearTimeout(timer);
+        }
+        prevUserRef.current = user;
+    }, [user, loading]);
 
     // Close user menu on outside click
     useEffect(() => {
@@ -180,6 +192,21 @@ export default function Header({ currentLang, onLangChange }: HeaderProps) {
                     </div>
                 </div>
             </header>
+            {/* Welcome Toast Notification */}
+            {showWelcome && user && (
+                <div className="fixed top-24 right-6 z-[60] animate-in slide-in-from-right-10 fade-in duration-500">
+                    <div className="bg-[#00FFA0]/10 border border-[#00FFA0]/30 backdrop-blur-md px-5 py-3 rounded-2xl flex items-center gap-3 shadow-[0_0_30px_rgba(0,255,160,0.15)]">
+                        <div className="w-8 h-8 rounded-full bg-[#00FFA0]/20 flex items-center justify-center text-[#00FFA0]">
+                            <Check className="w-4 h-4" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] uppercase font-black tracking-widest text-[#00FFA0]">Welcome Back</p>
+                            <p className="text-sm font-bold text-white">{user.displayName || 'Clinical Expert'}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             {/* Mobile Navigation Menu */}
             {isMobileMenuOpen && (

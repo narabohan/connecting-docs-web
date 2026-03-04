@@ -89,10 +89,26 @@ export default function SkinLayerSection({ activeLayers, language = 'EN', protoc
                 )}
             </div>
 
-            {/* Layer cross-section diagram */}
-            <div className="flex-1 relative mx-4 my-4 rounded-xl overflow-hidden" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.2) 100%)', border: '1px solid rgba(255,255,255,0.06)', minHeight: 220 }}>
+            {/* Layer cross-section diagram + Background */}
+            <div className="flex-1 relative mx-4 my-4 rounded-xl overflow-hidden"
+                style={{
+                    background: 'rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    minHeight: 240
+                }}>
+
+                {/* High-Fidelity Background Image */}
+                <div className="absolute inset-0 z-0 opacity-25 mix-blend-screen pointer-events-none">
+                    <img
+                        src="/images/Gemini_Generated_Image_tvx7w3tvx7w3tvx7.png"
+                        alt="Skin Anatomy"
+                        className="w-full h-full object-cover"
+                        onError={(e) => (e.currentTarget.style.display = 'none')}
+                    />
+                </div>
+
                 {/* Depth indicator line */}
-                <div className="absolute left-0 top-0 bottom-0 w-[2px] ml-6" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                <div className="absolute left-0 top-0 bottom-0 w-[2px] ml-6 z-10" style={{ background: 'rgba(255,255,255,0.1)' }}>
                     {LAYER_CONFIG.map(layer => (
                         <div key={layer.id} className="absolute" style={{ top: layer.top, left: 4, fontSize: 7, color: 'rgba(255,255,255,0.2)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                             {layer.depth}

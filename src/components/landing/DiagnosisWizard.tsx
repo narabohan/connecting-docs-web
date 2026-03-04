@@ -43,6 +43,11 @@ export type WizardData = {
     // Habits & Contact
     careHabits: string[];
     email: string;
+
+    // Korea Visit & Referral
+    koreaVisitPlan?: string;
+    koreaStayDays?: string;
+    referralCode?: string;
 };
 
 interface DiagnosisWizardProps {
@@ -141,6 +146,10 @@ const STEPS: {
             id: 'habits',
             question: { EN: "Care Habits", KO: "관리 습관", JP: "ケアの習慣", CN: "护理习惯" },
             multi: true
+        },
+        {
+            id: 'korea_visit',
+            question: { EN: "Korea Visit Plan", KO: "한국 방문 계획", JP: "韓国訪問のご予定", CN: "韩国就诊计划" }
         },
         {
             id: 'contact',
@@ -296,6 +305,14 @@ const OPTIONS = {
         { id: 'supplements', label: { EN: 'Supplements / Functional Foods', KO: '영양제/기능성 식품', JP: 'サプリ・機能性食品', CN: '营养补充剂/功能性食品' } },
         { id: 'massage', label: { EN: 'Facial Massage / Gua Sha', KO: '얼굴 마사지/괄사', JP: 'フェイスマッサージ・かっさ', CN: '面部按摩/刮痧' } },
         { id: 'none', label: { EN: 'Minimal – Basic care only', KO: '최소한 – 기본 케어만', JP: '最小限 – 基本ケアのみ', CN: '极简 – 只做基础护肤' } },
+    ],
+
+    // Korea Visit Plan
+    koreaVisit: [
+        { id: 'resident', label: { EN: 'I live in Korea', KO: '한국 거주 중', JP: '韓国在住', CN: '居住在韩国' } },
+        { id: 'long', label: { EN: 'Visiting Korea (2+ weeks)', KO: '한국 방문 예정 (2주 이상)', JP: '韓国を訪問予定（2週間以上）', CN: '计划访问韩国（2周以上）' } },
+        { id: 'short', label: { EN: 'Short visit to Korea (under 1 week)', KO: '단기 방문 (1주일 미만)', JP: '短期訪問（1週間未満）', CN: '短期访问韩国（1周以内）' } },
+        { id: 'undecided', label: { EN: 'Not visiting / Not sure yet', KO: '방문 계획 없음 / 미정', JP: '訪問予定なし / 未定', CN: '暂无计划 / 还未决定' } },
     ]
 };
 
@@ -307,7 +324,8 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
         primaryGoal: '', secondaryGoal: '',
         risks: [], areas: [], skinType: '', treatmentStyle: '',
         painTolerance: '', downtimeTolerance: '', budget: '', frequency: '',
-        treatmentHistory: [], careHabits: [], email: ''
+        treatmentHistory: [], careHabits: [], email: '',
+        koreaVisitPlan: '', koreaStayDays: '', referralCode: ''
     });
 
     // Reset step when opened
@@ -571,7 +589,60 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                                     <OptionButton key={o.id} label={(o.label as Record<string, string>)[language]} selected={data.careHabits.includes(o.id)} onClick={() => toggleMulti('careHabits', o.id)} multi />
                                 ))}
 
-                                {/* 9. CONTACT */}
+                                {/* 9. KOREA VISIT PLAN */}
+                                {currentStep.id === 'korea_visit' && (
+                                    <div className="space-y-4">
+                                        <div className="space-y-3">
+                                            {OPTIONS.koreaVisit.map(o => (
+                                                <OptionButton
+                                                    key={o.id}
+                                                    label={(o.label as Record<string, string>)[language]}
+                                                    selected={data.koreaVisitPlan === o.id}
+                                                    onClick={() => updateData('koreaVisitPlan', o.id)}
+                                                />
+                                            ))}
+                                        </div>
+                                        <AnimatePresence>
+                                            {(data.koreaVisitPlan === 'short' || data.koreaVisitPlan === 'long') && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    className="overflow-hidden"
+                                                >
+                                                    <div className="mt-4 space-y-4">
+                                                        <div>
+                                                            <label className="text-sm text-gray-400 mb-2 block">
+                                                                {{ EN: 'When do you plan to visit?', KO: '방문 예정 시기', JP: '訪問予定時期', CN: '预计访问日期' }[language]}
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder={{ EN: 'e.g., April 2026', KO: '예: 2026년 4월', JP: '例：2026年4月', CN: '例如：2026年4月' }[language]}
+                                                                value={data.koreaStayDays || ''}
+                                                                onChange={(e) => updateData('koreaStayDays', e.target.value)}
+                                                                className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white focus:border-blue-500 outline-none"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-sm text-gray-400 mb-2 block">
+                                                                {{ EN: 'Referral code (optional)', KO: '친구 추천 코드 (선택사항)', JP: '紹介コード（任意）', CN: '推荐码（可选）' }[language]}
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder={{ EN: 'Enter referral code', KO: '추천 코드를 입력하세요', JP: '紹介コードを入力', CN: '输入推荐码' }[language]}
+                                                                value={data.referralCode || ''}
+                                                                onChange={(e) => updateData('referralCode', e.target.value)}
+                                                                className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white focus:border-blue-500 outline-none"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                )}
+
+                                {/* 10. CONTACT */}
                                 {currentStep.id === 'contact' && (
                                     <div className="space-y-4">
                                         <input

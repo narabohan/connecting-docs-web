@@ -9,7 +9,8 @@ import {
     ArrowUpRight,
     Clock,
     CheckCircle2,
-    Database
+    Database,
+    Microscope
 } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 
@@ -113,7 +114,7 @@ const FounderDashboard = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5 text-gray-300">
-                                {stats?.recentLeads.map((lead) => (
+                                {stats?.recentLeads?.map((lead) => (
                                     <tr key={lead.id} className="hover:bg-white/5 transition-colors">
                                         <td className="px-6 py-4 font-mono text-cyan-200/80">{lead.email}</td>
                                         <td className="px-6 py-4">{lead.goal}</td>
@@ -149,12 +150,6 @@ const FounderDashboard = () => {
                                     The signature protocol pool was recently expanded to <strong>{stats?.signaturePoolSize || 0}</strong> items. Match accuracy is trending up.
                                 </p>
                             </div>
-                            <div className="p-4 bg-white/5 rounded-xl space-y-2">
-                                <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Conversion Pulse</p>
-                                <p className="text-sm text-gray-300">
-                                    Top-tier leads are showing preference for <strong>Combination Therapies</strong> (MNRF + Skin Booster).
-                                </p>
-                            </div>
                         </div>
 
                         <div className="pt-4 border-t border-white/5">
@@ -163,6 +158,35 @@ const FounderDashboard = () => {
                                 <ArrowUpRight className="w-4 h-4" />
                             </div>
                         </div>
+                    </div>
+
+                    {/* Admin Sample Gallery */}
+                    <h2 className="text-xl font-semibold flex items-center gap-2 pt-4">
+                        <Microscope className="w-5 h-5 text-pink-500" />
+                        Clinical Sample Gallery
+                    </h2>
+                    <div className="bg-[#0f0f0f] border border-white/5 p-6 rounded-2xl space-y-4">
+                        <p className="text-[10px] text-white/30 uppercase tracking-widest font-black">Admin Testing Suite</p>
+
+                        <a href="/report/demo?role=patient" target="_blank" className="block p-4 rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/50 transition-all group">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <p className="text-sm font-bold text-white">Patient Report Viewer</p>
+                                    <p className="text-[10px] text-gray-500">Live AI rendering, simulation & Top 3 results.</p>
+                                </div>
+                                <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-cyan-400" />
+                            </div>
+                        </a>
+
+                        <a href="/report/demo?role=doctor" target="_blank" className="block p-4 rounded-xl bg-white/5 border border-white/10 hover:border-violet-500/50 transition-all group">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <p className="text-sm font-bold text-white">Doctor Clinical Panel</p>
+                                    <p className="text-[10px] text-gray-500">Inventory matching, risk analysis & device logic.</p>
+                                </div>
+                                <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-violet-400" />
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>
