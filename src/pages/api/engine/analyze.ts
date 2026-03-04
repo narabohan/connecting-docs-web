@@ -569,13 +569,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         try {
             savePatientLog({
-                sessionId: runId,
+                sessionId: runId ?? `anon_${Date.now()}`,
                 timestamp: new Date().toISOString(),
                 userId: req.body.userId,
                 userEmail: req.body.userEmail,
                 tallyData: req.body,
                 analysisInput: { primaryGoal: surveyCanonical.primaryIndications[0], secondaryGoal: surveyCanonical.secondaryIndications[0], downtimeTolerance: surveyCanonical.downtimeTolerance, budget: surveyCanonical.budget },
-                reportId: runId
+                reportId: runId ?? undefined
             });
         } catch (e) { console.error('[LOG]', e); }
 
