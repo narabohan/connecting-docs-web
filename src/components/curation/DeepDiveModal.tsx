@@ -1,122 +1,59 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
-import { X, ArrowRight, CheckCircle, Shield, Award, Sparkles, Loader2, RefreshCw, Download, Sliders, Settings2, MapPin, Star, Stethoscope, ChevronRight } from 'lucide-react';
-import FaceMannequin from '@/components/simulation/FaceMannequin';
-import SkinLayerSection from '@/components/simulation/SkinLayerSection';
-import LiveRadar from '@/components/simulation/LiveRadar';
-import Image from 'next/image';
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { jsPDF } from 'jspdf';
-import DeviceDetailModal from '@/components/curation/DeviceDetailModal';
-
-// ─── why_cat 폴링 훅: generate-report-content.ts가 Airtable에 쓰면 표시 ───
-function useWhyCatPolling(runId: string | null, language: LanguageCode) {
-    const [whyCat, setWhyCat] = useState<Record<string, string>>({});
-    const [pollingDone, setPollingDone] = useState(false);
-    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-    const stopPolling = useCallback(() => {
-        if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
-    }, []);
-
-    useEffect(() => {
-        if (!runId || pollingDone) return;
-        let attempts = 0;
-        const MAX_ATTEMPTS = 12; // 최대 60초 (5초 * 12)
-
-        const poll = async () => {
-            try {
-                attempts++;
-                const res = await fetch(`/api/engine/get-run?runId=${runId}`);
-                if (!res.ok) { if (attempts >= MAX_ATTEMPTS) { stopPolling(); setPollingDone(true); } return; }
-                const data = await res.json();
-
-                // 현재 언어의 rank1 why_cat이 채워지면 전체 가져옴
-                const lang = language as string;
-                const key1 = `why_cat1_${lang}`;
-                if (data[key1]) {
-                    setWhyCat({
-                        rank1: data[`why_cat1_${lang}`] || '',
-                        rank2: data[`why_cat2_${lang}`] || '',
-                        rank3: data[`why_cat3_${lang}`] || '',
-                    });
-                    stopPolling();
-                    setPollingDone(true);
-                } else if (attempts >= MAX_ATTEMPTS) {
-                    stopPolling();
-                    setPollingDone(true);
-                }
-            } catch { if (attempts >= MAX_ATTEMPTS) { stopPolling(); setPollingDone(true); } }
-        };
-
-        intervalRef.current = setInterval(poll, 5000);
-        poll(); // 즉시 1회 실행
-
-        return () => stopPolling();
-    }, [runId, language, pollingDone, stopPolling]);
-
-    return whyCat;
-}
+import { X, Sparkles, Droplets, Zap, Clock, ShieldCheck, ChevronDown, ChevronUp, Link as LinkIcon, Loader2, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { LanguageCode } from '@/utils/translations';
 
 interface DeepDiveModalProps {
     isOpen: boolean;
     onClose: () => void;
-    rank: 1 | 2 | 3 | null;
-    language: LanguageCode;
-    tallyData?: any; // Pass Tally data for analysis
-    devices?: any[];
+    rankData: any;
+    language: string;
+    runId?: string;
+    overallDirectionText?: string;
+    isRank1?: boolean;
 }
 
-// Fallback Data (Skeleton)
-const SKELETON_DATA = {
-    primaryZones: [],
-    secondaryZones: [],
-    activeLayers: [],
-    painLevel: 0,
-    radar: { lifting: 0, firmness: 0, texture: 0, glow: 0, safety: 0 }
-};
-
-export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyData, devices }: DeepDiveModalProps) {
-    const t = (REPORT_TRANSLATIONS[language]?.curation || REPORT_TRANSLATIONS['EN'].curation);
-    const tRadar = (REPORT_TRANSLATIONS[language]?.simulation || REPORT_TRANSLATIONS['EN'].simulation).radar;
-    const td = (REPORT_TRANSLATIONS[language]?.deepDive || REPORT_TRANSLATIONS['EN'].deepDive)!;
-    const { user } = useAuth();
-
-    // State for API Data
-    const [analysisData, setAnalysisData] = useState<any>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    // ── why_cat 폴링: reportId 또는 runId (양쪽 호환) ──
-    const runId = analysisData?.reportId || analysisData?.runId || null;
-    const whyCat = useWhyCatPolling(runId, language);
-
-    // Matching State
-    const [matches, setMatches] = useState<any[]>([]);
-    const [matchLoading, setMatchLoading] = useState(false);
-
-    // Tuning State
-    const [isTuning, setIsTuning] = useState(false);
-    const [tuningParams, setTuningParams] = useState({
-        painTolerance: 'Moderate',
-        downtimeTolerance: 'Short (2-3 days)',
-        budget: 'Standard'
-    });
-
-    // DeviceModal State
-    const [deviceModal, setDeviceModal] = useState<{
-        isOpen: boolean;
-        type: 'device' | 'booster';
-        itemId: string;
-        itemName: string;
-    } | null>(null);
+export default function DeepDiveModal({
+    isOpen,
+    onClose,
+    rankData,
+    language,
+    runId,
+    overallDirectionText,
+    isRank1
+}: DeepDiveModalProps) {
+    const [expandedDevice, setExpandedDevice] = useState<string | null>(null);
+    const [expandedBooster, setExpandedBooster] = useState<string | null>(null);
 
     // AI Copilot Q&A State
     const [chatOpen, setChatOpen] = useState(false);
     const [chatQuestion, setChatQuestion] = useState('');
     const [chatAnswer, setChatAnswer] = useState('');
     const [chatLoading, setChatLoading] = useState(false);
+
+    if (!isOpen || !rankData) return null;
+
+    const cat = rankData.category || {};
+    const devices = rankData.devices || [];
+    const boosters = rankData.boosters || [];
+    const whyText = rankData.why_KO || rankData.why_EN || 'AI 분석 결과입니다.';
+
+    const getBrandTierColor = (tier: string) => {
+        if (!tier) return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        const t = tier.toLowerCase();
+        if (t.includes('premium')) return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+        if (t.includes('standard')) return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+        return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'; // Budget
+    };
+
+    const getEvidenceBadge = (score: number | string) => {
+        const s = Number(score) || 0;
+        if (s >= 5) return { stars: '★★★★★', label: 'Gold Standard', color: 'text-amber-400' };
+        if (s >= 4) return { stars: '★★★★', label: 'Strong Evidence', color: 'text-cyan-400' };
+        if (s >= 3) return { stars: '★★★', label: 'Clinical Evidence', color: 'text-emerald-400' };
+        if (s >= 2) return { stars: '★★', label: 'Emerging Evidence', color: 'text-blue-400' };
+        return { stars: '★', label: 'Early Stage', color: 'text-gray-400' };
+    };
 
     const handleAskCopilot = async () => {
         if (!chatQuestion.trim() || !runId) return;
@@ -128,7 +65,8 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ runId, question: chatQuestion, language })
             });
-            const reader = res.body!.getReader();
+            if (!res.body) throw new Error('No body');
+            const reader = res.body.getReader();
             const decoder = new TextDecoder();
             while (true) {
                 const { done, value } = await reader.read();
@@ -143,241 +81,12 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                     } catch { }
                 }
             }
-        } catch (e) { console.error('[Copilot]', e); }
-        finally { setChatLoading(false); }
-    };
-
-    // Fetch Analysis when Modal Opens
-    // Fetch Analysis when Modal Opens
-    useEffect(() => {
-        if (isOpen) {
-            if (tallyData) {
-                // Initialize tuning params from tallyData if available
-                setTuningParams({
-                    painTolerance: tallyData.painTolerance || 'Moderate',
-                    downtimeTolerance: tallyData.downtimeTolerance || 'Short (2-3 days)',
-                    budget: tallyData.budget || 'Standard'
-                });
-                fetchAnalysis(tallyData);
-            } else if (rank) {
-                // Static mode: No API call needed, UI uses rankInfo
-                setAnalysisData(null);
-            }
-        }
-    }, [isOpen, rank, tallyData]);
-
-    const fetchAnalysis = async (requestData: any) => {
-        if (!requestData) return;
-
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await fetch('/api/engine/analyze', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...requestData,
-                    userId: user?.uid,
-                    userEmail: user?.email,
-                    language,
-                }),
-            });
-
-            if (!res.ok) throw new Error("Analysis Failed");
-
-            const result = await res.json();
-            setAnalysisData(result);
-
-            // Fetch Matches if reportId exists
-            if (result.reportId) {
-                fetchMatches(result.reportId);
-            }
-        } catch (err) {
-            console.error(err);
-            setError("Failed to load AI analysis. Showing standard protocol.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchMatches = async (reportId: string) => {
-        setMatchLoading(true);
-        try {
-            const res = await fetch('/api/engine/match', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ reportId })
-            });
-            const data = await res.json();
-            setMatches(data.matches || []);
-
-            // Trigger Email (Mock)
-            if (data.matches && data.matches.length > 0) {
-                fetch('/api/email/send', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        to: 'patient@example.com', // Mock recipient
-                        subject: 'Your ConnectingDocs Analysis & Matches',
-                        data: {
-                            reportId: reportId,
-                            matchCount: data.matches.length,
-                            topMatch: data.matches[0].doctorName
-                        }
-                    })
-                }).catch(err => console.error("Email trigger failed", err));
-            }
         } catch (e) {
-            console.error("Match fetch failed", e);
+            console.error('[Copilot]', e);
         } finally {
-            setMatchLoading(false);
+            setChatLoading(false);
         }
     };
-
-    const handleReTune = () => {
-        // Merge original tallyData with new tuning params
-        const newRequest = {
-            ...tallyData,
-            ...tuningParams
-        };
-        fetchAnalysis(newRequest);
-        setIsTuning(false);
-    };
-
-    const handleDownloadPDF = () => {
-        const doc = new jsPDF();
-        const primaryColor = [0, 255, 160]; // ConnectingDocs Green
-        const bgColor = [5, 5, 26];
-
-        // ── Header Background ──
-        doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
-        doc.rect(0, 0, 210, 40, 'F');
-
-        // ── Logo / Title ──
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(18);
-        doc.setFont("helvetica", "bold");
-        doc.text("CONNECTING DOCS", 20, 20);
-
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        doc.text("CLINICAL INTELLIGENCE · SECURE REPORT", 20, 26);
-
-        // ── Metadata ──
-        doc.setTextColor(100, 100, 100);
-        doc.setFontSize(7);
-        doc.text(`ID: ${analysisData?.reportId || 'PENDING'}`, 150, 18);
-        doc.text(`DATE: ${new Date().toLocaleDateString()}`, 150, 22);
-        doc.text(`USER: ${user?.email || 'GUEST'}`, 150, 26);
-
-        // ── Content ──
-        if (displayData) {
-            // Rank Badge
-            doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-            doc.roundedRect(20, 50, 40, 6, 1, 1, 'F');
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(7);
-            doc.text(`RANK NO.0${effectiveRank} SELECTION`, 23, 54);
-
-            // Protocol Title
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(22);
-            doc.setFont("helvetica", "bold");
-            doc.text(displayData.protocolName, 20, 65);
-
-            // Divider
-            doc.setDrawColor(230, 230, 230);
-            doc.line(20, 72, 190, 72);
-
-            // Analysis Section
-            doc.setFontSize(10);
-            doc.setTextColor(150, 150, 150);
-            doc.text("AI CLINICAL RATIONALE", 20, 82);
-
-            doc.setFontSize(11);
-            doc.setTextColor(50, 50, 50);
-            doc.setFont("helvetica", "normal");
-            const reason = doc.splitTextToSize(displayData.reason, 170);
-            doc.text(reason, 20, 88);
-
-            // Metrics Box
-            let metricsY = 95 + (reason.length * 5);
-            doc.setFillColor(245, 248, 250);
-            doc.roundedRect(20, metricsY, 170, 25, 2, 2, 'F');
-
-            doc.setFontSize(8);
-            doc.setTextColor(120, 120, 120);
-            doc.text("DOWNTIME", 25, metricsY + 8);
-            doc.text("PAIN LEVEL", 80, metricsY + 8);
-            doc.text("SESSIONS", 135, metricsY + 8);
-
-            doc.setFontSize(10);
-            doc.setTextColor(0, 0, 0);
-            doc.setFont("helvetica", "bold");
-            doc.text(displayData.downtime || "Minimal", 25, metricsY + 16);
-            doc.text(`${displayData.painLevel}/3`, 80, metricsY + 16);
-            doc.text("3-5 Sessions", 135, metricsY + 16);
-        }
-
-        // ── Footer ──
-        doc.setDrawColor(240, 240, 240);
-        doc.line(20, 275, 190, 275);
-        doc.setFontSize(7);
-        doc.setTextColor(180, 180, 180);
-        doc.text("connectingdocs.ai · Global Medical Intelligence Platform", 20, 282);
-        doc.text("Disclaimer: Results based on AI clinical logic. Consult a professional physician.", 120, 282);
-
-        doc.save(`ConnectingDocs_Report_${effectiveRank}.pdf`);
-    };
-
-    if (!isOpen || (!rank && !tallyData) || !t) return null;
-
-    const effectiveRank = rank || 1;
-    const rankInfo = t?.ranking?.[`rank${effectiveRank}` as keyof typeof t.ranking];
-
-    // Determine which data to show (API > Static Translation)
-    const currentRankKey = `rank${effectiveRank}`;
-    const aiRankData = analysisData ? analysisData[currentRankKey] : null;
-
-    const displayDevices = (devices && devices.length > 0)
-        ? devices
-        : (aiRankData?.devices || aiRankData?.top_devices || []);
-
-    // why_cat: 폴링으로 받은 4개국어 AI 설명, 없으면 aiRankData.reason, 없으면 번역 fallback
-    const aiWhyCat = whyCat[`rank${effectiveRank}`] || '';
-
-    const displayData = aiRankData ? {
-        primaryZones: tallyData?.areas || ['Cheek', 'Jawline'],
-        secondaryZones: tallyData?.areas?.length > 1 ? [tallyData.areas[1]] : [],
-        activeLayers: aiRankData.protocol?.toLowerCase().includes('hifu') ? ['SMAS', 'Deep Dermis'] : ['Dermis', 'Epidermis'],
-        radar: { lifting: aiRankData.score || 85, firmness: 82, texture: 78, glow: 75, safety: 95 },
-        protocolName: aiRankData.protocol,
-        // why_cat AI 설명 우선, 없으면 analyze.ts reason fallback
-        reason: aiWhyCat || aiRankData.reason,
-        downtime: aiRankData.downtime,
-        painLevel: aiRankData.pain === 'High' ? 3 : aiRankData.pain === 'Moderate' ? 2 : 1
-    } : {
-        // Fallback to Static Data from Translations
-        primaryZones: tallyData?.areas || ['Cheek', 'Jawline'],
-        secondaryZones: [],
-        activeLayers: ['Dermis'],
-        radar: { lifting: 85, firmness: 80, texture: 75, glow: 70, safety: 95 },
-        protocolName: (rankInfo?.title || "Unknown Protocol") + " (" + (rankInfo?.combo || "Custom") + ")",
-        reason: aiWhyCat || rankInfo?.reason || "Loading clinical logic...",
-        downtime: "N/A",
-        painLevel: 2
-    };
-
-
-    // Standard Radar Data Construction
-    const radarChartData = [
-        { subject: tRadar.lifting, A: displayData.radar.lifting, fullMark: 100 },
-        { subject: tRadar.firmness, A: displayData.radar.firmness, fullMark: 100 },
-        { subject: tRadar.texture, A: displayData.radar.texture, fullMark: 100 },
-        { subject: tRadar.glow, A: displayData.radar.glow, fullMark: 100 },
-        { subject: tRadar.safety, A: displayData.radar.safety, fullMark: 100 },
-    ];
 
     return (
         <AnimatePresence>
@@ -385,334 +94,301 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm"
                 onClick={onClose}
             >
                 <div
-                    className="relative w-full max-w-6xl max-h-[90vh] overflow-hidden bg-[#0a0a0f] border border-white/10 rounded-3xl shadow-2xl flex flex-col"
+                    className="relative w-full sm:max-w-3xl h-[90vh] sm:h-auto sm:max-h-[90vh] bg-[#0a0a0f] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="flex-none flex items-start justify-between p-6 md:p-8 bg-[#0a0a0f]/95 backdrop-blur-md border-b border-white/5 z-20">
-                        <div>
-                            <div className="flex items-center gap-3 mb-2">
-                                <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider text-cyan-400 uppercase border border-cyan-400/30 rounded-full bg-cyan-400/10">
-                                    {td.badge} No.0{effectiveRank}
+                    <div className="flex-none flex items-center justify-between p-6 border-b border-white/5 bg-black/40">
+                        <div className="space-y-1">
+                            {cat.best_primary_indication && (
+                                <span className="inline-block px-2 py-0.5 text-[10px] font-bold tracking-widest text-cyan-400 uppercase border border-cyan-400/30 rounded bg-cyan-400/10 mb-2">
+                                    {cat.best_primary_indication}
                                 </span>
-                                {loading && <span className="flex items-center gap-1 text-xs text-blue-400"><Loader2 className="w-3 h-3 animate-spin" /> {td.analyzing}</span>}
-                            </div>
-                            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white tracking-tight">
-                                {loading ? td.analyzing : (displayData.protocolName || rankInfo.title)}
+                            )}
+                            <h2
+                                className="text-3xl text-white font-serif"
+                                style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700 }}
+                            >
+                                {cat.category_display_name}
                             </h2>
-                            <p className="max-w-2xl text-gray-400 text-sm md:text-base leading-relaxed mt-2">
-                                {loading ? td.analyzingDesc : (displayData.reason || rankInfo.reason)}
-                            </p>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => setIsTuning(!isTuning)}
-                                className={`p-2 rounded-full transition-colors ${isTuning ? 'bg-cyan-500 text-black' : 'bg-white/5 hover:bg-white/10 text-white'}`}
-                                title="Tune Protocol"
-                            >
-                                <Settings2 className="w-6 h-6" />
-                            </button>
-                            <button
-                                onClick={handleDownloadPDF}
-                                className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors"
-                                title="Download PDF"
-                            >
-                                <Download className="w-6 h-6" />
-                            </button>
-                            <button onClick={onClose} className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors">
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
+                        <button onClick={onClose} className="p-3 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors">
+                            <X className="w-5 h-5" />
+                        </button>
                     </div>
 
-                    {/* Tuning Panel */}
-                    <AnimatePresence>
-                        {isTuning && (
-                            <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                className="bg-[#111116] border-b border-white/10 overflow-hidden"
-                            >
-                                <div className="p-6 grid md:grid-cols-4 gap-6 items-end">
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{td.painLevel}</label>
-                                        <select
-                                            value={tuningParams.painTolerance}
-                                            onChange={(e) => setTuningParams(prev => ({ ...prev, painTolerance: e.target.value }))}
-                                            className="w-full bg-black/50 border border-white/20 rounded-lg p-2 text-white text-sm focus:border-cyan-500 outline-none"
-                                        >
-                                            <option value="Low">{td.painOptions[0]}</option>
-                                            <option value="Moderate">{td.painOptions[1]}</option>
-                                            <option value="High">{td.painOptions[2]}</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{td.depthPenetration.split(' ')[0]}</label>
-                                        <select
-                                            value={tuningParams.downtimeTolerance}
-                                            onChange={(e) => setTuningParams(prev => ({ ...prev, downtimeTolerance: e.target.value }))}
-                                            className="w-full bg-black/50 border border-white/20 rounded-lg p-2 text-white text-sm focus:border-cyan-500 outline-none"
-                                        >
-                                            <option value="None">{td.downtimeOptions[0]}</option>
-                                            <option value="Short (2-3 days)">{td.downtimeOptions[1]}</option>
-                                            <option value="Long (1 week+)">{td.downtimeOptions[2]}</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Budget</label>
-                                        <select
-                                            value={tuningParams.budget}
-                                            onChange={(e) => setTuningParams(prev => ({ ...prev, budget: e.target.value }))}
-                                            className="w-full bg-black/50 border border-white/20 rounded-lg p-2 text-white text-sm focus:border-cyan-500 outline-none"
-                                        >
-                                            <option value="Economy">{td.budgetOptions[0]}</option>
-                                            <option value="Standard">{td.budgetOptions[1]}</option>
-                                            <option value="Premium">{td.budgetOptions[2]}</option>
-                                        </select>
-                                    </div>
-                                    <button
-                                        onClick={handleReTune}
-                                        disabled={loading}
-                                        className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-                                    >
-                                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                                        {td.updateProtocol}
-                                    </button>
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                    {/* Scrollable Body */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-10">
 
-                    {/* Scrollable Content */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                        {loading ? (
-                            <div className="flex flex-col items-center justify-center h-96 gap-4">
-                                <Loader2 className="w-12 h-12 text-cyan-500 animate-spin" />
-                                <p className="text-gray-400">{td.analyzingDesc}</p>
+                        {/* Summary Badges */}
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+                                <Droplets className="w-4 h-4 text-emerald-400 mx-auto mb-2" />
+                                <div className="text-[10px] text-white/40 mb-1">통증 수준</div>
+                                <div className="text-sm font-bold text-white">{cat.avg_pain_level || '-'}</div>
                             </div>
-                        ) : (
-                            <div className="grid lg:grid-cols-2 gap-0 lg:divide-x divide-white/10">
-                                {/* Left: Visual Simulation */}
-                                <div className="p-6 md:p-8 space-y-8 bg-[#0a0a0f]">
-                                    {/* Face Map */}
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                                <div className="w-1 h-5 bg-cyan-500 rounded-full" />
-                                                {td.targetZones}
-                                            </h3>
-                                        </div>
-                                        <div className="relative aspect-[3/4] bg-black/40 rounded-2xl overflow-hidden border border-white/5">
-                                            <FaceMannequin
-                                                primaryZones={displayData.primaryZones}
-                                                secondaryZones={displayData.secondaryZones}
-                                                language={language}
-                                            />
-                                            {/* Overlay Info */}
-                                            <div className="absolute bottom-4 left-4 right-4 p-4 bg-black/60 backdrop-blur-md rounded-xl border border-white/10">
-                                                <div className="flex gap-4 text-xs">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-3 h-3 bg-red-500/80 rounded-full animate-pulse" />
-                                                        <span className="text-gray-300">{td.maxIntensity}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-3 h-3 bg-blue-400/80 rounded-full" />
-                                                        <span className="text-gray-300">{td.collagenRemodeling}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Skin Layers */}
-                                    <div className="space-y-4">
-                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                            <div className="w-1 h-5 bg-purple-500 rounded-full" />
-                                            {td.depthPenetration}
-                                        </h3>
-                                        <SkinLayerSection
-                                            activeLayers={displayData.activeLayers}
-                                            language={language}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Right: Clinical Data */}
-                                <div className="p-6 md:p-8 space-y-8 bg-[#0a0a0f/50]">
-                                    {/* Radar Chart */}
-                                    <div className="space-y-4">
-                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                            <div className="w-1 h-5 bg-emerald-500 rounded-full" />
-                                            {td.efficacyProfile}
-                                        </h3>
-                                        <div className="h-[320px] w-full flex items-center justify-center p-4 bg-black/20 rounded-2xl border border-white/5 overflow-visible">
-                                            <LiveRadar data={radarChartData} language={language} />
-                                        </div>
-                                    </div>
-
-                                    {/* Clinical Logic - AI Generated */}
-                                    <div className="space-y-4">
-                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                            <div className="w-1 h-5 bg-amber-500 rounded-full" />
-                                            Clinical Logic (AI)
-                                        </h3>
-                                        <div className="p-6 rounded-2xl bg-gradient-to-br from-gray-900 to-black border border-white/10 relative overflow-hidden group">
-                                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                                <Sparkles className="w-24 h-24 text-white" />
-                                            </div>
-
-                                            <h4 className="text-xl font-bold text-white mb-2 relative z-10">
-                                                {td.whyProtocol}
-                                            </h4>
-                                            <p className="text-gray-400 leading-relaxed mb-6 relative z-10">
-                                                {displayData.reason}
-                                            </p>
-
-                                            <div className="grid grid-cols-2 gap-4 relative z-10">
-                                                <div className="p-3 bg-white/5 rounded-lg border border-white/5">
-                                                    <span className="text-xs text-gray-500 uppercase tracking-wider">{td.estimatedDowntime}</span>
-                                                    <div className="text-white font-medium mt-1">
-                                                        {aiRankData?.downtime || "Minimal"}
-                                                    </div>
-                                                </div>
-                                                <div className="p-3 bg-white/5 rounded-lg border border-white/5">
-                                                    <span className="text-xs text-gray-500 uppercase tracking-wider">{td.painLevel}</span>
-                                                    <div className="flex gap-1 mt-1">
-                                                        {[...Array(5)].map((_, i) => (
-                                                            <div
-                                                                key={i}
-                                                                className={`h-1.5 w-4 rounded-full ${i < (aiRankData?.pain === 'High' ? 4 : aiRankData?.pain === 'Moderate' ? 2 : 1)
-                                                                    ? 'bg-red-500'
-                                                                    : 'bg-gray-700'
-                                                                    }`}
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-2 text-xs text-gray-500 justify-end">
-                                            <RefreshCw className="w-3 h-3" />
-                                            <span>{td.poweredBy}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Top Devices & Boosters */}
-                                    {displayDevices.length > 0 && (
-                                        <div className="space-y-3">
-                                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                                                <div className="w-1 h-4 bg-cyan-500 rounded-full" />
-                                                {language === 'KO' ? '추천 디바이스' : language === 'JP' ? '推奨機器' : language === 'CN' ? '推荐设备' : 'Recommended Devices'}
-                                            </h3>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                {displayDevices.slice(0, 2).map((device: any, idx: number) => {
-                                                    const deviceId = device?.device_id || device?.id || device?.canonical_id || '';
-                                                    const deviceName = device?.device_name || device?.name || device || '';
-                                                    return (
-                                                        <button
-                                                            key={idx}
-                                                            onClick={() => setDeviceModal({ isOpen: true, type: 'device', itemId: deviceId, itemName: deviceName })}
-                                                            className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/40 rounded-xl text-left transition-all group"
-                                                        >
-                                                            <div className="text-xs font-semibold text-white truncate">{deviceName}</div>
-                                                            <div className="text-[10px] text-cyan-400 mt-1 flex items-center gap-1">
-                                                                {language === 'KO' ? '상세 보기' : language === 'JP' ? '詳細を見る' : language === 'CN' ? '查看详情' : 'View Details'}
-                                                                <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                                                            </div>
-                                                        </button>
-                                                    )
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+                                <Clock className="w-4 h-4 text-amber-400 mx-auto mb-2" />
+                                <div className="text-[10px] text-white/40 mb-1">다운타임</div>
+                                <div className="text-sm font-bold text-white">{cat.avg_downtime || '-'}</div>
                             </div>
-                        )}
-                    </div>
+                            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+                                <Zap className="w-4 h-4 text-violet-400 mx-auto mb-2" />
+                                <div className="text-[10px] text-white/40 mb-1">권장 횟수</div>
+                                <div className="text-sm font-bold text-white">{cat.recommended_sessions || '-'}</div>
+                            </div>
+                        </div>
 
-                    {/* Matched Doctors Section */}
-                    {!loading && (
-                        <div className="p-6 md:p-8 border-t border-white/5 bg-[#0a0a0f]">
-                            <div className="space-y-4 max-w-4xl mx-auto">
-                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                    <div className="w-1 h-5 bg-blue-500 rounded-full" />
-                                    {td.topSpecialists}
+                        {/* Why This Treatment */}
+                        <section className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-cyan-400" />
+                                <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-widest">
+                                    Why This Treatment
                                 </h3>
-
-                                {matchLoading ? (
-                                    <div className="p-8 text-center text-gray-500 border border-white/5 rounded-2xl bg-white/5">
-                                        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                                        {td.runningMatch}
-                                    </div>
-                                ) : matches.length > 0 ? (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {matches.map((doc, idx) => (
-                                            <div key={idx} className="group relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/50 rounded-xl p-4 transition-all duration-300">
-                                                {/* Badge */}
-                                                {doc.score >= 90 && (
-                                                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-yellow-300/30 flex items-center gap-1">
-                                                        <Star className="w-3 h-3 fill-white" />
-                                                        {doc.score}% MATCH
-                                                    </div>
-                                                )}
-
-                                                <div className="flex justify-between items-start mb-3">
-                                                    <div>
-                                                        <h4 className="font-bold text-white text-base">{doc.doctorName}</h4>
-                                                        <div className="flex items-center gap-1 text-gray-400 text-xs mt-0.5">
-                                                            <MapPin className="w-3 h-3" />
-                                                            {doc.hospitalName}
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <div className="text-cyan-400 font-bold text-sm tracking-wide">{doc.solutionTitle}</div>
-                                                        <div className="text-gray-500 text-xs">{doc.priceRange}</div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Match Details */}
-                                                <div className="space-y-1 mb-3">
-                                                    {doc.matchDetails.slice(0, 2).map((detail: string, i: number) => (
-                                                        <div key={i} className="flex items-start gap-2 text-xs text-gray-300">
-                                                            <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5 flex-shrink-0" />
-                                                            {detail}
-                                                        </div>
-                                                    ))}
-                                                </div>
-
-                                                <button className="w-full py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-bold rounded-lg border border-cyan-500/30 transition-colors flex items-center justify-center gap-1 group-hover:text-cyan-300">
-                                                    View Clinical Profile <ChevronRight className="w-3 h-3" />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="p-6 text-center text-gray-500 border border-white/5 rounded-2xl bg-white/5 text-sm">
-                                        {td.noMatches}
+                            </div>
+                            <div className="bg-cyan-950/20 border border-cyan-500/20 rounded-2xl p-6 space-y-4">
+                                <p className="text-[15px] leading-relaxed text-cyan-50">
+                                    {whyText}
+                                </p>
+                                {overallDirectionText && (
+                                    <div className="pt-4 border-t border-cyan-500/20 mt-4">
+                                        <div className="text-[10px] text-cyan-400/60 uppercase tracking-widest mb-2 font-bold">Overall Clinical Context</div>
+                                        <p className="text-sm leading-relaxed text-cyan-100/70">
+                                            {overallDirectionText}
+                                        </p>
                                     </div>
                                 )}
                             </div>
-                        </div>
-                    )}
+                        </section>
 
-                    {/* AI Copilot Q&A */}
-                    <div className="border-t border-white/5 bg-[#0a0a0f]">
+                        {/* Recommended Devices */}
+                        {devices.length > 0 && (
+                            <section className="space-y-4">
+                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                    <div className="w-1 h-5 bg-cyan-500 rounded-full" />
+                                    적합한 디바이스 옵션
+                                </h3>
+
+                                <div className="space-y-3">
+                                    {devices.map((device: any) => {
+                                        const ev = getEvidenceBadge(device.clinical_evidence_score);
+                                        const isExp = expandedDevice === device.device_id;
+
+                                        return (
+                                            <div key={device.device_id} className="bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden">
+                                                <div
+                                                    className="p-5 cursor-pointer hover:bg-white/[0.02] transition-colors flex items-center justify-between"
+                                                    onClick={() => setExpandedDevice(isExp ? null : device.device_id)}
+                                                >
+                                                    <div className="space-y-2 flex-1 pr-4">
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <h4 className="text-lg font-bold text-white">{device.device_name}</h4>
+                                                            <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider border ${getBrandTierColor(device.brand_tier)}`}>
+                                                                {device.brand_tier || 'TIER UNKNOWN'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-xs text-white/50">{device.primary_indication} {device.secondary_indication && `· ${device.secondary_indication}`}</div>
+
+                                                        {/* Trend Bar */}
+                                                        {device.trend_score && (
+                                                            <div className="flex items-center gap-2 pt-1 max-w-[200px]">
+                                                                <span className="text-[10px] text-white/30 uppercase tracking-widest">Trend</span>
+                                                                <div className="h-1.5 flex-1 bg-white/10 rounded-full overflow-hidden">
+                                                                    <div className="h-full bg-cyan-500" style={{ width: `${(Number(device.trend_score) / 10) * 100}%` }} />
+                                                                </div>
+                                                                <span className="text-[10px] font-bold text-cyan-400">{device.trend_score}/10</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex flex-col items-end gap-2 shrink-0">
+                                                        <div className={`flex flex-col items-end`}>
+                                                            <span className={`text-xs ${ev.color} tracking-widest`}>{ev.stars}</span>
+                                                            <span className="text-[10px] text-white/40 uppercase tracking-wider">{ev.label}</span>
+                                                        </div>
+                                                        <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center">
+                                                            {isExp ? <ChevronUp className="w-4 h-4 text-white/60" /> : <ChevronDown className="w-4 h-4 text-white/60" />}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Expanded Area */}
+                                                <AnimatePresence>
+                                                    {isExp && (
+                                                        <motion.div
+                                                            initial={{ height: 0, opacity: 0 }}
+                                                            animate={{ height: 'auto', opacity: 1 }}
+                                                            exit={{ height: 0, opacity: 0 }}
+                                                            className="border-t border-white/5 bg-black/40"
+                                                        >
+                                                            <div className="p-5 space-y-4">
+                                                                {device.signature_technology && (
+                                                                    <div>
+                                                                        <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Signature Technology</div>
+                                                                        <div className="text-sm text-cyan-300 italic font-serif" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>
+                                                                            "{device.signature_technology}"
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                                {device.clinical_charactor && (
+                                                                    <div>
+                                                                        <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Clinical Character</div>
+                                                                        <div className="text-xs leading-relaxed text-white/70">
+                                                                            {device.clinical_charactor}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                                {device.reason_why && (
+                                                                    <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                                                        <div className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                                                            <ShieldCheck className="w-3 h-3" />
+                                                                            AI Selection Logic
+                                                                        </div>
+                                                                        <div className="text-xs leading-relaxed text-white/80 border-l-2 border-cyan-500/30 pl-3">
+                                                                            {device.reason_why}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                                {device.launch_year && (
+                                                                    <div className="inline-block px-2 py-1 bg-white/5 rounded text-[10px] text-white/40 border border-white/10">
+                                                                        Launched in {device.launch_year}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Recommended Boosters */}
+                        {boosters.length > 0 && (
+                            <section className="space-y-4">
+                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                    <div className="w-1 h-5 bg-violet-500 rounded-full" />
+                                    조합 추천 스킨부스터
+                                </h3>
+
+                                <div className="space-y-3">
+                                    {boosters.map((booster: any) => {
+                                        const isExp = expandedBooster === booster.booster_id;
+
+                                        return (
+                                            <div key={booster.booster_id} className="bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden">
+                                                <div
+                                                    className="p-5 cursor-pointer hover:bg-white/[0.02] transition-colors flex items-center justify-between"
+                                                    onClick={() => setExpandedBooster(isExp ? null : booster.booster_id)}
+                                                >
+                                                    <div className="space-y-2 flex-1 pr-4">
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <h4 className="text-base font-bold text-white">{booster.booster_name}</h4>
+                                                            {booster.canonical_role && (
+                                                                <span className="px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider border bg-violet-500/20 text-violet-400 border-violet-500/30">
+                                                                    {booster.canonical_role}
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        {booster.primary_effect && (
+                                                            <div className="flex items-center gap-2 text-xs text-white/60">
+                                                                <span className="font-medium text-white/90">{booster.primary_effect}</span>
+                                                                {booster.secondary_effect && (
+                                                                    <>
+                                                                        <ArrowRight className="w-3 h-3 text-white/30" />
+                                                                        <span>{booster.secondary_effect}</span>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {booster.target_layer && (
+                                                            <div className="text-[10px] text-white/40 pt-1">Target Layer: {booster.target_layer}</div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="w-6 h-6 rounded-full bg-white/5 flex flex-shrink-0 items-center justify-center">
+                                                        {isExp ? <ChevronUp className="w-4 h-4 text-white/60" /> : <ChevronDown className="w-4 h-4 text-white/60" />}
+                                                    </div>
+                                                </div>
+
+                                                <AnimatePresence>
+                                                    {isExp && (
+                                                        <motion.div
+                                                            initial={{ height: 0, opacity: 0 }}
+                                                            animate={{ height: 'auto', opacity: 1 }}
+                                                            exit={{ height: 0, opacity: 0 }}
+                                                            className="border-t border-white/5 bg-black/40"
+                                                        >
+                                                            <div className="p-5 space-y-4">
+                                                                {booster.key_value && (
+                                                                    <div>
+                                                                        <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-2">Key Ingredients / Value</div>
+                                                                        <div className="text-xs leading-relaxed text-white/80 bg-white/5 border border-white/10 p-3 rounded-lg">
+                                                                            {booster.key_value}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                                {booster.product_page_url && (
+                                                                    <a
+                                                                        href={booster.product_page_url}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg text-xs font-bold text-white transition-colors"
+                                                                        onClick={e => e.stopPropagation()}
+                                                                    >
+                                                                        제품 상세 보기 <LinkIcon className="w-3 h-3" />
+                                                                    </a>
+                                                                )}
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Category Booster Pairing Note */}
+                                {(cat.booster_pairing_note_KO || cat.booster_pairing_note_EN) && (
+                                    <div className="mt-4 bg-violet-950/20 border border-violet-500/20 rounded-xl p-4">
+                                        <div className="text-[10px] font-bold text-violet-400 uppercase tracking-widest mb-1">Clinical Suggestion</div>
+                                        <p className="text-xs text-violet-200/80 leading-relaxed">
+                                            {cat.booster_pairing_note_KO || cat.booster_pairing_note_EN}
+                                        </p>
+                                    </div>
+                                )}
+                            </section>
+                        )}
+
+                        <div className="h-8" />
+                    </div>
+
+                    {/* Footer / Copilot (Sticky Bottom) */}
+                    <div className="flex-none bg-[#111116] border-t border-white/5 relative z-10 w-full rounded-b-3xl">
                         <button
                             onClick={() => setChatOpen(!chatOpen)}
-                            className="w-full flex items-center justify-between px-6 md:px-8 py-4 text-sm text-gray-400 hover:text-white transition-colors"
+                            className="w-full flex items-center justify-between px-6 py-4 text-sm font-bold text-cyan-400 hover:text-cyan-300 transition-colors"
                         >
                             <span className="flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-cyan-500" />
-                                {language === 'KO' ? 'AI에게 질문하기' : language === 'JP' ? 'AI에に質問する' : language === 'CN' ? '向AI提问' : 'Ask AI Copilot'}
+                                <Sparkles className="w-4 h-4" />
+                                AI 전문의에게 질문하기
                             </span>
-                            <ChevronRight className={`w-4 h-4 transition-transform ${chatOpen ? 'rotate-90' : ''}`} />
+                            <ChevronUp className={`w-4 h-4 transition-transform ${chatOpen ? 'rotate-180' : ''}`} />
                         </button>
+
                         <AnimatePresence>
                             {chatOpen && (
                                 <motion.div
@@ -721,51 +397,46 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                     exit={{ height: 0, opacity: 0 }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="px-6 md:px-8 pb-4 space-y-3">
-                                        {/* 예시 질문 버튼 */}
+                                    <div className="px-6 pb-6 space-y-4">
                                         <div className="flex flex-wrap gap-2">
-                                            {[
-                                                language === 'KO' ? '이 시술 주의사항은?' : 'What are the contraindications?',
-                                                language === 'KO' ? '회복 기간은 얼마나 되나요?' : 'How long is recovery?',
-                                                language === 'KO' ? '비용은 어느 정도인가요?' : 'What\'s the typical cost?',
-                                            ].map((q, i) => (
+                                            {['부작용은 어떤게 있나요?', '시술 간격은 언제가 좋나요?', '화장은 언제부터 가능한가요?'].map((q, i) => (
                                                 <button
                                                     key={i}
-                                                    onClick={() => { setChatQuestion(q); }}
-                                                    className="px-3 py-1.5 text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-gray-300 transition-colors"
+                                                    onClick={() => setChatQuestion(q)}
+                                                    className="px-3 py-1.5 text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white/70 transition-colors"
                                                 >
                                                     {q}
                                                 </button>
                                             ))}
                                         </div>
-                                        {/* 입력창 */}
-                                        <div className="flex gap-2">
+
+                                        <div className="flex gap-2 relative z-20">
                                             <input
                                                 type="text"
                                                 value={chatQuestion}
                                                 onChange={e => setChatQuestion(e.target.value)}
                                                 onKeyDown={e => e.key === 'Enter' && handleAskCopilot()}
-                                                placeholder={language === 'KO' ? '시술에 대해 궁금한 점을 물어보세요...' : 'Ask anything about this treatment...'}
-                                                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/50"
+                                                placeholder={'무엇이든 물어보세요...'}
+                                                className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50"
                                             />
                                             <button
                                                 onClick={handleAskCopilot}
                                                 disabled={chatLoading || !chatQuestion.trim() || !runId}
-                                                className="px-4 py-2.5 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 text-black font-bold rounded-xl transition-colors flex items-center gap-1.5 text-sm"
+                                                className="px-4 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 text-black font-bold rounded-xl transition-colors flex items-center justify-center min-w-[50px]"
                                             >
-                                                {chatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+                                                {chatLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
                                             </button>
                                         </div>
-                                        {/* 응답 */}
+
                                         {chatAnswer && (
-                                            <div className="p-4 bg-gradient-to-br from-cyan-950/30 to-black border border-cyan-500/20 rounded-xl text-sm text-gray-300 leading-relaxed">
+                                            <div className="p-4 bg-black/40 border border-cyan-500/20 rounded-xl text-sm text-white/90 leading-relaxed font-normal whitespace-pre-wrap">
                                                 {chatAnswer}
-                                                {chatLoading && <span className="inline-block w-1.5 h-4 bg-cyan-500 ml-1 animate-pulse rounded-sm" />}
+                                                {chatLoading && <span className="inline-block w-1.5 h-4 bg-cyan-500 ml-1 animate-pulse rounded-sm align-middle" />}
                                             </div>
                                         )}
                                         {!runId && (
                                             <p className="text-xs text-gray-600">
-                                                {language === 'KO' ? '* 설문 완료 후 AI 코파일럿이 활성화됩니다' : '* Complete the survey to activate AI Copilot'}
+                                                * 일시적으로 AI 지원을 사용할 수 없습니다
                                             </p>
                                         )}
                                     </div>
@@ -773,60 +444,8 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                             )}
                         </AnimatePresence>
                     </div>
-
-                    {/* Footer */}
-                    <div className="flex-none p-6 md:p-8 border-t border-white/5 bg-[#0a0a0f] flex flex-col sm:flex-row justify-between items-center gap-4 z-20">
-                        <div className="text-sm text-gray-500 text-center sm:text-left">
-                            {td.resultsDisclaimer}
-                        </div>
-                        <div className="flex items-center gap-3 w-full sm:w-auto">
-                            <button
-                                onClick={onClose}
-                                className="flex-1 sm:flex-none border border-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/5 transition-colors"
-                            >
-                                {td.closeAnalysis}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    if (user) {
-                                        // If reportId exists, redirect to permanent report page
-                                        if (analysisData?.reportId) {
-                                            window.location.href = `/report/${analysisData.reportId}`;
-                                        } else {
-                                            onClose();
-                                        }
-                                    } else {
-                                        // Trigger Auth Modal via parent
-                                        (window as any).dispatchEvent(new CustomEvent('open-auth-modal'));
-                                        onClose();
-                                    }
-                                }}
-                                className="flex-1 sm:flex-none bg-cyan-500 text-black px-8 py-3 rounded-full font-bold hover:bg-cyan-400 transition-transform active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.4)]"
-                            >
-                                <Shield className="w-5 h-5" />
-                                {language === 'KO' ? '리포트 저장 & 상담 예약' :
-                                    language === 'JP' ? 'レポート保存 & 相談予約' :
-                                        'Save Report & Book'}
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </motion.div>
-
-            {deviceModal && (
-                <DeviceDetailModal
-                    isOpen={deviceModal.isOpen}
-                    onClose={() => setDeviceModal(null)}
-                    type={deviceModal.type}
-                    itemId={deviceModal.itemId}
-                    itemName={deviceModal.itemName}
-                    patientContext={{
-                        primaryGoal: tallyData?.primaryGoal || '',
-                        budget: tallyData?.budget || '',
-                        language
-                    }}
-                />
-            )}
         </AnimatePresence>
     );
 }
