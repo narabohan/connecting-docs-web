@@ -472,8 +472,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             runId = rrRec[0].id;
         }
 
+        const finalRunId = runId || `mock_run_${Date.now()}`;
         const responsePayload: AnalysisResponseV2 = {
-            runId: runId || `mock_run_${Date.now()}`,
+            runId: finalRunId,
+            reportId: finalRunId, // alias — DeepDiveModal + report page polling 호환
             rank1: buildRankResult(scoredCategories[0], topDevicesPerCategory[0], topBoostersPerCategory[0], radarScore),
             rank2: scoredCategories[1] ? buildRankResult(scoredCategories[1], topDevicesPerCategory[1], topBoostersPerCategory[1], radarScore) : null,
             rank3: scoredCategories[2] ? buildRankResult(scoredCategories[2], topDevicesPerCategory[2], topBoostersPerCategory[2], radarScore) : null,

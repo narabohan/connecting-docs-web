@@ -138,6 +138,7 @@ export interface RiskFlagData {
 
 export interface AnalysisResponseV2 {
     runId: string;
+    reportId: string; // alias for runId — for DeepDiveModal / polling compatibility
     rank1: CategoryRankResult;
     rank2: CategoryRankResult | null;
     rank3: CategoryRankResult | null;

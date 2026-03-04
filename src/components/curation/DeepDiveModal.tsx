@@ -87,8 +87,8 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // ── why_cat 폴링: runId는 analyze.ts → reportId로 반환됨 ──
-    const runId = analysisData?.reportId || null;
+    // ── why_cat 폴링: reportId 또는 runId (양쪽 호환) ──
+    const runId = analysisData?.reportId || analysisData?.runId || null;
     const whyCat = useWhyCatPolling(runId, language);
 
     // Matching State
