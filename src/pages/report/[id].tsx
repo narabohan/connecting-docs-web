@@ -51,9 +51,14 @@ export default function ReportPage() {
                 if (!res.ok) throw new Error('Report load failed');
                 const json = await res.json();
 
-                // Keep polling if recommendation not ready
+                // Keep polling if recommendation still processing
                 if (json.error === 'recommendation_not_ready') {
                     setTimeout(() => fetchData(), 5000);
+                    return;
+                }
+                // Background function failed — stop polling, show error
+                if (json.error === 'recommendation_failed') {
+                    setTimeout(() => { setData(null); setLoading(false); }, 500);
                     return;
                 }
                 setTimeout(() => { setData(json); setLoading(false); }, 1000);

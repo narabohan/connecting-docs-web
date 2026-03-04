@@ -28,7 +28,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const rank3CatId = (rrf.rank_3_category_id as string) || '';
 
         // --- Step 2: Check status ---
-        if (status === 'error' || (!rank1CatId && !rank2CatId && !rank3CatId)) {
+        if (status === 'error') {
+            // Background function failed — stop polling, show error
+            return res.status(200).json({ error: 'recommendation_failed' });
+        }
+        if (!rank1CatId && !rank2CatId && !rank3CatId) {
+            // Still processing — keep polling
             return res.status(200).json({ error: 'recommendation_not_ready' });
         }
 
