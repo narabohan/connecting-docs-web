@@ -9,6 +9,7 @@ import {
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
 import { useAuth } from '@/context/AuthContext';
 import UnlockModal from '@/components/report/UnlockModal';
+import DeepDiveModal from '@/components/curation/DeepDiveModal';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface Device {
@@ -259,6 +260,7 @@ function ProtocolCard({
     t,
     rankLabel,
     onUnlock,
+    onDeepDive,
 }: {
     rec: Recommendation;
     isExpanded: boolean;
@@ -267,16 +269,16 @@ function ProtocolCard({
     t: Record<string, string>;
     rankLabel: string;
     onUnlock: () => void;
+    onDeepDive: () => void;
 }) {
     const devices = rec.devices || [];
     const boosters = rec.boosters || [];
 
     return (
-        <div className={`rounded-3xl border transition-all duration-300 overflow-hidden ${
-            isPrimary
-                ? 'border-cyan-500/30 bg-gradient-to-b from-cyan-500/5 to-transparent'
-                : 'border-white/10 bg-white/[0.02] hover:border-white/20'
-        }`}>
+        <div className={`rounded-3xl border transition-all duration-300 overflow-hidden ${isPrimary
+            ? 'border-cyan-500/30 bg-gradient-to-b from-cyan-500/5 to-transparent'
+            : 'border-white/10 bg-white/[0.02] hover:border-white/20'
+            }`}>
             {/* Card Header — always visible */}
             <button
                 onClick={onToggle}
@@ -374,9 +376,14 @@ function ProtocolCard({
                     {/* Devices */}
                     {devices.length > 0 && (
                         <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                                <Zap className="w-4 h-4 text-cyan-400/60" />
-                                <h3 className="text-xs font-black tracking-widest text-white/40 uppercase">{t.devicesTitle}</h3>
+                            <div className="flex items-center justify-between pb-1">
+                                <div className="flex items-center gap-2">
+                                    <Zap className="w-4 h-4 text-cyan-400/60" />
+                                    <h3 className="text-xs font-black tracking-widest text-white/40 uppercase">{t.devicesTitle}</h3>
+                                </div>
+                                <button onClick={onDeepDive} className="text-[10px] uppercase font-bold tracking-wider text-cyan-400 border border-cyan-400/30 px-3 py-1 rounded-full hover:bg-cyan-400/10 transition-colors">
+                                    {t.expand}
+                                </button>
                             </div>
                             <div className="bg-white/[0.02] border border-white/5 rounded-2xl px-5">
                                 {devices.map((d, i) => <DeviceRow key={i} device={d} t={t} />)}
@@ -423,6 +430,11 @@ export default function ReportPage() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [expandedRank, setExpandedRank] = useState<number>(1); // rank 1 open by default
+    const [deepDiveConfig, setDeepDiveConfig] = useState<{ isOpen: boolean; rank: 1 | 2 | 3 | null; devices: any[] }>({
+        isOpen: false,
+        rank: null,
+        devices: []
+    });
 
     const language = (data?.language || 'EN') as LanguageCode;
     const t = T[language] || T['EN'];
@@ -553,11 +565,10 @@ export default function ReportPage() {
 
                 {/* ── Risk Flag ────────────────────────────────────────────── */}
                 {riskFlag && riskLevel !== 'none' && (
-                    <div className={`rounded-2xl border p-5 flex items-start gap-4 ${
-                        riskLevel === 'high'
-                            ? 'border-red-500/30 bg-red-500/5'
-                            : 'border-amber-500/30 bg-amber-500/5'
-                    }`}>
+                    <div className={`rounded-2xl border p-5 flex items-start gap-4 ${riskLevel === 'high'
+                        ? 'border-red-500/30 bg-red-500/5'
+                        : 'border-amber-500/30 bg-amber-500/5'
+                        }`}>
                         <AlertTriangle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${riskLevel === 'high' ? 'text-red-400' : 'text-amber-400'}`} />
                         <div>
                             <div className="text-[10px] font-black tracking-widest uppercase mb-1 text-white/40">
@@ -620,6 +631,7 @@ export default function ReportPage() {
                             t={t}
                             rankLabel={rankLabels[idx] || `Rank ${rec.rank}`}
                             onUnlock={() => setIsModalOpen(true)}
+                            onDeepDive={() => setDeepDiveConfig({ isOpen: true, rank: rec.rank as any, devices: rec.devices || [] })}
                         />
                     ))}
                 </div>
@@ -670,6 +682,15 @@ export default function ReportPage() {
                 onClose={() => setIsModalOpen(false)}
                 language={language}
                 reportId={typeof id === 'string' ? id : undefined}
+            />
+
+            {/* ── Deep Dive Modal ───────────────────────────────────────────── */}
+            <DeepDiveModal
+                isOpen={deepDiveConfig.isOpen}
+                onClose={() => setDeepDiveConfig({ ...deepDiveConfig, isOpen: false })}
+                rank={deepDiveConfig.rank}
+                language={language}
+                devices={deepDiveConfig.devices}
             />
 
             <style jsx global>{`
