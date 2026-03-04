@@ -65,6 +65,7 @@ interface DeepDiveModalProps {
     rank: 1 | 2 | 3 | null;
     language: LanguageCode;
     tallyData?: any; // Pass Tally data for analysis
+    devices?: any[];
 }
 
 // Fallback Data (Skeleton)
@@ -76,7 +77,7 @@ const SKELETON_DATA = {
     radar: { lifting: 0, firmness: 0, texture: 0, glow: 0, safety: 0 }
 };
 
-export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyData }: DeepDiveModalProps) {
+export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyData, devices }: DeepDiveModalProps) {
     const t = (REPORT_TRANSLATIONS[language]?.curation || REPORT_TRANSLATIONS['EN'].curation);
     const tRadar = (REPORT_TRANSLATIONS[language]?.simulation || REPORT_TRANSLATIONS['EN'].simulation).radar;
     const td = (REPORT_TRANSLATIONS[language]?.deepDive || REPORT_TRANSLATIONS['EN'].deepDive)!;
@@ -339,6 +340,10 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
     const currentRankKey = `rank${effectiveRank}`;
     const aiRankData = analysisData ? analysisData[currentRankKey] : null;
 
+    const displayDevices = (devices && devices.length > 0)
+        ? devices
+        : (aiRankData?.devices || aiRankData?.top_devices || []);
+
     // why_cat: 폴링으로 받은 4개국어 AI 설명, 없으면 aiRankData.reason, 없으면 번역 fallback
     const aiWhyCat = whyCat[`rank${effectiveRank}`] || '';
 
@@ -599,26 +604,30 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                     </div>
 
                                     {/* Top Devices & Boosters */}
-                                    {((aiRankData?.devices || aiRankData?.top_devices)?.length > 0) && (
+                                    {displayDevices.length > 0 && (
                                         <div className="space-y-3">
                                             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
                                                 <div className="w-1 h-4 bg-cyan-500 rounded-full" />
                                                 {language === 'KO' ? '추천 디바이스' : language === 'JP' ? '推奨機器' : language === 'CN' ? '推荐设备' : 'Recommended Devices'}
                                             </h3>
                                             <div className="grid grid-cols-2 gap-2">
-                                                {(aiRankData.devices || aiRankData.top_devices).slice(0, 2).map((device: any, idx: number) => (
-                                                    <button
-                                                        key={idx}
-                                                        onClick={() => setDeviceModal({ isOpen: true, type: 'device', itemId: device?.device_id || device?.id || '', itemName: device?.device_name || device?.name || device })}
-                                                        className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/40 rounded-xl text-left transition-all group"
-                                                    >
-                                                        <div className="text-xs font-semibold text-white truncate">{device?.device_name || device?.name || device}</div>
-                                                        <div className="text-[10px] text-cyan-400 mt-1 flex items-center gap-1">
-                                                            {language === 'KO' ? '상세 보기' : language === 'JP' ? '詳細を見る' : language === 'CN' ? '查看详情' : 'View Details'}
-                                                            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                                                        </div>
-                                                    </button>
-                                                ))}
+                                                {displayDevices.slice(0, 2).map((device: any, idx: number) => {
+                                                    const deviceId = device?.device_id || device?.id || device?.canonical_id || '';
+                                                    const deviceName = device?.device_name || device?.name || device || '';
+                                                    return (
+                                                        <button
+                                                            key={idx}
+                                                            onClick={() => setDeviceModal({ isOpen: true, type: 'device', itemId: deviceId, itemName: deviceName })}
+                                                            className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/40 rounded-xl text-left transition-all group"
+                                                        >
+                                                            <div className="text-xs font-semibold text-white truncate">{deviceName}</div>
+                                                            <div className="text-[10px] text-cyan-400 mt-1 flex items-center gap-1">
+                                                                {language === 'KO' ? '상세 보기' : language === 'JP' ? '詳細を見る' : language === 'CN' ? '查看详情' : 'View Details'}
+                                                                <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                                            </div>
+                                                        </button>
+                                                    )
+                                                })}
                                             </div>
                                         </div>
                                     )}
@@ -642,7 +651,7 @@ export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyDa
                                         {td.runningMatch}
                                     </div>
                                 ) : matches.length > 0 ? (
-                                    <div className="grid md:grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {matches.map((doc, idx) => (
                                             <div key={idx} className="group relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/50 rounded-xl p-4 transition-all duration-300">
                                                 {/* Badge */}
