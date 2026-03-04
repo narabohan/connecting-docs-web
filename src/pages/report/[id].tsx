@@ -210,12 +210,12 @@ export default function ReportPage() {
                     <section className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 sm:p-8 space-y-6">
                         <div className="flex items-center gap-2">
                             <CheckCircle className="w-4 h-4 text-cyan-400" />
-                            <h2 className="text-sm font-bold text-cyan-400 uppercase tracking-widest">
+                            <h2 className="text-xl font-serif font-light text-cyan-400 tracking-wide">
                                 {language === 'EN' ? 'Skin Analysis Summary' : '피부 분석 요약'}
                             </h2>
                         </div>
 
-                        <p className="text-[15px] leading-relaxed text-white/80 whitespace-pre-wrap font-medium">
+                        <p className="text-[15px] leading-relaxed text-white/80 whitespace-pre-wrap">
                             {skinAnalysisText}
                         </p>
 
@@ -229,7 +229,7 @@ export default function ReportPage() {
 
                 {/* ── 2. Top Recommendations ─────────────────────────────────── */}
                 <section className="space-y-4">
-                    <h2 className="text-xl font-bold text-white pl-2">
+                    <h2 className="text-3xl font-serif font-light text-white pl-2">
                         {language === 'EN' ? 'AI Recommended Protocols' : 'AI 추천 솔루션'}
                     </h2>
 
@@ -240,7 +240,7 @@ export default function ReportPage() {
 
                         return (
                             <div key={idx} className={`rounded-3xl border transition-all duration-300 relative overflow-hidden ${isRank1
-                                ? 'border-cyan-500/30 bg-gradient-to-br from-cyan-900/20 via-black to-black'
+                                ? 'border-rose-300/20 bg-gradient-to-br from-cyan-900/20 via-black to-black'
                                 : 'border-white/10 bg-white/[0.02] hover:border-white/20'
                                 }`}>
                                 {isRank1 && (
@@ -258,8 +258,7 @@ export default function ReportPage() {
                                     </div>
 
                                     <h3
-                                        className="text-2xl sm:text-3xl text-white mb-4"
-                                        style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 600 }}
+                                        className="text-2xl sm:text-3xl text-white mb-4 font-serif italic font-light"
                                     >
                                         {cat.category_display_name}
                                     </h3>
@@ -306,7 +305,7 @@ export default function ReportPage() {
                     <section className="rounded-3xl border border-amber-500/20 bg-amber-500/5 p-6 sm:p-8">
                         <div className="flex items-center gap-2 mb-4">
                             <AlertTriangle className="w-4 h-4 text-amber-500" />
-                            <h2 className="text-sm font-bold text-amber-500 uppercase tracking-widest">
+                            <h2 className="text-lg font-serif font-light text-amber-500 tracking-wide">
                                 {language === 'EN' ? 'Treatments to Avoid' : '주의할 치료'}
                             </h2>
                         </div>
@@ -322,7 +321,7 @@ export default function ReportPage() {
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <Info className="w-4 h-4 text-violet-400" />
-                                <h2 className="text-sm font-bold text-violet-400 uppercase tracking-widest">
+                                <h2 className="text-lg font-serif font-light text-violet-400 tracking-wide">
                                     {language === 'EN' ? 'Questions for your Doctor' : '클리닉 방문 시 이 질문을 해보세요'}
                                 </h2>
                             </div>

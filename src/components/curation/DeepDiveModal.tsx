@@ -110,8 +110,7 @@ export default function DeepDiveModal({
                                 </span>
                             )}
                             <h2
-                                className="text-3xl text-white font-serif"
-                                style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700 }}
+                                className="text-3xl text-white font-serif italic font-light"
                             >
                                 {cat.category_display_name}
                             </h2>

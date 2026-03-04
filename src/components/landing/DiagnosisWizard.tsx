@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Check, ChevronLeft, Loader2, Sparkles, AlertTriangle } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { LanguageCode } from '@/utils/translations';
+import KoreaTripPicker from '@/components/common/KoreaTripPicker';
 
 // --- Types ---
 export type WizardData = {
@@ -615,12 +616,13 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                                                             <label className="text-sm text-gray-400 mb-2 block">
                                                                 {{ EN: 'When do you plan to visit?', KO: '방문 예정 시기', JP: '訪問予定時期', CN: '预计访问日期' }[language]}
                                                             </label>
-                                                            <input
-                                                                type="month"
-                                                                value={data.koreaStayDays || ''}
-                                                                onChange={(e) => updateData('koreaStayDays', e.target.value)}
-                                                                className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white text-base focus:border-blue-500 outline-none transition-colors"
-                                                            />
+                                                            <div className="pt-2">
+                                                                <KoreaTripPicker
+                                                                    value={data.koreaStayDays || ''}
+                                                                    onChange={(dateStr) => updateData('koreaStayDays', dateStr)}
+                                                                    language={language}
+                                                                />
+                                                            </div>
                                                         </div>
                                                         <div>
                                                             <label className="text-sm text-gray-400 mb-2 block">

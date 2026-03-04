@@ -2,17 +2,24 @@
 
 :root {
   /* Dark Mode Base */
-  --background: #0f172a; /* Slate 900 */
-  --foreground: #f8fafc; /* Slate 50 */
-  
+  --background: #0f172a;
+  /* Slate 900 */
+  --foreground: #f8fafc;
+  /* Slate 50 */
+
   /* Brand Colors */
-  --primary: #0077b6; /* Medical Blue */
-  --secondary: #00b4d8; /* Lighter Blue */
-  --accent: #90e0ef; /* Cyan/Ice */
-  --dark-accent: #03045e; /* Deep Blue */
-  
-  /* Font fallbacks (Geist is Next.js default) */
-  --font-sans: Arial, Helvetica, sans-serif;
+  --primary: #0077b6;
+  /* Medical Blue */
+  --secondary: #00b4d8;
+  /* Lighter Blue */
+  --accent: #90e0ef;
+  /* Cyan/Ice */
+  --dark-accent: #03045e;
+  /* Deep Blue */
+
+  /* Font fallbacks */
+  --font-serif: "Cormorant Garamond", serif;
+  --font-sans: "DM Sans", Arial, Helvetica, sans-serif;
 }
 
 @theme inline {
@@ -22,6 +29,8 @@
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
   --color-dark-accent: var(--dark-accent);
+  --font-serif: var(--font-serif);
+  --font-sans: var(--font-sans);
 }
 
 body {
