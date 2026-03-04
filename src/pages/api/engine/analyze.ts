@@ -1,11 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import Airtable from 'airtable';
+import { z } from 'zod';
+import Anthropic from '@anthropic-ai/sdk';
 import { savePatientLog } from '../intelligence/save-log';
 import {
     AnalysisResponseV2,
     CategoryRankResult,
     BoosterDeliveryItem,
-    SupportingCareItem,
     DeviceSummary,
     RadarScoreData,
     RiskFlagData
@@ -13,462 +14,309 @@ import {
 
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID!);
 
-// ─── Interfaces ─────────────────────────────────────────────────────────────
+// ─── Table IDs ──────────────────────────────────────────────────────────────
+const TBL_INDICATION_MAP = 'tbl4xrXM1kllfQSMS';
+const TBL_EBD_CATEGORY = 'tblCCnizVeFcNpjbj';
+const TBL_EBD_DEVICE = 'tblZrp328Yu9HETOj';
+const TBL_SKIN_BOOSTER = 'tblta0NVjbNgh8Avs';
+const TBL_INJECTABLE_RULES = 'tblNESYb9m7kKabAX';
+const TBL_RECOMMENDATION_RUN = 'tblAv5eoTae4Al5zy';
 
-interface SurveySignals {
-    primaryIndications: string[];
-    secondaryIndications: string[];
-    painTolerance: number; // 1-5
-    downtimeTolerance: number; // 0-3
-    budget: string; // 'Budget', 'Mid', 'Premium', 'Luxury'
-    hasThinSkin: boolean;
-    hasVolumeConcern: boolean;
-    risks: string[];
-    rawLanguage: string;
-    koreaVisitPlan: 'resident' | 'short' | 'long' | 'undecided';
-    koreaStayDays: number;
-    referralCode?: string;
+// ─── TypeScript Types for Fetched Data ──────────────────────────────────────
+interface IndicationMapRecord {
+    id: string;
+    indication_name: string;
+    canonical_signal: string;
+    recommended_category_ids: string;
+    survey_signals: string;
+    notes: string;
+    concern_domain: string;
 }
 
 interface EBDCategoryRecord {
+    id: string;
     category_id: string;
     category_display_name: string;
-    best_primary_indication: string;
-    secondary_indications: string[];
+    category_description: string;
+    budget_tier: string;
     avg_pain_level: string;
     avg_downtime: string;
-    budget_tier: string;
-    thin_skin_fit: string;
-    fat_loss_risk: string;
-    volume_effect: string;
     recommended_sessions: number;
-    session_interval_weeks: number;
+    contraindicated_conditions: string;
+    thin_skin_fit: string;
+    risk_flag_trigger: string;
     preferred_booster_roles: string;
-    recommended_supporting_care: string[];
-    booster_pairing_note_KO?: string;
-    booster_pairing_note_EN?: string;
-    contraindications: string[];
-    devices: string[]; // Device IDs
+    reason_why_template: string;
+    reason_why_EN: string;
+    best_primary_indication: string;
+    secondary_indications: string;
+    target_layer: string;
+    aggressiveness_score: number;
+    safety_margin: string;
+    survey_primary_match: string;
+    survey_secondary_match: string;
+    booster_pairing_note_KO: string;
+    booster_pairing_note_EN: string;
+    recommended_supporting_care: string;
 }
 
-// ─── Constants & Parsers ──────────────────────────────────────────────────
-
-const PAIN_SCORE: Record<string, number> = {
-    'None': 1, 'Very Low': 1.5, 'Low': 2, 'Medium': 3, 'High': 4, 'Very High': 5
-};
-const BUDGET_ORDER = ['Budget', 'Mid', 'Premium', 'Luxury'];
-
-// ─── Wizard ID → EBD_Category indication 매핑 ─────────────────────────────
-// DiagnosisWizard는 'hydration', 'tone', 'contour' 같은 short ID를 전송
-// EBD_Category.best_primary_indication는 'Skin quality / Glow', 'Tone', 'Lifting' 등 전체 텍스트
-
-const GOAL_TO_INDICATION: Record<string, string> = {
-    'hydration':   'Skin quality / Glow',
-    'texture':     'Skin quality / Glow',
-    'volume':      'Lifting',
-    'contour':     'Lifting',
-    'tone':        'Tone',
-    'lifting':     'Lifting',
-    'pigment':     'Dermal pigmentation',
-    'acne':        'Acne scar',
-    'scars':       'Acne scar',
-    'pores':       'Skin quality / Glow',
-    'guidance':    'Skin quality / Glow',
-    // Legacy / Tally canonical strings (하위 호환)
-    'Lifting':     'Lifting',
-    'Tone':        'Tone',
-    'Skin Improvement': 'Skin quality / Glow',
-    'Glass Skin':  'Skin quality / Glow',
-};
-
-// Pain 내성 매핑 (wizard IDs → 1-5 숫자)
-const PAIN_MAP: Record<string, number> = {
-    'minimal':  2,  // Low tolerance
-    'moderate': 3,  // Medium
-    'high':     4,  // High tolerance
-    'notsure':  3,
-    // Legacy
-    'Low': 2, 'Medium': 3, 'High': 4,
-};
-
-// 다운타임 매핑 (wizard IDs → 0-3 숫자)
-const DOWNTIME_MAP: Record<string, number> = {
-    'none':    0,   // Zero downtime
-    'short':   2,   // 3-5 days
-    'long':    3,   // 1 week+
-    'notsure': 1,
-    // Legacy
-    'None': 0, 'Low': 1, 'Medium': 2, 'High': 3,
-};
-
-// Budget 매핑 (wizard IDs → 'Budget'|'Mid'|'Premium'|'Luxury')
-const BUDGET_MAP: Record<string, string> = {
-    'premium':  'Premium',
-    'balanced': 'Mid',
-    'economy':  'Budget',
-    'notsure':  'Mid',
-    // Legacy passthrough
-    'Budget': 'Budget', 'Mid': 'Mid', 'Premium': 'Premium', 'Luxury': 'Luxury',
-};
-
-function parseSurveyCanonical(body: any): SurveySignals {
-    // Goal ID → EBD_Category indication 이름으로 변환
-    const mapGoal = (goalId: string) =>
-        GOAL_TO_INDICATION[goalId] || goalId || 'Skin quality / Glow';
-
-    const goalId = String(body.primaryGoal || '');
-    const secondGoalId = String(body.secondaryGoal || '');
-
-    let primaryIndications = goalId ? [mapGoal(goalId)] : ['Skin quality / Glow'];
-    let secondaryIndications = secondGoalId ? [mapGoal(secondGoalId)] : [];
-
-    // risks 배열: 위험 요소가 있으면 secondaryIndications에 추가
-    const risks: string[] = body.risks || [];
-    if (risks.includes('pigment') && !secondaryIndications.includes('Dermal pigmentation')) {
-        secondaryIndications.push('Dermal pigmentation');
-    }
-    if (risks.includes('acne') && !secondaryIndications.includes('Acne scar')) {
-        secondaryIndications.push('Acne scar');
-    }
-
-    // Korea visit plan mapping
-    let koreaVisitPlan: SurveySignals['koreaVisitPlan'] = 'undecided';
-    if (body.koreaVisitPlan === 'resident') koreaVisitPlan = 'resident';
-    else if (body.koreaVisitPlan === 'short') koreaVisitPlan = 'short';
-    else if (body.koreaVisitPlan === 'long') koreaVisitPlan = 'long';
-
-    return {
-        primaryIndications,
-        secondaryIndications,
-        painTolerance: PAIN_MAP[body.painTolerance] ?? 3,
-        downtimeTolerance: DOWNTIME_MAP[body.downtimeTolerance] ?? 1,
-        budget: BUDGET_MAP[body.budget] || 'Mid',
-        hasThinSkin: body.skinType === 'thin' || body.skinType === 'Thin' || String(body.q4_skin_thickness_MASTER || '').toLowerCase().includes('thin'),
-        hasVolumeConcern: body.volumePreference === 'Focus on Fat Loss' || body.volumeLogic === 'instant' || !!body.q3_vol_logic_MASTER,
-        risks,
-        rawLanguage: body.language || 'EN',
-        koreaVisitPlan,
-        koreaStayDays: Number(body.koreaStayDays || 0),
-        referralCode: body.referralCode || undefined
-    };
+interface EBDDeviceRecord {
+    id: string;
+    device_id: string;
+    device_name: string;
+    primary_indication: string;
+    secondary_indication: string;
+    avg_downtime_days: number;
+    avg_pain_level: string;
+    trend_score: number;
+    brand_tier: string;
+    clinical_evidence_score: number;
+    signature_technology: string;
+    clinical_charactor: string;
+    reason_why: string;
+    evidence_basis: string;
+    launch_year: number;
+    EBD_Category: string[]; // Linked record IDs
 }
 
-// ─── Engine Scoring Logic ─────────────────────────────────────────────────
-
-function scoreCategory(category: EBDCategoryRecord, surveySignals: SurveySignals): number {
-    let score = 0;
-
-    // [A] Indication Match (53pt)
-    const primaryMatch = surveySignals.primaryIndications.includes(category.best_primary_indication);
-    const secondaryMatches = surveySignals.secondaryIndications.filter(
-        ind => category.secondary_indications?.includes(ind)
-    ).length;
-    score += primaryMatch ? 35 : 0;
-    score += Math.min(secondaryMatches * 9, 18); // max 18pt (2 items)
-
-    // [B] Pain & Downtime (20pt)
-    const painScore = PAIN_SCORE[category.avg_pain_level] || 3;
-    const painFit = Math.max(0, 5 - Math.abs(painScore - surveySignals.painTolerance));
-    score += Math.round((painFit / 5) * 12); // Pain 12pt
-
-    const downtimeLevels = ['None', 'Short (≤3d)', 'Medium (4–7d)', 'Long (≥8d)', 'Low', 'High'];
-    const downtimeIdx = downtimeLevels.indexOf(category.avg_downtime);
-    const dIdx = downtimeIdx >= 0 ? Math.min(downtimeIdx, 3) : 2; // Rough mapping
-
-    score += dIdx <= surveySignals.downtimeTolerance ? 8 : Math.max(0, 8 - (dIdx - surveySignals.downtimeTolerance) * 3);
-
-    // [C] Budget (15pt)
-    const categoryBudgetIdx = BUDGET_ORDER.indexOf(category.budget_tier || 'Mid');
-    const surveyBudgetIdx = BUDGET_ORDER.indexOf(surveySignals.budget);
-
-    const cBudget = categoryBudgetIdx >= 0 ? categoryBudgetIdx : 1;
-    const sBudget = surveyBudgetIdx >= 0 ? surveyBudgetIdx : 1;
-
-    score += cBudget <= sBudget ? 15 : Math.max(0, 15 - (cBudget - sBudget) * 5);
-
-    // [D] Skin Adjustments (12pt)
-    if (category.thin_skin_fit === 'Good' && surveySignals.hasThinSkin) score += 6;
-    if (category.thin_skin_fit === 'Contra' && surveySignals.hasThinSkin) score -= 20; // Contraindication
-    if (category.fat_loss_risk === 'High' && surveySignals.hasVolumeConcern) score -= 8;
-    if (category.volume_effect === 'Increase' && surveySignals.hasVolumeConcern) score += 6;
-
-    // [E] Korea Visit Plan modifier (±10pt)
-    // Short stay (≤3 days): single-session treatments get a boost; multi-session get penalized
-    if (surveySignals.koreaVisitPlan === 'short' && surveySignals.koreaStayDays <= 3) {
-        if (category.recommended_sessions === 1) score += 8;
-        else if (category.recommended_sessions >= 4) score -= 10;
-    }
-    // Long stay or resident: no restriction; slight boost to planned courses
-    if (surveySignals.koreaVisitPlan === 'resident' || surveySignals.koreaVisitPlan === 'long') {
-        if (category.recommended_sessions >= 3) score += 3;
-    }
-
-    return Math.max(0, Math.min(score, 100));
+interface SkinBoosterRecord {
+    id: string;
+    booster_id: string;
+    booster_name: string;
+    canonical_role: string;
+    primary_effect: string;
+    secondary_effect: string;
+    target_layer: string;
+    key_value: string;
+    product_page_url: string;
+    delivery_method_ids: string[];
 }
 
-// ─── Data Fetchers ────────────────────────────────────────────────────────
+interface InjectableRuleRecord {
+    id: string;
+    rule_id: string;
+    target_layer: string;
+    rule_rationale: string;
+    safety_flag: boolean;
+    rule_category: string;
+    relaxation_logic: string;
+    priority: number;
+}
 
-async function fetchEBDCategories(): Promise<EBDCategoryRecord[]> {
-    const records = await base('EBD_Category').select({
-        fields: [
-            'category_id', 'category_display_name', 'best_primary_indication', 'secondary_indications',
-            'avg_pain_level', 'avg_downtime', 'budget_tier', 'thin_skin_fit', 'fat_loss_risk',
-            'volume_effect', 'recommended_sessions', 'session_interval_weeks', 'preferred_booster_roles',
-            'recommended_supporting_care', 'booster_pairing_note_KO', 'booster_pairing_note_EN',
-            'contraindications', 'devices'
-        ]
-    }).all();
+// ─── Data Fetchers (Pure Data) ─────────────────────────────────────────────
 
+async function fetchIndicationMap(): Promise<IndicationMapRecord[]> {
+    const records = await base(TBL_INDICATION_MAP).select().all();
     return records.map(r => ({
-        category_id: String(r.get('category_id') || ''),
-        category_display_name: String(r.get('category_display_name') || ''),
-        best_primary_indication: String(r.get('best_primary_indication') || ''),
-        secondary_indications: (r.get('secondary_indications') as string[]) || [],
-        avg_pain_level: String(r.get('avg_pain_level') || ''),
-        avg_downtime: String(r.get('avg_downtime') || ''),
-        budget_tier: String(r.get('budget_tier') || 'Mid'),
-        thin_skin_fit: String(r.get('thin_skin_fit') || ''),
-        fat_loss_risk: String(r.get('fat_loss_risk') || ''),
-        volume_effect: String(r.get('volume_effect') || ''),
-        recommended_sessions: Number(r.get('recommended_sessions') || 1),
-        session_interval_weeks: Number(r.get('session_interval_weeks') || 4),
-        preferred_booster_roles: String(r.get('preferred_booster_roles') || ''),
-        recommended_supporting_care: (r.get('recommended_supporting_care') as string[]) || [],
-        booster_pairing_note_KO: r.get('booster_pairing_note_KO') as string,
-        booster_pairing_note_EN: r.get('booster_pairing_note_EN') as string,
-        contraindications: (r.get('contraindications') as string[]) || [],
-        devices: (r.get('devices') as string[]) || []
+        id: r.id,
+        indication_name: (r.get('indication_name') as string) || '',
+        canonical_signal: (r.get('canonical_signal') as string) || '',
+        recommended_category_ids: (r.get('recommended_category_ids') as string) || '',
+        survey_signals: (r.get('survey_signals') as string) || '',
+        notes: (r.get('notes') as string) || '',
+        concern_domain: (r.get('concern_domain') as string) || ''
     }));
 }
 
-function checkRiskFlag(survey: SurveySignals, categories: EBDCategoryRecord[]): RiskFlagData {
-    const hasPigmentRisk = survey.risks.some(r => r.toLowerCase().includes('pigment') || r.toLowerCase().includes('melasma'));
-    const hasAcneRisk = survey.risks.some(r => r.toLowerCase().includes('acne'));
-
-    if (hasPigmentRisk) {
-        return { triggered: true, reason_KO: '기미/색소 악화 위험이 있어 색소 치료를 우선 권장합니다.', reason_EN: 'Due to pigmentation/melasma risk, pigment-stabilizing treatments are prioritized.' };
-    }
-    if (hasAcneRisk) {
-        return { triggered: true, reason_KO: '활성 여드름/염증이 있어 항염증 치료를 우선 권장합니다.', reason_EN: 'Active acne/inflammation detected; anti-inflammatory treatments are prioritized.' };
-    }
-    return { triggered: false };
+async function fetchEBDCategories(): Promise<EBDCategoryRecord[]> {
+    const records = await base(TBL_EBD_CATEGORY).select().all();
+    return records.map(r => ({
+        id: r.id,
+        category_id: (r.get('category_id') as string) || '',
+        category_display_name: (r.get('category_display_name') as string) || '',
+        category_description: (r.get('category_description') as string) || '',
+        budget_tier: (r.get('budget_tier') as string) || '',
+        avg_pain_level: (r.get('avg_pain_level') as string) || '',
+        avg_downtime: (r.get('avg_downtime') as string) || '',
+        recommended_sessions: Number(r.get('recommended_sessions') || 1),
+        contraindicated_conditions: (r.get('contraindicated_conditions') as string) || '',
+        thin_skin_fit: (r.get('thin_skin_fit') as string) || '',
+        risk_flag_trigger: (r.get('risk_flag_trigger') as string) || '',
+        preferred_booster_roles: (r.get('preferred_booster_roles') as string) || '',
+        reason_why_template: (r.get('reason_why_template') as string) || '',
+        reason_why_EN: (r.get('reason_why_EN') as string) || '',
+        best_primary_indication: (r.get('best_primary_indication') as string) || '',
+        secondary_indications: (r.get('secondary_indications') as string) || '',
+        target_layer: (r.get('target_layer') as string) || '',
+        aggressiveness_score: Number(r.get('aggressiveness_score') || 0),
+        safety_margin: (r.get('safety_margin') as string) || '',
+        survey_primary_match: (r.get('survey_primary_match') as string) || '',
+        survey_secondary_match: (r.get('survey_secondary_match') as string) || '',
+        booster_pairing_note_KO: (r.get('booster_pairing_note_KO') as string) || '',
+        booster_pairing_note_EN: (r.get('booster_pairing_note_EN') as string) || '',
+        recommended_supporting_care: (r.get('recommended_supporting_care') as string) || '',
+    }));
 }
 
-function isContraindicated(category: EBDCategoryRecord, survey: SurveySignals): boolean {
-    // Add robust logic if necessary
-    if (category.thin_skin_fit === 'Contra' && survey.hasThinSkin) return true;
-    return false;
+async function fetchEBDDevices(): Promise<EBDDeviceRecord[]> {
+    const records = await base(TBL_EBD_DEVICE).select().all();
+    return records.map(r => ({
+        id: r.id,
+        device_id: (r.get('device_id') as string) || '',
+        device_name: (r.get('device_name') as string) || '',
+        primary_indication: (r.get('primary_indication') as string) || '',
+        secondary_indication: (r.get('secondary_indication') as string) || '',
+        avg_downtime_days: Number(r.get('avg_downtime_days') || 0),
+        avg_pain_level: (r.get('avg_pain_level') as string) || '',
+        trend_score: Number(r.get('trend_score') || 0),
+        brand_tier: (r.get('brand_tier') as string) || '',
+        clinical_evidence_score: Number(r.get('clinical_evidence_score') || 0),
+        signature_technology: (r.get('signature_technology') as string) || '',
+        clinical_charactor: (r.get('clinical_charactor') as string) || '',
+        reason_why: (r.get('reason_why') as string) || '',
+        evidence_basis: (r.get('evidence_basis') as string) || '',
+        launch_year: Number(r.get('launch_year') || 0),
+        EBD_Category: (r.get('EBD_Category') as string[]) || [], // Link IDs
+    }));
 }
 
-function calculateRadarScore(category: EBDCategoryRecord, survey: SurveySignals): RadarScoreData {
-    return {
-        efficacy: 90,
-        downtime: 85,
-        discomfort: 80,
-        cost_efficiency: 75,
-        maintenance: 85
-    }; // Placeholder radar math pending precise weights
+async function fetchSkinBoosters(): Promise<SkinBoosterRecord[]> {
+    const records = await base(TBL_SKIN_BOOSTER).select().all();
+    return records.map(r => ({
+        id: r.id,
+        booster_id: (r.get('booster_id') as string) || '',
+        booster_name: (r.get('booster_name') as string) || '',
+        canonical_role: (r.get('canonical_role') as string) || '',
+        primary_effect: (r.get('primary_effect') as string) || '',
+        secondary_effect: (r.get('secondary_effect') as string) || '',
+        target_layer: (r.get('target_layer') as string) || '',
+        key_value: (r.get('key_value') as string) || '',
+        product_page_url: (r.get('product_page_url') as string) || '',
+        delivery_method_ids: (r.get('delivery_method_ids') as string[]) || [],
+    }));
 }
 
-// ─── Rules Applicator ─────────────────────────────────────────────────────
-
-async function applyInjectableMethodRules(
-    booster: any,
-    surveyCanonical: SurveySignals
-): Promise<BoosterDeliveryItem> {
-    const targetLayer = booster.injection_target_layer;
-    const painToleranceStr = ['Very Low', 'Low', 'Medium', 'High', 'Very High', 'Very High'][surveyCanonical.painTolerance] || 'Medium';
-
-    let rules: any[] = [];
-    try {
-        const ruleRecords = await base('injectable_method_rules').select().all();
-        rules = ruleRecords.map(r => ({
-            target_layer: r.get('target_layer'),
-            patient_pain_tolerance: r.get('patient_pain_tolerance'),
-            safety_flag: r.get('safety_flag'),
-            required_delivery_method_id: (r.get('required_delivery_method_id') as any)?.[0], // Link ID
-            delivery_method_name: (r.get('delivery_method_name (from required_delivery_method_id)') as any)?.[0],
-            typical_pain_level: (r.get('typical_pain_level (from required_delivery_method_id)') as any)?.[0] || 'Medium',
-            safety_reason_KO: r.get('safety_reason_KO')
-        }));
-    } catch (e) { console.error('Error fetching injectable rules', e); }
-
-    const matchedRules = rules.filter(r => r.target_layer === targetLayer && (!r.patient_pain_tolerance || r.patient_pain_tolerance === painToleranceStr));
-
-    const safetyRule = matchedRules.find(r => r.safety_flag === true);
-    if (safetyRule) {
-        return {
-            booster_id: booster.booster_id,
-            booster_name: booster.booster_name,
-            canonical_role: booster.canonical_role,
-            injection_target_layer: targetLayer,
-            delivery_method_id: safetyRule.required_delivery_method_id,
-            delivery_name: safetyRule.delivery_method_name || '',
-            delivery_pain_level: safetyRule.typical_pain_level,
-            is_safety_required: true,
-            safety_reason_KO: safetyRule.safety_reason_KO,
-        };
-    }
-
-    const recommended = matchedRules
-        .filter(r => !r.safety_flag)
-        .sort((a, b) => (PAIN_SCORE[a.typical_pain_level] || 3) - (PAIN_SCORE[b.typical_pain_level] || 3))
-    [0];
-
-    return {
-        booster_id: booster.booster_id,
-        booster_name: booster.booster_name,
-        canonical_role: booster.canonical_role,
-        injection_target_layer: targetLayer,
-        delivery_method_id: recommended?.required_delivery_method_id || null,
-        delivery_name: recommended?.delivery_method_name || 'Manual Injection',
-        delivery_pain_level: recommended?.typical_pain_level || 'Medium',
-        is_safety_required: false,
-    };
+async function fetchInjectableRules(): Promise<InjectableRuleRecord[]> {
+    const records = await base(TBL_INJECTABLE_RULES).select().all();
+    return records.map(r => ({
+        id: r.id,
+        rule_id: (r.get('rule_id') as string) || '',
+        target_layer: (r.get('target_layer') as string) || '',
+        rule_rationale: (r.get('rule_rationale') as string) || '',
+        safety_flag: Boolean(r.get('safety_flag')),
+        rule_category: (r.get('rule_category') as string) || '',
+        relaxation_logic: (r.get('relaxation_logic') as string) || '',
+        priority: Number(r.get('priority') || 0),
+    }));
 }
 
-// Budget tier numeric index for comparison
-const BUDGET_TIER_ORDER: Record<string, number> = { 'Budget': 0, 'Mid': 1, 'Premium': 2, 'Luxury': 3 };
+// ─── Constants & AI Config ────────────────────────────────────────────────
 
-async function fetchTopDevices(categories: EBDCategoryRecord[], survey: SurveySignals): Promise<DeviceSummary[][]> {
-    const result: DeviceSummary[][] = [];
-    const surveyBudgetIdx = BUDGET_TIER_ORDER[survey.budget] ?? 1;
-    const currentYear = new Date().getFullYear();
+const CLINICAL_SYSTEM_PROMPT = `You are a Korean medical aesthetics clinical AI advisor specializing in EBD
+(Evidence-Based Dermatology). You receive a patient profile and a complete
+proprietary knowledge base of aesthetic treatments, devices, and boosters
+used in Korean medical aesthetic clinics.
 
-    for (const cat of categories) {
-        if (!cat.devices || cat.devices.length === 0) {
-            result.push([]);
-            continue;
-        }
+YOUR TASK: Analyze the patient profile and select the 3 best-fit treatment
+categories. Use the clinical indication map, category knowledge base, and
+device data to reason carefully.
 
-        type ScoredDevice = DeviceSummary & { subScore: number };
-        const deviceSub: ScoredDevice[] = [];
+HARD RULES (never violate):
+1. Budget constraint: If patient budget is 'Economy' or 'Mid', never assign
+   a category with budget_tier='Luxury' as rank_1. Economy patients MUST get
+   Economy/Mid rank_1.
+2. Melasma + Sun-worsened pigmentation: NEVER recommend as rank_1 any category
+   whose contraindicated_conditions contains 'melasma' or 'pigmentation' risk.
+   PREFER: PICO, Q_SWITCH. AVOID: IPL at high power, CO2, aggressive ablative.
+3. Active inflammatory acne: AVOID ablative resurfacing (CO2, ERYAG) as rank_1.
+   PREFER: MN_RF (bypasses epidermis), LED, Q_SWITCH (toning mode).
+4. Thin/sensitive skin: Aggressiveness score should be <=5 for rank_1.
+   PREFER categories with thin_skin_fit = 'High' or 'Good'.
+5. Past injectable dissatisfaction: Downweight injectable-heavy categories.
+   Prefer energy-based device categories over injection-primary ones.
+6. Elongated/vertical pores (aging type = dermal volume loss):
+   Prioritize dermal collagen stimulation (MN_RF, PICO Fractional) over
+   surface-only resurfacing.
+7. NEGATIVE FIRST: Before selecting rank_1/2/3, explicitly list which
+   categories are EXCLUDED for this patient and why.
 
-        try {
-            const deviceIdList = cat.devices.join(',');
-            const dRecs = await base('EBD_Device').select({
-                filterByFormula: `FIND(RECORD_ID(), '${deviceIdList}') > 0`,
-                fields: [
-                    'device_name', 'pain_modifier',
-                    'trend_score',        // fld0F33GXXt9tFrAC: 1-10 (added this session)
-                    'skin_depth_fit',     // fldOccPo2Fb8EpESY: Shallow/Medium/Deep/Universal
-                    'budget_tier',        // flduA112tlP7RgKgE: Budget/Mid/Premium/Luxury
-                    'evidence_basis',     // fldUk1LMb7qS6QGcp: text (e.g. "FDA-cleared RCT")
-                    'launch_year',        // numeric year
-                    'brand_tier',         // fldVDVn2sZeGh65TE: Premium/Standard/Budget (new)
-                    'clinical_evidence_score' // fldVHXiwbc1Rvuk9g: 1-5 (new)
-                ]
-            }).all();
+REASONING PROCESS:
+1. First identify the patient's clinical indications from the indication map
+2. List excluded categories with reasons (apply HARD RULES)
+3. From remaining candidates, select rank_1/2/3 by best clinical fit
+4. For each rank, select 1-3 devices from that category's EBD_Device list
+   (prefer higher trend_score + clinical_evidence_score for Premium/Standard
+   budget; prefer Budget brand_tier for Economy budget)
+5. For each rank, select 0-2 boosters matching preferred_booster_roles
+6. Generate warm, evidence-based explanations in Korean and English
 
-            dRecs.forEach(r => {
-                // ── Sub-score Calculation (100pt) ──────────────────────────────
+OUTPUT: Return ONLY valid JSON matching the exact schema. No markdown wrapping block (\`\`\`json). No extra text outside JSON.`;
 
-                // [A] Trend Score: 35pt  (stored 1-10, scale to 0-35)
-                const trendScore = Number(r.get('trend_score') || 5);
-                const scoreA = (trendScore / 10) * 35;
+const CategoryRankSchema = z.object({
+    category_id: z.string(),
+    why_KO: z.string(),
+    why_EN: z.string(),
+    recommended_device_ids: z.array(z.string()).max(3),
+    recommended_booster_ids: z.array(z.string()).max(2),
+    fit_score: z.number().min(0).max(100),
+});
 
-                // [B] Budget Match: 25pt
-                const devBudgetTier = String(r.get('budget_tier') || 'Mid');
-                const devBudgetIdx = BUDGET_TIER_ORDER[devBudgetTier] ?? 1;
-                const budgetDiff = Math.abs(devBudgetIdx - surveyBudgetIdx);
-                const scoreB = budgetDiff === 0 ? 25 : budgetDiff === 1 ? 17 : budgetDiff === 2 ? 8 : 2;
+const ClinicalRecommendationSchema = z.object({
+    excluded_categories: z.array(z.object({
+        category_id: z.string(),
+        reason: z.string(),
+    })),
+    rank1: CategoryRankSchema,
+    rank2: CategoryRankSchema,
+    rank3: CategoryRankSchema,
+    what_to_avoid_KO: z.string(),
+    what_to_avoid_EN: z.string(),
+    skin_analysis_summary_KO: z.string(),
+    skin_analysis_summary_EN: z.string(),
+    doctor_question_KO: z.string(),
+    doctor_question_EN: z.string(),
+    overall_direction_KO: z.string(),
+});
 
-                // [C] Clinical Evidence: 20pt  (evidence_score 1-5 OR evidence_basis text heuristic)
-                let clinicalScore = Number(r.get('clinical_evidence_score') || 0);
-                if (!clinicalScore) {
-                    // Fallback heuristic: if evidence_basis contains quality keywords, give score
-                    const evText = String(r.get('evidence_basis') || '').toLowerCase();
-                    if (evText.includes('rct') || evText.includes('fda')) clinicalScore = 5;
-                    else if (evText.includes('clinical') || evText.includes('trial')) clinicalScore = 4;
-                    else if (evText.includes('study') || evText.includes('paper')) clinicalScore = 3;
-                    else clinicalScore = 2;
-                }
-                const scoreC = (Math.min(clinicalScore, 5) / 5) * 20;
+type ClinicalRecommendation = z.infer<typeof ClinicalRecommendationSchema>;
 
-                // [D] Recency / Launch Year: 10pt
-                const launchYear = Number(r.get('launch_year') || 2018);
-                const age = currentYear - launchYear;
-                const scoreD = age <= 2 ? 10 : age <= 5 ? 8 : age <= 10 ? 5 : 2;
+// Helper to construct response structures
+function buildCategoryResult(
+    rankData: z.infer<typeof CategoryRankSchema>,
+    categories: EBDCategoryRecord[],
+    devices: EBDDeviceRecord[],
+    boosters: SkinBoosterRecord[]
+): CategoryRankResult {
+    const category = categories.find(c => c.category_id === rankData.category_id) || categories[0];
 
-                // [E] Brand Tier bonus: 10pt
-                const brandTier = String(r.get('brand_tier') || '');
-                const scoreE = brandTier === 'Premium' ? 10 : brandTier === 'Standard' ? 6 : 2;
-
-                const subScore = scoreA + scoreB + scoreC + scoreD + scoreE;
-
-                deviceSub.push({
-                    device_id: r.id,
-                    device_name: String(r.get('device_name') || ''),
-                    pain_modifier: Number(r.get('pain_modifier') || 0),
-                    subScore
-                });
-            });
-
-            // Sort by sub-score descending, return top 2 (strip subScore from response)
-            deviceSub.sort((a, b) => b.subScore - a.subScore);
-            result.push(deviceSub.slice(0, 2).map(({ subScore, ...d }) => d as DeviceSummary));
-        } catch (e) {
-            console.error('[fetchTopDevices] Error:', e);
-            result.push([]);
-        }
-    }
-    return result;
-}
-
-async function fetchTopBoosters(categories: EBDCategoryRecord[], survey: SurveySignals): Promise<BoosterDeliveryItem[][]> {
-    const result: BoosterDeliveryItem[][] = [];
-    try {
-        const allBoostersRaw = await base('Skin_booster').select({
-            fields: ['booster_id', 'booster_name', 'canonical_role', 'injection_target_layer']
-        }).all();
-        const allBoosters = allBoostersRaw.map(r => ({
-            booster_id: String(r.get('booster_id') || r.id),
-            booster_name: String(r.get('booster_name') || ''),
-            canonical_role: String(r.get('canonical_role') || ''),
-            injection_target_layer: String(r.get('injection_target_layer') || '')
+    // Map devices
+    const top_devices: DeviceSummary[] = rankData.recommended_device_ids
+        .map(did => devices.find(d => d.device_id === did || d.id === did))
+        .filter(Boolean)
+        .map(d => ({
+            device_id: d!.device_id,
+            device_name: d!.device_name,
+            pain_modifier: 0
         }));
 
-        for (const cat of categories) {
-            const roles = cat.preferred_booster_roles ? cat.preferred_booster_roles.split(',').map(s => s.trim()) : [];
-            if (roles.length === 0) {
-                result.push([]);
-                continue;
-            }
-            const matchingBoosters = allBoosters.filter(b => roles.includes(b.canonical_role));
-            // Apply Injectable Method Rules
-            const parsedBoosters: BoosterDeliveryItem[] = [];
-            for (const b of matchingBoosters.slice(0, 2)) {
-                const ruleMatched = await applyInjectableMethodRules(b, survey);
-                parsedBoosters.push(ruleMatched);
-            }
-            result.push(parsedBoosters);
-        }
-    } catch (e) {
-        console.error(e);
-        result.push([], [], []);
-    }
-    return result;
-}
+    // Map boosters
+    const top_boosters: BoosterDeliveryItem[] = rankData.recommended_booster_ids
+        .map(bid => boosters.find(b => b.booster_id === bid || b.id === bid))
+        .filter(Boolean)
+        .map(b => ({
+            booster_id: b!.booster_id,
+            booster_name: b!.booster_name,
+            canonical_role: b!.canonical_role,
+            injection_target_layer: b!.target_layer,
+            delivery_method_id: null,
+            delivery_name: 'Manual Injection',
+            delivery_pain_level: 'Medium',
+            is_safety_required: false
+        }));
 
-function buildRankResult(category: EBDCategoryRecord & { score: number }, devices: DeviceSummary[], boosters: BoosterDeliveryItem[], radarScore: RadarScoreData): CategoryRankResult {
     return {
         category_id: category.category_id,
-        score: category.score,
-        why_KO: null,
-        why_EN: null,
-        radar: radarScore,
-        top_devices: devices,
-        top_boosters: boosters,
-        booster_pairing_note_KO: category.booster_pairing_note_KO ?? null,
-        booster_pairing_note_EN: category.booster_pairing_note_EN ?? null,
-        recommended_sessions: category.recommended_sessions ?? null,
-        session_interval_weeks: category.session_interval_weeks ?? null,
-        recommended_supporting_care: category.recommended_supporting_care ? category.recommended_supporting_care.map((id, i) => ({
-            supportcare_id: id,
-            supportcare_name: `Supporting Care ${i}`, // Usually mapped using lookup
-            primary_purpose: 'Recovery',
-            canonical_role: 'PostCare'
-        })) : []
+        score: rankData.fit_score,
+        why_KO: rankData.why_KO || null,
+        why_EN: rankData.why_EN || null,
+        radar: { efficacy: 90, downtime: 85, discomfort: 80, cost_efficiency: 75, maintenance: 85 },
+        top_devices,
+        top_boosters,
+        booster_pairing_note_KO: category.booster_pairing_note_KO || null,
+        booster_pairing_note_EN: category.booster_pairing_note_EN || null,
+        recommended_sessions: category.recommended_sessions,
+        session_interval_weeks: 4,
+        recommended_supporting_care: []
     };
 }
 
@@ -478,104 +326,177 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
-        const surveyCanonical = parseSurveyCanonical(req.body);
-        const allCategories = await fetchEBDCategories();
+        const surveyData = req.body;
 
-        // Check Risk Flags
-        const riskFlag = checkRiskFlag(surveyCanonical, allCategories);
+        // --- Step 1: FETCH ALL KNOWLEDGE BASE DATA IN PARALLEL ---
+        const [
+            indicationRecords,
+            categoryRecords,
+            deviceRecords,
+            boosterRecords,
+            ruleRecords
+        ] = await Promise.all([
+            fetchIndicationMap(),
+            fetchEBDCategories(),
+            fetchEBDDevices(),
+            fetchSkinBoosters(),
+            fetchInjectableRules()
+        ]);
 
-        // Boost score if risk flag applies to specific categories (Optional logic enhancement)
-        // Score & Sort
-        const scoredCategories = allCategories
-            .map(cat => ({ ...cat, score: scoreCategory(cat, surveyCanonical) }))
-            .filter(cat => !isContraindicated(cat, surveyCanonical))
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 3);
+        // --- Step 2: BUILD THE CLINICAL PROMPT ---
+        const indicationText = indicationRecords.map(r => `INDICATION: ${r.indication_name}\nSurvey Signals: ${r.survey_signals}\nRecommended Categories: ${r.recommended_category_ids}\nNotes/Contraindications: ${r.notes}`).join('\n\n');
 
-        // Overwrite Rank 1 if Risk Flag is triggered and we need to push a specific category
-        if (riskFlag.triggered && scoredCategories.length > 0) {
-            // Find best match for the risk category (case-insensitive)
-            const isAcneRisk = surveyCanonical.risks.join(',').toLowerCase().includes('acne');
-            const targetIndication = isAcneRisk ? 'acne scar' : 'pigmentation';
-            const overrideCat = allCategories.find(c =>
-                c.best_primary_indication.toLowerCase().includes(targetIndication) ||
-                c.category_display_name.toLowerCase().includes(isAcneRisk ? 'acne' : 'pigment') ||
-                c.category_id.toLowerCase().includes(isAcneRisk ? 'mn_rf' : 'pico')
-            );
-            if (overrideCat) {
-                const idx = scoredCategories.findIndex(c => c.category_id === overrideCat.category_id);
-                if (idx > -1) scoredCategories.splice(idx, 1);
-                scoredCategories.unshift({ ...overrideCat, score: 99 });
-                if (scoredCategories.length > 3) scoredCategories.pop();
-            }
-        }
+        const categoryText = categoryRecords.map(r => `CATEGORY: ${r.category_id} | ${r.category_display_name}\nBudget Tier: ${r.budget_tier}\nPain: ${r.avg_pain_level} | Downtime: ${r.avg_downtime} | Sessions: ${r.recommended_sessions}\nThin Skin Fit: ${r.thin_skin_fit}\nContraindicated For: ${r.contraindicated_conditions}\nRisk Flag Trigger: ${r.risk_flag_trigger}\nBest Indication: ${r.best_primary_indication}\nSecondary: ${r.secondary_indications}\nPreferred Boosters: ${r.preferred_booster_roles}`).join('\n\n');
 
-        const topDevicesPerCategory = await fetchTopDevices(scoredCategories, surveyCanonical);
-        const topBoostersPerCategory = await fetchTopBoosters(scoredCategories, surveyCanonical);
+        const deviceText = deviceRecords.map(r => `DEVICE: ${r.device_id} | ${r.device_name}\nCategory Link: ${r.EBD_Category?.join(', ')}\nTrend: ${r.trend_score}/10 | Brand: ${r.brand_tier} | Evidence: ${r.clinical_evidence_score}/5\nTechnology: ${r.signature_technology}\nClinical Characteristics: ${r.clinical_charactor}\nWhy This Device: ${r.reason_why}\nEvidence Basis: ${r.evidence_basis}`).join('\n\n');
 
-        // Calculate Radar only for Rank 1 for now
-        const radarScore = calculateRadarScore(scoredCategories[0] || {} as EBDCategoryRecord, surveyCanonical);
+        const boosterText = boosterRecords.map(r => `BOOSTER: ${r.booster_id} | ${r.booster_name}\nRole: ${r.canonical_role}\nPrimary Effect: ${r.primary_effect}\nSecondary Effect: ${r.secondary_effect}\nTarget Layer: ${r.target_layer}`).join('\n\n');
 
-        // Save to Recommendation_Run — 로그인 여부와 무관하게 항상 저장
-        const patientLink = [req.body.patientId || req.body.userId].filter(Boolean) as string[];
-        const rrPayload: Record<string, any> = {
-            rank_1_category_id: scoredCategories[0]?.category_id,
-            rank_2_category_id: scoredCategories[1]?.category_id,
-            rank_3_category_id: scoredCategories[2]?.category_id,
-            radar_score_json: JSON.stringify(radarScore),
-            top5_booster_ids: topBoostersPerCategory.flat().map(b => b.booster_id).slice(0, 5).join(', ')
-        };
-        // 로그인 사용자만 patients_v1 링크 포함
-        if (patientLink.length > 0) {
-            rrPayload.patients_v1 = patientLink;
-        }
-        // Optionally attach korea visit plan if available
-        if (surveyCanonical.koreaVisitPlan !== 'undecided') {
-            rrPayload.survey_meta_json = JSON.stringify({
-                koreaVisitPlan: surveyCanonical.koreaVisitPlan,
-                koreaStayDays: surveyCanonical.koreaStayDays,
-                referralCode: surveyCanonical.referralCode || null
+        const ruleText = ruleRecords.map(r => `RULE: ${r.rule_id} | Safety Flag: ${r.safety_flag}\nRationale: ${r.rule_rationale}\nCategory: ${r.rule_category} | Priority: ${r.priority}`).join('\n\n');
+
+        const userPrompt = `── PATIENT PROFILE ──
+Primary Goal: ${surveyData.primaryGoal || ''}
+Secondary Goal: ${surveyData.secondaryGoal || ''}
+Risk Flags: ${(surveyData.risks || []).join(', ')}
+Acne Type: ${surveyData.acne || 'None'}
+Pigmentation: ${surveyData.pigment || 'None'}
+Problem Areas: ${surveyData.concernAreas || ''}
+Pore Type: ${surveyData.pores || ''}
+Priority: ${surveyData.priority || ''}
+Skin Profile: ${surveyData.skinType || ''}
+Result Style: ${surveyData.resultStyle || ''}
+Pain Tolerance: ${surveyData.painTolerance || ''}
+Downtime Tolerance: ${surveyData.downtimeTolerance || ''}
+Budget: ${surveyData.budget || ''}
+Visit Frequency: ${surveyData.visitFrequency || ''}
+Past Experience: ${surveyData.history || ''}
+Past Satisfaction: ${surveyData.historySatisfaction || ''}
+Korea Visit: ${surveyData.koreaVisitPlan || ''} - ${surveyData.koreaStayDays || ''}
+
+── CLINICAL INDICATION MAP (20 indications) ──
+${indicationText}
+
+── EBD CATEGORY KNOWLEDGE BASE (19 categories) ──
+${categoryText}
+
+── EBD DEVICE KNOWLEDGE BASE (30 devices) ──
+${deviceText}
+
+── SKIN BOOSTER KNOWLEDGE BASE ──
+${boosterText}
+
+── INJECTABLE RULES ──
+${ruleText}
+
+REMINDER: Return ONLY raw JSON matching the required schema. No other conversational text.`;
+
+        // --- Step 3: CALL API ---
+        const anthropic = new Anthropic({
+            apiKey: process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY, // Use configured env
+        });
+
+        let recommendation: ClinicalRecommendation;
+
+        try {
+            const msg = await anthropic.messages.create({
+                model: 'claude-opus-4-5-20251101', // Exact model specified inside prompt instructions
+                max_tokens: 4096,
+                temperature: 0.1,
+                system: CLINICAL_SYSTEM_PROMPT,
+                messages: [
+                    { role: 'user', content: userPrompt }
+                ]
+            });
+
+            const textOutput = msg.content.filter(c => c.type === 'text').map(c => (c as any).text).join('\n');
+
+            // Clean markdown blocks if LLM still includes them
+            const jsonString = textOutput.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+            const firstBrace = jsonString.indexOf('{');
+            const lastBrace = jsonString.lastIndexOf('}');
+            const cleanJson = jsonString.substring(firstBrace, lastBrace + 1);
+
+            // --- Step 4: PARSE RESPONSE WITH ZOD ---
+            recommendation = ClinicalRecommendationSchema.parse(JSON.parse(cleanJson));
+
+        } catch (llmError) {
+            console.error('[Analyze Engine] LLM / Parsing Error:', llmError);
+            return res.status(200).json({
+                error: '분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+                status: 'error'
             });
         }
-        // 항상 Recommendation_Run 레코드 생성 (비로그인도 포함)
-        let runId: string | null = null;
+
+        // --- Step 5: SAVE TO Recommendation_Run ---
+        let runId = `fallback_${Date.now()}`;
         try {
-            const rrRec = await base('Recommendation_Run').create([{ fields: rrPayload }]);
+            const rrPayload = {
+                rank_1_category_id: recommendation.rank1.category_id,
+                rank_2_category_id: recommendation.rank2.category_id,
+                rank_3_category_id: recommendation.rank3.category_id,
+                why_cat1_KO: recommendation.rank1.why_KO,
+                why_cat1_EN: recommendation.rank1.why_EN,
+                why_cat2_KO: recommendation.rank2.why_KO,
+                why_cat2_EN: recommendation.rank2.why_EN,
+                why_cat3_KO: recommendation.rank3.why_KO,
+                why_cat3_EN: recommendation.rank3.why_EN,
+                patient_summary: recommendation.skin_analysis_summary_KO,
+                patient_friendly_summary: recommendation.skin_analysis_summary_EN,
+                clinical_warning: recommendation.what_to_avoid_KO,
+                comprehensive_analysis: recommendation.overall_direction_KO,
+                doctor_question_ko: recommendation.doctor_question_KO,
+                doctor_question_en: recommendation.doctor_question_EN,
+                top10_device_ids: [
+                    ...recommendation.rank1.recommended_device_ids,
+                    ...recommendation.rank2.recommended_device_ids,
+                    ...recommendation.rank3.recommended_device_ids,
+                ].join(', '),
+                top5_booster_ids: [
+                    ...recommendation.rank1.recommended_booster_ids,
+                    ...recommendation.rank2.recommended_booster_ids,
+                    ...recommendation.rank3.recommended_booster_ids,
+                ].slice(0, 5).join(', '),
+                survey_meta_json: JSON.stringify(surveyData),
+                status: 'completed',
+            };
+
+            const rrRec = await base(TBL_RECOMMENDATION_RUN).create([{ fields: rrPayload }]);
             runId = rrRec[0].id;
-        } catch (rrCreateErr: any) {
-            console.error('[analyze] Recommendation_Run create failed:', rrCreateErr?.message || rrCreateErr);
+        } catch (saveError) {
+            console.error('[Analyze Engine] Failed to save to Airtable:', saveError);
         }
 
-        const finalRunId = runId || `mock_run_${Date.now()}`;
+        // Build Response Payload matching original formats
+        const radarScore = { efficacy: 90, downtime: 85, discomfort: 80, cost_efficiency: 75, maintenance: 85 };
+        const riskFlag: RiskFlagData = { triggered: recommendation.excluded_categories.length > 0, reason_KO: recommendation.what_to_avoid_KO, reason_EN: recommendation.what_to_avoid_EN };
+
         const responsePayload: AnalysisResponseV2 = {
-            runId: finalRunId,
-            reportId: finalRunId, // alias — DeepDiveModal + report page polling 호환
-            rank1: buildRankResult(scoredCategories[0], topDevicesPerCategory[0], topBoostersPerCategory[0], radarScore),
-            rank2: scoredCategories[1] ? buildRankResult(scoredCategories[1], topDevicesPerCategory[1], topBoostersPerCategory[1], radarScore) : null,
-            rank3: scoredCategories[2] ? buildRankResult(scoredCategories[2], topDevicesPerCategory[2], topBoostersPerCategory[2], radarScore) : null,
+            runId,
+            reportId: runId, // alias
+            rank1: buildCategoryResult(recommendation.rank1, categoryRecords, deviceRecords, boosterRecords),
+            rank2: buildCategoryResult(recommendation.rank2, categoryRecords, deviceRecords, boosterRecords),
+            rank3: buildCategoryResult(recommendation.rank3, categoryRecords, deviceRecords, boosterRecords),
             riskFlag,
             radarScore,
         };
 
-        // Fire and forget Async Generation Tasks (Task 4 & 5 endpoint)
-        if (runId) {
-            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `http://${req.headers.host}`;
-            fetch(`${baseUrl}/api/recommendation/generate-report-content`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ runId, patientId: req.body.patientId || req.body.userId || '' })
-            }).catch(e => console.error('[Analyze Engine] Async trigger failed:', e));
-        }
+        // Fire and forget Async Generation Tasks (if still needed)
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `http://${req.headers.host}`;
+        fetch(`${baseUrl}/api/recommendation/generate-report-content`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ runId, patientId: surveyData.patientId || surveyData.userId || '' })
+        }).catch(e => console.error('[Analyze Engine] Async trigger failed:', e));
 
         try {
             savePatientLog({
-                sessionId: runId ?? `anon_${Date.now()}`,
+                sessionId: runId,
                 timestamp: new Date().toISOString(),
-                userId: req.body.userId,
-                userEmail: req.body.userEmail,
-                tallyData: req.body,
-                analysisInput: { primaryGoal: surveyCanonical.primaryIndications[0], secondaryGoal: surveyCanonical.secondaryIndications[0], downtimeTolerance: surveyCanonical.downtimeTolerance, budget: surveyCanonical.budget },
-                reportId: runId ?? undefined
+                userId: surveyData.userId,
+                userEmail: surveyData.userEmail,
+                tallyData: surveyData,
+                analysisInput: { primaryGoal: surveyData.primaryGoal, secondaryGoal: surveyData.secondaryGoal, budget: surveyData.budget },
+                reportId: runId
             });
         } catch (e) { console.error('[LOG]', e); }
 
@@ -583,6 +504,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     } catch (error: any) {
         console.error('[ENGINE] Error:', error);
-        return res.status(500).json({ error: error.message || 'Internal Server Error' });
+        return res.status(200).json({
+            error: '분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+            status: 'error'
+        });
     }
 }
