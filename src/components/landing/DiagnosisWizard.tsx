@@ -616,11 +616,10 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                                                                 {{ EN: 'When do you plan to visit?', KO: '방문 예정 시기', JP: '訪問予定時期', CN: '预计访问日期' }[language]}
                                                             </label>
                                                             <input
-                                                                type="text"
-                                                                placeholder={{ EN: 'e.g., April 2026', KO: '예: 2026년 4월', JP: '例：2026年4月', CN: '例如：2026年4月' }[language]}
+                                                                type="month"
                                                                 value={data.koreaStayDays || ''}
                                                                 onChange={(e) => updateData('koreaStayDays', e.target.value)}
-                                                                className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white focus:border-blue-500 outline-none"
+                                                                className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white text-base focus:border-blue-500 outline-none transition-colors"
                                                             />
                                                         </div>
                                                         <div>
@@ -632,7 +631,7 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                                                                 placeholder={{ EN: 'Enter referral code', KO: '추천 코드를 입력하세요', JP: '紹介コードを入力', CN: '输入推荐码' }[language]}
                                                                 value={data.referralCode || ''}
                                                                 onChange={(e) => updateData('referralCode', e.target.value)}
-                                                                className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white focus:border-blue-500 outline-none"
+                                                                className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white text-base focus:border-blue-500 outline-none transition-colors"
                                                             />
                                                         </div>
                                                     </div>
