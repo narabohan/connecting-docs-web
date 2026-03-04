@@ -58,15 +58,78 @@ const PAIN_SCORE: Record<string, number> = {
 };
 const BUDGET_ORDER = ['Budget', 'Mid', 'Premium', 'Luxury'];
 
-function parseSurveyCanonical(body: any): SurveySignals {
-    // Map incoming Tally/Survey data (like body.primaryGoal, body.painTolerance) to SurveySignals
-    let painMap: Record<string, number> = { 'Low': 2, 'Medium': 3, 'High': 4 };
-    let dtMap: Record<string, number> = { 'None': 0, 'Low': 1, 'Medium': 2, 'High': 3 };
+// ─── Wizard ID → EBD_Category indication 매핑 ─────────────────────────────
+// DiagnosisWizard는 'hydration', 'tone', 'contour' 같은 short ID를 전송
+// EBD_Category.best_primary_indication는 'Skin quality / Glow', 'Tone', 'Lifting' 등 전체 텍스트
 
-    // E.g., Map body.primaryGoal strings to Indication standard names
-    // For simplicity assuming body.primaryGoal contains comma-separated or is string
-    let primaryIndications = body.primaryGoal ? [body.primaryGoal] : ['Tone'];
-    let secondaryIndications = body.secondaryGoal ? [body.secondaryGoal] : [];
+const GOAL_TO_INDICATION: Record<string, string> = {
+    'hydration':   'Skin quality / Glow',
+    'texture':     'Skin quality / Glow',
+    'volume':      'Lifting',
+    'contour':     'Lifting',
+    'tone':        'Tone',
+    'lifting':     'Lifting',
+    'pigment':     'Dermal pigmentation',
+    'acne':        'Acne scar',
+    'scars':       'Acne scar',
+    'pores':       'Skin quality / Glow',
+    'guidance':    'Skin quality / Glow',
+    // Legacy / Tally canonical strings (하위 호환)
+    'Lifting':     'Lifting',
+    'Tone':        'Tone',
+    'Skin Improvement': 'Skin quality / Glow',
+    'Glass Skin':  'Skin quality / Glow',
+};
+
+// Pain 내성 매핑 (wizard IDs → 1-5 숫자)
+const PAIN_MAP: Record<string, number> = {
+    'minimal':  2,  // Low tolerance
+    'moderate': 3,  // Medium
+    'high':     4,  // High tolerance
+    'notsure':  3,
+    // Legacy
+    'Low': 2, 'Medium': 3, 'High': 4,
+};
+
+// 다운타임 매핑 (wizard IDs → 0-3 숫자)
+const DOWNTIME_MAP: Record<string, number> = {
+    'none':    0,   // Zero downtime
+    'short':   2,   // 3-5 days
+    'long':    3,   // 1 week+
+    'notsure': 1,
+    // Legacy
+    'None': 0, 'Low': 1, 'Medium': 2, 'High': 3,
+};
+
+// Budget 매핑 (wizard IDs → 'Budget'|'Mid'|'Premium'|'Luxury')
+const BUDGET_MAP: Record<string, string> = {
+    'premium':  'Premium',
+    'balanced': 'Mid',
+    'economy':  'Budget',
+    'notsure':  'Mid',
+    // Legacy passthrough
+    'Budget': 'Budget', 'Mid': 'Mid', 'Premium': 'Premium', 'Luxury': 'Luxury',
+};
+
+function parseSurveyCanonical(body: any): SurveySignals {
+    // Goal ID → EBD_Category indication 이름으로 변환
+    const mapGoal = (goalId: string) =>
+        GOAL_TO_INDICATION[goalId] || goalId || 'Skin quality / Glow';
+
+    const goalId = String(body.primaryGoal || '');
+    const secondGoalId = String(body.secondaryGoal || '');
+
+    let primaryIndications = goalId ? [mapGoal(goalId)] : ['Skin quality / Glow'];
+    let secondaryIndications = secondGoalId ? [mapGoal(secondGoalId)] : [];
+
+    // risks 배열: 위험 요소가 있으면 secondaryIndications에 추가
+    const risks: string[] = body.risks || [];
+    if (risks.includes('pigment') && !secondaryIndications.includes('Dermal pigmentation')) {
+        secondaryIndications.push('Dermal pigmentation');
+    }
+    if (risks.includes('acne') && !secondaryIndications.includes('Acne scar')) {
+        secondaryIndications.push('Acne scar');
+    }
 
     // Korea visit plan mapping
     let koreaVisitPlan: SurveySignals['koreaVisitPlan'] = 'undecided';
@@ -77,12 +140,12 @@ function parseSurveyCanonical(body: any): SurveySignals {
     return {
         primaryIndications,
         secondaryIndications,
-        painTolerance: painMap[body.painTolerance] || 3,
-        downtimeTolerance: dtMap[body.downtimeTolerance] || 2,
-        budget: body.budget || 'Mid',
-        hasThinSkin: body.skinType === 'Thin' || String(body.q4_skin_thickness_MASTER || '').includes('Thin'),
-        hasVolumeConcern: body.volumePreference === 'Focus on Fat Loss' || !!body.q3_vol_logic_MASTER,
-        risks: body.risks || [],
+        painTolerance: PAIN_MAP[body.painTolerance] ?? 3,
+        downtimeTolerance: DOWNTIME_MAP[body.downtimeTolerance] ?? 1,
+        budget: BUDGET_MAP[body.budget] || 'Mid',
+        hasThinSkin: body.skinType === 'thin' || body.skinType === 'Thin' || String(body.q4_skin_thickness_MASTER || '').toLowerCase().includes('thin'),
+        hasVolumeConcern: body.volumePreference === 'Focus on Fat Loss' || body.volumeLogic === 'instant' || !!body.q3_vol_logic_MASTER,
+        risks,
         rawLanguage: body.language || 'EN',
         koreaVisitPlan,
         koreaStayDays: Number(body.koreaStayDays || 0),
@@ -431,9 +494,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Overwrite Rank 1 if Risk Flag is triggered and we need to push a specific category
         if (riskFlag.triggered && scoredCategories.length > 0) {
-            // Find best inflammation/pigment control
-            const targetIndication = surveyCanonical.risks.join(',').toLowerCase().includes('acne') ? 'Inflammation' : 'Pigment';
-            const overrideCat = allCategories.find(c => c.best_primary_indication.includes(targetIndication) || c.category_display_name.includes(targetIndication));
+            // Find best match for the risk category (case-insensitive)
+            const isAcneRisk = surveyCanonical.risks.join(',').toLowerCase().includes('acne');
+            const targetIndication = isAcneRisk ? 'acne scar' : 'pigmentation';
+            const overrideCat = allCategories.find(c =>
+                c.best_primary_indication.toLowerCase().includes(targetIndication) ||
+                c.category_display_name.toLowerCase().includes(isAcneRisk ? 'acne' : 'pigment') ||
+                c.category_id.toLowerCase().includes(isAcneRisk ? 'mn_rf' : 'pico')
+            );
             if (overrideCat) {
                 const idx = scoredCategories.findIndex(c => c.category_id === overrideCat.category_id);
                 if (idx > -1) scoredCategories.splice(idx, 1);
@@ -448,15 +516,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Calculate Radar only for Rank 1 for now
         const radarScore = calculateRadarScore(scoredCategories[0] || {} as EBDCategoryRecord, surveyCanonical);
 
-        // Save to Recommendation_Run
+        // Save to Recommendation_Run — 로그인 여부와 무관하게 항상 저장
+        const patientLink = [req.body.patientId || req.body.userId].filter(Boolean) as string[];
         const rrPayload: Record<string, any> = {
-            patients_v1: [req.body.patientId || req.body.userId].filter(Boolean) as string[],
             rank_1_category_id: scoredCategories[0]?.category_id,
             rank_2_category_id: scoredCategories[1]?.category_id,
             rank_3_category_id: scoredCategories[2]?.category_id,
             radar_score_json: JSON.stringify(radarScore),
             top5_booster_ids: topBoostersPerCategory.flat().map(b => b.booster_id).slice(0, 5).join(', ')
         };
+        // 로그인 사용자만 patients_v1 링크 포함
+        if (patientLink.length > 0) {
+            rrPayload.patients_v1 = patientLink;
+        }
         // Optionally attach korea visit plan if available
         if (surveyCanonical.koreaVisitPlan !== 'undecided') {
             rrPayload.survey_meta_json = JSON.stringify({
@@ -465,11 +537,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 referralCode: surveyCanonical.referralCode || null
             });
         }
-
-        let runId = req.body.runId || null;
-        if (rrPayload.patients_v1.length > 0) {
+        // 항상 Recommendation_Run 레코드 생성 (비로그인도 포함)
+        let runId: string | null = null;
+        try {
             const rrRec = await base('Recommendation_Run').create([{ fields: rrPayload }]);
             runId = rrRec[0].id;
+        } catch (rrCreateErr: any) {
+            console.error('[analyze] Recommendation_Run create failed:', rrCreateErr?.message || rrCreateErr);
         }
 
         const finalRunId = runId || `mock_run_${Date.now()}`;

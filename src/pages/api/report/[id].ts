@@ -172,8 +172,210 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
     }
 
+    // ── STEP 0: V2 Engine — Recommendation_Run lookup ───────────────────────
+    // analyze.ts가 생성한 runId는 Recommendation_Run 레코드 ID
+    const queryLang = ((req.query.lang as string) || 'EN').toUpperCase();
+
     try {
-        const queryLang = ((req.query.lang as string) || 'EN').toUpperCase();
+        const rrRec = await base('Recommendation_Run').find(id);
+        const rrf = (rrRec?.fields || {}) as Record<string, any>;
+        const rank1CatId = String(rrf.rank_1_category_id || '');
+
+        if (rank1CatId) {
+            const rank2CatId = String(rrf.rank_2_category_id || '');
+            const rank3CatId = String(rrf.rank_3_category_id || '');
+
+            // EBD_Category 레코드 fetch (category_id 텍스트 필드로 필터)
+            const fetchCat = async (catId: string) => {
+                if (!catId) return null;
+                const recs = await base('EBD_Category').select({
+                    filterByFormula: `{category_id} = "${catId}"`,
+                    maxRecords: 1,
+                    fields: [
+                        'category_display_name', 'best_primary_indication', 'avg_pain_level',
+                        'avg_downtime', 'recommended_sessions', 'devices',
+                        'booster_pairing_note_KO', 'booster_pairing_note_EN'
+                    ]
+                }).firstPage();
+                return recs[0] || null;
+            };
+
+            const [cat1, cat2, cat3] = await Promise.all([
+                fetchCat(rank1CatId),
+                rank2CatId ? fetchCat(rank2CatId) : Promise.resolve(null),
+                rank3CatId ? fetchCat(rank3CatId) : Promise.resolve(null),
+            ]);
+
+            if (!cat1) throw new Error('EBD_Category not found');
+
+            // EBD_Device fetch (카테고리에 링크된 디바이스 IDs)
+            const fetchCatDevices = async (catRec: any) => {
+                if (!catRec) return [] as { name: string; suitability: number; pain: string; downtime: string }[];
+                const deviceIds = (catRec.get('devices') as string[]) || [];
+                if (!deviceIds.length) return [];
+                try {
+                    const devRecs = await base('EBD_Device').select({
+                        filterByFormula: `OR(${deviceIds.slice(0, 5).map((dId: string) => `RECORD_ID()="${dId}"`).join(',')})`,
+                        fields: ['device_name', 'pain_modifier', 'trend_score'],
+                        maxRecords: 3
+                    }).firstPage();
+                    return devRecs.map(r => ({
+                        name: String(r.get('device_name') || ''),
+                        suitability: 88 + Math.round((Number(r.get('trend_score') || 5) / 10) * 10),
+                        pain: 'Medium',
+                        downtime: 'Low'
+                    }));
+                } catch { return []; }
+            };
+
+            const [devs1, devs2, devs3] = await Promise.all([
+                fetchCatDevices(cat1),
+                cat2 ? fetchCatDevices(cat2) : Promise.resolve([]),
+                cat3 ? fetchCatDevices(cat3) : Promise.resolve([]),
+            ]);
+
+            // booster_delivery_json (async 필드 — 없으면 빈 배열)
+            let boosterDelivery: any[] = [];
+            try {
+                if (rrf.booster_delivery_json) {
+                    boosterDelivery = JSON.parse(String(rrf.booster_delivery_json));
+                }
+            } catch {}
+
+            // radar_score_json
+            const DEFAULT_RADAR_V2 = [
+                { subject: 'Pain Tolerance', A: 65, fullMark: 100 },
+                { subject: 'Skin Fit', A: 80, fullMark: 100 },
+                { subject: 'Aging Stage', A: 65, fullMark: 100 },
+                { subject: 'Efficacy', A: 88, fullMark: 100 },
+                { subject: 'Pigment Risk', A: 45, fullMark: 100 },
+                { subject: 'Budget', A: 70, fullMark: 100 },
+            ];
+            let radarData = DEFAULT_RADAR_V2;
+            try {
+                if (rrf.radar_score_json) {
+                    const rs = JSON.parse(String(rrf.radar_score_json));
+                    radarData = [
+                        { subject: 'Pain Tolerance', A: Math.round(100 - (rs.discomfort || 20)), fullMark: 100 },
+                        { subject: 'Skin Fit', A: Math.round(rs.efficacy || 80), fullMark: 100 },
+                        { subject: 'Aging Stage', A: 65, fullMark: 100 },
+                        { subject: 'Efficacy', A: Math.round(rs.efficacy || 88), fullMark: 100 },
+                        { subject: 'Pigment Risk', A: 45, fullMark: 100 },
+                        { subject: 'Budget', A: Math.round(rs.cost_efficiency || 70), fullMark: 100 },
+                    ];
+                }
+            } catch {}
+
+            const lang = (['EN', 'KO', 'JP', 'CN'].includes(queryLang) ? queryLang : 'EN') as string;
+            const RANK_LABELS_V2 = ['No.1 Clinical Fit', 'No.2 Trending Match', 'No.3 Stretch Goal'];
+            const SCORES_V2 = [90, 82, 74];
+
+            const buildRecV2 = (catRec: any, rank: number, devList: { name: string; suitability: number; pain: string; downtime: string }[]) => {
+                if (!catRec) return null;
+                const catName = String(catRec.get('category_display_name') || '');
+                const painLvl = String(catRec.get('avg_pain_level') || 'Medium');
+                const downtimeLvl = String(catRec.get('avg_downtime') || 'Low');
+                const sessions = Number(catRec.get('recommended_sessions') || 3);
+                const primaryInd = String(catRec.get('best_primary_indication') || '');
+                const note = lang === 'KO'
+                    ? String(catRec.get('booster_pairing_note_KO') || '')
+                    : String(catRec.get('booster_pairing_note_EN') || catRec.get('booster_pairing_note_KO') || '');
+                const deviceNames = devList.map(d => d.name).filter(Boolean);
+                const rankBoosters = boosterDelivery
+                    .filter((b: any) => b.booster_name)
+                    .slice((rank - 1) * 2, rank * 2)
+                    .map((b: any) => String(b.booster_name));
+
+                return {
+                    id: `v2_rr_${id}_rank${rank}`,
+                    rank,
+                    name: catName,
+                    matchScore: SCORES_V2[rank - 1],
+                    composition: [...deviceNames, ...rankBoosters],
+                    devices: deviceNames,
+                    boosters: rankBoosters,
+                    description: note || (lang === 'KO'
+                        ? `${catName} — AI 분석 생성 중...`
+                        : `${catName} — AI analysis generating...`),
+                    tags: [
+                        downtimeLvl ? `${downtimeLvl} Downtime` : '',
+                        painLvl ? `${painLvl} Pain` : ''
+                    ].filter(Boolean),
+                    rankLabel: RANK_LABELS_V2[rank - 1],
+                    rankRationale: rank === 1
+                        ? (lang === 'KO' ? '내 피부 프로파일에 가장 적합한 임상 매칭입니다.' : 'Best clinical match for your profile.')
+                        : rank === 2
+                        ? (lang === 'KO' ? '많은 분들이 선택하는 트렌딩 시술입니다.' : 'A trending treatment you may have heard of.')
+                        : (lang === 'KO' ? '더 강한 효과를 원한다면 고려해보세요.' : 'Consider this for stronger results.'),
+                    sessions,
+                    isLocked: false,
+                    targetLayers: [],
+                    faceZones: deriveZonesFromIndications(primaryInd),
+                    reasonWhy: {
+                        why_suitable: note || '',
+                        pain_level: painLvl,
+                        downtime_level: downtimeLvl,
+                        combinations: [...deviceNames, ...rankBoosters]
+                    }
+                };
+            };
+
+            const recommendations = [
+                buildRecV2(cat1, 1, devs1),
+                buildRecV2(cat2, 2, devs2),
+                buildRecV2(cat3, 3, devs3),
+            ].filter(Boolean);
+
+            const primaryGoal = String(cat1.get('best_primary_indication') || 'Skin Improvement');
+            const allDevices = [...devs1, ...devs2, ...devs3].filter(d => d.name);
+            const allBoosters = boosterDelivery.slice(0, 5).map((b: any) => ({
+                name: String(b.booster_name || ''),
+                suitability: 88,
+                mechanism: String(b.mechanism_short || ''),
+            }));
+
+            return res.status(200).json({
+                language: lang,
+                patientSummary: lang === 'KO'
+                    ? `AI 피부 분석 완료. ${recommendations[0]?.name || ''}이(가) 최우선 추천입니다.`
+                    : `AI analysis complete. ${recommendations[0]?.name || 'Treatment'} is your top recommendation.`,
+                skinAnalysis: {
+                    thickness: 'Normal',
+                    sensitivity: 'Stable',
+                    primaryConcern: primaryGoal,
+                    clinicalNote: lang === 'KO'
+                        ? `설문 분석을 기반으로 ${recommendations[0]?.name || ''}이(가) 최적화되었습니다.`
+                        : `Based on your survey, ${recommendations[0]?.name || 'this treatment'} is optimized for your skin profile.`
+                },
+                clinicalIntelligence: {
+                    devices: allDevices,
+                    boosters: allBoosters
+                },
+                patient: {
+                    id,
+                    name: 'Patient',
+                    language: lang,
+                    goals: [primaryGoal],
+                    radar_score: radarData,
+                    simulationData: { primaryIndication: primaryGoal, secondaryIndication: null, locations: ['Full Face'] }
+                },
+                logic: {
+                    terminalText: `ANALYSIS COMPLETE\nRANK 1: ${recommendations[0]?.name || ''}\nRANK 2: ${recommendations[1]?.name || ''}\nRANK 3: ${recommendations[2]?.name || ''}`,
+                    risks: []
+                },
+                recommendations
+            });
+        }
+    } catch (rrStep0Err: any) {
+        const errMsg = String(rrStep0Err?.message || rrStep0Err || '');
+        if (!errMsg.includes('Could not find') && rrStep0Err?.statusCode !== 404) {
+            console.warn('[REPORT] STEP 0 warning (non-fatal):', errMsg.slice(0, 120));
+        }
+        // Fall through to legacy lookup
+    }
+
+    // ── Legacy Lookup (V1 Reports / Protocol_block) ──────────────────────────
+    try {
         const reportsTable = base('Reports');
 
         // ── STEP 1: Try direct report record lookup first (when id = Airtable report record ID) ──
