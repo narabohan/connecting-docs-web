@@ -39,11 +39,16 @@ export default function ReportPage() {
         rankData: null,
     });
     const [copied, setCopied] = useState(false);
+    const [timedOut, setTimedOut] = useState(false);
 
     const language = (data?.language || 'EN') as string;
+    // displayLang: available even before data loads (uses URL ?lang= param)
+    const displayLang = ((router.query.lang as string) || 'KO').toUpperCase();
 
     useEffect(() => {
         if (!id) return;
+        let pollCount = 0;
+        const MAX_POLLS = 24; // 24 × 5s = 2 minutes max wait before showing timeout error
         const fetchData = async () => {
             try {
                 const langParam = router.query.lang ? `?lang=${router.query.lang}` : '';
@@ -53,6 +58,13 @@ export default function ReportPage() {
 
                 // Keep polling if recommendation still processing
                 if (json.error === 'recommendation_not_ready') {
+                    pollCount++;
+                    if (pollCount >= MAX_POLLS) {
+                        // Stop polling after 2 minutes — show timeout error
+                        setTimedOut(true);
+                        setLoading(false);
+                        return;
+                    }
                     setTimeout(() => fetchData(), 5000);
                     return;
                 }
@@ -113,7 +125,7 @@ export default function ReportPage() {
                     </div>
                 </div>
                 <div className="text-[10px] font-black tracking-[0.5em] text-cyan-400 uppercase animate-pulse">
-                    리포트 생성 중...
+                    {displayLang === 'EN' ? 'Generating your report...' : '리포트 생성 중...'}
                 </div>
             </div>
         );
@@ -124,10 +136,21 @@ export default function ReportPage() {
             <div className="min-h-screen flex flex-col items-center justify-center bg-[#02020a] gap-4 text-center px-8">
                 <AlertTriangle className="w-12 h-12 text-amber-400" />
                 <p className="text-white/60 text-sm">
-                    리포트를 불러올 수 없습니다.
+                    {timedOut
+                        ? (displayLang === 'EN'
+                            ? 'Report generation timed out. Please try again.'
+                            : '리포트 생성 시간이 초과되었습니다. 다시 시도해 주세요.')
+                        : (displayLang === 'EN'
+                            ? 'Unable to load report.'
+                            : '리포트를 불러올 수 없습니다.')}
                 </p>
+                {timedOut && (
+                    <button onClick={() => router.reload()} className="text-xs text-cyan-400 hover:underline font-bold">
+                        {displayLang === 'EN' ? 'Try again' : '다시 시도'}
+                    </button>
+                )}
                 <button onClick={() => router.push('/')} className="text-xs text-cyan-400 hover:underline">
-                    홈으로
+                    {displayLang === 'EN' ? 'Go Home' : '홈으로'}
                 </button>
             </div>
         );
@@ -297,7 +320,7 @@ export default function ReportPage() {
                                             : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
                                             }`}
                                     >
-                                        자세히 보기 <ChevronRight className="w-4 h-4" />
+                                        {language === 'EN' ? 'Learn More' : '자세히 보기'} <ChevronRight className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>
@@ -335,7 +358,7 @@ export default function ReportPage() {
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs font-bold text-violet-300 hover:bg-violet-500/20 transition-colors"
                             >
                                 {copied ? <CheckCircle className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                                {copied ? '복사됨' : '복사'}
+                                {copied ? (language === 'EN' ? 'Copied' : '복사됨') : (language === 'EN' ? 'Copy' : '복사')}
                             </button>
                         </div>
                         <div className="bg-black/30 border border-violet-500/10 rounded-xl p-5 text-sm leading-relaxed text-violet-100 whitespace-pre-wrap border-l-2 border-l-violet-500">

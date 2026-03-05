@@ -134,8 +134,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         // --- Step 6: Build final API response ---
+        // Determine language: prefer URL ?lang param, then survey data, then default KO
+        const detectedLang = req.query.lang
+            ? (req.query.lang as string).toUpperCase()
+            : ((surveyMeta as any)?.language || 'KO').toUpperCase();
+
         const apiResponse = {
             runId: id,
+            language: detectedLang,
             rank1: rank1 || null,
             rank2: rank2 || null,
             rank3: rank3 || null,

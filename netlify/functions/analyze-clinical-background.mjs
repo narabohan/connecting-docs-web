@@ -334,9 +334,12 @@ Required JSON schema:
 export const handler = async (event, context) => {
     console.log('[BG] analyze-clinical-background v2.0 started');
 
+    // Declare runId at handler scope so catch block can always access it
+    let runId = null;
+
     try {
         const body = JSON.parse(event.body || '{}');
-        const { runId } = body;
+        runId = body.runId;
 
         if (!runId) {
             console.error('[BG] No runId provided');
@@ -519,11 +522,14 @@ REMINDER: Apply all 13 Hard Rules. Return ONLY raw JSON. No markdown fences. No 
 
     } catch (error) {
         console.error('[BG] Fatal error:', error);
-        try {
-            const body = JSON.parse(event.body || '{}');
-            if (body.runId) {
-                await base(TBL_RECOMMENDATION_RUN).update(body.runId, { status: 'error' });
+        // runId is in handler scope — always available here, no need to re-parse event.body
+        if (runId) {
+            try {
+                await base(TBL_RECOMMENDATION_RUN).update(runId, { status: 'error' });
+                console.log('[BG] status set to error for runId:', runId);
+            } catch (_) {
+                console.error('[BG] Could not set status:error for runId:', runId);
             }
-        } catch (_) {}
+        }
     }
 };
