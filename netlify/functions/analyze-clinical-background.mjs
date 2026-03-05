@@ -31,11 +31,11 @@ import Anthropic from '@anthropic-ai/sdk';
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY })
     .base(process.env.AIRTABLE_BASE_ID || 'appS8kd8H48DMYXct');
 
-const TBL_INDICATION_MAP    = 'tbl4xrXM1kllfQSMS';
-const TBL_EBD_CATEGORY      = 'tblCCnizVeFcNpjbj';
-const TBL_EBD_DEVICE        = 'tblZrp328Yu9HETOj';
-const TBL_SKIN_BOOSTER      = 'tblta0NVjbNgh8Avs';
-const TBL_INJECTABLE_RULES  = 'tblNESYb9m7kKabAX';
+const TBL_INDICATION_MAP = 'tbl4xrXM1kllfQSMS';
+const TBL_EBD_CATEGORY = 'tblCCnizVeFcNpjbj';
+const TBL_EBD_DEVICE = 'tblZrp328Yu9HETOj';
+const TBL_SKIN_BOOSTER = 'tblta0NVjbNgh8Avs';
+const TBL_INJECTABLE_RULES = 'tblNESYb9m7kKabAX';
 const TBL_RECOMMENDATION_RUN = 'tblAv5eoTae4Al5zy';
 
 // ─── Anthropic Setup ──────────────────────────────────────────────────────
@@ -456,7 +456,7 @@ REMINDER: Apply all 13 Hard Rules. Return ONLY raw JSON. No markdown fences. No 
         // --- Step 6: Call Claude Opus ---
         console.log('[BG] Calling Claude Opus (v2.0 prompt)...');
         const msg = await anthropic.messages.create({
-            model: 'claude-opus-4-5-20251101',
+            model: 'claude-3-5-sonnet-20241022',
             max_tokens: 3500,
             temperature: 0.1,
             system: CLINICAL_SYSTEM_PROMPT,
