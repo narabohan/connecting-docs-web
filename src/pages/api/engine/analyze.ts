@@ -64,8 +64,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             body: JSON.stringify({ runId }),
         }).catch(e => console.warn('[Analyze] BG trigger failed (will retry on next poll):', e));
 
-        // 200ms grace window to ensure the fetch request is initiated
-        await new Promise(r => setTimeout(r, 200));
+        // 800ms grace window to ensure the fetch request is fully initiated
+        // (TCP handshake + header send must complete before Lambda exits)
+        await new Promise(r => setTimeout(r, 800));
 
         // ─── Step 3: Log & return runId immediately ──────────────────────────
         try {
