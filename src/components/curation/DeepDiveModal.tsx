@@ -36,7 +36,7 @@ export default function DeepDiveModal({
     const cat = rankData.category || {};
     const devices = rankData.devices || [];
     const boosters = rankData.boosters || [];
-    const whyText = rankData.why_KO || rankData.why_EN || 'AI 분석 결과입니다.';
+    const whyText = language === 'EN' ? (rankData.why_EN || rankData.why_KO) : (rankData.why_KO || rankData.why_EN);
 
     const getBrandTierColor = (tier: string) => {
         if (!tier) return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
@@ -127,17 +127,17 @@ export default function DeepDiveModal({
                         <div className="grid grid-cols-3 gap-3">
                             <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
                                 <Droplets className="w-4 h-4 text-emerald-400 mx-auto mb-2" />
-                                <div className="text-[10px] text-white/40 mb-1">통증 수준</div>
+                                <div className="text-[10px] text-white/40 mb-1">{language === 'EN' ? 'Pain Level' : '통증 수준'}</div>
                                 <div className="text-sm font-bold text-white">{cat.avg_pain_level || '-'}</div>
                             </div>
                             <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
                                 <Clock className="w-4 h-4 text-amber-400 mx-auto mb-2" />
-                                <div className="text-[10px] text-white/40 mb-1">다운타임</div>
+                                <div className="text-[10px] text-white/40 mb-1">{language === 'EN' ? 'Downtime' : '다운타임'}</div>
                                 <div className="text-sm font-bold text-white">{cat.avg_downtime || '-'}</div>
                             </div>
                             <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
                                 <Zap className="w-4 h-4 text-violet-400 mx-auto mb-2" />
-                                <div className="text-[10px] text-white/40 mb-1">권장 횟수</div>
+                                <div className="text-[10px] text-white/40 mb-1">{language === 'EN' ? 'Sessions' : '권장 횟수'}</div>
                                 <div className="text-sm font-bold text-white">{cat.recommended_sessions || '-'}</div>
                             </div>
                         </div>
@@ -147,7 +147,7 @@ export default function DeepDiveModal({
                             <div className="flex items-center gap-2">
                                 <Sparkles className="w-4 h-4 text-cyan-400" />
                                 <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-widest">
-                                    Why This Treatment
+                                    Why This Treatment / {language === 'EN' ? 'Rationale' : '적합 사유'}
                                 </h3>
                             </div>
                             <div className="bg-cyan-950/20 border border-cyan-500/20 rounded-2xl p-6 space-y-4">
@@ -170,7 +170,7 @@ export default function DeepDiveModal({
                             <section className="space-y-4">
                                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                     <div className="w-1 h-5 bg-cyan-500 rounded-full" />
-                                    적합한 디바이스 옵션
+                                    {language === 'EN' ? 'Suitable Device Options' : '적합한 디바이스 옵션'}
                                 </h3>
 
                                 <div className="space-y-3">
@@ -226,11 +226,11 @@ export default function DeepDiveModal({
                                                             className="border-t border-white/5 bg-black/40"
                                                         >
                                                             <div className="p-5 space-y-4">
-                                                                {device.signature_technology && (
+                                                                {device.signiture_technology && (
                                                                     <div>
                                                                         <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Signature Technology</div>
                                                                         <div className="text-sm text-cyan-300 italic font-serif" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>
-                                                                            "{device.signature_technology}"
+                                                                            "{device.signiture_technology}"
                                                                         </div>
                                                                     </div>
                                                                 )}
@@ -244,14 +244,26 @@ export default function DeepDiveModal({
                                                                     </div>
                                                                 )}
 
-                                                                {device.reason_why && (
+                                                                {(device.reason_why || device.reason_why_EN) && (
                                                                     <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                                                                         <div className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest mb-2 flex items-center gap-1">
                                                                             <ShieldCheck className="w-3 h-3" />
                                                                             AI Selection Logic
                                                                         </div>
                                                                         <div className="text-xs leading-relaxed text-white/80 border-l-2 border-cyan-500/30 pl-3">
-                                                                            {device.reason_why}
+                                                                            {language === 'EN' ? (device.reason_why_EN || device.reason_why) : (device.reason_why || device.reason_why_EN)}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                                {device.evidence_basis && (
+                                                                    <div className="bg-emerald-950/20 border border-emerald-500/20 rounded-xl p-4 mt-2">
+                                                                        <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                                                            <Sparkles className="w-3 h-3" />
+                                                                            {language === 'EN' ? 'Evidence Basis' : '근거 자료'}
+                                                                        </div>
+                                                                        <div className="text-xs leading-relaxed text-emerald-100/80 border-l-2 border-emerald-500/30 pl-3">
+                                                                            {device.evidence_basis}
                                                                         </div>
                                                                     </div>
                                                                 )}
@@ -277,7 +289,7 @@ export default function DeepDiveModal({
                             <section className="space-y-4">
                                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                     <div className="w-1 h-5 bg-violet-500 rounded-full" />
-                                    조합 추천 스킨부스터
+                                    {language === 'EN' ? 'Recommended Skin Boosters' : '조합 추천 스킨부스터'}
                                 </h3>
 
                                 <div className="space-y-3">

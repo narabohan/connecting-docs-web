@@ -139,8 +139,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 fields: [
                     'device_id', 'device_name', 'primary_indication', 'secondary_indication',
                     'avg_downtime_days', 'avg_pain_level', 'trend_score', 'brand_tier',
-                    'clinical_evidence_score', 'signature_technology', 'clinical_charactor',
-                    'reason_why', 'evidence_basis', 'launch_year'
+                    'clinical_evidence_score', 'signiture_technology', 'clinical_charactor',
+                    'reason_why', 'reason_why_EN', 'evidence_basis', 'launch_year'
                 ]
             }).all();
             deviceRecords = devResponse.map(r => ({ record_id: r.id, ...r.fields }));

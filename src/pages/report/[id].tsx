@@ -235,97 +235,116 @@ export default function ReportPage() {
 
                 {/* ── 1. Patient Skin Analysis ──────────────────────────────── */}
                 {(skinAnalysisText || radarData) && (
-                    <section className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 sm:p-8 space-y-6">
-                        <div className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-cyan-400" />
-                            <h2 className="text-xl font-serif font-light text-cyan-400 tracking-wide">
-                                {language === 'EN' ? 'Skin Analysis Summary' : '피부 분석 요약'}
-                            </h2>
-                        </div>
+                    <section className="relative overflow-hidden bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 rounded-3xl p-6 sm:p-10 space-y-8">
+                        {/* Decorative background glow */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] -z-10 pointer-events-none" />
 
-                        <p className="text-[15px] leading-relaxed text-white/80 whitespace-pre-wrap">
-                            {skinAnalysisText}
-                        </p>
-
-                        {radarData && (
-                            <div className="h-[280px] w-full flex items-center justify-center bg-black/30 rounded-2xl border border-white/5 mt-6">
-                                <LiveRadar data={radarData} language={language as LanguageCode} />
+                        <div className="flex flex-col md:flex-row gap-10 relative z-10">
+                            {/* Analysis Text & Illustration Placeholder */}
+                            <div className="flex-1 space-y-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center">
+                                        <Sparkles className="w-5 h-5 text-cyan-400" />
+                                    </div>
+                                    <h2 className="text-2xl font-serif font-light text-cyan-50 tracking-wide">
+                                        {language === 'EN' ? 'AI Skin Analysis' : 'AI 피부 상태 분석'}
+                                    </h2>
+                                </div>
+                                <div className="bg-black/30 border border-white/5 rounded-2xl p-6 relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-1 h-full bg-cyan-400" />
+                                    <p className="text-[15px] leading-[1.8] text-white/80 whitespace-pre-wrap font-light">
+                                        {skinAnalysisText}
+                                    </p>
+                                </div>
                             </div>
-                        )}
+
+                            {/* Radar Data */}
+                            {radarData && (
+                                <div className="w-full md:w-[320px] shrink-0">
+                                    <div className="text-[10px] text-cyan-400/60 font-bold tracking-widest uppercase mb-4 text-center md:text-left">
+                                        Clinical Parameter Radar
+                                    </div>
+                                    <div className="h-[280px] w-full flex items-center justify-center bg-black/40 rounded-2xl border border-white/5 shadow-inner">
+                                        <LiveRadar data={radarData} language={language as LanguageCode} />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </section>
                 )}
 
-                {/* ── 2. Top Recommendations ─────────────────────────────────── */}
-                <section className="space-y-4">
-                    <h2 className="text-3xl font-serif font-light text-white pl-2">
-                        {language === 'EN' ? 'AI Recommended Protocols' : 'AI 추천 솔루션'}
-                    </h2>
+                {/* ── 2. Top Recommendations (Card Format) ─────────────────────────────────── */}
+                <section className="space-y-6 pt-4">
+                    <div className="flex items-center gap-3 pl-2">
+                        <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                            <Star className="w-4 h-4 text-white/70" />
+                        </div>
+                        <h2 className="text-3xl font-serif font-light text-white">
+                            {language === 'EN' ? 'Top 3 Protocol Recommendations' : 'AI 추천 솔루션 Top 3'}
+                        </h2>
+                    </div>
 
-                    {ranks.map((rankObj, idx) => {
-                        const rec = rankObj.data;
-                        const cat = rec.category;
-                        const isRank1 = rankObj.rankNum === 1;
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {ranks.map((rankObj, idx) => {
+                            const rec = rankObj.data;
+                            const cat = rec.category;
+                            const isRank1 = rankObj.rankNum === 1;
 
-                        return (
-                            <div key={idx} className={`rounded-3xl border transition-all duration-300 relative overflow-hidden ${isRank1
-                                ? 'border-rose-300/20 bg-gradient-to-br from-cyan-900/20 via-black to-black'
-                                : 'border-white/10 bg-white/[0.02] hover:border-white/20'
-                                }`}>
-                                {isRank1 && (
-                                    <div className="absolute top-0 right-0 p-6 opacity-20 pointer-events-none">
-                                        <Award className="w-24 h-24 text-cyan-400" />
+                            return (
+                                <div key={idx} className={`rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col h-full group ${isRank1
+                                    ? 'border-cyan-500/30 bg-gradient-to-b from-cyan-950/20 to-black hover:border-cyan-400/50 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)]'
+                                    : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]'
+                                    }`}>
+
+                                    {isRank1 && (
+                                        <div className="absolute -top-10 -right-10 opacity-20 group-hover:opacity-30 transition-opacity pointer-events-none">
+                                            <Award className="w-48 h-48 text-cyan-400" />
+                                        </div>
+                                    )}
+
+                                    <div className="p-6 relative z-10 flex flex-col h-full">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className={`px-2 py-0.5 rounded flex items-center gap-1 text-[10px] font-black tracking-widest uppercase ${isRank1 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/10 text-white/60'}`}>
+                                                {isRank1 && <Star className="w-3 h-3 fill-cyan-400" />}
+                                                {rankObj.label}
+                                            </div>
+                                        </div>
+
+                                        <h3 className={`text-2xl mb-4 font-serif italic font-light leading-tight ${isRank1 ? 'text-cyan-50' : 'text-white'}`}>
+                                            {cat.category_display_name}
+                                        </h3>
+
+                                        <p className="text-sm text-white/60 leading-relaxed mb-6 line-clamp-4 flex-1 font-light">
+                                            {language === 'EN' ? rec.why_EN : rec.why_KO}
+                                        </p>
+
+                                        <div className="grid grid-cols-2 gap-2 mb-6 mt-auto">
+                                            <div className="bg-black/50 border border-white/5 rounded-xl p-3 text-center transition-colors group-hover:border-white/10">
+                                                <Droplets className={`w-3 h-3 mx-auto mb-1 ${isRank1 ? 'text-cyan-400' : 'text-white/40'}`} />
+                                                <div className="text-[9px] text-white/40 mb-0.5 tracking-wider">{language === 'EN' ? 'PAIN' : '통증'}</div>
+                                                <div className="text-xs font-bold text-white">{cat.avg_pain_level || '-'}</div>
+                                            </div>
+                                            <div className="bg-black/50 border border-white/5 rounded-xl p-3 text-center transition-colors group-hover:border-white/10">
+                                                <Clock className={`w-3 h-3 mx-auto mb-1 ${isRank1 ? 'text-blue-400' : 'text-white/40'}`} />
+                                                <div className="text-[9px] text-white/40 mb-0.5 tracking-wider">{language === 'EN' ? 'DOWNTIME' : '회복기간'}</div>
+                                                <div className="text-xs font-bold text-white">{cat.avg_downtime || '-'}</div>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={() => setDeepDiveConfig({ isOpen: true, rankData: rec })}
+                                            className={`w-full py-3.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 mt-auto shrink-0 ${isRank1
+                                                ? 'bg-cyan-500 text-black shadow-[0_4px_20px_rgba(6,182,212,0.2)] hover:bg-cyan-400'
+                                                : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
+                                                }`}
+                                        >
+                                            {language === 'EN' ? 'View Blueprint' : '상세 분석 보기'} <ChevronRight className="w-4 h-4" />
+                                        </button>
                                     </div>
-                                )}
-
-                                <div className="p-6 sm:p-8 relative z-10">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <div className={`px-2 py-0.5 rounded flex items-center gap-1 text-[10px] font-black tracking-widest uppercase ${isRank1 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/10 text-white/60'}`}>
-                                            {isRank1 && <Star className="w-3 h-3 fill-cyan-400" />}
-                                            {rankObj.label}
-                                        </div>
-                                    </div>
-
-                                    <h3
-                                        className="text-2xl sm:text-3xl text-white mb-4 font-serif italic font-light"
-                                    >
-                                        {cat.category_display_name}
-                                    </h3>
-
-                                    <p className="text-sm text-white/70 leading-relaxed mb-6 border-l-2 border-white/10 pl-3">
-                                        {language === 'EN' ? rec.why_EN : rec.why_KO}
-                                    </p>
-
-                                    <div className="grid grid-cols-3 gap-2 mb-6">
-                                        <div className="bg-black/40 border border-white/5 rounded-xl p-3 text-center">
-                                            <Droplets className="w-3 h-3 text-emerald-400 mx-auto mb-1" />
-                                            <div className="text-[10px] text-white/40 mb-0.5">통증</div>
-                                            <div className="text-xs font-bold text-white">{cat.avg_pain_level || '-'}</div>
-                                        </div>
-                                        <div className="bg-black/40 border border-white/5 rounded-xl p-3 text-center">
-                                            <Clock className="w-3 h-3 text-amber-400 mx-auto mb-1" />
-                                            <div className="text-[10px] text-white/40 mb-0.5">회복기간</div>
-                                            <div className="text-xs font-bold text-white">{cat.avg_downtime || '-'}</div>
-                                        </div>
-                                        <div className="bg-black/40 border border-white/5 rounded-xl p-3 text-center">
-                                            <Zap className="w-3 h-3 text-violet-400 mx-auto mb-1" />
-                                            <div className="text-[10px] text-white/40 mb-0.5">권장횟수</div>
-                                            <div className="text-xs font-bold text-white">{cat.recommended_sessions || '-'}</div>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        onClick={() => setDeepDiveConfig({ isOpen: true, rankData: rec })}
-                                        className={`w-full py-3.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${isRank1
-                                            ? 'bg-cyan-500 text-black shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:bg-cyan-400'
-                                            : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
-                                            }`}
-                                    >
-                                        {language === 'EN' ? 'Learn More' : '자세히 보기'} <ChevronRight className="w-4 h-4" />
-                                    </button>
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
+                    </div>
                 </section>
 
                 {/* ── 3. What To Avoid ──────────────────────────────────────── */}
