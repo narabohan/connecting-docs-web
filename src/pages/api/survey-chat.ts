@@ -174,6 +174,71 @@ function determineCriticalMissing(state: SignalState): string[] {
   return missing;
 }
 
+// ─── Country-specific patient profiles ────────────────────────────────────
+
+const COUNTRY_PROFILES: Record<string, {
+  topConcerns: string;
+  culturalNotes: string;
+  questioningStyle: string;
+  prioritySignals: string;
+}> = {
+  KR: {
+    topConcerns: '피부결 개선, 기미/색소, 리프팅, 모공',
+    culturalNotes: '시술 경험자 비율이 높아 "재시술 최적화" 패턴이 많음. 임상 근거와 효과 지속성을 중시. 다운타임 3~5일 수용도 높음.',
+    questioningStyle: '시술 이력을 자연스럽게 먼저 확인. 이미 받아봤다면 무엇이 부족했는지 파악.',
+    prioritySignals: 'treatment_history → primary_concern → downtime_tolerance',
+  },
+  JP: {
+    topConcerns: '피부 민감성, 무자극 화이트닝, 최소 다운타임 리프팅',
+    culturalNotes: '피부 예민도를 매우 중시함. 침습적 시술에 거부감 큼. 다운타임 0~1일 이하 선호. 안전성 데이터를 효과보다 우선 신뢰.',
+    questioningStyle: '피부 반응성(민감도)을 초반에 파악. 비침습 옵션을 언급하며 신뢰 형성.',
+    prioritySignals: 'skin_sensitivity → primary_concern → downtime_tolerance(거의 0)',
+  },
+  CN: {
+    topConcerns: 'V라인 윤곽, 화이트닝/미백, 피부톤 균일화',
+    culturalNotes: 'V라인과 미백이 압도적 1순위. 예산 허용 범위 넓음. 정품/정식 시술 여부를 중시(모조품 경험 多). 효과 사진 선호.',
+    questioningStyle: '얼굴 윤곽과 피부톤을 함께 물어보는 게 자연스러움. 예산은 초반에 확인해도 OK.',
+    prioritySignals: 'primary_concern(윤곽 vs 톤) → budget_level → downtime_tolerance',
+  },
+  TW: {
+    topConcerns: '화이트닝, 피부 탄력, 모공',
+    culturalNotes: '미백과 탄력을 동시에 원하는 경향. 한국 시술 트렌드에 관심 높음. 중간 예산대 다수.',
+    questioningStyle: '복합 고민이 많으므로 주 고민 1가지를 먼저 명확히 확인.',
+    prioritySignals: 'primary_concern → secondary_concern → budget_level',
+  },
+  SG: {
+    topConcerns: '색소 침착(UV), 피부 탄력, 땀구멍/모공',
+    culturalNotes: '열대성 기후로 UV 노출이 많아 색소/색조 재발 이슈가 큼. 영어권으로 직접적 소통 선호. 예산 민감도 중간.',
+    questioningStyle: '야외 활동량/자외선 노출 습관을 자연스럽게 확인. 재발 우려 다루기.',
+    prioritySignals: 'primary_concern → treatment_history → downtime_tolerance',
+  },
+  TH: {
+    topConcerns: '미백, 피부톤 개선, 저예산 고효율',
+    culturalNotes: '미백 효과가 1위. 열대 기후 특성상 색소 재발 우려 높음. 예산 민감도 높아 가성비 언급 효과적.',
+    questioningStyle: '미백 목표를 먼저 파악 후 예산 범위 확인. 저자극 옵션 소개.',
+    prioritySignals: 'primary_concern(미백 구체화) → budget_level → downtime_tolerance',
+  },
+  US: {
+    topConcerns: '자연스러운 안티에이징, 주름/볼륨, 피부톤',
+    culturalNotes: '"Done look"을 매우 싫어함. 자연스러운 결과 강조 필수. 다운타임 1주일 수용. 근거 기반 설명 선호. 고가여도 결과 보장 시 OK.',
+    questioningStyle: '원하는 결과의 "자연스러운 정도"를 먼저 파악. 비용 대비 지속성 언급.',
+    prioritySignals: 'primary_concern → result_style(natural) → downtime_tolerance',
+  },
+  GB: {
+    topConcerns: '안티에이징, 피부결, 자연스러운 리프팅',
+    culturalNotes: 'US와 유사하나 더 보수적. 과도한 시술 거부감 큼. 신중한 정보 제공 선호.',
+    questioningStyle: '부작용/리스크 설명을 충분히 하면서 신뢰 먼저 형성.',
+    prioritySignals: 'primary_concern → downtime_tolerance → treatment_history',
+  },
+};
+
+const DEFAULT_PROFILE = {
+  topConcerns: '피부결 개선, 탄력, 색소',
+  culturalNotes: '환자의 언어와 문화적 배경에 맞는 접근 필요.',
+  questioningStyle: '주 고민을 먼저 파악 후 다운타임 확인.',
+  prioritySignals: 'primary_concern → downtime_tolerance → budget_level',
+};
+
 // ─── Helper: Build system prompt with demographics ────────────────────────
 
 function buildSystemPrompt(
@@ -181,6 +246,7 @@ function buildSystemPrompt(
   language: string
 ): string {
   const { country, age_range, gender } = demographics;
+  const profile = COUNTRY_PROFILES[country] || DEFAULT_PROFILE;
 
   return `You are a warm, professional Korean medical aesthetics consultation assistant for ConnectingDocs.
 Conduct a natural conversational intake to collect clinical signals needed for AI skin analysis.
@@ -195,7 +261,19 @@ CONVERSATION STYLE:
 
 DEMOGRAPHICS CONTEXT (already collected before conversation):
 Country: ${country}, Age range: ${age_range}, Gender: ${gender}
-Use this to contextualize your questions — e.g., a 40s female asking about "lifting" likely needs HIFU/MN_RF guidance.
+
+COUNTRY-SPECIFIC PROFILE (${country}):
+- Top concerns for this patient group: ${profile.topConcerns}
+- Cultural notes: ${profile.culturalNotes}
+- Recommended questioning style: ${profile.questioningStyle}
+- Priority signal order: ${profile.prioritySignals}
+
+Use this country profile to shape your question order and tone. For example:
+${country === 'JP' ? '→ Start by acknowledging skin sensitivity concerns, emphasize non-invasive options early.' : ''}
+${country === 'CN' ? '→ Naturally ask about both facial contour AND skin tone — patients often want both.' : ''}
+${country === 'TH' || country === 'SG' ? '→ Ask about sun exposure habits early — UV-related pigmentation is a common concern.' : ''}
+${country === 'US' || country === 'GB' ? '→ Explicitly acknowledge the preference for natural-looking results early in conversation.' : ''}
+${country === 'KR' ? '→ If patient mentions prior treatments, ask what was lacking — optimization framing resonates well.' : ''}
 
 SIGNALS TO COLLECT:
 ALWAYS required:
