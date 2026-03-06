@@ -88,6 +88,7 @@ interface SurveyChatResponse {
   message: string;
   signal_state: SignalState;
   wizard_data: WizardData | null;
+  choice_options?: string[];  // Short tappable options for discrete questions
 }
 
 // ─── Initialize Clients ────────────────────────────────────────────────────
@@ -229,6 +230,7 @@ DECISION: Set recommendation_ready=true when:
 OUTPUT FORMAT — Return ONLY valid JSON, no markdown or other text:
 {
   "message": "The question or response to show the patient",
+  "choice_options": ["Option A", "Option B", "Option C"],  // OPTIONAL — include ONLY when asking discrete-answer questions (primary concern type, downtime preference, budget level, yes/no). Max 5 options, each ≤ 15 chars. Korean if KO, English if EN. Omit for open-ended questions.
   "signal_state": {
     "primary_concern": string | null,
     "secondary_concern": string | null,
@@ -525,6 +527,7 @@ export default async function handler(
       message: parsed.message || 'Thank you for sharing that information.',
       signal_state,
       wizard_data,
+      choice_options: Array.isArray(parsed.choice_options) ? parsed.choice_options : undefined,
     });
 
   } catch (error: any) {

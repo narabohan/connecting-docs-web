@@ -47,8 +47,16 @@ interface SurveyResponse {
   message: string;                      // field is 'message', not 'content'
   signal_state: Record<string, unknown> & {
     recommendation_ready?: boolean;
+    triggered_protocols?: string[];
+    primary_concern?: string | null;
+    secondary_concern?: string | null;
+    downtime_tolerance?: string | null;
+    budget_level?: string | null;
+    treatment_history?: string | null;
+    turn_count?: number;
   };
   wizard_data?: Record<string, unknown> | null;
+  choice_options?: string[];            // tappable choice chips
 }
 
 // Country data with flags and translations
@@ -323,6 +331,228 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isNew }) => {
 };
 
 // ============================================================================
+// Choice Chips — Tappable A/B/C options below AI messages
+// ============================================================================
+
+interface ChoiceChipsProps {
+  choices: string[];
+  onSelect: (choice: string) => void;
+  disabled?: boolean;
+}
+
+const ChoiceChips: React.FC<ChoiceChipsProps> = ({ choices, onSelect, disabled }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 6 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3 }}
+    className="flex flex-wrap gap-2 mt-2 ml-2 mb-2"
+  >
+    {choices.map((choice, i) => (
+      <button
+        key={i}
+        onClick={() => !disabled && onSelect(choice)}
+        disabled={disabled}
+        className="px-4 py-2 bg-white border-2 border-blue-200 hover:border-blue-500 hover:bg-blue-50
+          text-blue-700 text-sm font-medium rounded-xl transition-all duration-150
+          active:scale-95 disabled:opacity-40 min-h-[44px]"
+      >
+        {choice}
+      </button>
+    ))}
+  </motion.div>
+);
+
+// ============================================================================
+// Lentigo Multi-Select Checkbox Panel
+// ============================================================================
+
+interface LentigoCheckboxProps {
+  language: 'KO' | 'EN';
+  onSubmit: (answer: string) => void;
+  disabled?: boolean;
+}
+
+const LENTIGO_OPTIONS_KO = [
+  '10년 이상 된 흑자예요',
+  '여름/햇볕 후 더 진해져요',
+  '가족력이 있어요',
+  '레이저 치료를 해본 적 있어요',
+  '기미와 혼재되어 있어요',
+  '색이 불균일해요',
+];
+
+const LENTIGO_OPTIONS_EN = [
+  'Present for 10+ years',
+  'Darkens after sun exposure',
+  'Family history',
+  'Prior laser treatment',
+  'Mixed with melasma',
+  'Irregular color pattern',
+];
+
+const LentigoCheckbox: React.FC<LentigoCheckboxProps> = ({ language, onSubmit, disabled }) => {
+  const [selected, setSelected] = React.useState<Set<number>>(new Set());
+  const options = language === 'KO' ? LENTIGO_OPTIONS_KO : LENTIGO_OPTIONS_EN;
+
+  const toggle = (i: number) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i); else next.add(i);
+      return next;
+    });
+  };
+
+  const handleSubmit = () => {
+    const chosen = options.filter((_, i) => selected.has(i));
+    if (chosen.length === 0) return;
+    onSubmit(chosen.join(', '));
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+      className="mx-2 mb-3 bg-amber-50 border border-amber-200 rounded-xl p-4"
+    >
+      <p className="text-sm font-semibold text-amber-800 mb-3">
+        {language === 'KO' ? '🔍 흑자 상세 정보 (해당하는 것 모두 선택)' : '🔍 Lentigo Details (select all that apply)'}
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        {options.map((opt, i) => (
+          <button
+            key={i}
+            onClick={() => toggle(i)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left transition-all min-h-[44px]
+              ${selected.has(i)
+                ? 'bg-amber-300 text-amber-900 font-semibold border-2 border-amber-400'
+                : 'bg-white text-gray-700 border border-gray-200 hover:border-amber-300'
+              }`}
+          >
+            <span className="text-lg flex-shrink-0">{selected.has(i) ? '☑' : '☐'}</span>
+            <span className="leading-tight">{opt}</span>
+          </button>
+        ))}
+      </div>
+      <button
+        onClick={handleSubmit}
+        disabled={selected.size === 0 || disabled}
+        className="mt-3 w-full py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300
+          text-white font-semibold rounded-lg text-sm transition-colors"
+      >
+        {language === 'KO' ? `선택 완료 (${selected.size}개)` : `Submit (${selected.size} selected)`}
+      </button>
+    </motion.div>
+  );
+};
+
+// ============================================================================
+// Signal Panel — Live progress display
+// ============================================================================
+
+interface SignalPanelProps {
+  signalState: Record<string, unknown> | null;
+  language: 'KO' | 'EN';
+}
+
+const SignalPanel: React.FC<SignalPanelProps> = ({ signalState, language }) => {
+  if (!signalState) return (
+    <div className="p-4 text-gray-400 text-xs text-center mt-8">
+      {language === 'KO' ? '상담을 시작하면 분석 신호가 나타납니다' : 'Signals will appear as you chat'}
+    </div>
+  );
+
+  const s = signalState as any;
+  const turnCount = (s.turn_count as number) || 0;
+  const estTotal = 6;
+  const progress = Math.min(Math.round((turnCount / estTotal) * 100), 95);
+
+  const labelKO: Record<string, string> = {
+    primary_concern: '주요 고민',
+    secondary_concern: '2차 고민',
+    downtime_tolerance: '다운타임',
+    budget_level: '예산',
+    treatment_history: '시술 이력',
+  };
+  const labelEN: Record<string, string> = {
+    primary_concern: 'Main concern',
+    secondary_concern: '2nd concern',
+    downtime_tolerance: 'Downtime',
+    budget_level: 'Budget',
+    treatment_history: 'Tx history',
+  };
+
+  const fields = ['primary_concern', 'secondary_concern', 'downtime_tolerance', 'budget_level', 'treatment_history'];
+  const labels = language === 'KO' ? labelKO : labelEN;
+
+  const protocols = (s.triggered_protocols as string[]) || [];
+
+  return (
+    <div className="p-4 flex flex-col gap-4 overflow-y-auto">
+      {/* Progress */}
+      <div>
+        <div className="flex justify-between text-xs text-gray-500 mb-1">
+          <span>{language === 'KO' ? '상담 진행도' : 'Progress'}</span>
+          <span>{progress}%</span>
+        </div>
+        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-blue-500 rounded-full"
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
+      </div>
+
+      {/* Signal values */}
+      <div className="space-y-2">
+        {fields.map(field => {
+          const val = s[field];
+          const hasVal = val !== null && val !== undefined && val !== '';
+          return (
+            <div key={field} className="flex flex-col">
+              <span className="text-xs text-gray-400 uppercase tracking-wide">{labels[field]}</span>
+              <span className={`text-sm font-medium mt-0.5 truncate ${hasVal ? 'text-gray-800' : 'text-gray-300'}`}>
+                {hasVal ? String(val) : '—'}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Triggered protocols */}
+      {protocols.length > 0 && (
+        <div>
+          <span className="text-xs text-gray-400 uppercase tracking-wide block mb-1">
+            {language === 'KO' ? '감지된 프로토콜' : 'Protocols'}
+          </span>
+          <div className="flex flex-wrap gap-1">
+            {protocols.map((p: string) => (
+              <span key={p} className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                {p}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Readiness indicator */}
+      {s.recommendation_ready && (
+        <motion.div
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
+          className="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
+        >
+          <div className="text-green-600 font-bold text-sm">
+            {language === 'KO' ? '✓ 분석 준비 완료' : '✓ Ready to analyze'}
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+};
+
+// ============================================================================
 // Main Component
 // ============================================================================
 
@@ -354,6 +584,9 @@ export const ConversationalSurvey: React.FC<ConversationalSurveyProps> = ({
     null
   );
   const [error, setError] = useState<string | null>(null);
+  const [currentChoices, setCurrentChoices] = useState<string[] | null>(null);
+  const [lentigoPanelActive, setLentigoPanelActive] = useState(false);
+  const [lentigoPanelDone, setLentigoPanelDone] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -434,7 +667,14 @@ export const ConversationalSurvey: React.FC<ConversationalSurveyProps> = ({
       };
 
       setMessages([assistantMsg]);
-      setSignalState(data.signal_state); // was: data.signalState
+      setSignalState(data.signal_state);
+      setCurrentChoices(data.choice_options || null);
+
+      // Detect lentigo context from triggered protocols
+      const protocols = data.signal_state?.triggered_protocols || [];
+      if (protocols.includes('PROTO_06') && !lentigoPanelDone) {
+        setLentigoPanelActive(true);
+      }
 
       // Check if recommendation is ready after first message
       if (data.signal_state?.recommendation_ready && data.wizard_data) {
@@ -450,11 +690,82 @@ export const ConversationalSurvey: React.FC<ConversationalSurveyProps> = ({
     }
   };
 
+  // Handle choice chip tap — inject choice as user message
+  const handleChoiceSelect = useCallback((choice: string) => {
+    setCurrentChoices(null);   // dismiss chips immediately
+    setInputValue(choice);
+    // Use a micro-delay so state updates before send
+    setTimeout(() => {
+      // Manually trigger send with the choice value
+      setInputValue('');
+      // Build and send directly to avoid stale closure
+      const sendChoice = async () => {
+        setError(null);
+        const userMsg: Message = {
+          id: `msg-${Date.now()}`,
+          role: 'user',
+          content: choice,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, userMsg]);
+        setIsLoadingMessage(true);
+
+        try {
+          const surveyMessages = messages.map(m => ({ role: m.role, content: m.content })) as SurveyMessage[];
+          surveyMessages.push({ role: 'user', content: choice });
+
+          const response = await fetch('/api/survey-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: surveyMessages, signalState, demographics, language }),
+          });
+          if (!response.ok) throw new Error(`API error: ${response.status}`);
+          const data: SurveyResponse = await response.json();
+
+          const assistantMsg: Message = {
+            id: `msg-${Date.now()}`,
+            role: 'assistant',
+            content: data.message,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, assistantMsg]);
+          setSignalState(data.signal_state);
+          setCurrentChoices(data.choice_options || null);
+
+          const protocols = data.signal_state?.triggered_protocols || [];
+          if (protocols.includes('PROTO_06') && !lentigoPanelDone) {
+            setLentigoPanelActive(true);
+          }
+
+          if (data.signal_state?.recommendation_ready && data.wizard_data) {
+            setWizardData(data.wizard_data);
+            setPhase('analyzing');
+          }
+        } catch (err) {
+          console.error('Choice send error:', err);
+          setError(t.errorMessage);
+        } finally {
+          setIsLoadingMessage(false);
+        }
+      };
+      sendChoice();
+    }, 10);
+  }, [messages, signalState, demographics, language, lentigoPanelDone, t]);
+
+  // Handle lentigo checkbox submission
+  const handleLentigoSubmit = useCallback((answer: string) => {
+    setLentigoPanelActive(false);
+    setLentigoPanelDone(true);
+    // Inject as user message
+    handleChoiceSelect(answer);
+  }, [handleChoiceSelect]);
+
   // Handle user message submission
   const handleSendMessage = useCallback(async () => {
     if (!inputValue.trim() || isLoadingMessage) return;
 
     setError(null);
+    setCurrentChoices(null);  // clear chips on manual send
 
     // Add user message to chat
     const userMsg: Message = {
@@ -505,11 +816,16 @@ export const ConversationalSurvey: React.FC<ConversationalSurveyProps> = ({
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
-      setSignalState(data.signal_state); // was: data.signalState
+      setSignalState(data.signal_state);
+      setCurrentChoices(data.choice_options || null);
+
+      // Detect lentigo context
+      const protocols = data.signal_state?.triggered_protocols || [];
+      if (protocols.includes('PROTO_06') && !lentigoPanelDone) {
+        setLentigoPanelActive(true);
+      }
 
       // Check if recommendation is ready — only transition if wizard_data exists
-      // (If survey-chat fails, recommendation_ready may be true but wizard_data null
-      //  which would cause infinite 'analyzing' screen with no action)
       if (data.signal_state?.recommendation_ready && data.wizard_data) {
         setWizardData(data.wizard_data);
         setPhase('analyzing');
@@ -520,7 +836,7 @@ export const ConversationalSurvey: React.FC<ConversationalSurveyProps> = ({
     } finally {
       setIsLoadingMessage(false);
     }
-  }, [inputValue, messages, signalState, demographics, language, isLoadingMessage, t]);
+  }, [inputValue, messages, signalState, demographics, language, isLoadingMessage, lentigoPanelDone, t]);
 
   // Handle analyze phase
   useEffect(() => {
@@ -535,6 +851,7 @@ export const ConversationalSurvey: React.FC<ConversationalSurveyProps> = ({
             ...wizardData,
             userId,
             userEmail,
+            language,  // pass language so background function & report API can detect it
           }),
         });
 
@@ -598,7 +915,7 @@ export const ConversationalSurvey: React.FC<ConversationalSurveyProps> = ({
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="w-full h-full max-w-2xl max-h-screen lg:max-h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col relative"
+            className="w-full h-full max-w-4xl max-h-screen lg:max-h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col relative"
           >
             {/* Close Button */}
             <button
@@ -622,88 +939,99 @@ export const ConversationalSurvey: React.FC<ConversationalSurveyProps> = ({
             </button>
 
             {/* Content */}
-            <div className="flex-1 overflow-hidden flex flex-col">
-              {/* Step 0 */}
-              {phase === 'step0' && (
-                <div className="flex-1 flex items-center justify-center p-6">
-                  <Step0Frame
-                    demographics={demographics}
-                    onDemographicsChange={setDemographics}
-                    onStart={() => setPhase('conversation')}
-                    language={language}
-                    loading={isLoadingMessage}
-                  />
-                </div>
-              )}
-
-              {/* Conversation Phase */}
-              {phase === 'conversation' && (
-                <>
-                  {/* Message Area */}
-                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                    {messages.map((msg, idx) => (
-                      <MessageBubble
-                        key={msg.id}
-                        message={msg}
-                        isNew={idx === messages.length - 1}
-                      />
-                    ))}
-
-                    {/* Typing Indicator */}
-                    {isLoadingMessage && <TypingIndicator isVisible={true} />}
-
-                    {/* Error Message */}
-                    {error && (
-                      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                        {error}
-                      </div>
-                    )}
-
-                    {/* Scroll Anchor */}
-                    <div ref={messagesEndRef} />
+            <div className="flex-1 overflow-hidden flex">
+              {/* Main chat column */}
+              <div className="flex-1 overflow-hidden flex flex-col">
+                {/* Step 0 */}
+                {phase === 'step0' && (
+                  <div className="flex-1 flex items-center justify-center p-6">
+                    <Step0Frame
+                      demographics={demographics}
+                      onDemographicsChange={setDemographics}
+                      onStart={() => setPhase('conversation')}
+                      language={language}
+                      loading={isLoadingMessage}
+                    />
                   </div>
+                )}
 
-                  {/* Input Area */}
-                  <div className="border-t border-gray-200 bg-gray-50 p-4">
-                    <div className="flex gap-3">
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSendMessage();
-                          }
-                        }}
-                        placeholder={t.placeholder}
-                        disabled={isLoadingMessage}
-                        className="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-200 transition"
-                      />
-                      <button
-                        onClick={handleSendMessage}
-                        disabled={!inputValue.trim() || isLoadingMessage}
-                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold px-6 py-2 rounded-xl transition-colors"
-                      >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                          />
-                        </svg>
-                      </button>
+                {/* Conversation Phase */}
+                {phase === 'conversation' && (
+                  <>
+                    {/* Message Area */}
+                    <div className="flex-1 overflow-y-auto p-4 lg:p-6">
+                      {messages.map((msg, idx) => {
+                        const isLast = idx === messages.length - 1;
+                        const isAssistant = msg.role === 'assistant';
+                        return (
+                          <div key={msg.id}>
+                            <MessageBubble message={msg} isNew={isLast} />
+                            {/* Choice chips below the last assistant message */}
+                            {isAssistant && isLast && currentChoices && !isLoadingMessage && (
+                              <ChoiceChips
+                                choices={currentChoices}
+                                onSelect={handleChoiceSelect}
+                                disabled={isLoadingMessage}
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {/* Lentigo multi-select checkbox */}
+                      {lentigoPanelActive && !isLoadingMessage && (
+                        <LentigoCheckbox
+                          language={language}
+                          onSubmit={handleLentigoSubmit}
+                          disabled={isLoadingMessage}
+                        />
+                      )}
+
+                      {/* Typing Indicator */}
+                      {isLoadingMessage && <TypingIndicator isVisible={true} />}
+
+                      {/* Error Message */}
+                      {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                          {error}
+                        </div>
+                      )}
+
+                      {/* Scroll Anchor */}
+                      <div ref={messagesEndRef} />
                     </div>
-                  </div>
-                </>
-              )}
+
+                    {/* Input Area */}
+                    <div className="border-t border-gray-200 bg-gray-50 p-4">
+                      <div className="flex gap-3">
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={inputValue}
+                          onChange={(e) => setInputValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSendMessage();
+                            }
+                          }}
+                          placeholder={t.placeholder}
+                          disabled={isLoadingMessage}
+                          className="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-200 transition"
+                        />
+                        <button
+                          onClick={handleSendMessage}
+                          disabled={!inputValue.trim() || isLoadingMessage}
+                          className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold px-5 py-2 rounded-xl transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
 
               {/* Analyzing Phase */}
               {phase === 'analyzing' && (
@@ -778,7 +1106,22 @@ export const ConversationalSurvey: React.FC<ConversationalSurveyProps> = ({
                   </div>
                 </div>
               )}
-            </div>
+            </div>{/* /main chat column */}
+
+            {/* Signal Panel — desktop only, shown during conversation */}
+            {phase === 'conversation' && (
+              <div className="hidden lg:flex w-60 border-l border-gray-100 flex-col bg-gray-50 overflow-hidden">
+                <div className="p-3 border-b border-gray-100 bg-white flex-shrink-0">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    {language === 'KO' ? '상담 신호' : 'Signals'}
+                  </h3>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  <SignalPanel signalState={signalState} language={language} />
+                </div>
+              </div>
+            )}
+          </div>{/* /outer flex */}
           </motion.div>
         </div>
       )}
