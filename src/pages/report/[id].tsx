@@ -387,8 +387,8 @@ export default function ReportPage() {
                 )}
             </main>
 
-            {/* ── Sticky Bottom CTA ─────────────────────────────────────────── */}
-            <div className="fixed bottom-0 left-0 w-full z-40 pointer-events-none">
+            {/* ── Sticky Bottom CTA (mobile only) ──────────────────────────── */}
+            <div className="fixed bottom-0 left-0 w-full z-40 pointer-events-none lg:hidden">
                 <div className="bg-gradient-to-t from-black via-black/90 to-transparent pb-6 pt-12 px-6">
                     <button
                         onClick={() => setIsModalOpen(true)}

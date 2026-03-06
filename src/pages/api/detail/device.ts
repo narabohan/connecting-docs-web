@@ -14,7 +14,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!id || typeof id !== 'string') return res.status(400).json({ error: 'id is required' });
 
     try {
-        const rec = await base('EBD_Device').find(id);
+        // Support both Airtable record IDs (rec...) and text device_id field values
+        let rec: any;
+        if (id.startsWith('rec')) {
+            rec = await base('EBD_Device').find(id);
+        } else {
+            const results = await base('EBD_Device').select({
+                filterByFormula: `{device_id}="${id}"`,
+                maxRecords: 1,
+            }).all();
+            if (!results.length) return res.status(404).json({ error: 'Device not found' });
+            rec = results[0];
+        }
 
         return res.status(200).json({
             device_name: String(rec.get('device_name') || ''),

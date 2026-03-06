@@ -22,6 +22,18 @@
  *   - Compound indication priority logic
  *   - Korea single-visit optimization rule
  *   - Evidence-based device selection rule
+ *
+ * Changelog v2.1:
+ *   - Rule #13 softened: hard evidence block → -10 scoring penalty (DermaV / Quadessy fix)
+ *   - Rule #14 added: CLINICAL_PROTOCOL blocks as highest-priority reasoning override
+ *   - New CLINICAL_PROTOCOLS Airtable table fetch (graceful no-op if table not yet created)
+ *   - triggered_protocols signal from Haiku conversation conductor injected into context
+ *   - Protocol-endorsed devices exempt from Rule #13 low-evidence penalty
+ *
+ * Changelog v2.2:
+ *   - Per-rank device IDs now stored separately: rank_1_device_ids, rank_2_device_ids, rank_3_device_ids
+ *   - Enables accurate Device Intelligence Cards in DeepDiveModal (no category→device link ambiguity)
+ *   - top10_device_ids preserved for backward compat
  */
 
 import Airtable from 'airtable';
@@ -37,6 +49,9 @@ const TBL_EBD_DEVICE = 'tblZrp328Yu9HETOj';
 const TBL_SKIN_BOOSTER = 'tblta0NVjbNgh8Avs';
 const TBL_INJECTABLE_RULES = 'tblNESYb9m7kKabAX';
 const TBL_RECOMMENDATION_RUN = 'tblAv5eoTae4Al5zy';
+// CLINICAL_PROTOCOLS table created: tblHcQPrHdlxA692o (6 protocols loaded)
+// Also set AIRTABLE_TBL_CLINICAL_PROTOCOLS=tblHcQPrHdlxA692o in Netlify env vars
+const TBL_CLINICAL_PROTOCOLS = process.env.AIRTABLE_TBL_CLINICAL_PROTOCOLS || 'tblHcQPrHdlxA692o';
 
 // ─── Anthropic Setup ──────────────────────────────────────────────────────
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -162,6 +177,48 @@ async function fetchInjectableRules() {
     }));
 }
 
+/**
+ * Fetch clinical protocol blocks that were triggered by the Haiku conversation.
+ * Returns empty array if:
+ *   - TBL_CLINICAL_PROTOCOLS is not yet configured (table not created)
+ *   - No protocol IDs were passed
+ *   - Airtable fetch fails for any reason (graceful degradation)
+ */
+async function fetchClinicalProtocols(protocolIds = []) {
+    if (!TBL_CLINICAL_PROTOCOLS || protocolIds.length === 0) return [];
+    try {
+        const filterFormula = protocolIds.length === 1
+            ? `{protocol_id} = "${protocolIds[0]}"`
+            : `OR(${protocolIds.map(id => `{protocol_id} = "${id}"`).join(', ')})`;
+
+        const recs = await base(TBL_CLINICAL_PROTOCOLS).select({
+            filterByFormula: filterFormula,
+            fields: [
+                'protocol_id',
+                'protocol_name',
+                'clinical_reasoning',
+                'related_category_ids',
+                'endorsed_device_ids',
+                'active',
+            ],
+        }).all();
+
+        return recs
+            .filter(r => r.get('active') !== false) // only active protocols
+            .map(r => ({
+                protocol_id: r.get('protocol_id') || '',
+                protocol_name: r.get('protocol_name') || '',
+                clinical_reasoning: r.get('clinical_reasoning') || '',
+                related_category_ids: String(r.get('related_category_ids') || ''),
+                endorsed_device_ids: String(r.get('endorsed_device_ids') || ''),
+            }));
+    } catch (e) {
+        // Non-fatal: protocols enrich context but aren't required for a valid result
+        console.warn('[BG] CLINICAL_PROTOCOLS fetch skipped (table may not be configured yet):', e.message);
+        return [];
+    }
+}
+
 // ─── Clinical System Prompt ───────────────────────────────────────────────
 
 const CLINICAL_SYSTEM_PROMPT = `You are a Korean medical aesthetics clinical AI advisor specializing in EBD
@@ -174,7 +231,7 @@ categories. Use the clinical indication map, category knowledge base, and
 device data to reason carefully.
 
 ═══════════════════════════════════════════════════════
-HARD RULES (never violate — 13 rules total)
+HARD RULES (never violate — 14 rules total)
 ═══════════════════════════════════════════════════════
 
 ── SAFETY & BUDGET RULES ──
@@ -254,15 +311,32 @@ HARD RULES (never violate — 13 rules total)
     If koreaVisitPlan = 'long' OR koreaStayDays >= 14:
     Consider multi-session protocol optimization as a positive factor.
 
-13. Evidence-Based Device Priority:
-    When selecting devices within a category:
-    - Primary filter: clinical_evidence_score >= 4 (prefer strong evidence)
-    - Secondary filter: trend_score >= 7 (current market relevance in Korea)
-    - Budget match: Economy patients → accept evidence_score >= 3 with
-      brand_tier = 'Budget'
-    - Never select a device with clinical_evidence_score <= 2 as the
-      PRIMARY device for rank_1.
+13. Evidence-Based Device Scoring (Penalty, not Hard Block):
+    When scoring devices within a category:
+    - PREFERRED: clinical_evidence_score >= 4 (strong evidence base)
+    - SECONDARY: trend_score >= 7 (current Korean market relevance)
+    - Economy patients: accept evidence_score >= 3 with brand_tier = 'Budget'
+    - LOW EVIDENCE PENALTY: devices with clinical_evidence_score <= 2 receive
+      a -10 fit-score penalty. DO NOT hard-exclude them — just rank lower.
+      Reason: clinically newer devices (e.g., DermaV LP_532_1064, Quadessy HTC)
+      may have strong mechanism rationale even if RCT evidence is limited.
+    - PROTOCOL OVERRIDE: if Rule #14 protocol block explicitly endorses a device
+      (endorsed_device_ids), that device is EXEMPT from the -10 penalty.
     - Use reason_why_EN and evidence_basis fields to justify device selection.
+    - Always state the evidence basis and any penalty/override applied in why_EN.
+
+14. Clinical Protocol Priority:
+    When CLINICAL_PROTOCOL blocks are present in the patient context (section
+    "── CLINICAL PROTOCOL REASONING ──"), treat their clinical_reasoning as the
+    HIGHEST-PRIORITY clinical context for category selection and device choice.
+    - Protocol reasoning OVERRIDES indication_map hints for category matching.
+    - related_category_ids in a protocol block are strongly favored candidates.
+    - endorsed_device_ids are EXEMPT from Rule #13 low-evidence penalty.
+    - If protocol clinical_reasoning conflicts with a Hard Rule (1–12), the
+      Hard Rule still takes precedence (patient safety is never overridden).
+    - When a protocol is applied: include a brief protocol rationale note in
+      why_KO (e.g., "이 시술은 [프로토콜명] 기반 임상 프로토콜에 따른 추천입니다").
+    - If no protocol blocks are present, proceed with indication_map as normal.
 
 ═══════════════════════════════════════════════════════
 REASONING PROCESS
@@ -270,7 +344,9 @@ REASONING PROCESS
 
 Step 1 — Parse Indication Signals:
   Map patient goals and skin concerns to canonical indications using the
-  indication map. Note compound indications (3+ signals → apply Rule #11).
+  indication map. If CLINICAL_PROTOCOL blocks are present, let protocol
+  related_category_ids take priority (Rule #14).
+  Note compound indications (3+ signals → apply Rule #11).
 
 Step 2 — Apply Safety Exclusions (Rules 1-9):
   List all excluded categories with specific rule references.
@@ -283,10 +359,13 @@ Step 4 — Select Rank 1/2/3:
   Rank_1 = primary goal + highest safety confidence.
   Rank_2 = secondary goal or complementary category.
   Rank_3 = maintenance or synergistic option.
+  If protocol blocks present, bias toward protocol-endorsed categories.
 
-Step 5 — Select Devices per Category (Rule 13):
+Step 5 — Select Devices per Category (Rules 13 + 14):
   For each rank, select 1-3 devices from that category's EBD_Device list.
-  Use clinical_evidence_score + trend_score + brand_tier alignment.
+  Score each device: base score from clinical_evidence_score + trend_score.
+  Apply -10 penalty for evidence_score <= 2 (Rule #13).
+  Remove penalty if device appears in any active protocol's endorsed_device_ids (Rule #14).
   Reference device's clinical_charactor and reason_why_EN for rationale.
 
 Step 6 — Select Boosters:
@@ -332,7 +411,7 @@ Required JSON schema:
 // ─── Main Handler ─────────────────────────────────────────────────────────
 
 export const handler = async (event, context) => {
-    console.log('[BG] analyze-clinical-background v2.0 started');
+    console.log('[BG] analyze-clinical-background v2.1 started');
 
     // Declare runId at handler scope so catch block can always access it
     let runId = null;
@@ -363,14 +442,25 @@ export const handler = async (event, context) => {
         console.log('[BG] Seasonal context:', seasonal.season, seasonal.label);
 
         // --- Step 3: Fetch all knowledge base tables in parallel ---
-        console.log('[BG] Fetching Airtable knowledge base...');
-        const [indicationRecords, categoryRecords, deviceRecords, boosterRecords, ruleRecords] =
+        // Extract triggered_protocols from conversational survey (Haiku conductor)
+        // Falls back to [] for backward compatibility with old fixed-survey flow
+        const triggeredProtocolIds = Array.isArray(surveyData.triggered_protocols)
+            ? surveyData.triggered_protocols
+            : [];
+
+        console.log('[BG] Fetching Airtable knowledge base...',
+            triggeredProtocolIds.length > 0
+                ? `| triggered protocols: [${triggeredProtocolIds.join(', ')}]`
+                : '| no triggered protocols (indication_map mode)');
+
+        const [indicationRecords, categoryRecords, deviceRecords, boosterRecords, ruleRecords, protocolRecords] =
             await Promise.all([
                 fetchIndicationMap(),
                 fetchEBDCategories(),
                 fetchEBDDevices(),
                 fetchSkinBoosters(),
                 fetchInjectableRules(),
+                fetchClinicalProtocols(triggeredProtocolIds),
             ]);
 
         // --- Step 4: Build clinical prompt ---
@@ -451,10 +541,22 @@ ${boosterText}
 ── INJECTABLE RULES ──
 ${ruleText}
 
-REMINDER: Apply all 13 Hard Rules. Return ONLY raw JSON. No markdown fences. No extra text.`;
+── CLINICAL PROTOCOL REASONING (Rule #14) ──
+${protocolRecords.length > 0
+    ? protocolRecords.map(p => `
+PROTOCOL: ${p.protocol_id} | ${p.protocol_name}
+  Related Categories: ${p.related_category_ids}
+  Endorsed Devices (exempt from Rule #13 penalty): ${p.endorsed_device_ids || 'none specified'}
+  Clinical Reasoning:
+${p.clinical_reasoning}
+`).join('\n---\n')
+    : '(No clinical protocols triggered — use indication_map as primary signal source)'
+}
+
+REMINDER: Apply all 14 Hard Rules. Rule #13 is a PENALTY (-10), not a hard block. Rule #14 gives protocol blocks highest reasoning priority. Return ONLY raw JSON. No markdown fences. No extra text.`;
 
         // --- Step 6: Call Claude Opus ---
-        console.log('[BG] Calling Claude Opus (v2.0 prompt)...');
+        console.log('[BG] Calling Claude (v2.1 prompt, 14 rules, protocol blocks:', protocolRecords.length, ')...');
         const msg = await anthropic.messages.create({
             model: 'claude-3-5-sonnet-20241022',
             max_tokens: 3500,
@@ -486,11 +588,10 @@ REMINDER: Apply all 13 Hard Rules. Return ONLY raw JSON. No markdown fences. No 
             '| rank3:', recommendation.rank3.category_id);
 
         // --- Step 7: Update Recommendation_Run ---
-        const deviceIds = [
-            ...(recommendation.rank1.recommended_device_ids || []),
-            ...(recommendation.rank2.recommended_device_ids || []),
-            ...(recommendation.rank3.recommended_device_ids || []),
-        ];
+        const rank1DeviceIds = (recommendation.rank1.recommended_device_ids || []);
+        const rank2DeviceIds = (recommendation.rank2.recommended_device_ids || []);
+        const rank3DeviceIds = (recommendation.rank3.recommended_device_ids || []);
+        const deviceIds = [...rank1DeviceIds, ...rank2DeviceIds, ...rank3DeviceIds];
         const boosterIds = [
             ...(recommendation.rank1.recommended_booster_ids || []),
             ...(recommendation.rank2.recommended_booster_ids || []),
@@ -515,6 +616,10 @@ REMINDER: Apply all 13 Hard Rules. Return ONLY raw JSON. No markdown fences. No 
             doctor_question_en: recommendation.doctor_question_EN,
             top10_device_ids: deviceIds.join(', '),
             top5_booster_ids: boosterIds.join(', '),
+            // v2.2: Per-rank device IDs for accurate device intelligence display
+            rank_1_device_ids: rank1DeviceIds.join(', '),
+            rank_2_device_ids: rank2DeviceIds.join(', '),
+            rank_3_device_ids: rank3DeviceIds.join(', '),
             status: 'completed',
         });
 

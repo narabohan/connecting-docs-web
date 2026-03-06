@@ -121,29 +121,56 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     'best_primary_indication', 'avg_pain_level', 'avg_downtime', 'recommended_sessions',
                     'session_interval_weeks', 'budget_tier', 'preferred_booster_roles',
                     'booster_pairing_note_KO', 'booster_pairing_note_EN',
-                    'category_image', 'reason_why_EN', 'EBD_Device'
+                    'category_image', 'reason_why_EN',
+                    // 'EBD_Device' field is empty — actual device links live in 'Imported table 2'
+                    'Imported table 2'
                 ]
             }).all();
             categoryRecords = catResponse.map(r => ({ record_id: r.id, ...r.fields }));
         }
 
         // --- Step 4: Fetch EBD_Device ---
+        // Per-rank device IDs (v2.2+): precise Claude-recommended devices per rank
+        const rank1DevIdsStr = (rrf.rank_1_device_ids as string) || '';
+        const rank2DevIdsStr = (rrf.rank_2_device_ids as string) || '';
+        const rank3DevIdsStr = (rrf.rank_3_device_ids as string) || '';
+        const rank1DevIds = rank1DevIdsStr.split(',').map(s => s.trim()).filter(Boolean);
+        const rank2DevIds = rank2DevIdsStr.split(',').map(s => s.trim()).filter(Boolean);
+        const rank3DevIds = rank3DevIdsStr.split(',').map(s => s.trim()).filter(Boolean);
+        const hasPerRankDevIds = rank1DevIds.length > 0;
+
+        // Fall back to merged top10 for legacy records (pre-v2.2)
         const top10DevicesStr = (rrf.top10_device_ids as string) || '';
-        const deviceIds = top10DevicesStr.split(',').map(s => s.trim()).filter(Boolean);
+        const allDeviceIds = hasPerRankDevIds
+            ? Array.from(new Set([...rank1DevIds, ...rank2DevIds, ...rank3DevIds]))
+            : top10DevicesStr.split(',').map(s => s.trim()).filter(Boolean);
+
         let deviceRecords: any[] = [];
 
-        if (deviceIds.length > 0) {
-            const devFormulas = deviceIds.map(dId => `{device_id}="${dId}"`);
+        if (allDeviceIds.length > 0) {
+            const devFormulas = allDeviceIds.map(dId => `{device_id}="${dId}"`);
             const devResponse = await base('EBD_Device').select({
                 filterByFormula: `OR(${devFormulas.join(',')})`,
                 fields: [
-                    'device_id', 'device_name', 'primary_indication', 'secondary_indication',
-                    'avg_downtime_days', 'avg_pain_level', 'trend_score', 'brand_tier',
+                    'device_id', 'device_name',
+                    'device_best_primary_indication', 'device_secondary_indications',
+                    'pain_modifier', 'downtime_modifier',
+                    'trend_score', 'brand_tier',
                     'clinical_evidence_score', 'signiture_technology', 'clinical_charactor',
-                    'reason_why', 'reason_why_EN', 'evidence_basis', 'launch_year'
+                    'reason_why', 'reason_why_EN', 'evidence_basis', 'launch_year',
+                    'device_unique_identity', 'manufacturer'
                 ]
             }).all();
-            deviceRecords = devResponse.map(r => ({ record_id: r.id, ...r.fields }));
+            // Normalize field names for frontend compatibility
+            deviceRecords = devResponse.map(r => ({
+                record_id: r.id,
+                ...r.fields,
+                // Map to display-friendly names used in DeepDiveModal
+                primary_indication: r.fields['device_best_primary_indication'] || '',
+                secondary_indication: Array.isArray(r.fields['device_secondary_indications'])
+                    ? (r.fields['device_secondary_indications'] as string[]).slice(0, 2).join(', ')
+                    : (r.fields['device_secondary_indications'] as string) || '',
+            }));
         }
 
         // --- Step 5: Fetch Skin_booster ---
@@ -164,14 +191,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         // Helper to build rank output mapping devices and boosters
-        const buildRank = (catId: string, whyKO: string, whyEN: string) => {
+        const buildRank = (catId: string, whyKO: string, whyEN: string, rankSpecificDevIds: string[]) => {
             if (!catId) return null;
             const category = categoryRecords.find(c => c.category_id === catId);
             if (!category) return null;
 
-            // Link devices via the Airtable linked record IDs in category.EBD_Device
-            const categoryDeviceRecordIds = (category.EBD_Device as string[]) || [];
-            const rankDevices = deviceRecords.filter(d => categoryDeviceRecordIds.includes(d.record_id));
+            let rankDevices: any[];
+            if (hasPerRankDevIds && rankSpecificDevIds.length > 0) {
+                // v2.2+: Use Claude's exact per-rank device IDs (most accurate)
+                rankDevices = deviceRecords.filter(d => rankSpecificDevIds.includes(d.device_id as string));
+            } else {
+                // Legacy fallback: intersect top10 pool with 'Imported table 2' category links
+                // NOTE: 'EBD_Device' Airtable field is empty — actual links are in 'Imported table 2'
+                const categoryDeviceRecordIds = (category['Imported table 2'] as string[]) || [];
+                rankDevices = deviceRecords.filter(d => categoryDeviceRecordIds.includes(d.record_id));
+            }
 
             // Link boosters by comparing category's preferred_booster_roles to booster's canonical_role
             const preferredRoles = (category.preferred_booster_roles as string || '').toLowerCase();
@@ -179,8 +213,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 (b.canonical_role as string || '').toLowerCase().split(',').some(role => preferredRoles.includes(role.trim())) || preferredRoles.includes((b.canonical_role as string || '').toLowerCase())
             );
 
-            // Clean internal tracking IDs
-            const cleanObj = (obj: any) => { const { record_id, EBD_Device, ...rest } = obj; return rest; };
+            // Clean internal tracking fields
+            const cleanObj = (obj: any) => {
+                const { record_id, 'Imported table 2': _devices, EBD_Device: _ed, ...rest } = obj;
+                return rest;
+            };
 
             return {
                 category: cleanObj(category),
@@ -191,9 +228,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             };
         };
 
-        const rank1 = buildRank(rank1CatId, rrf.why_cat1_KO as string, rrf.why_cat1_EN as string);
-        const rank2 = buildRank(rank2CatId, rrf.why_cat2_KO as string, rrf.why_cat2_EN as string);
-        const rank3 = buildRank(rank3CatId, rrf.why_cat3_KO as string, rrf.why_cat3_EN as string);
+        const rank1 = buildRank(rank1CatId, rrf.why_cat1_KO as string, rrf.why_cat1_EN as string, rank1DevIds);
+        const rank2 = buildRank(rank2CatId, rrf.why_cat2_KO as string, rrf.why_cat2_EN as string, rank2DevIds);
+        const rank3 = buildRank(rank3CatId, rrf.why_cat3_KO as string, rrf.why_cat3_EN as string, rank3DevIds);
 
         let surveyMeta = {};
         try {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Check, ChevronLeft, Loader2, Sparkles, AlertTriangle } from 'lucide-react';
+import { ArrowRight, Check, ChevronLeft, Loader2, Sparkles, AlertTriangle, MapPin } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { LanguageCode } from '@/utils/translations';
 import KoreaTripPicker from '@/components/common/KoreaTripPicker';
@@ -461,6 +461,9 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                     {/* --- QUESTION STEPS --- */}
                     {step > 0 && currentStep.id !== 'analysis' && (
                         <div className="flex flex-col flex-1 max-w-xl mx-auto w-full">
+                            {currentStep.id === 'korea_visit' && (
+                                <MapPin className="w-5 h-5 text-blue-400 mb-2" />
+                            )}
                             <h3 className="text-2xl font-bold text-white mb-2">{currentStep.question?.[language]}</h3>
                             {currentStep.multi && <p className="text-sm text-gray-500 mb-6">{{ EN: 'Select all that apply', KO: '해당하는 것을 모두 선택하세요', JP: '当てはまるものをすべて選択', CN: '请选择所有适用项' }[language]}</p>}
                             {!currentStep.multi && <div className="mb-6" />}
@@ -630,7 +633,7 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                                                             </label>
                                                             <input
                                                                 type="text"
-                                                                placeholder={{ EN: 'Enter referral code', KO: '추천 코드를 입력하세요', JP: '紹介コードを入力', CN: '输入推荐码' }[language]}
+                                                                placeholder={{ EN: 'Referral code (optional)', KO: '추천인 코드 입력 (선택사항)', JP: '紹介コード（任意）', CN: '推荐码（选填）' }[language]}
                                                                 value={data.referralCode || ''}
                                                                 onChange={(e) => updateData('referralCode', e.target.value)}
                                                                 className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white text-base focus:border-blue-500 outline-none transition-colors"

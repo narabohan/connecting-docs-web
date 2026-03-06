@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Droplets, Zap, Clock, ShieldCheck, ChevronDown, ChevronUp, Link as LinkIcon, Loader2, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 import { LanguageCode } from '@/utils/translations';
+import DeviceDetailModal from '@/components/curation/DeviceDetailModal';
 
 interface DeepDiveModalProps {
     isOpen: boolean;
@@ -24,6 +25,14 @@ export default function DeepDiveModal({
 }: DeepDiveModalProps) {
     const [expandedDevice, setExpandedDevice] = useState<string | null>(null);
     const [expandedBooster, setExpandedBooster] = useState<string | null>(null);
+
+    // DeviceDetailModal state (TASK 1)
+    const [deviceDetailModal, setDeviceDetailModal] = useState<{
+        isOpen: boolean;
+        type: 'device' | 'booster';
+        itemId: string;
+        itemName: string;
+    } | null>(null);
 
     // AI Copilot Q&A State
     const [chatOpen, setChatOpen] = useState(false);
@@ -89,6 +98,7 @@ export default function DeepDiveModal({
     };
 
     return (
+        <>
         <AnimatePresence>
             <motion.div
                 initial={{ opacity: 0 }}
@@ -226,6 +236,17 @@ export default function DeepDiveModal({
                                                             className="border-t border-white/5 bg-black/40"
                                                         >
                                                             <div className="p-5 space-y-4">
+                                                                {device.device_unique_identity && (
+                                                                    <div className="bg-gradient-to-r from-cyan-950/30 to-transparent border-l-2 border-cyan-400 pl-4 py-2 rounded-r-lg">
+                                                                        <div className="text-[10px] font-bold text-cyan-400/70 uppercase tracking-widest mb-1.5">
+                                                                            {language === 'EN' ? 'Device Identity' : '디바이스 핵심 가치'}
+                                                                        </div>
+                                                                        <div className="text-sm leading-relaxed text-white/90 font-light">
+                                                                            {device.device_unique_identity}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
                                                                 {device.signiture_technology && (
                                                                     <div>
                                                                         <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Signature Technology</div>
@@ -273,6 +294,22 @@ export default function DeepDiveModal({
                                                                         Launched in {device.launch_year}
                                                                     </div>
                                                                 )}
+
+                                                                {/* DeviceDetailModal trigger */}
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setDeviceDetailModal({
+                                                                            isOpen: true,
+                                                                            type: 'device',
+                                                                            itemId: device.device_id || '',
+                                                                            itemName: device.device_name || '',
+                                                                        });
+                                                                    }}
+                                                                    className="w-full mt-1 py-2 text-xs font-bold text-cyan-400 hover:text-cyan-300 border border-cyan-500/20 hover:border-cyan-500/40 rounded-lg transition-colors bg-cyan-950/20 hover:bg-cyan-950/30"
+                                                                >
+                                                                    {language === 'EN' ? '⊕ Full Device Profile' : '⊕ 디바이스 전체 프로필 보기'}
+                                                                </button>
                                                             </div>
                                                         </motion.div>
                                                     )}
@@ -458,5 +495,21 @@ export default function DeepDiveModal({
                 </div>
             </motion.div>
         </AnimatePresence>
+
+        {/* DeviceDetailModal — nested modal for full device profile */}
+        {deviceDetailModal && (
+            <DeviceDetailModal
+                isOpen={deviceDetailModal.isOpen}
+                onClose={() => setDeviceDetailModal(null)}
+                type={deviceDetailModal.type}
+                itemId={deviceDetailModal.itemId}
+                itemName={deviceDetailModal.itemName}
+                patientContext={{
+                    primaryGoal: cat.best_primary_indication || '',
+                    language: language,
+                }}
+            />
+        )}
+        </>
     );
 }

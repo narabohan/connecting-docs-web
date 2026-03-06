@@ -14,10 +14,9 @@ import Footer from '@/components/Footer';
 import AuthModal from '@/components/auth/AuthModal';
 import { LanguageCode } from '@/utils/translations';
 import { useAuth } from '@/context/AuthContext';
-import { WizardData } from '@/components/landing/DiagnosisWizard';
-import DiagnosisWizard from '@/components/landing/DiagnosisWizard';
+import ConversationalSurvey from '@/components/landing/ConversationalSurvey';
 import { useRouter } from 'next/router';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
@@ -41,8 +40,19 @@ export default function Home() {
     setIsWizardOpen(true);
   };
 
-  // ── 설문 완료 → analyze.ts 호출 → /report/[runId] 이동 ──────────────────────
-  const handleDiagnosisComplete = async (data: WizardData) => {
+  // ── ConversationalSurvey 완료 → runId 수신 → /report/[runId] 이동 ─────────
+  // ConversationalSurvey handles analyze internally; we just receive the runId
+  const handleSurveyComplete = (runId: string) => {
+    setIsWizardOpen(false);
+    if (!runId || runId.startsWith('mock_run_')) {
+      router.push(`/report/demo?lang=${currentLang}`);
+    } else {
+      router.push(`/report/${runId}?lang=${currentLang}`);
+    }
+  };
+
+  // ── Legacy: 기존 Hero 등 WizardData 직접 전달 경로 유지 (backward compat) ──
+  const handleDiagnosisComplete = async (data: Record<string, unknown>) => {
     setIsWizardOpen(false);
     setIsAnalyzing(true);
 
@@ -68,7 +78,7 @@ export default function Home() {
         body: JSON.stringify({
           ...data,
           userId: user?.uid || null,
-          userEmail: user?.email || data.email || null,
+          userEmail: user?.email || null,
           language: currentLang,
         }),
       });
@@ -80,7 +90,6 @@ export default function Home() {
 
       const runId = result.reportId || result.runId;
       if (!runId || runId.startsWith('mock_run_')) {
-        // Airtable 저장 안 된 경우 — 게스트 데모 페이지로
         router.push(`/report/demo?lang=${currentLang}`);
       } else {
         router.push(`/report/${runId}?lang=${currentLang}`);
@@ -88,7 +97,6 @@ export default function Home() {
     } catch (err) {
       console.error('[Analyze] Error:', err);
       clearInterval(msgInterval);
-      // 오류 시 데모 리포트로 fallback
       router.push(`/report/demo?lang=${currentLang}`);
     } finally {
       setIsAnalyzing(false);
@@ -139,11 +147,14 @@ export default function Home() {
 
         <HowItWorks language={currentLang} />
 
-        <DiagnosisWizard
+        {/* ── Conversational Survey Modal (replaces DiagnosisWizard) ─────────────── */}
+        <ConversationalSurvey
           isOpen={isWizardOpen}
           onClose={() => setIsWizardOpen(false)}
-          onComplete={handleDiagnosisComplete}
-          language={currentLang}
+          onComplete={handleSurveyComplete}
+          userId={user?.uid}
+          userEmail={user?.email || undefined}
+          language={currentLang === 'KO' ? 'KO' : 'EN'}
         />
 
         <ForPatients language={currentLang} onStartSurvey={handleStartAnalysis} />
