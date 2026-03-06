@@ -60,6 +60,9 @@ const TBL_RECOMMENDATION_RUN = 'tblAv5eoTae4Al5zy';
 // CLINICAL_PROTOCOLS table created: tblHcQPrHdlxA692o (6 protocols loaded)
 // Also set AIRTABLE_TBL_CLINICAL_PROTOCOLS=tblHcQPrHdlxA692o in Netlify env vars
 const TBL_CLINICAL_PROTOCOLS = process.env.AIRTABLE_TBL_CLINICAL_PROTOCOLS || 'tblHcQPrHdlxA692o';
+// CLINICAL_INSIGHTS_KB table created: tblcHlnAhWE5eeSaT (v2.4)
+// Set AIRTABLE_TBL_CLINICAL_INSIGHTS_KB=tblcHlnAhWE5eeSaT in Netlify env vars
+const TBL_CLINICAL_INSIGHTS_KB = process.env.AIRTABLE_TBL_CLINICAL_INSIGHTS_KB || 'tblcHlnAhWE5eeSaT';
 
 // ─── Anthropic Setup ──────────────────────────────────────────────────────
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -223,6 +226,53 @@ async function fetchClinicalProtocols(protocolIds = []) {
     } catch (e) {
         // Non-fatal: protocols enrich context but aren't required for a valid result
         console.warn('[BG] CLINICAL_PROTOCOLS fetch skipped (table may not be configured yet):', e.message);
+        return [];
+    }
+}
+
+/**
+ * Fetch curated clinical insights from CLINICAL_INSIGHTS_KB that match this patient's signals.
+ * patientSignals: array of lowercase strings derived from survey data
+ *   (primary/secondary goal, skin concerns, device names in history, etc.)
+ * Returns empty array if:
+ *   - TBL_CLINICAL_INSIGHTS_KB is not configured
+ *   - No matching rows found (indication_tags overlap with patientSignals)
+ *   - Table fetch fails (graceful degradation)
+ */
+async function fetchClinicalInsightsKB(patientSignals = []) {
+    if (!TBL_CLINICAL_INSIGHTS_KB || patientSignals.length === 0) return [];
+    try {
+        const allRecs = await base(TBL_CLINICAL_INSIGHTS_KB).select({
+            fields: ['insight_id', 'indication_tags', 'device_id', 'insight_type',
+                     'session_trigger', 'insight_KO', 'insight_EN', 'source', 'active'],
+        }).all();
+
+        const signalLower = patientSignals.map(s => s.toLowerCase());
+
+        return allRecs
+            .filter(r => r.get('active') === true)
+            .filter(r => {
+                const tags = String(r.get('indication_tags') || '')
+                    .split(',')
+                    .map(t => t.trim().toLowerCase())
+                    .filter(Boolean);
+                // Match if any KB tag appears in any patient signal (or vice versa)
+                return tags.some(tag =>
+                    signalLower.some(sig => sig.includes(tag) || tag.includes(sig))
+                );
+            })
+            .map(r => ({
+                insight_id: r.get('insight_id') || '',
+                indication_tags: r.get('indication_tags') || '',
+                device_id: r.get('device_id') || '',
+                insight_type: r.get('insight_type') || '',
+                session_trigger: r.get('session_trigger') || '',
+                insight_KO: r.get('insight_KO') || '',
+                insight_EN: r.get('insight_EN') || '',
+                source: r.get('source') || '',
+            }));
+    } catch (e) {
+        console.warn('[BG] CLINICAL_INSIGHTS_KB fetch skipped (table may not be populated yet):', e.message);
         return [];
     }
 }
@@ -406,6 +456,22 @@ Step 8 — Generate Device Alternatives per Rank:
   If no meaningful alternative exists for a device, return an empty array [].
 
 Step 9 — Generate Clinical Narrative:
+  NARRATIVE SOURCES (use in priority order — highest first):
+  1. COMPOUND PROTOCOL RULES section in patient context — scan ALL compound rules whose
+     Survey Signals overlap with this patient's signals. Use matching rules' Protocol Notes
+     as the PRIMARY structure for Paragraph 2 (Treatment Sequencing) and Paragraph 3 (Protocol Depth).
+     These notes represent curated, evidence-based sequencing logic — do NOT paraphrase away
+     their clinical specificity. Translate into patient-friendly Korean for clinical_narrative_KO.
+  2. CLINICAL INSIGHTS KB section (if present in patient context) — each KB entry contains
+     a curated protocol insight tied to specific indication tags. Use ALL matching KB insights
+     as the core content for Paragraph 3. Do NOT generalize — preserve the specific session-count
+     thresholds, mechanism names, and clinical behavior details.
+  3. EBD Device Knowledge Base fields: clinical_charactor, reason_why_EN, evidence_basis —
+     use for mechanism accuracy in Paragraphs 1 and 2.
+  4. General aesthetic medicine knowledge — only for narrative flow and connective tissue.
+     NEVER invent session counts, mechanism claims, or combination synergies not supported
+     by sources 1-3 above.
+
   clinical_narrative_KO: A 3-4 paragraph DEEP clinical narrative written like
   an experienced Korean aesthetic doctor advising a well-informed patient.
   This is the most valuable section — information patients CANNOT find with a
@@ -417,21 +483,22 @@ Step 9 — Generate Clinical Narrative:
   are (e.g., "하안부 처짐은 진피층 콜라겐 감소와 골격 지지력 약화가 복합적으로 작용하며...").
 
   [Paragraph 2 — Treatment Sequencing Rationale]
+  REQUIRED SOURCE: Check COMPOUND PROTOCOL RULES for matching sequencing logic FIRST.
   Explain WHY the ORDER of treatments matters for this SPECIFIC patient.
   If competing conditions exist (e.g., melasma + laxity, active acne + scarring):
   explicitly state the sequencing priority and what happens if wrong order is followed.
-  Example tone: "기미가 있는 상태에서 열 자극 시술을 먼저 진행하면 PIH 악화 위험이 2배 이상 높아지므로,
-  먼저 PICO 토닝으로 기미를 50% 이상 개선한 후 리프팅 시술로 넘어가는 것이 안전하고 효과적입니다."
+  Use the Protocol Notes from COMPOUND PROTOCOL RULES verbatim as the basis.
 
   [Paragraph 3 — Protocol Depth / What Patients Don't Know]
+  REQUIRED SOURCE: Use CLINICAL INSIGHTS KB entries (if present) as primary content.
+  If KB is empty, fall back to COMPOUND PROTOCOL RULES notes for session/protocol specifics.
   Provide specific protocol insights that are NOT common knowledge:
   - Session counts that produce qualitatively different results
-    (e.g., "LaseMD Ultra는 4회 이상 시술 시 follicular remodeling을 통한 피지 분비 정상화가 일어나며,
-    단순 레이저 토닝과 달리 재발률이 현저히 낮아집니다")
   - Combination synergies at specific session milestones
-    (e.g., "3회 시술 이후부터 MN_RF 타이트닝과 필러를 병행하면 콜라겐 신생과 볼륨 회복이 시너지를 냅니다")
   - Device-specific clinical behavior differences patients assume are the same
   - Realistic expectations with honest timelines (e.g., "2-3개월 후 효과가 피크에 달하며...")
+  If neither KB nor compound rule notes provide specific data for this patient's devices,
+  use mechanism-level reasoning from the device knowledge base only.
 
   [Paragraph 4 — Korea Visit Optimization] (only if koreaVisitPlan != 'none'/'unknown')
   How to maximize results given their specific visit constraints.
@@ -481,7 +548,7 @@ Required JSON schema:
 // ─── Main Handler ─────────────────────────────────────────────────────────
 
 export const handler = async (event, context) => {
-    console.log('[BG] analyze-clinical-background v2.1 started');
+    console.log('[BG] analyze-clinical-background v2.4 started');
 
     // Declare runId at handler scope so catch block can always access it
     let runId = null;
@@ -518,12 +585,27 @@ export const handler = async (event, context) => {
             ? surveyData.triggered_protocols
             : [];
 
+        // Build patient signal array for CLINICAL_INSIGHTS_KB matching (v2.4)
+        // Combines all survey fields that carry clinical signal — lower-cased for tag matching
+        const patientSignals = [
+            surveyData.primaryGoal,
+            surveyData.secondaryGoal,
+            surveyData.acne,
+            surveyData.pigment,
+            surveyData.pores,
+            surveyData.concernAreas,
+            surveyData.priority,
+            surveyData.skinType,
+            ...(surveyData.risks || []),
+        ].filter(Boolean).map(s => String(s).toLowerCase());
+
         console.log('[BG] Fetching Airtable knowledge base...',
             triggeredProtocolIds.length > 0
                 ? `| triggered protocols: [${triggeredProtocolIds.join(', ')}]`
-                : '| no triggered protocols (indication_map mode)');
+                : '| no triggered protocols (indication_map mode)',
+            `| patient signals: [${patientSignals.slice(0, 4).join(', ')}...]`);
 
-        const [indicationRecords, categoryRecords, deviceRecords, boosterRecords, ruleRecords, protocolRecords] =
+        const [indicationRecords, categoryRecords, deviceRecords, boosterRecords, ruleRecords, protocolRecords, insightRecords] =
             await Promise.all([
                 fetchIndicationMap(),
                 fetchEBDCategories(),
@@ -531,16 +613,43 @@ export const handler = async (event, context) => {
                 fetchSkinBoosters(),
                 fetchInjectableRules(),
                 fetchClinicalProtocols(triggeredProtocolIds),
+                fetchClinicalInsightsKB(patientSignals),
             ]);
 
         // --- Step 4: Build clinical prompt ---
-        const indicationText = indicationRecords.map(r =>
+
+        // Separate simple indications (no notes) from compound protocol rules (have notes)
+        // Compound rules contain multi-indication sequencing logic and phase-by-phase protocols
+        const simpleIndications = indicationRecords.filter(r => !r.notes);
+        const compoundRules = indicationRecords.filter(r => r.notes);
+
+        const indicationText = simpleIndications.map(r =>
             `INDICATION: ${r.indication_name}${r.concern_domain ? ` [${r.concern_domain}]` : ''}
 Canonical Signal: ${r.canonical_signal}
 Survey Signals: ${r.survey_signals}
-Recommended Categories: ${r.recommended_category_ids}
-Notes: ${r.notes}`
+Recommended Categories: ${r.recommended_category_ids}`
         ).join('\n\n');
+
+        // Compound rules get their own dedicated section for Step 9 narrative generation
+        const compoundRuleText = compoundRules.length > 0
+            ? compoundRules.map(r =>
+                `COMPOUND RULE: ${r.indication_name}${r.concern_domain ? ` [${r.concern_domain}]` : ''}
+Canonical Signal: ${r.canonical_signal}
+Survey Signals: ${r.survey_signals}
+Recommended Categories: ${r.recommended_category_ids}
+Protocol Notes: ${r.notes}`
+            ).join('\n\n')
+            : '(No compound rules defined yet)';
+
+        // Build CLINICAL_INSIGHTS_KB section for Step 9 Paragraph 3
+        const insightsText = insightRecords.length > 0
+            ? insightRecords.map(r =>
+                `[${r.insight_id}] Type: ${r.insight_type}${r.device_id ? ` | Device: ${r.device_id}` : ''}${r.session_trigger ? ` | Trigger: ${r.session_trigger}` : ''}
+Tags: ${r.indication_tags}
+KO: ${r.insight_KO}
+EN: ${r.insight_EN}`
+            ).join('\n\n')
+            : '(No matching insights in KB yet — use compound rule notes and device KB for Paragraph 3)';
 
         const categoryText = categoryRecords.map(r =>
             `CATEGORY: ${r.category_id} | ${r.category_display_name}
@@ -596,8 +705,13 @@ Past Experience: ${surveyData.history || ''}
 Past Satisfaction: ${surveyData.historySatisfaction || ''}
 Korea Visit Plan: ${surveyData.koreaVisitPlan || 'unknown'} | Stay Days: ${surveyData.koreaStayDays || 'unknown'}
 
-── CLINICAL INDICATION MAP ──
+── CLINICAL INDICATION MAP (simple indications) ──
 ${indicationText}
+
+── COMPOUND PROTOCOL RULES (Step 9 PRIMARY SOURCE for Paragraphs 2 & 3) ──
+These rules encode curated multi-indication sequencing logic. When a compound rule's
+Survey Signals match this patient, its Protocol Notes MUST structure the narrative.
+${compoundRuleText}
 
 ── EBD CATEGORY KNOWLEDGE BASE ──
 ${categoryText}
@@ -623,10 +737,21 @@ ${p.clinical_reasoning}
     : '(No clinical protocols triggered — use indication_map as primary signal source)'
 }
 
-REMINDER: Apply all 14 Hard Rules. Rule #13 is a PENALTY (-10), not a hard block. Rule #14 gives protocol blocks highest reasoning priority. Return ONLY raw JSON. No markdown fences. No extra text.`;
+── CLINICAL INSIGHTS KB (Step 9 Paragraph 3 SOURCE — use verbatim) ──
+These are curated, evidence-verified protocol insights. When present, they are the
+HIGHEST-PRIORITY source for Paragraph 3 (Protocol Depth / What Patients Don't Know).
+Do NOT paraphrase away session counts, mechanism names, or milestone thresholds.
+Matched insights for this patient (${insightRecords.length} found):
+${insightsText}
+
+REMINDER: Apply all 14 Hard Rules. Rule #13 is a PENALTY (-10), not a hard block.
+Rule #14 gives protocol blocks highest reasoning priority for category selection.
+Step 9 narrative: use COMPOUND PROTOCOL RULES → CLINICAL INSIGHTS KB → device KB (priority order).
+Return ONLY raw JSON. No markdown fences. No extra text.`;
 
         // --- Step 6: Call Claude Opus ---
-        console.log('[BG] Calling Claude (v2.1 prompt, 14 rules, protocol blocks:', protocolRecords.length, ')...');
+        console.log('[BG] Calling Claude (v2.4 prompt, 14 rules, protocol blocks:', protocolRecords.length,
+            '| KB insights:', insightRecords.length, '| compound rules:', compoundRules.length, ')...');
         const msg = await anthropic.messages.create({
             model: 'claude-3-5-sonnet-20241022',
             max_tokens: 6000,
