@@ -45,6 +45,7 @@ export default function DeepDiveModal({
     const cat = rankData.category || {};
     const devices = rankData.devices || [];
     const boosters = rankData.boosters || [];
+    const deviceAlternatives: Array<{ device_id: string; alt_note_KO: string; alt_note_EN: string }> = rankData.device_alternatives || [];
     const whyText = language === 'EN' ? (rankData.why_EN || rankData.why_KO) : (rankData.why_KO || rankData.why_EN);
 
     const getBrandTierColor = (tier: string) => {
@@ -317,6 +318,37 @@ export default function DeepDiveModal({
                                             </div>
                                         );
                                     })}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* ── Device Alternatives ────────────────────────── */}
+                        {deviceAlternatives.length > 0 && (
+                            <section className="rounded-2xl border border-cyan-500/15 bg-cyan-950/10 p-5 space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-1 h-5 bg-cyan-400/60 rounded-full" />
+                                    <h3 className="text-sm font-bold text-cyan-300 uppercase tracking-wider">
+                                        {language === 'EN' ? 'Same Mechanism · Alternative Devices' : '동일 원리 · 대체 장비 옵션'}
+                                    </h3>
+                                </div>
+                                <p className="text-[11px] text-cyan-400/50">
+                                    {language === 'EN'
+                                        ? 'Devices using the same core energy principle — different brands, price tiers, or session tradeoffs.'
+                                        : '동일한 에너지 원리를 사용하는 장비들 — 브랜드, 가격대, 세션 효율이 다릅니다.'}
+                                </p>
+                                <div className="space-y-2">
+                                    {deviceAlternatives.map((alt, idx) => (
+                                        <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-cyan-500/20 transition-colors">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400/60 mt-2 flex-shrink-0" />
+                                            <div className="flex-1 min-w-0">
+                                                <span className="text-xs font-bold text-white/90">{alt.device_id}</span>
+                                                <span className="mx-2 text-white/20">·</span>
+                                                <span className="text-xs text-gray-400">
+                                                    {language === 'EN' ? alt.alt_note_EN : alt.alt_note_KO}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </section>
                         )}

@@ -34,6 +34,14 @@
  *   - Per-rank device IDs now stored separately: rank_1_device_ids, rank_2_device_ids, rank_3_device_ids
  *   - Enables accurate Device Intelligence Cards in DeepDiveModal (no category→device link ambiguity)
  *   - top10_device_ids preserved for backward compat
+ *
+ * Changelog v2.3:
+ *   - Step 8: device_alternatives per rank — same-mechanism alternative devices with cost/tradeoff notes
+ *   - Step 9: clinical_narrative_KO/EN — deep 3-4 paragraph clinical narrative (skin state portrait,
+ *     treatment sequencing rationale, protocol depth insights, Korea visit optimization)
+ *   - max_tokens: 3500 → 6000 (narrative requires more tokens)
+ *   - temperature: 0.1 → 0.2 (slightly more natural narrative voice)
+ *   - New Airtable fields: clinical_narrative_KO, clinical_narrative_EN, device_alternatives_json
  */
 
 import Airtable from 'airtable';
@@ -373,15 +381,66 @@ Step 6 — Select Boosters:
   Prefer boosters with trend_score >= 7.
 
 Step 7 — Generate Explanations:
-  why_KO: Warm Korean explanation (patient-facing). Include:
+  why_KO: Warm Korean explanation (patient-facing, 2-3 sentences). Include:
     - Why this category fits their specific concern
     - Device rationale (what makes the specific device right for them)
     - Any seasonal / visit-plan note if applicable
     - PIH/safety counseling if triggered by Rule #2 or #8
-  why_EN: Clinical English explanation (doctor-facing). Include:
+  why_EN: Clinical English explanation (doctor-facing, 2-3 sentences). Include:
     - Mechanism of action
     - Evidence basis
     - Device selection rationale
+
+Step 8 — Generate Device Alternatives per Rank:
+  For each rank's PRIMARY recommended device (first in recommended_device_ids),
+  identify 1-3 alternative devices that use the SAME core energy/mechanism principle
+  but differ in brand tier, price point, or clinical tradeoff.
+  Examples:
+    - Thermage (MonopolarRF) → Volnewmer, XERF, 10Therma (same RF principle, different brands)
+    - Ulthera HIFU → Doublo, Shurink, Ultraformer III (same HIFU, different depth/cost)
+    - Genius MN_RF → Morpheus8, Scarlet (same microneedle RF, different needle config)
+  device_alternatives per rank:
+    - device_id: exact device_id string from the EBD_DEVICE knowledge base (or the common Korean clinic name if not in DB)
+    - alt_note_KO: 1 sentence explaining the tradeoff vs the primary device (cost, sessions, effect)
+    - alt_note_EN: same in English
+  If no meaningful alternative exists for a device, return an empty array [].
+
+Step 9 — Generate Clinical Narrative:
+  clinical_narrative_KO: A 3-4 paragraph DEEP clinical narrative written like
+  an experienced Korean aesthetic doctor advising a well-informed patient.
+  This is the most valuable section — information patients CANNOT find with a
+  simple web search. Structure:
+
+  [Paragraph 1 — Skin State Portrait]
+  Synthesize ALL survey signals into a coherent, honest skin condition assessment.
+  Do not just list problems — connect them. Explain what the underlying mechanisms
+  are (e.g., "하안부 처짐은 진피층 콜라겐 감소와 골격 지지력 약화가 복합적으로 작용하며...").
+
+  [Paragraph 2 — Treatment Sequencing Rationale]
+  Explain WHY the ORDER of treatments matters for this SPECIFIC patient.
+  If competing conditions exist (e.g., melasma + laxity, active acne + scarring):
+  explicitly state the sequencing priority and what happens if wrong order is followed.
+  Example tone: "기미가 있는 상태에서 열 자극 시술을 먼저 진행하면 PIH 악화 위험이 2배 이상 높아지므로,
+  먼저 PICO 토닝으로 기미를 50% 이상 개선한 후 리프팅 시술로 넘어가는 것이 안전하고 효과적입니다."
+
+  [Paragraph 3 — Protocol Depth / What Patients Don't Know]
+  Provide specific protocol insights that are NOT common knowledge:
+  - Session counts that produce qualitatively different results
+    (e.g., "LaseMD Ultra는 4회 이상 시술 시 follicular remodeling을 통한 피지 분비 정상화가 일어나며,
+    단순 레이저 토닝과 달리 재발률이 현저히 낮아집니다")
+  - Combination synergies at specific session milestones
+    (e.g., "3회 시술 이후부터 MN_RF 타이트닝과 필러를 병행하면 콜라겐 신생과 볼륨 회복이 시너지를 냅니다")
+  - Device-specific clinical behavior differences patients assume are the same
+  - Realistic expectations with honest timelines (e.g., "2-3개월 후 효과가 피크에 달하며...")
+
+  [Paragraph 4 — Korea Visit Optimization] (only if koreaVisitPlan != 'none'/'unknown')
+  How to maximize results given their specific visit constraints.
+  For short visits: prioritize which single/dual-session procedures give best ROI.
+  For longer visits: optimal session spacing and what to complete before returning home.
+
+  clinical_narrative_EN: Clinical English version covering the same depth but
+  written for a medical professional reading context. Include mechanism details,
+  evidence references where applicable, and clinical decision rationale.
 
 OUTPUT: Return ONLY valid JSON matching the exact schema.
 No markdown wrapping block. No extra text outside JSON.
@@ -395,17 +454,28 @@ Required JSON schema:
     "why_EN": string,
     "recommended_device_ids": string[],
     "recommended_booster_ids": string[],
-    "fit_score": number
+    "fit_score": number,
+    "device_alternatives": [{ "device_id": string, "alt_note_KO": string, "alt_note_EN": string }]
   },
-  "rank2": { "category_id": string, "why_KO": string, "why_EN": string, "recommended_device_ids": string[], "recommended_booster_ids": string[], "fit_score": number },
-  "rank3": { "category_id": string, "why_KO": string, "why_EN": string, "recommended_device_ids": string[], "recommended_booster_ids": string[], "fit_score": number },
+  "rank2": {
+    "category_id": string, "why_KO": string, "why_EN": string,
+    "recommended_device_ids": string[], "recommended_booster_ids": string[], "fit_score": number,
+    "device_alternatives": [{ "device_id": string, "alt_note_KO": string, "alt_note_EN": string }]
+  },
+  "rank3": {
+    "category_id": string, "why_KO": string, "why_EN": string,
+    "recommended_device_ids": string[], "recommended_booster_ids": string[], "fit_score": number,
+    "device_alternatives": [{ "device_id": string, "alt_note_KO": string, "alt_note_EN": string }]
+  },
   "what_to_avoid_KO": string,
   "what_to_avoid_EN": string,
   "skin_analysis_summary_KO": string,
   "skin_analysis_summary_EN": string,
   "doctor_question_KO": string,
   "doctor_question_EN": string,
-  "overall_direction_KO": string
+  "overall_direction_KO": string,
+  "clinical_narrative_KO": string,
+  "clinical_narrative_EN": string
 }`;
 
 // ─── Main Handler ─────────────────────────────────────────────────────────
@@ -559,8 +629,8 @@ REMINDER: Apply all 14 Hard Rules. Rule #13 is a PENALTY (-10), not a hard block
         console.log('[BG] Calling Claude (v2.1 prompt, 14 rules, protocol blocks:', protocolRecords.length, ')...');
         const msg = await anthropic.messages.create({
             model: 'claude-3-5-sonnet-20241022',
-            max_tokens: 3500,
-            temperature: 0.1,
+            max_tokens: 6000,
+            temperature: 0.2,
             system: CLINICAL_SYSTEM_PROMPT,
             messages: [{ role: 'user', content: userPrompt }],
         });
@@ -598,6 +668,13 @@ REMINDER: Apply all 14 Hard Rules. Rule #13 is a PENALTY (-10), not a hard block
             ...(recommendation.rank3.recommended_booster_ids || []),
         ].slice(0, 5);
 
+        // Build device_alternatives payload
+        const deviceAlternativesPayload = {
+            rank1: recommendation.rank1.device_alternatives || [],
+            rank2: recommendation.rank2.device_alternatives || [],
+            rank3: recommendation.rank3.device_alternatives || [],
+        };
+
         await base(TBL_RECOMMENDATION_RUN).update(runId, {
             rank_1_category_id: recommendation.rank1.category_id,
             rank_2_category_id: recommendation.rank2.category_id,
@@ -620,6 +697,10 @@ REMINDER: Apply all 14 Hard Rules. Rule #13 is a PENALTY (-10), not a hard block
             rank_1_device_ids: rank1DeviceIds.join(', '),
             rank_2_device_ids: rank2DeviceIds.join(', '),
             rank_3_device_ids: rank3DeviceIds.join(', '),
+            // v2.3: Deep clinical narrative + device alternatives
+            clinical_narrative_KO: recommendation.clinical_narrative_KO || '',
+            clinical_narrative_EN: recommendation.clinical_narrative_EN || '',
+            device_alternatives_json: JSON.stringify(deviceAlternativesPayload),
             status: 'completed',
         });
 

@@ -22,6 +22,7 @@ interface ReportData {
     whatToAvoid: { ko: string; en: string };
     overallDirection: { ko: string; en: string };
     doctorQuestion: { ko: string; en: string };
+    clinicalNarrative?: { ko: string; en: string };
     surveyMeta: any;
     error?: string;
 }
@@ -160,6 +161,7 @@ export default function ReportPage() {
     const skinAnalysisText = language === 'EN' ? data.skinAnalysis?.en : data.skinAnalysis?.ko;
     const whatToAvoidText = language === 'EN' ? data.whatToAvoid?.en : data.whatToAvoid?.ko;
     const doctorQuestionText = language === 'EN' ? data.doctorQuestion?.en : data.doctorQuestion?.ko;
+    const clinicalNarrativeText = language === 'EN' ? data.clinicalNarrative?.en : data.clinicalNarrative?.ko;
 
     const ranks = [
         { data: data.rank1, label: language === 'EN' ? 'Primary Protocol' : '1순위 추천 프로토콜 · 최적 매칭', rankNum: 1 },
@@ -347,7 +349,49 @@ export default function ReportPage() {
                     </div>
                 </section>
 
-                {/* ── 3. What To Avoid ──────────────────────────────────────── */}
+                {/* ── 3. Clinical Narrative ─────────────────────────────────── */}
+                {clinicalNarrativeText && (
+                    <section className="relative overflow-hidden rounded-3xl border border-violet-500/20 bg-gradient-to-br from-violet-950/30 via-[#0a0a12] to-transparent p-6 sm:p-10 space-y-6">
+                        {/* Background accent */}
+                        <div className="absolute top-0 right-0 w-80 h-80 bg-violet-500/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
+
+                        {/* Header */}
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-violet-500/10 border border-violet-500/30 flex items-center justify-center flex-shrink-0">
+                                <Zap className="w-5 h-5 text-violet-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-serif font-light text-violet-100 tracking-wide">
+                                    {language === 'EN' ? 'Clinical Intelligence Report' : '임상 전문가 인사이트'}
+                                </h2>
+                                <p className="text-[11px] text-violet-400/70 mt-0.5 tracking-widest uppercase">
+                                    {language === 'EN' ? 'Personalized protocol depth analysis' : '일반 검색으로는 알기 어려운 맞춤 분석'}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Narrative paragraphs */}
+                        <div className="space-y-5">
+                            {clinicalNarrativeText.split('\n\n').filter(Boolean).map((para, idx) => (
+                                <div key={idx} className={`relative pl-5 ${idx === 0 ? 'border-l-2 border-violet-500' : idx === 1 ? 'border-l-2 border-cyan-500' : idx === 2 ? 'border-l-2 border-emerald-500' : 'border-l-2 border-amber-500/70'}`}>
+                                    <p className="text-[14px] leading-[1.9] text-white/80 font-light whitespace-pre-wrap">
+                                        {para}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Footer badge */}
+                        <div className="flex items-center gap-2 pt-2 border-t border-white/5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                            <span className="text-[10px] font-black tracking-widest text-violet-400/60 uppercase">
+                                {language === 'EN' ? 'AI Clinical Engine · Evidence-Based' : 'AI 임상 엔진 · 근거 기반 분석'}
+                            </span>
+                        </div>
+                    </section>
+                )}
+
+                {/* ── 4. What To Avoid ──────────────────────────────────────── */}
                 {whatToAvoidText && (
                     <section className="rounded-3xl border border-amber-500/20 bg-amber-500/5 p-6 sm:p-8">
                         <div className="flex items-center gap-2 mb-4">

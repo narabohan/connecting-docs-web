@@ -241,6 +241,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             console.error('Failed to parse survey_meta_json', e);
         }
 
+        // --- Parse device_alternatives_json (v2.3) ---
+        let deviceAlternatives: { rank1: any[]; rank2: any[]; rank3: any[] } = { rank1: [], rank2: [], rank3: [] };
+        try {
+            if (rrf.device_alternatives_json) {
+                deviceAlternatives = JSON.parse(rrf.device_alternatives_json as string);
+            }
+        } catch (e) {
+            console.error('Failed to parse device_alternatives_json', e);
+        }
+
         // --- Step 6: Build final API response ---
         // Determine language: prefer URL ?lang param, then survey data, then default KO
         const detectedLang = req.query.lang
@@ -250,9 +260,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const apiResponse = {
             runId: id,
             language: detectedLang,
-            rank1: rank1 || null,
-            rank2: rank2 || null,
-            rank3: rank3 || null,
+            rank1: rank1 ? { ...rank1, device_alternatives: deviceAlternatives.rank1 || [] } : null,
+            rank2: rank2 ? { ...rank2, device_alternatives: deviceAlternatives.rank2 || [] } : null,
+            rank3: rank3 ? { ...rank3, device_alternatives: deviceAlternatives.rank3 || [] } : null,
             skinAnalysis: {
                 ko: rrf.patient_summary as string || '',
                 en: rrf.patient_friendly_summary as string || ''
@@ -266,6 +276,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             doctorQuestion: {
                 ko: rrf.doctor_question_ko as string || '',
                 en: rrf.doctor_question_en as string || ''
+            },
+            // v2.3: Deep clinical narrative
+            clinicalNarrative: {
+                ko: rrf.clinical_narrative_KO as string || '',
+                en: rrf.clinical_narrative_EN as string || ''
             },
             surveyMeta
         };
