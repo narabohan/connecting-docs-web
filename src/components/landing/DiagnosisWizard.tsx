@@ -392,12 +392,12 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
             className={cn(
                 "p-4 rounded-xl border transition-all text-left flex items-center justify-between group",
                 selected
-                    ? "bg-blue-500/20 border-blue-500 text-white"
+                    ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-50"
                     : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
             )}
         >
-            <span className="text-sm md:text-base font-medium">{label}</span>
-            {selected && <Check className="w-4 h-4 text-blue-400" />}
+            <span className="text-[14px] font-light leading-[1.9]">{label}</span>
+            {selected && <Check className="w-4 h-4 text-cyan-400" />}
         </button>
     );
 
@@ -417,7 +417,7 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                 {/* Progress Bar */}
                 <div className="h-1 bg-white/5 w-full">
                     <motion.div
-                        className="h-full bg-blue-500"
+                        className="h-full bg-cyan-500"
                         initial={{ width: 0 }}
                         animate={{ width: `${((step + 1) / activeSteps.length) * 100}%` }}
                     />
@@ -429,17 +429,17 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                     {/* --- INTRO STEP --- */}
                     {currentStep.id === 'intro' && (
                         <div className="flex flex-col items-center justify-center flex-1 text-center space-y-8 py-10">
-                            <div className="w-20 h-20 rounded-full bg-blue-500/10 flex items-center justify-center relative">
-                                <Sparkles className="w-10 h-10 text-blue-400" />
-                                <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full" />
+                            <div className="w-20 h-20 rounded-full bg-cyan-500/10 flex items-center justify-center relative">
+                                <Sparkles className="w-10 h-10 text-cyan-400" />
+                                <div className="absolute inset-0 bg-cyan-500/20 blur-xl rounded-full" />
                             </div>
                             <div>
-                                <h2 className="text-3xl font-bold text-white mb-4">{currentStep.title?.[language]}</h2>
-                                <p className="text-gray-400 text-lg max-w-md mx-auto">{currentStep.desc?.[language]}</p>
+                                <h2 className="text-3xl font-serif font-light text-white mb-4 tracking-wide">{currentStep.title?.[language]}</h2>
+                                <p className="text-white/60 text-[14px] leading-[1.9] font-light max-w-md mx-auto">{currentStep.desc?.[language]}</p>
                             </div>
                             <button
                                 onClick={handleNext}
-                                className="px-10 py-4 bg-white text-black rounded-full font-bold hover:scale-105 transition-transform flex items-center gap-2"
+                                className="px-10 py-4 bg-cyan-500 text-black rounded-full font-bold hover:bg-cyan-400 hover:scale-105 transition-all shadow-[0_4px_20px_rgba(6,182,212,0.2)] flex items-center gap-2"
                             >
                                 Start Diagnosis <ArrowRight className="w-5 h-5" />
                             </button>
@@ -450,11 +450,11 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                     {currentStep.id === 'analysis' && (
                         <div className="flex flex-col items-center justify-center flex-1 text-center space-y-8 py-20">
                             <div className="relative">
-                                <Loader2 className="w-16 h-16 text-blue-500 animate-spin" />
-                                <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full" />
+                                <Loader2 className="w-16 h-16 text-cyan-500 animate-spin" />
+                                <div className="absolute inset-0 bg-cyan-500/20 blur-2xl rounded-full" />
                             </div>
-                            <h2 className="text-2xl font-bold text-white animate-pulse">{currentStep.title?.[language]}</h2>
-                            <p className="text-gray-500 text-sm">{{ EN: 'Consulting 80+ Protocols...', KO: '80개 이상의 프로토콜 분석 중...', JP: '80以上のプロトコルを照合中...', CN: '正在匹配80+个临床方案...' }[language]}</p>
+                            <h2 className="text-2xl font-serif font-light text-white tracking-wide animate-pulse">{currentStep.title?.[language]}</h2>
+                            <p className="text-cyan-400/60 text-[10px] font-black tracking-[0.4em] uppercase">{{ EN: 'Consulting 80+ Protocols...', KO: '80개 이상의 프로토콜 분석 중...', JP: '80以上のプロトコルを照合中...', CN: '正在匹配80+个临床方案...' }[language]}</p>
                         </div>
                     )}
 
@@ -462,10 +462,10 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                     {step > 0 && currentStep.id !== 'analysis' && (
                         <div className="flex flex-col flex-1 max-w-xl mx-auto w-full">
                             {currentStep.id === 'korea_visit' && (
-                                <MapPin className="w-5 h-5 text-blue-400 mb-2" />
+                                <MapPin className="w-5 h-5 text-cyan-400 mb-2" />
                             )}
-                            <h3 className="text-2xl font-bold text-white mb-2">{currentStep.question?.[language]}</h3>
-                            {currentStep.multi && <p className="text-sm text-gray-500 mb-6">{{ EN: 'Select all that apply', KO: '해당하는 것을 모두 선택하세요', JP: '当てはまるものをすべて選択', CN: '请选择所有适用项' }[language]}</p>}
+                            <h3 className="text-2xl font-serif font-light text-white tracking-wide mb-2">{currentStep.question?.[language]}</h3>
+                            {currentStep.multi && <p className="text-[10px] text-cyan-400/60 font-black tracking-[0.2em] uppercase mb-6">{{ EN: 'Select all that apply', KO: '복수 선택 가능', JP: '当てはまるものをすべて選択', CN: '请选择所有适用项' }[language]}</p>}
                             {!currentStep.multi && <div className="mb-6" />}
 
                             <div className="flex-1 space-y-3">
@@ -480,7 +480,7 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                                         <div className="grid grid-cols-3 gap-2">
                                             {OPTIONS.age.map((a) => (
                                                 <button key={a.id} onClick={() => updateData('age', a.id)}
-                                                    className={cn("p-3 rounded-xl border text-sm transition-all", data.age === a.id ? "bg-blue-500/20 border-blue-500 text-white" : "bg-white/5 border-white/10 text-gray-400")}
+                                                    className={cn("p-3 rounded-xl border text-sm transition-all", data.age === a.id ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-50" : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10")}
                                                 >{(a.label as Record<string, string>)[language]}</button>
                                             ))}
                                         </div>
@@ -538,42 +538,42 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                                 {currentStep.id === 'preferences' && (
                                     <div className="space-y-6">
                                         <div>
-                                            <label className="text-sm text-gray-400 mb-2 block">
+                                            <label className="text-[10px] text-white/50 uppercase tracking-[0.2em] mb-2 block font-black">
                                                 {{ EN: 'Pain Tolerance', KO: '통증 내성', JP: '痛み耐性', CN: '疼痛耐受' }[language]}
                                             </label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {OPTIONS.pain.map(o => (
-                                                    <button key={o.id} onClick={() => updateData('painTolerance', o.id)} className={cn("p-3 rounded-lg border text-xs text-left", data.painTolerance === o.id ? "bg-blue-500/20 border-blue-500 text-white" : "bg-white/5 border-white/10 text-gray-400")}>{(o.label as Record<string, string>)[language]}</button>
+                                                    <button key={o.id} onClick={() => updateData('painTolerance', o.id)} className={cn("p-4 rounded-xl border text-xs text-left transition-colors", data.painTolerance === o.id ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-50" : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10")}>{(o.label as Record<string, string>)[language]}</button>
                                                 ))}
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="text-sm text-gray-400 mb-2 block">
+                                            <label className="text-[10px] text-white/50 uppercase tracking-[0.2em] mb-2 block font-black">
                                                 {{ EN: 'Downtime', KO: '회복 기간', JP: 'ダウンタイム', CN: '恢复期' }[language]}
                                             </label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {OPTIONS.downtime.map(o => (
-                                                    <button key={o.id} onClick={() => updateData('downtimeTolerance', o.id)} className={cn("p-3 rounded-lg border text-xs text-left", data.downtimeTolerance === o.id ? "bg-blue-500/20 border-blue-500 text-white" : "bg-white/5 border-white/10 text-gray-400")}>{(o.label as Record<string, string>)[language]}</button>
+                                                    <button key={o.id} onClick={() => updateData('downtimeTolerance', o.id)} className={cn("p-4 rounded-xl border text-xs text-left transition-colors", data.downtimeTolerance === o.id ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-50" : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10")}>{(o.label as Record<string, string>)[language]}</button>
                                                 ))}
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="text-sm text-gray-400 mb-2 block">
+                                            <label className="text-[10px] text-white/50 uppercase tracking-[0.2em] mb-2 block font-black">
                                                 {{ EN: 'Budget Preference', KO: '예산 선호도', JP: '予算の優先度', CN: '预算偏好' }[language]}
                                             </label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {OPTIONS.budget.map(o => (
-                                                    <button key={o.id} onClick={() => updateData('budget', o.id)} className={cn("p-3 rounded-lg border text-xs text-left", data.budget === o.id ? "bg-blue-500/20 border-blue-500 text-white" : "bg-white/5 border-white/10 text-gray-400")}>{(o.label as Record<string, string>)[language]}</button>
+                                                    <button key={o.id} onClick={() => updateData('budget', o.id)} className={cn("p-4 rounded-xl border text-xs text-left transition-colors", data.budget === o.id ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-50" : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10")}>{(o.label as Record<string, string>)[language]}</button>
                                                 ))}
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="text-sm text-gray-400 mb-2 block">
+                                            <label className="text-[10px] text-white/50 uppercase tracking-[0.2em] mb-2 block font-black">
                                                 {{ EN: 'Treatment Frequency', KO: '시술 빈도', JP: '施術頻度', CN: '治疗频率' }[language]}
                                             </label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {OPTIONS.frequency.map(o => (
-                                                    <button key={o.id} onClick={() => updateData('frequency', o.id)} className={cn("p-3 rounded-lg border text-xs text-left", data.frequency === o.id ? "bg-blue-500/20 border-blue-500 text-white" : "bg-white/5 border-white/10 text-gray-400")}>{(o.label as Record<string, string>)[language]}</button>
+                                                    <button key={o.id} onClick={() => updateData('frequency', o.id)} className={cn("p-4 rounded-xl border text-xs text-left transition-colors", data.frequency === o.id ? "bg-cyan-500/10 border-cyan-500/50 text-cyan-50" : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10")}>{(o.label as Record<string, string>)[language]}</button>
                                                 ))}
                                             </div>
                                         </div>
@@ -654,11 +654,11 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                                             placeholder={{ EN: 'Enter your email to receive the report', KO: '리포트를 받을 이메일 주소', JP: 'レポートを受け取るメールアドレス', CN: '输入邮箱以接收报告' }[language] || 'Enter your email'}
                                             value={data.email}
                                             onChange={(e) => updateData('email', e.target.value)}
-                                            className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white focus:border-blue-500 outline-none"
+                                            className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white focus:border-cyan-500/50 outline-none transition-colors"
                                         />
-                                        <div className="flex items-start gap-3 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                                            <AlertTriangle className="w-5 h-5 text-blue-400 shrink-0" />
-                                            <p className="text-sm text-gray-300">
+                                        <div className="flex items-start gap-3 p-4 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
+                                            <AlertTriangle className="w-5 h-5 text-cyan-400 shrink-0" />
+                                            <p className="text-[14px] leading-[1.9] text-gray-300 font-light">
                                                 {{ EN: 'By continuing, you agree to our processing of your personal health data for the purpose of generating this clinical report.', KO: '계속 진행하면 임상 리포트 생성을 위한 개인 건강 정보 처리에 동의하는 것으로 간주됩니다.', JP: '続行することで、臨床レポート生成のための個人健康情報の処理に同意したものとみなされます。', CN: '继续即表示您同意我们处理您的个人健康数据以生成本临床报告。' }[language]}
                                             </p>
                                         </div>
@@ -667,14 +667,14 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
 
                             </div>
 
-                            <div className="mt-8 flex justify-between pt-4 border-t border-white/5">
-                                <button onClick={handleBack} className="text-gray-400 hover:text-white flex items-center gap-2">
+                            <div className="mt-8 flex justify-between pt-6 border-t border-white/5">
+                                <button onClick={handleBack} className="text-gray-400 hover:text-white flex items-center gap-2 font-medium">
                                     <ChevronLeft className="w-4 h-4" /> {{ EN: 'Back', KO: '이전', JP: '前へ', CN: '上一步' }[language]}
                                 </button>
                                 <button
                                     onClick={handleNext}
                                     disabled={currentStep.id === 'contact' && !data.email.includes('@')}
-                                    className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-blue-900/20"
+                                    className="bg-cyan-500 hover:bg-cyan-400 text-black px-8 py-3 rounded-xl font-bold transition-all shadow-[0_4px_20px_rgba(6,182,212,0.2)] disabled:opacity-50 disabled:shadow-none"
                                 >
                                     {isLastStep ? { EN: 'Analyze Now', KO: '지금 분석하기', JP: '今すぐ分析', CN: '立即分析' }[language] : { EN: 'Next', KO: '다음', JP: '次へ', CN: '下一步' }[language]}
                                 </button>

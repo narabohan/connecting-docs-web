@@ -1,10 +1,9 @@
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
+import { motion } from 'framer-motion';
 import {
-    Loader2, Lock, ArrowLeft, Stethoscope, Sparkles,
-    AlertTriangle, CheckCircle, Zap, Clock, Droplets,
-    Star, ChevronRight, Shield, Award, Copy, Info
+    AlertTriangle, Clock, Droplets, ChevronRight, CheckCircle, Award, ArrowLeft, Star, ArrowRight, Zap, Sparkles, Stethoscope, Copy, Info, ScanFace, Shield, Check
 } from 'lucide-react';
 import { LanguageCode } from '@/utils/translations';
 import { useAuth } from '@/context/AuthContext';
@@ -225,14 +224,19 @@ export default function ReportPage() {
 
             <main className="pt-24 px-6 max-w-2xl mx-auto space-y-10">
                 {/* ── Title ─────────────────────────────────────────────────── */}
-                <div className="space-y-2 pt-4">
-                    <div className="text-[10px] font-black tracking-widest text-cyan-400 uppercase flex items-center gap-2">
+                <div className="space-y-4 pt-4 sm:pt-8 text-center sm:text-left">
+                    <div className="inline-flex text-[10px] font-black tracking-[0.4em] text-cyan-400 uppercase items-center gap-2">
                         <Sparkles className="w-3 h-3" />
                         Intelligence Report V3
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-white leading-tight">
-                        {patientName}님을 위한<br />맞춤형 시술 분석 결과
-                    </h1>
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-4xl sm:text-5xl lg:text-6xl font-serif font-light tracking-wide text-white leading-[1.1] sm:leading-[1.1]"
+                    >
+                        {patientName}{language === 'EN' ? "'s" : "님을 위한"}<br />
+                        <span className="text-white/70 italic">{language === 'EN' ? "Clinical Analysis" : "맞춤형 시술 분석 결과"}</span>
+                    </motion.h1>
                 </div>
 
                 {/* ── 1. Patient Skin Analysis ──────────────────────────────── */}
@@ -241,20 +245,43 @@ export default function ReportPage() {
                         {/* Decorative background glow */}
                         <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] -z-10 pointer-events-none" />
 
-                        <div className="flex flex-col md:flex-row gap-10 relative z-10">
-                            {/* Analysis Text & Illustration Placeholder */}
+                        <div className="flex flex-col lg:flex-row gap-8 sm:gap-12 relative z-10">
+                            {/* Digital Twin Illustration */}
+                            <div className="w-full lg:w-[280px] shrink-0">
+                                <div className="text-[10px] text-cyan-400/60 font-bold tracking-[0.2em] uppercase mb-4 text-center lg:text-left">
+                                    {language === 'EN' ? "Digital Skin Twin" : "클리니컬 디지털 트윈"}
+                                </div>
+                                <div className="h-[280px] w-full relative bg-[#05050a] rounded-3xl border border-white/5 overflow-hidden flex items-center justify-center group">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent opacity-50" />
+                                    {/* Scanning Image/Icon Placeholder */}
+                                    <ScanFace className="w-24 h-24 text-cyan-400/60 stroke-[0.5] group-hover:scale-110 transition-transform duration-700" />
+
+                                    {/* Scanning Line Animation */}
+                                    <motion.div
+                                        animate={{ y: [0, 280, 0] }}
+                                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                                        className="absolute top-0 left-0 w-full h-[2px] bg-cyan-400/50 shadow-[0_0_15px_rgba(6,182,212,0.8)]"
+                                    />
+                                    <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center text-[9px] font-black tracking-widest text-cyan-400/40 uppercase">
+                                        <span>Analyzing</span>
+                                        <span className="animate-pulse">...</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Analysis Text */}
                             <div className="flex-1 space-y-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center flex-shrink-0">
                                         <Sparkles className="w-5 h-5 text-cyan-400" />
                                     </div>
-                                    <h2 className="text-2xl font-serif font-light text-cyan-50 tracking-wide">
+                                    <h2 className="text-xl sm:text-2xl font-serif font-light text-white tracking-wide">
                                         {language === 'EN' ? 'AI Skin Analysis' : 'AI 피부 상태 분석'}
                                     </h2>
                                 </div>
-                                <div className="bg-black/30 border border-white/5 rounded-2xl p-6 relative overflow-hidden">
-                                    <div className="absolute top-0 left-0 w-1 h-full bg-cyan-400" />
-                                    <p className="text-[15px] leading-[1.8] text-white/80 whitespace-pre-wrap font-light">
+                                <div className="bg-black/30 border border-white/5 rounded-2xl p-6 relative overflow-hidden h-full min-h-[220px]">
+                                    <div className="absolute top-0 left-0 w-1 h-full bg-cyan-400/50" />
+                                    <p className="text-[14px] sm:text-[15px] leading-[1.9] text-white/80 whitespace-pre-wrap font-light">
                                         {skinAnalysisText}
                                     </p>
                                 </div>
@@ -262,11 +289,11 @@ export default function ReportPage() {
 
                             {/* Radar Data */}
                             {radarData && (
-                                <div className="w-full md:w-[320px] shrink-0">
-                                    <div className="text-[10px] text-cyan-400/60 font-bold tracking-widest uppercase mb-4 text-center md:text-left">
+                                <div className="w-full lg:w-[280px] shrink-0">
+                                    <div className="text-[10px] text-cyan-400/60 font-bold tracking-[0.2em] uppercase mb-4 text-center lg:text-left">
                                         Clinical Parameter Radar
                                     </div>
-                                    <div className="h-[280px] w-full flex items-center justify-center bg-black/40 rounded-2xl border border-white/5 shadow-inner">
+                                    <div className="h-[280px] w-full flex items-center justify-center bg-black/40 rounded-3xl border border-white/5 shadow-inner p-4">
                                         <LiveRadar data={radarData} language={language as LanguageCode} />
                                     </div>
                                 </div>
@@ -275,13 +302,65 @@ export default function ReportPage() {
                     </section>
                 )}
 
-                {/* ── 2. Top Recommendations (Card Format) ─────────────────────────────────── */}
-                <section className="space-y-6 pt-4">
-                    <div className="flex items-center gap-3 pl-2">
-                        <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                            <Star className="w-4 h-4 text-white/70" />
+                {/* ── 2. Clinical Narrative ─────────────────────────────────── */}
+                {clinicalNarrativeText && (
+                    <motion.section
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="relative overflow-hidden rounded-3xl border border-violet-500/20 bg-gradient-to-br from-violet-950/30 via-[#0a0a0f] to-transparent p-6 sm:p-10 space-y-6"
+                    >
+                        {/* Background accent */}
+                        <div className="absolute top-0 right-0 w-80 h-80 bg-violet-500/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
+
+                        {/* Header */}
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-full bg-violet-500/10 border border-violet-500/30 flex items-center justify-center flex-shrink-0">
+                                <Zap className="w-5 h-5 text-violet-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl sm:text-2xl font-serif font-light text-white tracking-wide">
+                                    {language === 'EN' ? 'Clinical Intelligence Report' : '임상 전문가 인사이트'}
+                                </h2>
+                                <p className="text-[10px] text-violet-400/70 mt-1 tracking-[0.4em] uppercase font-black">
+                                    {language === 'EN' ? 'Personalized depth analysis' : '일반 검색불가 맞춤 분석'}
+                                </p>
+                            </div>
                         </div>
-                        <h2 className="text-3xl font-serif font-light text-white">
+
+                        {/* Narrative paragraphs */}
+                        <div className="space-y-6">
+                            {clinicalNarrativeText.split('\n\n').filter(Boolean).map((para, idx) => (
+                                <div key={idx} className={`relative pl-4 sm:pl-6 ${idx === 0 ? 'border-l-2 border-violet-500' : idx === 1 ? 'border-l-2 border-cyan-500' : idx === 2 ? 'border-l-2 border-emerald-500' : 'border-l-2 border-amber-500/70'}`}>
+                                    <p className="text-[14px] leading-[1.9] text-white/80 font-light whitespace-pre-wrap">
+                                        {para}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Footer badge */}
+                        <div className="flex items-center gap-2 pt-6 mt-6 border-t border-white/5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                            <span className="text-[10px] font-black tracking-[0.4em] text-violet-400/60 uppercase">
+                                {language === 'EN' ? 'EVIDENCE-BASED ENGINE' : 'AI 임상 엔진 근거 기반'}
+                            </span>
+                        </div>
+                    </motion.section>
+                )}
+
+                {/* ── 3. Top Recommendations (Card Format) ─────────────────────────────────── */}
+                <motion.section
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="space-y-6 pt-4"
+                >
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+                            <Star className="w-5 h-5 text-white/70" />
+                        </div>
+                        <h2 className="text-xl sm:text-2xl font-serif font-light text-white tracking-wide">
                             {language === 'EN' ? 'Top 3 Protocol Recommendations' : 'AI 추천 솔루션 Top 3'}
                         </h2>
                     </div>
@@ -293,10 +372,10 @@ export default function ReportPage() {
                             const isRank1 = rankObj.rankNum === 1;
 
                             return (
-                                <div key={idx} className={`rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col h-full group ${isRank1
-                                    ? 'border-cyan-500/30 bg-gradient-to-b from-cyan-950/20 to-black hover:border-cyan-400/50 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)]'
-                                    : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]'
-                                    }`}>
+                                <div key={idx} className={`rounded-3xl border transition-all duration-300 relative flex flex-col h-full group ${isRank1
+                                    ? 'border-cyan-500/30 bg-gradient-to-b from-cyan-950/20 to-[#0a0a0f] hover:border-cyan-400/50 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)] hover:-translate-y-1'
+                                    : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04] hover:-translate-y-1'
+                                    } overflow-hidden`}>
 
                                     {isRank1 && (
                                         <div className="absolute -top-10 -right-10 opacity-20 group-hover:opacity-30 transition-opacity pointer-events-none">
@@ -304,7 +383,7 @@ export default function ReportPage() {
                                         </div>
                                     )}
 
-                                    <div className="p-6 relative z-10 flex flex-col h-full">
+                                    <div className="p-6 sm:p-10 relative z-10 flex flex-col h-full">
                                         <div className="flex items-center gap-2 mb-4">
                                             <div className={`px-2 py-0.5 rounded flex items-center gap-1 text-[10px] font-black tracking-widest uppercase ${isRank1 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/10 text-white/60'}`}>
                                                 {isRank1 && <Star className="w-3 h-3 fill-cyan-400" />}
@@ -312,11 +391,11 @@ export default function ReportPage() {
                                             </div>
                                         </div>
 
-                                        <h3 className={`text-2xl mb-4 font-serif italic font-light leading-tight ${isRank1 ? 'text-cyan-50' : 'text-white'}`}>
+                                        <h3 className={`text-3xl mb-4 font-serif italic font-light leading-tight ${isRank1 ? 'text-cyan-50' : 'text-white'}`}>
                                             {cat.category_display_name}
                                         </h3>
 
-                                        <p className="text-sm text-white/60 leading-relaxed mb-6 line-clamp-4 flex-1 font-light">
+                                        <p className="text-[14px] leading-[1.9] text-white/60 mb-8 line-clamp-4 flex-1 font-light">
                                             {language === 'EN' ? rec.why_EN : rec.why_KO}
                                         </p>
 
@@ -335,9 +414,9 @@ export default function ReportPage() {
 
                                         <button
                                             onClick={() => setDeepDiveConfig({ isOpen: true, rankData: rec })}
-                                            className={`w-full py-3.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 mt-auto shrink-0 ${isRank1
-                                                ? 'bg-cyan-500 text-black shadow-[0_4px_20px_rgba(6,182,212,0.2)] hover:bg-cyan-400'
-                                                : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
+                                            className={`w-full px-6 py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 mt-2 shrink-0 ${isRank1
+                                                ? 'bg-cyan-500 text-black font-bold shadow-[0_4px_20px_rgba(6,182,212,0.2)] hover:bg-cyan-400'
+                                                : 'border border-white/20 text-white/70 font-medium hover:border-white/40 hover:text-white'
                                                 }`}
                                         >
                                             {language === 'EN' ? 'View Blueprint' : '상세 분석 보기'} <ChevronRight className="w-4 h-4" />
@@ -347,87 +426,59 @@ export default function ReportPage() {
                             );
                         })}
                     </div>
-                </section>
-
-                {/* ── 3. Clinical Narrative ─────────────────────────────────── */}
-                {clinicalNarrativeText && (
-                    <section className="relative overflow-hidden rounded-3xl border border-violet-500/20 bg-gradient-to-br from-violet-950/30 via-[#0a0a12] to-transparent p-6 sm:p-10 space-y-6">
-                        {/* Background accent */}
-                        <div className="absolute top-0 right-0 w-80 h-80 bg-violet-500/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
-
-                        {/* Header */}
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-violet-500/10 border border-violet-500/30 flex items-center justify-center flex-shrink-0">
-                                <Zap className="w-5 h-5 text-violet-400" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-serif font-light text-violet-100 tracking-wide">
-                                    {language === 'EN' ? 'Clinical Intelligence Report' : '임상 전문가 인사이트'}
-                                </h2>
-                                <p className="text-[11px] text-violet-400/70 mt-0.5 tracking-widest uppercase">
-                                    {language === 'EN' ? 'Personalized protocol depth analysis' : '일반 검색으로는 알기 어려운 맞춤 분석'}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Narrative paragraphs */}
-                        <div className="space-y-5">
-                            {clinicalNarrativeText.split('\n\n').filter(Boolean).map((para, idx) => (
-                                <div key={idx} className={`relative pl-5 ${idx === 0 ? 'border-l-2 border-violet-500' : idx === 1 ? 'border-l-2 border-cyan-500' : idx === 2 ? 'border-l-2 border-emerald-500' : 'border-l-2 border-amber-500/70'}`}>
-                                    <p className="text-[14px] leading-[1.9] text-white/80 font-light whitespace-pre-wrap">
-                                        {para}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Footer badge */}
-                        <div className="flex items-center gap-2 pt-2 border-t border-white/5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-                            <span className="text-[10px] font-black tracking-widest text-violet-400/60 uppercase">
-                                {language === 'EN' ? 'AI Clinical Engine · Evidence-Based' : 'AI 임상 엔진 · 근거 기반 분석'}
-                            </span>
-                        </div>
-                    </section>
-                )}
+                </motion.section>
 
                 {/* ── 4. What To Avoid ──────────────────────────────────────── */}
                 {whatToAvoidText && (
-                    <section className="rounded-3xl border border-amber-500/20 bg-amber-500/5 p-6 sm:p-8">
-                        <div className="flex items-center gap-2 mb-4">
-                            <AlertTriangle className="w-4 h-4 text-amber-500" />
-                            <h2 className="text-lg font-serif font-light text-amber-500 tracking-wide">
+                    <motion.section
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="rounded-3xl border border-amber-500/20 bg-amber-500/5 p-6 sm:p-10"
+                    >
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+                                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                            </div>
+                            <h2 className="text-xl sm:text-2xl font-serif font-light text-amber-500 tracking-wide">
                                 {language === 'EN' ? 'Treatments to Avoid' : '주의할 치료'}
                             </h2>
                         </div>
-                        <p className="text-sm leading-relaxed text-amber-500/90 whitespace-pre-wrap">
+                        <p className="text-[14px] leading-[1.9] font-light text-amber-500/90 whitespace-pre-wrap">
                             {whatToAvoidText}
                         </p>
-                    </section>
+                    </motion.section>
                 )}
 
-                {/* ── 4. Doctor Question ────────────────────────────────────── */}
+                {/* ── 5. Doctor Question ────────────────────────────────────── */}
                 {doctorQuestionText && (
-                    <section className="rounded-3xl border border-violet-500/20 bg-violet-500/5 p-6 sm:p-8">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
-                                <Info className="w-4 h-4 text-violet-400" />
-                                <h2 className="text-lg font-serif font-light text-violet-400 tracking-wide">
+                    <motion.section
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="rounded-3xl border border-violet-500/20 bg-gradient-to-br from-violet-500/5 to-transparent p-6 sm:p-10"
+                    >
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-violet-500/10 border border-violet-500/30 flex items-center justify-center flex-shrink-0">
+                                    <Info className="w-5 h-5 text-violet-400" />
+                                </div>
+                                <h2 className="text-xl sm:text-2xl font-serif font-light text-violet-400 tracking-wide">
                                     {language === 'EN' ? 'Questions for your Doctor' : '클리닉 방문 시 이 질문을 해보세요'}
                                 </h2>
                             </div>
                             <button
                                 onClick={copyToClipboard}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs font-bold text-violet-300 hover:bg-violet-500/20 transition-colors"
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-500/10 border border-violet-500/20 text-sm font-medium text-violet-300 hover:bg-violet-500/20 transition-all hover:border-violet-500/40 shrink-0"
                             >
-                                {copied ? <CheckCircle className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                                {copied ? (language === 'EN' ? 'Copied' : '복사됨') : (language === 'EN' ? 'Copy' : '복사')}
+                                {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                {copied ? (language === 'EN' ? 'Copied' : '복사됨') : (language === 'EN' ? 'Copy Text' : '질문 복사')}
                             </button>
                         </div>
-                        <div className="bg-black/30 border border-violet-500/10 rounded-xl p-5 text-sm leading-relaxed text-violet-100 whitespace-pre-wrap border-l-2 border-l-violet-500">
+                        <div className="bg-[#0a0a0f]/50 border border-violet-500/10 rounded-2xl p-6 sm:p-8 text-[14px] leading-[1.9] font-light text-violet-100/90 whitespace-pre-wrap border-l-2 border-l-violet-500 shadow-inner">
                             {doctorQuestionText}
                         </div>
-                    </section>
+                    </motion.section>
                 )}
             </main>
 
