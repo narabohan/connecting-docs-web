@@ -707,24 +707,73 @@ export const ConversationalSurvey: React.FC<ConversationalSurveyProps> = ({
 
               {/* Analyzing Phase */}
               {phase === 'analyzing' && (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: 'linear',
-                      }}
-                      className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full mx-auto mb-4"
-                    />
-                    <p className="text-gray-700 font-semibold text-lg">
-                      {t.analyzing}
+                <div className="flex-1 flex items-center justify-center p-8">
+                  <div className="text-center w-full max-w-sm">
+                    {/* Animated DNA/scan icon */}
+                    <div className="relative w-20 h-20 mx-auto mb-6">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                        className="w-20 h-20 border-4 border-blue-100 border-t-blue-500 rounded-full absolute inset-0"
+                      />
+                      <motion.div
+                        animate={{ rotate: -360 }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                        className="w-12 h-12 border-4 border-blue-200 border-b-blue-600 rounded-full absolute inset-4"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl">🔬</span>
+                      </div>
+                    </div>
+
+                    <p className="text-gray-800 font-bold text-lg mb-1">
+                      {language === 'KO' ? 'AI 피부 분석 중...' : 'Analyzing your skin profile...'}
                     </p>
-                    <p className="text-gray-500 text-sm mt-2">
+                    <p className="text-gray-500 text-sm mb-6">
                       {language === 'KO'
-                        ? '데이터 분석 중입니다...'
-                        : 'Processing your data...'}
+                        ? '맞춤 시술 계획을 준비하고 있어요. 약 30초 소요됩니다.'
+                        : 'Preparing your personalized treatment plan. About 30 seconds.'}
+                    </p>
+
+                    {/* Step progress indicators */}
+                    <div className="space-y-2 text-left">
+                      {(language === 'KO' ? [
+                        '상담 내용 분석 완료 ✓',
+                        '임상 데이터베이스 매칭 중...',
+                        '맞춤 시술 조합 생성 중...',
+                      ] : [
+                        'Survey analysis complete ✓',
+                        'Matching clinical database...',
+                        'Generating treatment plan...',
+                      ]).map((step, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.8, duration: 0.4 }}
+                          className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg ${
+                            i === 0
+                              ? 'bg-green-50 text-green-700'
+                              : 'bg-blue-50 text-blue-600'
+                          }`}
+                        >
+                          {i === 0 ? (
+                            <span className="text-green-500">✓</span>
+                          ) : (
+                            <motion.span
+                              animate={{ opacity: [1, 0.3, 1] }}
+                              transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.4 }}
+                            >⚡</motion.span>
+                          )}
+                          {step}
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    <p className="text-gray-400 text-xs mt-5">
+                      {language === 'KO'
+                        ? '분석이 완료되면 자동으로 리포트 페이지로 이동합니다'
+                        : 'You will be redirected to your report automatically'}
                     </p>
                   </div>
                 </div>
