@@ -38,6 +38,15 @@ export function useAsyncDataPolling(runId: string | undefined, dispatch: Dispatc
             attempts++;
 
             try {
+                // If it's the first attempt, we also trigger the generation just in case the backend fire-and-forget failed
+                if (attempts === 1) {
+                    fetch('/api/recommendation/generate-report-content', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ runId, patientId: '' }) // patientDocs will be fetched by ID in worker
+                    }).catch(e => console.error('Background trigger error:', e));
+                }
+
                 const res = await fetch(`/api/engine/get-run?runId=${runId}`);
                 const data = await res.json();
 

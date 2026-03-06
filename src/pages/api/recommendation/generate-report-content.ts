@@ -21,16 +21,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
         const { runId, patientId } = req.body;
 
-        if (!runId || !patientId) {
-            return res.status(400).json({ error: 'runId and patientId are required' });
+        // 1. Fetch Recommendation_Run record to get details
+        const recRun = await airtable(TABLE_RECOMMENDATION_RUN).find(runId);
+
+        // 2. Resolve patientId if not provided (from linked record)
+        let resolvedPatientId = patientId;
+        if (!resolvedPatientId) {
+            const linkedPatient = recRun.get('Patients_v1') as string[];
+            if (linkedPatient && linkedPatient.length > 0) {
+                resolvedPatientId = linkedPatient[0];
+            }
         }
 
-        console.log(`Starting recommendation content generation for Run: ${runId}`);
+        if (!resolvedPatientId) {
+            console.error(`Patient ID missing and could not be resolved for Run: ${runId}`);
+            return res.status(400).json({ error: 'patientId is missing' });
+        }
+
+        console.log(`Starting recommendation content generation for Run: ${runId} (Patient: ${resolvedPatientId})`);
 
         // Task 4 and Task 5 run concurrently
         const [boosterResult, whyCatResult] = await Promise.allSettled([
-            generateBoosterDeliveryJson(runId),
-            generateWhyCategoryTexts(runId, patientId)
+            generateBoosterDeliveryJson(recRun),
+            generateWhyCategoryTexts(recRun, resolvedPatientId)
         ]);
 
         if (boosterResult.status === 'rejected') {
@@ -55,9 +68,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 // ----------------------------------------------------------------------------
 // Task 4: Skin Booster Delivery Method Mapping
 // ----------------------------------------------------------------------------
-async function generateBoosterDeliveryJson(runId: string) {
+async function generateBoosterDeliveryJson(recRun: any) {
+    const runId = recRun.id;
     // 1. Fetch Recommendation_Run record to get top5_booster_ids
-    const recRun = await airtable(TABLE_RECOMMENDATION_RUN).find(runId);
+    // const recRun = await airtable(TABLE_RECOMMENDATION_RUN).find(runId);
 
     // Handling array of linked records or pure JSON string depending on implementation
     let top5BoosterIds: string[] = [];
@@ -161,9 +175,10 @@ async function generateBoosterDeliveryJson(runId: string) {
 // ----------------------------------------------------------------------------
 // Task 5: Why This Category Personalized LLM Generation
 // ----------------------------------------------------------------------------
-async function generateWhyCategoryTexts(runId: string, patientId: string) {
+async function generateWhyCategoryTexts(recRun: any, patientId: string) {
+    const runId = recRun.id;
     // 1. Fetch Recommendation_Run to get ranked categories
-    const recRun = await airtable(TABLE_RECOMMENDATION_RUN).find(runId);
+    // const recRun = await airtable(TABLE_RECOMMENDATION_RUN).find(runId);
     const rank1Id = Array.isArray(recRun.get('rank_1_category_id')) ? (recRun.get('rank_1_category_id') as any)[0] : recRun.get('rank_1_category_id');
     const rank2Id = Array.isArray(recRun.get('rank_2_category_id')) ? (recRun.get('rank_2_category_id') as any)[0] : recRun.get('rank_2_category_id');
     const rank3Id = Array.isArray(recRun.get('rank_3_category_id')) ? (recRun.get('rank_3_category_id') as any)[0] : recRun.get('rank_3_category_id');

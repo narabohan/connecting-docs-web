@@ -52,37 +52,40 @@ interface EBDCategoryRecord {
 // ─── Survey goal → canonical signal mapping ───────────────────────────────────
 // WizardData.primaryGoal values mapped to indication_map canonical_signal strings
 const GOAL_TO_CANONICAL: Record<string, string[]> = {
-    // Smooth Texture / Pore / Roughness
-    'Smooth Texture': ['Texture refinement', 'Pore / texture'],
-    'Texture/Roughness': ['Texture refinement'],
-    'Pore': ['Pore / texture'],
-    // Glow / Brightening
-    'Glow': ['Brightening / radiance', 'Skin quality / glow'],
-    'Skin quality/Glow': ['Brightening / radiance', 'Skin quality / glow'],
+    // Smooth Texture / Pore / Roughness — matches indication_map: "Texture refinement", "Pores / texture"
+    'Smooth Texture': ['Texture refinement', 'Pores / texture'],
+    'Texture/Roughness': ['Texture refinement', 'Pores / texture'],
+    'Pore': ['Pores / texture', 'Pore & Skin quality'],
+    // Glow / Brightening / Hydration — matches: "Brightening / radiance", "Hydration / Regeneration"
+    'Glow': ['Brightening / radiance', 'Hydration / Regeneration'],
+    'Hydration': ['Hydration / Regeneration', 'Pore & Skin quality'],
+    'Skin quality/Glow': ['Brightening / radiance', 'Pore & Skin quality'],
+    'Skin quality': ['Pore & Skin quality', 'Hydration / Regeneration'],
     'Brightening': ['Brightening / radiance'],
     // Tone / Pigmentation
     'Tone': ['Brightening / radiance', 'Melasma / pigmentation risk'],
     'Pigmentation': ['Melasma / pigmentation risk'],
     'Melasma': ['Melasma / pigmentation risk'],
-    // Tightening / Lifting
+    // Tightening / Lifting — matches: "Contouring / lifting", "Jawline / lower face"
     'Tightening': ['Contouring / lifting'],
     'Lifting': ['Contouring / lifting'],
-    'Contour/Jawline definition': ['Contouring / lifting'],
-    // Acne / Scars
-    'Acne scar': ['Acne / scar improvement'],
-    'Acne/Scar improvement': ['Acne / scar improvement'],
-    'Acne': ['Acne / scar improvement'],
-    // Skin Barrier / Sensitive
+    'Contour/Jawline definition': ['Jawline / lower face', 'Contouring / lifting'],
+    'Jawline': ['Jawline / lower face'],
+    // Acne / Scars — matches: "Acne / Scar improvement"
+    'Acne scar': ['Acne / Scar improvement'],
+    'Acne/Scar improvement': ['Acne / Scar improvement'],
+    'Acne': ['Acne / Scar improvement'],
+    // Sensitive / Barrier — matches: "Sensitive / barrier damage"
     'Sensitive': ['Sensitive / barrier damage'],
-    'Hydration': ['Skin quality / glow', 'Sensitive / barrier damage'],
-    'Skin quality': ['Skin quality / glow'],
-    // Vascular / Redness
+    // Vascular / Redness — matches: "Rosacea / vascular"
     'Redness': ['Rosacea / vascular'],
     'Vascular': ['Rosacea / vascular'],
-    // Eye Area
+    // Eye Area — matches: "Eye area / Fine lines"
     'Eye area': ['Eye area / Fine lines'],
-    // Volume
+    // Volume — matches: "Midface volume"
     'Volume loss': ['Midface volume', 'Contouring / lifting'],
+    'Midface volume': ['Midface volume'],
+    // Body
     'Body': ['Body contouring'],
 };
 
@@ -129,15 +132,23 @@ async function fetchIndicationMap(): Promise<IndicationMapEntry[]> {
         fields: ['canonical_signal', 'recommended_category_ids']
     }).all();
 
-    return records
-        .map(r => ({
-            canonical_signal: String(r.get('canonical_signal') || '').trim(),
-            category_ids: String(r.get('recommended_category_ids') || '')
-                .split(',')
-                .map(s => s.trim())
-                .filter(Boolean)
-        }))
-        .filter(e => e.canonical_signal && e.category_ids.length > 0);
+    const entries: IndicationMapEntry[] = [];
+    for (const r of records) {
+        const rawSignals = String(r.get('canonical_signal') || '').trim();
+        const categoryIds = String(r.get('recommended_category_ids') || '')
+            .split(',')
+            .map(s => s.trim())
+            .filter(Boolean);
+        if (!rawSignals || categoryIds.length === 0) continue;
+
+        // A single record can have multiple canonical_signals (comma-separated)
+        // Expand each to its own entry so comparison works correctly
+        const signals = rawSignals.split(',').map(s => s.trim()).filter(Boolean);
+        for (const sig of signals) {
+            entries.push({ canonical_signal: sig, category_ids: categoryIds });
+        }
+    }
+    return entries;
 }
 
 interface CategoryScoreContext {
