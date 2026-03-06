@@ -455,7 +455,7 @@ export default async function handler(
 
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 400,
+      max_tokens: 1024,
       temperature: 0.3,
       system: systemPrompt,
       messages: conversationMessages,
@@ -471,9 +471,13 @@ export default async function handler(
       parsed = JSON.parse(responseText);
     } catch (parseErr) {
       console.error('[Survey Chat] JSON parse error:', parseErr);
-      console.error('[Survey Chat] Claude response:', responseText);
+      console.error('[Survey Chat] Raw response length:', responseText.length);
+      console.error('[Survey Chat] Raw response preview:', responseText.slice(0, 300));
 
-      // Fallback: return graceful error response
+      // Attempt to extract message field via regex even if JSON is truncated
+      const messageMatch = responseText.match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+      const extractedMessage = messageMatch ? messageMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : null;
+
       const fallbackState = extractSignalsFromResponse(
         messages[messages.length - 1]?.content || '',
         demographics,
@@ -481,10 +485,11 @@ export default async function handler(
       );
 
       return res.status(200).json({
-        message:
+        message: extractedMessage || (
           language === 'KO'
-            ? '죄송합니다. 다시 시도해주세요.'
-            : 'I apologize for the error. Please try again.',
+            ? '죄송합니다. 잠시 후 다시 시도해주세요.'
+            : 'I apologize for the error. Please try again.'
+        ),
         signal_state: fallbackState,
         wizard_data: null,
       });
