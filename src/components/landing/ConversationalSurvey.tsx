@@ -507,11 +507,11 @@ export const ConversationalSurvey: React.FC<ConversationalSurveyProps> = ({
       setMessages((prev) => [...prev, assistantMsg]);
       setSignalState(data.signal_state); // was: data.signalState
 
-      // Check if recommendation is ready
-      if (data.signal_state?.recommendation_ready) {
-        if (data.wizard_data) {
-          setWizardData(data.wizard_data);
-        }
+      // Check if recommendation is ready — only transition if wizard_data exists
+      // (If survey-chat fails, recommendation_ready may be true but wizard_data null
+      //  which would cause infinite 'analyzing' screen with no action)
+      if (data.signal_state?.recommendation_ready && data.wizard_data) {
+        setWizardData(data.wizard_data);
         setPhase('analyzing');
       }
     } catch (err) {
@@ -679,7 +679,7 @@ export const ConversationalSurvey: React.FC<ConversationalSurveyProps> = ({
                         }}
                         placeholder={t.placeholder}
                         disabled={isLoadingMessage}
-                        className="flex-1 border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-200 transition"
+                        className="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-200 transition"
                       />
                       <button
                         onClick={handleSendMessage}
