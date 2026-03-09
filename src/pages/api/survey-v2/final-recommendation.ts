@@ -397,7 +397,7 @@ CRITICAL RULES:
 5. Confidence scores must reflect realistic accuracy (typically 80-95 range)
 6. Patient-facing content must be in the patient's language, doctor tab in bilingual KO+EN
 7. Respond ONLY with valid JSON, no other text
-8. CONCISENESS IS CRITICAL — keep all HTML fields to 1-2 short sentences max. Keep summary_html under 40 words, why_fit_html under 60 words, moa_description_html under 50 words. Omit verbose explanations. The JSON MUST fit within 4000 tokens total.`;
+8. CONCISENESS IS CRITICAL — keep all HTML fields to 1-2 short sentences max. Keep summary_html under 40 words, why_fit_html under 60 words, moa_description_html under 50 words. Omit verbose explanations. The complete JSON MUST fit within 7500 tokens.`;
 
 /** Build dynamic system prompt — changes per patient */
 function buildDynamicSystemPrompt(
@@ -497,7 +497,7 @@ export default async function handler(
     // We collect the full text, then parse JSON at the end
     const stream = anthropic.messages.stream({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 4096,
+      max_tokens: 8192,
       temperature: 0.3,
       system: [
         {
@@ -555,7 +555,7 @@ export default async function handler(
       recommendation = JSON.parse(jsonStr);
     } catch {
       console.error('[final-recommendation] JSON parse error:', fullText.substring(0, 200));
-      res.write(`data: ${JSON.stringify({ type: 'error', error: 'Failed to parse Sonnet response as JSON' })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: 'error', error: 'Failed to parse model response as JSON — output may be truncated (max_tokens)' })}\n\n`);
       res.end();
       return;
     }
