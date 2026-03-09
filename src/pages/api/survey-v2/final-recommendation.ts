@@ -523,6 +523,9 @@ export default async function handler(
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
+    // Send immediate debug event so we can verify which model is deployed
+    res.write(`data: ${JSON.stringify({ type: 'debug', model: 'claude-haiku-4-5-20251001', max_tokens: 8192, deploy: 'a1eab4b' })}\n\n`);
+
     let fullText = '';
     let inputTokens = 0;
     let outputTokens = 0;
