@@ -456,11 +456,11 @@ Safety Follow-up Answers: ${JSON.stringify(req.safety_followup_answers)}
 ${safetySection}`;
 }
 
-// ─── API Handler ─────────────────────────────────────────────
+// ─── API Handler (Streaming to avoid Netlify timeout) ────────
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<FinalRecommendationResponse | { error: string }>
+  res: NextApiResponse
 ) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -476,9 +476,9 @@ export default async function handler(
 
     const dynamicPrompt = buildDynamicSystemPrompt(body);
 
-    // Prompt Caching: static part is cached (90% input cost savings),
-    // dynamic part changes per patient
-    const message = await anthropic.messages.create({
+    // Use streaming to keep connection alive and avoid Netlify timeout
+    // We collect the full text, then parse JSON at the end
+    const stream = anthropic.messages.stream({
       model: 'claude-sonnet-4-6',
       max_tokens: 12000,
       temperature: 0.3,
@@ -501,37 +501,61 @@ export default async function handler(
       ],
     });
 
-    // Extract text content
-    const textBlock = message.content.find(b => b.type === 'text');
-    if (!textBlock || textBlock.type !== 'text') {
-      return res.status(500).json({ error: 'No text response from Sonnet' });
-    }
+    // Set headers for streaming (keeps Netlify connection alive)
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
-    // Parse JSON from response
+    let fullText = '';
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let modelUsed = 'claude-sonnet-4-6';
+
+    // Stream progress events to keep connection alive
+    stream.on('text', (text) => {
+      fullText += text;
+      // Send a heartbeat to keep connection alive
+      res.write(`data: ${JSON.stringify({ type: 'progress', chars: fullText.length })}\n\n`);
+    });
+
+    // Wait for stream to complete
+    const finalMessage = await stream.finalMessage();
+    inputTokens = finalMessage.usage.input_tokens;
+    outputTokens = finalMessage.usage.output_tokens;
+    modelUsed = finalMessage.model;
+
+    // Parse JSON from collected text
     let recommendation: OpusRecommendationOutput;
     try {
-      // Handle potential markdown code blocks
-      let jsonStr = textBlock.text.trim();
+      let jsonStr = fullText.trim();
       if (jsonStr.startsWith('```')) {
         jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
       }
       recommendation = JSON.parse(jsonStr);
     } catch {
-      console.error('[final-recommendation] JSON parse error:', textBlock.text.substring(0, 200));
-      return res.status(500).json({ error: 'Failed to parse Sonnet response as JSON' });
+      console.error('[final-recommendation] JSON parse error:', fullText.substring(0, 200));
+      res.write(`data: ${JSON.stringify({ type: 'error', error: 'Failed to parse Sonnet response as JSON' })}\n\n`);
+      res.end();
+      return;
     }
 
-    return res.status(200).json({
+    // Send final result
+    const result: FinalRecommendationResponse = {
       recommendation_json: recommendation,
-      model: message.model,
-      usage: {
-        input_tokens: message.usage.input_tokens,
-        output_tokens: message.usage.output_tokens,
-      },
-    });
+      model: modelUsed,
+      usage: { input_tokens: inputTokens, output_tokens: outputTokens },
+    };
+    res.write(`data: ${JSON.stringify({ type: 'done', ...result })}\n\n`);
+    res.end();
   } catch (error) {
     console.error('[final-recommendation] Error:', error);
     const msg = error instanceof Error ? error.message : 'Unknown error';
-    return res.status(500).json({ error: msg });
+    // Try to send error via stream if headers already sent
+    if (res.headersSent) {
+      res.write(`data: ${JSON.stringify({ type: 'error', error: msg })}\n\n`);
+      res.end();
+    } else {
+      res.status(500).json({ error: msg });
+    }
   }
 }

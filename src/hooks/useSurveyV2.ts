@@ -449,7 +449,45 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
         throw new Error(errData.error || 'Opus analysis failed');
       }
 
-      const data: FinalRecommendationResponse = await res.json();
+      // Parse SSE streaming response (keeps connection alive to avoid Netlify timeout)
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error('No response body');
+
+      const decoder = new TextDecoder();
+      let data: FinalRecommendationResponse | null = null;
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // Parse SSE events from buffer
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+            if (event.type === 'done') {
+              data = {
+                recommendation_json: event.recommendation_json,
+                model: event.model,
+                usage: event.usage,
+              };
+            } else if (event.type === 'error') {
+              throw new Error(event.error || 'Analysis stream error');
+            }
+            // 'progress' events are just heartbeats — ignore
+          } catch (parseErr) {
+            // Skip unparseable lines (heartbeats, empty lines)
+            if ((parseErr as Error).message?.includes('Analysis stream error')) throw parseErr;
+          }
+        }
+      }
+
+      if (!data) throw new Error('No final result received from analysis');
 
       // Store the Opus output in sessionStorage for the report page to consume
       if (typeof window !== 'undefined') {
