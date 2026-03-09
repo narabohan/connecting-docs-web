@@ -256,7 +256,8 @@ function inferTriggeredProtocols(
   }
 
   // Risk-based overrides
-  if (riskFlags.includes('rosacea') || riskFlags.includes('vascular')) {
+  const flags = riskFlags || [];
+  if (flags.includes('rosacea') || flags.includes('vascular')) {
     if (!protocols.includes('PROTO_03')) protocols.push('PROTO_03');
   }
   if (pigmentPattern === 'hormonal_melasma') {
@@ -441,7 +442,7 @@ Style Preference: ${req.q5_style || 'Not specified'}
 Pain Tolerance: ${req.q6_pain_tolerance || 'Not specified'}
 Downtime Tolerance: ${req.q6_downtime_tolerance || 'Not specified'}
 Past Experience: ${req.q7_past_experience || 'None disclosed'}
-Risk Flags: ${req.q2_risk_flags.length > 0 ? req.q2_risk_flags.join(', ') : 'None'}
+Risk Flags: ${(req.q2_risk_flags || []).length > 0 ? req.q2_risk_flags.join(', ') : 'None'}
 Pigment Pattern: ${req.q2_pigment_pattern || 'N/A'}
 Volume Logic: ${req.q3_volume_logic || 'N/A'}
 
@@ -468,6 +469,14 @@ export default async function handler(
 
   try {
     const body = req.body as FinalRecommendationRequest;
+
+    // Defensive defaults for array/object fields that may be undefined
+    body.q2_risk_flags = body.q2_risk_flags || [];
+    body.safety_flags = body.safety_flags || [];
+    body.chip_responses = body.chip_responses || {};
+    body.prior_applied = body.prior_applied || [];
+    body.prior_values = body.prior_values || {};
+    body.safety_followup_answers = body.safety_followup_answers || {};
 
     // Validate required fields
     if (!body.demographics || !body.q1_primary_goal) {
