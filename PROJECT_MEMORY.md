@@ -277,6 +277,16 @@ demographics.d_gender            // 정확한 필드명
 - [ ] 사업계획서 업데이트 진행 여부 확인
 - [ ] 1인 기업 운영 자동화 도구 필요 여부
 
+## 12. Change Log
+
+| 날짜 | Issue | Commit | 요약 |
+|------|-------|--------|------|
+| 2026-03-09 | #2 | `f7e7b25` | Report v7-premium 다크 테마 iframe + postMessage 브릿지 적용 |
+| 2026-03-09 | #9 | `ee12645` | 주사제 → 스킨부스터/인젝터블 용어 통일 (3파일 4곳) |
+| 2026-03-09 | #1 | `d4ab215` | Clinical depth chips 7종 추가 (ChipType, i18n, generate-chips, analyze-open) |
+| 2026-03-09 | #5+#6 | `ed0aa19` | Trend/Popularity 가중치 + 나이/국가 분기 skeleton 추가 |
+| 2026-03-09 | #6 | `22c75f2` | 나이 브라켓(20s~50+) + 국가별(KR/JP/CN/SEA/SG-US) 실제 임상 규칙으로 업그레이드 |
+
 ---
 *이 파일은 대화 컨텍스트 보존용입니다. 새 세션에서 "PROJECT_MEMORY.md를 읽고 이어서 진행해"라고 말하세요.*
 *사업계획서 작업 시: "PROJECT_MEMORY.md를 읽고 사업계획서 업데이트를 진행해"라고 말하세요.*
