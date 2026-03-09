@@ -73,7 +73,7 @@ function buildAdminEmail(data: NotifyReportRequest): string {
           <td style="padding:8px 0;">${data.top_device || '-'}</td>
         </tr>
         <tr>
-          <td style="padding:8px 0;color:#6b7280;">Top 주사제</td>
+          <td style="padding:8px 0;color:#6b7280;">Top 스킨부스터/인젝터블</td>
           <td style="padding:8px 0;">${data.top_injectable || '-'}</td>
         </tr>
         <tr>
