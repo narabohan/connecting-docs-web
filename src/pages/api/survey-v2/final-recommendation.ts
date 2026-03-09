@@ -459,8 +459,8 @@ ${safetySection}`;
 }
 
 // ─── API Route Config ────────────────────────────────────────
-// Extend Netlify function timeout (default 10s is too short for Sonnet 4.6)
-// Netlify Pro supports up to 26s; Background Functions up to 15min
+// Extend Netlify function timeout (default 10s)
+// Using Haiku 4.5 for speed (~3-5s); Sonnet requires Background Functions
 export const config = {
   maxDuration: 60, // seconds — Netlify will cap to plan max
 };
@@ -496,7 +496,7 @@ export default async function handler(
     // Use streaming to keep connection alive and avoid Netlify timeout
     // We collect the full text, then parse JSON at the end
     const stream = anthropic.messages.stream({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 4096,
       temperature: 0.3,
       system: [
@@ -526,7 +526,7 @@ export default async function handler(
     let fullText = '';
     let inputTokens = 0;
     let outputTokens = 0;
-    let modelUsed = 'claude-sonnet-4-6';
+    let modelUsed = 'claude-haiku-4-5-20251001';
     let lastProgressAt = 0;
 
     // Stream progress events to keep connection alive (throttled to every 500 chars)
