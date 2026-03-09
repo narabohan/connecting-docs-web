@@ -218,34 +218,77 @@ function parseAgeBracket(ageStr: string): AgeBracket {
 }
 
 const AGE_BRACKET_CONTEXTS: Record<AgeBracket, string> = {
-  '20s': `[AGE_CONTEXT: 20s]
-예방적 케어 중심. 콜라겐 자극 기초 시술 + 스킨부스터 위주.
-Zone priority: 전체 균일. Device preference: low-energy + prevention-focused.
-── TODO: 20대 세부 임상 규칙 추가 예정 ──`,
+  '20s': `[AGE_CONTEXT: 20s — Prevention & Foundation]
+Clinical focus: 예방적 콜라겐 자극 + barrier 강화. 공격적 시술 불필요.
+Zone priority: 전체 균일 (특정 zone targeting 미필요).
+Device rules:
+- 1st line: Low-energy MN-RF (Sylfirm X, Potenza low-tip) → collagen priming
+- 2nd line: Gentle PICO toning (1064nm low-fluence) for 톤 정리 if needed
+- Avoid: HIFU (불필요한 SMAS 자극), aggressive ablative lasers
+Injectable rules:
+- 1st: 스킨부스터 (Juvelook, Rejuran HB) → hydration + barrier maintenance
+- 2nd: Exosome (ASCE+) if regeneration needed
+- Avoid: Biostimulators (Sculptra) — 20대에 콜라겐 손실이 미미하므로 과잉
+Weight adjustments: texture +2, evidence +1, roi +2. tightening/lifting weights neutral.
+Treatment rhythm: 4-6주 간격 스킨부스터 routine → quarterly device maintenance.
+Confidence calibration: recommend with lower urgency framing ("예방 차원").`,
 
-  '30s': `[AGE_CONTEXT: 30s]
-초기 노화 징후 대응. 콜라겐 리모델링 + 탄력 유지 핵심.
-Zone priority: 눈가 > 팔자 > 턱선. Device preference: MN-RF + HIFU low-mid energy.
-Weight adjustments: tightening +1, elasticity +1, prevention +1.
-── TODO: 30대 세부 임상 규칙 추가 예정 ──`,
+  '30s': `[AGE_CONTEXT: 30s — Early Intervention]
+Clinical focus: 초기 노화 징후 대응. 콜라겐 리모델링 + 탄력 유지 핵심기.
+Zone priority: 눈가(periorbital) > 팔자(nasolabial) > 턱선(jawline early laxity).
+Device rules:
+- 1st line: MN-RF (Sylfirm X PW, Genius RF) — dermal remodeling at reticular dermis
+- 2nd line: Low-mid HIFU (Ultraformer MPT 3.0mm) for early SMAS tightening
+- 3rd line: PICO (PicoSure/PicoWay 1064nm) for pigment prevention + tone
+- Combination: MN-RF + HIFU layering (2주 간격) for synergistic collagen response
+Injectable rules:
+- 1st: PN/PDRN (Rejuran Healer) → tissue repair + elasticity
+- 2nd: Exosome (ASCE+) → growth factor boost
+- 3rd: 스킨부스터 routine (Juvelook 2-4주 간격)
+- Hold on: 필러 — unless specific volume concern (tear trough, temple hollowing)
+Weight adjustments: tightening +1, elasticity +2, texture +1, prevention +2.
+Energy parameters: MN-RF 0.5-1.5mm depth, HIFU 3.0mm cartridge preferred.
+Treatment plan: Phase 1 (MN-RF 3회) → Phase 2 (HIFU maintenance quarterly).`,
 
-  '40s': `[AGE_CONTEXT: 40s]
-중등도 노화. 볼륨 감소 + 중안부 처짐 본격화. 복합 시술 필요.
-Zone priority: 중안부(볼/광대) > 하안부(턱선) > 상안부(이마).
-Device preference: HIFU mid-high energy + Thread + MN-RF combination.
-Weight adjustments: lifting +2, volume +2, synergy +1.
-Injectable preference: Biostimulator (Sculptra/Lanluma) 우선 고려.
-── TODO: 40대 세부 임상 규칙 추가 예정 ──`,
+  '40s': `[AGE_CONTEXT: 40s — Active Restoration]
+Clinical focus: 중등도 노화. 볼륨 감소 + 중안부 처짐 본격화. 복합 시술 필수.
+Zone priority: 중안부(볼/광대 volume loss) > 하안부(턱선 laxity) > 상안부(이마 주름).
+Device rules:
+- 1st line: HIFU mid-high energy (Ultraformer MPT 3.0+4.5mm / Ulthera 4.0mm) → SMAS layer tightening
+- 2nd line: MN-RF (Genius RF / Morpheus8 deep tip) → dermal volumization + textural improvement
+- 3rd line: Thread lift (Mint/Omega) for mechanical lift if laxity moderate+
+- Combination MANDATORY: HIFU + MN-RF (3-4주 간격), Thread + 스킨부스터 (2주 후)
+Injectable rules:
+- 1st: Biostimulator (Sculptra 2-3 vials/session, Lanluma) → 볼륨+콜라겐 동시
+- 2nd: HA filler for structural support (mid-face, temple, chin) — if volume loss significant
+- 3rd: PN/PDRN (Rejuran Healer) maintenance between sessions
+Weight adjustments: lifting +2, volume +3, synergy +2, longevity +1.
+Energy parameters: HIFU 4.5mm SMAS + 3.0mm deep dermal. MN-RF 1.5-3.5mm depth.
+IMPORTANT: 40대부터는 단일 디바이스 시술 효과 제한적 → 반드시 combination protocol 강조.
+Treatment plan: Phase 1 (HIFU+MN-RF 3-4회, 3-4주 간격) → Phase 2 (Biostim 3회, 4주 간격) → Phase 3 (quarterly maintenance).`,
 
-  '50+': `[AGE_CONTEXT: 50+]
-심한 처짐 + 볼륨 손실 + 피부 위축. 다층 접근 필수.
-Zone priority: 중안부 타이트닝 ≠ 하안부 리프팅 (구분 치료 필요).
-Device preference: HIFU high energy (SMAS layer) + RF + 필러/Biostimulator layered approach.
-Weight adjustments: lifting +3, volume +3, longevity +2, safety +1.
-Injectable preference: HA filler (volume restoration) + Biostimulator (collagen).
-IMPORTANT: 50+ 환자는 중안부(mid-face volume)와 하안부(jawline lift)를 별도 목표로 치료.
-Energy parameter: conservative start → gradual escalation. Multi-session preferred.
-── TODO: 50+ 세부 임상 규칙 추가 예정 ──`,
+  '50+': `[AGE_CONTEXT: 50+ — Multi-Layer Restoration]
+Clinical focus: 심한 처짐 + 볼륨 손실 + 피부 위축. 다층 접근 필수.
+Zone priority: 중안부 타이트닝(mid-face tightening) ≠ 하안부 리프팅(jawline lifting) → 별도 목표로 치료.
+Device rules:
+- 1st line: High-energy HIFU (Ulthera 4.0+4.5mm / Ultraformer MPT full-face) → deep SMAS contraction
+- 2nd line: RF + MN-RF combo (Thermage FLX body tip for jawline + Genius RF for mid-face)
+- 3rd line: Thread lift (essential for 50+ moderate-severe laxity) — PDO or Mint threads
+- CRITICAL: 50+ needs layered approach — HIFU for SMAS → Thread for mechanical lift → MN-RF for dermal quality → 스킨부스터 for hydration top layer
+Injectable rules:
+- 1st: HA filler VOLUME restoration (deep injection: temple, mid-face, marionette) — 2-4cc per session
+- 2nd: Biostimulator (Sculptra 3-4 vials, multiple sessions) for gradual collagen rebuild
+- 3rd: PN/PDRN for skin quality between procedures
+- AVOID: superficial-only treatments — 50+ 피부에 표피 시술만으로는 효과 불충분
+Weight adjustments: lifting +3, volume +3, longevity +2, safety +2, evidence +1.
+Energy parameters: HIFU 4.5mm preferred, conservative start (lower line density) → escalate by session.
+IMPORTANT RULES:
+- 중안부(mid-face): volume restoration + SMAS tightening → Filler + HIFU
+- 하안부(lower face): mechanical lift + skin tightening → Thread + RF
+- 이 두 zone을 하나의 시술로 해결하려 하지 마라. 각각 별도 치료 목표.
+- Multi-session mandatory (minimum 3-4 sessions over 3-6 months for meaningful results).
+- Pain management: 50+ 환자는 시술 내성이 낮을 수 있음 → pain_level consideration +1.
+Treatment plan: Phase 1 Acute (HIFU + Thread, month 1-2) → Phase 2 Volume (Filler + Biostim, month 2-4) → Phase 3 Refinement (MN-RF + Skinbooster, month 4-6) → Maintenance (quarterly).`,
 };
 
 function getAgeBracketContext(ageStr: string): string {
@@ -260,39 +303,77 @@ function getAgeBracketContext(ageStr: string): string {
 const COUNTRY_CLINICAL_RULES: Record<string, string> = {
   KR: `[COUNTRY_CLINICAL: KR]
 Fitzpatrick: III-IV typical. PIH risk: moderate.
-Preferred combo patterns: MN-RF + HIFU layering, 스킨부스터 routine (2-4주 간격).
-Price sensitivity: high → ROI score weight +2.
-Device familiarity: very high → can recommend advanced combinations.
-── TODO: KR 세부 임상 규칙 추가 예정 ──`,
+Preferred combo patterns: MN-RF + HIFU layering (3-4주 간격), 스킨부스터 routine (2-4주 간격).
+Price sensitivity: high → ROI score weight +2, roi 점수 높은 장비 우선.
+Device familiarity: very high → advanced multi-device combos OK (3-device protocol acceptable).
+Device preferences:
+- HIFU: Ultraformer MPT 선호 (KR 시장 1위, 가격 대비 효과 우수)
+- MN-RF: Sylfirm X PW-mode 선호 (기미 환자 안전성)
+- 스킨부스터: Juvelook > Rejuran > ASCE+ (보험/가격 구조 영향)
+Energy parameters: KR 의사 경험치 높으므로 standard-to-aggressive fluence 가능.
+Combination emphasis: 시너지 점수(synergy) 높은 프로토콜 적극 추천. 한국 환자는 복합 시술에 익숙.
+Scheduling: 2-4주 tight interval acceptable (KR 환자 compliance 높음).`,
 
   JP: `[COUNTRY_CLINICAL: JP]
-Fitzpatrick: II-III typical. PIH risk: moderate-low.
-Conservative approach mandatory: lowest effective energy first.
-Preferred: single-device clarity over multi-device combos.
-Safety documentation requirement: very high → evidence score weight +2.
-── TODO: JP 세부 임상 규칙 추가 예정 ──`,
+Fitzpatrick: II-III typical. PIH risk: moderate-low (but patient concern is VERY HIGH).
+Conservative approach mandatory: lowest effective energy → 점진적 escalation over sessions.
+Single-device clarity preferred: 2-device combo max. 3+ device protocols confuse JP patients.
+Device preferences:
+- HIFU: Ulthera preferred (FDA-approved brand trust), Ultraformer acceptable
+- RF: Thermage FLX 1위 (JP market dominance). Monopolar RF highly trusted.
+- MN-RF: Potenza preferred in JP (Cynosure brand trust)
+- 스킨부스터: Rejuran Healer dominant (PDRN 인지도 높음), Juvelook growing
+Safety documentation: evidence score weight +2. Must cite clinical study counts.
+Pain management: ALWAYS address pain mitigation in practical info. Numbing cream + cooling mandatory mention.
+Scheduling: 4-6주 longer intervals preferred (JP patients prefer fewer visits with clear milestones).
+Communication style: conservative claims, avoid superlatives, factual and measured tone.`,
 
   CN: `[COUNTRY_CLINICAL: CN]
-Fitzpatrick: III-IV typical. PIH risk: moderate-high.
-Brand prestige weight: +3 for globally recognized premium brands.
-Single-session maximization: prefer high-energy single sessions over multiple low-energy.
-Dramatic result expectation: confidence threshold higher (recommend only >85 confidence).
-── TODO: CN 세부 임상 규칙 추가 예정 ──`,
+Fitzpatrick: III-IV typical. PIH risk: moderate-high (Fitz IV common).
+Brand prestige: +3 weighting for premium global brands (Ulthera, Thermage FLX, Cynosure).
+Single-session maximization: high-energy single session > multiple low-energy sessions.
+Device preferences:
+- HIFU: Ulthera 1위 (luxury positioning), Thermage FLX 2위
+- MN-RF: Morpheus8 (US brand appeal), Genius RF
+- Injectable: Sculptra + HA filler combo (볼륨 극대화 인기)
+- 스킨부스터: 수광주사 (water-light injection) category — ASCE+ Exosome trending rapidly
+Dramatic result expectation: confidence >85 only. Under-promising is poorly received.
+PIH consideration: Fitz IV patients → 532nm laser restricted. 1064nm + PW-mode MN-RF only for pigment.
+Energy parameters: aggressive acceptable if PIH-safe. CN patients tolerate higher pain for results.
+Scheduling: 1-2 month intervals. Prefer "몇 회면 끝" (X sessions to complete) framing.`,
 
-  SEA: `[COUNTRY_CLINICAL: SEA]
-Fitzpatrick: IV-V typical. PIH risk: HIGH — critical parameter.
-Mandatory: PIH-safe devices only (1064nm preferred over 532nm).
-Energy limits: conservative for all ablative. Non-ablative preferred.
-K-Beauty trend awareness: trend score weight +1.
-Cost optimization: ROI score weight +2.
-── TODO: SEA 세부 임상 규칙 추가 예정 ──`,
+  SEA: `[COUNTRY_CLINICAL: SEA — TH/VN/MY/ID/PH]
+Fitzpatrick: IV-V typical. PIH risk: HIGH — CRITICAL safety parameter.
+MANDATORY PIH RULES:
+- Laser wavelength: 1064nm ONLY for pigment. NEVER 532nm or 755nm on Fitz V.
+- MN-RF: PW-mode mandatory (Sylfirm X preferred). CW-mode MN-RF restricted.
+- IPL/BBL: CONTRAINDICATED for Fitz IV-V.
+- Ablative laser: strongly discouraged. If necessary, fractional only + test patch required.
+Device preferences:
+- HIFU: Ultraformer MPT (K-beauty brand trust + affordable), Ulthera for premium segment
+- MN-RF: Sylfirm X (PIH-safe PW mode), Potenza (adjustable tip)
+- PICO: 1064nm only (PicoWay, PicoSure Pro). NEVER 532nm tip on SEA patients.
+- 스킨부스터: Rejuran, Juvelook (K-beauty halo effect), ASCE+ (growing)
+Cost optimization: ROI weight +2. Package pricing emphasis (3+1 session deals).
+K-Beauty trend: trend score weight +1. Mention Korean celebrity/influencer association if relevant.
+Energy parameters: START CONSERVATIVE. Fitz V = energy 20-30% below KR standard parameters.
+Scheduling: monthly preferred. Compliance can be lower → simpler protocols preferred.`,
 
-  'SG/US': `[COUNTRY_CLINICAL: SG/US]
-Fitzpatrick: mixed (II-V). Must estimate from demographics.
-Evidence-based approach: evidence score weight +3.
-FDA/CE certification: must explicitly mention in device descriptions.
-Transparency expectation: detailed MOA explanations expected.
-── TODO: SG/US 세부 임상 규칙 추가 예정 ──`,
+  'SG/US': `[COUNTRY_CLINICAL: SG/US/AU/GB/CA]
+Fitzpatrick: mixed II-V. MUST estimate from patient demographics (gender + country + ethnicity cues).
+Evidence-based approach: evidence score weight +3. Clinical trial data preferred.
+FDA/CE/TGA certification: MUST mention in device descriptions. Unapproved devices need explicit disclosure.
+Device preferences:
+- HIFU: Ulthera (FDA-cleared gold standard), Sofwave (newer FDA option)
+- MN-RF: Morpheus8 (dominant in US), Genius RF, Sylfirm X (growing)
+- RF: Thermage FLX (legacy trust)
+- Injectable: Sculptra (FDA-approved biostim), Juvederm/Restylane HA fillers
+- 스킨부스터: Profhilo (HA-based, popular in SG/UK), Rejuran (growing)
+Transparency: detailed MOA explanations expected. "How it works" is valued.
+Scientific framing: use evidence levels, cite mechanism of action, avoid marketing language.
+Pain management: moderate tolerance. Standard numbing adequate.
+Scheduling: 4-6 week intervals. Patients expect clear ROI per session.
+Insurance/pricing: not typically covered. Emphasize value proposition clearly.`,
 };
 
 function getCountryClinicalRules(country: string): string {
