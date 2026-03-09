@@ -42,3 +42,17 @@ next-env.d.ts
 
 # Local Netlify folder
 .netlify
+
+# Claude session data
+.claude/
+
+# One-time utility scripts (Airtable upload, data processing)
+*.py
+additional_ebd_updates.json
+all_remaining_updates.json
+bud_chunks.json
+eud_chunks.json
+moa_export.json
+payloads.json
+temp_questions.json
+testAirtable.ts

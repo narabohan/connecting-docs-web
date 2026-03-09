@@ -1,0 +1,119 @@
+import { useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { cn } from '@/utils/cn';
+import type { SurveyLang } from '@/types/survey-v2';
+import { SURVEY_V2_I18N } from '@/utils/survey-v2-i18n';
+
+interface OpenQuestionStepProps {
+  lang: SurveyLang;
+  value: string;
+  onChange: (v: string) => void;
+  onSubmit: () => void;
+  isLoading: boolean;
+  onBack: () => void;
+}
+
+const MIN_CHARS = 5;
+
+export default function OpenQuestionStep({
+  lang,
+  value,
+  onChange,
+  onSubmit,
+  isLoading,
+  onBack,
+}: OpenQuestionStepProps) {
+  const t = SURVEY_V2_I18N[lang].step2;
+  const tc = SURVEY_V2_I18N[lang].common;
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.max(120, el.scrollHeight)}px`;
+  }, [value]);
+
+  // Autofocus
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  const canSubmit = value.trim().length >= MIN_CHARS && !isLoading;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 40 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -40 }}
+      transition={{ duration: 0.3 }}
+      className="flex flex-col gap-5 px-1"
+    >
+      {/* Back */}
+      <button
+        onClick={onBack}
+        disabled={isLoading}
+        className="self-start flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" /> {tc.back}
+      </button>
+
+      {/* Title */}
+      <div className="text-center">
+        <div className="text-3xl mb-3">💬</div>
+        <h2 className="text-xl font-bold text-gray-900 whitespace-pre-line leading-snug">{t.title}</h2>
+        <p className="text-sm text-gray-500 mt-2">{t.subtitle}</p>
+      </div>
+
+      {/* Textarea */}
+      <div>
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={t.placeholder}
+          disabled={isLoading}
+          className={cn(
+            'w-full min-h-[120px] max-h-[300px] p-4 rounded-xl border-2 text-base',
+            'resize-none transition-all focus:outline-none',
+            'placeholder:text-gray-400',
+            isLoading
+              ? 'border-gray-200 bg-gray-50 text-gray-400'
+              : 'border-gray-200 focus:border-blue-400 bg-white text-gray-900'
+          )}
+          rows={4}
+        />
+        {/* Hint */}
+        <p className="text-xs text-gray-400 mt-2 italic">{t.hint}</p>
+        {/* Character indicator */}
+        {value.length > 0 && value.trim().length < MIN_CHARS && (
+          <p className="text-xs text-amber-500 mt-1">{t.min_chars}</p>
+        )}
+      </div>
+
+      {/* Submit */}
+      <button
+        onClick={onSubmit}
+        disabled={!canSubmit}
+        className={cn(
+          'w-full py-3.5 rounded-xl text-base font-semibold transition-all min-h-[48px]',
+          'flex items-center justify-center gap-2',
+          canSubmit
+            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+        )}
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            {tc.loading}
+          </>
+        ) : (
+          <>분석하기 →</>
+        )}
+      </button>
+    </motion.div>
+  );
+}
