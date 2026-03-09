@@ -88,11 +88,8 @@ export default function Home() {
   };
 
   const handleStartAnalysis = () => {
-    if (user) {
-      setIsWizardOpen(true);
-    } else {
-      setIsAuthModalOpen(true);
-    }
+    // Route to Survey V2 hybrid pipeline instead of V1 modal
+    router.push('/survey-v2');
   };
 
   useEffect(() => {
