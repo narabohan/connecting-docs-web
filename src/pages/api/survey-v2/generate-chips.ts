@@ -57,24 +57,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // 2. Conditional additions based on primary goal
-    if (['Contouring/lifting', 'Volume/elasticity'].includes(q1_primary_goal)) {
-      if (!already_known_signals.includes('concern_area') && !chipList.find(c => c.type === 'concern_area')) {
-        const chip = getChipTemplate('concern_area', detected_language);
-        if (chip) { chip.source = 'conditional'; chipList.push(chip); }
-      }
-      if (!already_known_signals.includes('volume_logic') && !chipList.find(c => c.type === 'volume_logic')) {
-        const chip = getChipTemplate('volume_logic', detected_language);
+    // ── Helper: conditionally add a chip if not already known/present ──
+    function addConditionalChip(signal: string) {
+      if (!already_known_signals.includes(signal) && !chipList.find(c => c.type === signal)) {
+        const chip = getChipTemplate(signal, detected_language);
         if (chip) { chip.source = 'conditional'; chipList.push(chip); }
       }
     }
 
-    if (q1_primary_goal === 'Brightening/radiance') {
-      if (!already_known_signals.includes('pigment_pattern') && !chipList.find(c => c.type === 'pigment_pattern')) {
-        const chip = getChipTemplate('pigment_pattern', detected_language);
-        if (chip) { chip.source = 'conditional'; chipList.push(chip); }
-      }
+    // 2. Conditional additions based on primary goal
+    //    (Issue #1: Goal-specific clinical depth chips)
+
+    if (['Contouring/lifting', 'Volume/elasticity'].includes(q1_primary_goal)) {
+      addConditionalChip('concern_area');
+      addConditionalChip('volume_logic');
+      // Clinical depth: zone targeting + laxity assessment
+      addConditionalChip('tightening_zone');
+      addConditionalChip('laxity_severity');
     }
+
+    if (q1_primary_goal === 'Brightening/radiance') {
+      addConditionalChip('pigment_pattern');
+      // Clinical depth: specific pigment type → wavelength selection
+      addConditionalChip('pigment_detail');
+    }
+
+    if (q1_primary_goal === 'Anti-aging/prevention') {
+      addConditionalChip('aging_priority');
+      addConditionalChip('laxity_severity');
+    }
+
+    if (q1_primary_goal === 'Skin texture/pores') {
+      addConditionalChip('texture_concern');
+    }
+
+    if (q1_primary_goal === 'Acne/scarring') {
+      addConditionalChip('scar_type');
+      addConditionalChip('texture_concern');
+    }
+
+    // Budget chip is always relevant for clinical-depth recommendations
+    addConditionalChip('treatment_budget');
 
     // Always ensure skin_profile and past_experience are included (fallback)
     for (const fallback of ['skin_profile', 'past_experience'] as const) {
@@ -118,9 +141,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // 4. Sort by priority and limit to 6
+    // 4. Sort by priority and limit to 8 (increased from 6 for clinical depth)
     chipList.sort((a, b) => a.priority - b.priority);
-    chipList = chipList.slice(0, 6);
+    chipList = chipList.slice(0, 8);
 
     // Deduplicate by type
     const seen = new Set<string>();

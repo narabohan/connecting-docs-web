@@ -37,7 +37,15 @@ export type ChipType =
   | 'style'
   | 'pain_tolerance'
   | 'downtime_tolerance'
-  | 'treatment_rhythm';
+  | 'treatment_rhythm'
+  // ─── Clinical depth chips (Issue #1) ─────────────────────
+  | 'tightening_zone'       // → EBD device zone targeting
+  | 'scar_type'             // → Protocol selection (acne vs traumatic)
+  | 'pigment_detail'        // → Wavelength selection (532/755/1064nm)
+  | 'aging_priority'        // → Device ranking weight
+  | 'texture_concern'       // → Resurfacing protocol selection
+  | 'laxity_severity'       // → Energy level + layer targeting
+  | 'treatment_budget';     // → ROI weighting in recommendations
 
 export interface SmartChipOption {
   label: string;        // i18n된 표시 텍스트

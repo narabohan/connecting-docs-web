@@ -48,8 +48,17 @@ Output a JSON object with these fields:
 - concern_area_hint: Brief description of specific areas mentioned
 - emotion_tone: One of ["urgent", "casual", "serious", "exploratory"]
 - prior_alignment: Compare response with demographic priors. "aligned" if consistent, "diverged" if surprising, "neutral" if insufficient info
-- already_known_signals: Array of signal types clearly expressed (e.g., "q1_primary_goal", "concern_area", "pain_tolerance", "style")
-- needs_confirmation: Array of signal types still needed (from: "concern_area", "skin_profile", "past_experience", "volume_logic", "pigment_pattern", "style", "pain_tolerance", "downtime_tolerance", "treatment_rhythm")
+- already_known_signals: Array of signal types clearly expressed (e.g., "q1_primary_goal", "concern_area", "pain_tolerance", "style", "scar_type", "pigment_detail")
+- needs_confirmation: Array of signal types still needed. Choose from BOTH generic and clinical-depth signals:
+  Generic: "concern_area", "skin_profile", "past_experience", "volume_logic", "pigment_pattern", "style", "pain_tolerance", "downtime_tolerance", "treatment_rhythm"
+  Clinical depth (use when the primary goal clearly maps to a clinical domain):
+    - "tightening_zone" — if goal involves lifting/contouring and specific zone is unclear
+    - "scar_type" — if acne/scarring is mentioned but scar type is unspecified
+    - "pigment_detail" — if brightening is the goal but specific pigment type is unclear
+    - "aging_priority" — if anti-aging is the goal but priority (wrinkles vs sagging vs volume) is unclear
+    - "texture_concern" — if texture/pore issues are mentioned but type is unspecified
+    - "laxity_severity" — if sagging/lifting is discussed but severity is unknown
+    - "treatment_budget" — if no budget preference is expressed
 
 Respond ONLY with valid JSON, no other text.`;
 

@@ -519,6 +519,121 @@ export const CHIP_TEMPLATES: Record<string, ChipTemplate> = {
     ],
     priority: 9,
   },
+
+  // ═══════════════════════════════════════════════════════════
+  //  Clinical Depth Chips (Issue #1)
+  //  Goal-specific questions that map directly to clinical
+  //  decision parameters in the Opus recommendation engine.
+  // ═══════════════════════════════════════════════════════════
+
+  tightening_zone: {
+    question: {
+      KO: '가장 개선하고 싶은 리프팅 부위는?',
+      EN: 'Which area do you most want to lift/tighten?',
+      JP: '最もリフトアップしたい部位は？',
+      'ZH-CN': '您最想提升紧致的部位是？',
+    },
+    options: [
+      { label: { KO: '이마/눈가 (상안부)', EN: 'Forehead/eyes (upper)', JP: '額・目元（上顔面）', 'ZH-CN': '额头/眼周（上面部）' }, value: 'upper_face' },
+      { label: { KO: '볼/광대 (중안부)', EN: 'Cheeks/midface', JP: '頬・中顔面', 'ZH-CN': '脸颊/中面部' }, value: 'mid_face' },
+      { label: { KO: '턱선/이중턱 (하안부)', EN: 'Jawline/double chin (lower)', JP: '顎ライン・二重あご（下顔面）', 'ZH-CN': '下颌线/双下巴（下面部）' }, value: 'lower_face' },
+      { label: { KO: '전체적으로', EN: 'Overall', JP: '全体的に', 'ZH-CN': '整体' }, value: 'full_face' },
+    ],
+    priority: 2,
+  },
+
+  scar_type: {
+    question: {
+      KO: '흉터 유형은 어떤 편인가요?',
+      EN: 'What type of scarring do you have?',
+      JP: '傷跡のタイプは？',
+      'ZH-CN': '您的疤痕类型是？',
+    },
+    options: [
+      { label: { KO: '여드름 흉터 (움푹/볼록)', EN: 'Acne scars (pitted/raised)', JP: 'ニキビ跡（凹凸）', 'ZH-CN': '痘疤（凹陷/凸起）' }, value: 'acne_scar' },
+      { label: { KO: '외상/수술 흉터', EN: 'Trauma/surgical scars', JP: '外傷・手術の傷跡', 'ZH-CN': '外伤/手术疤痕' }, value: 'traumatic_scar' },
+      { label: { KO: '넓은 모공 (흉터 유사)', EN: 'Enlarged pores (scar-like)', JP: '毛穴の開き（傷跡に近い）', 'ZH-CN': '毛孔粗大（类似疤痕）' }, value: 'pore_scar' },
+    ],
+    priority: 2,
+  },
+
+  pigment_detail: {
+    question: {
+      KO: '색소 고민의 구체적인 유형은?',
+      EN: 'What specific type of pigmentation concerns you?',
+      JP: '色素の悩みの具体的なタイプは？',
+      'ZH-CN': '您的色素问题具体是哪种类型？',
+    },
+    options: [
+      { label: { KO: '흑자/검버섯 (Lentigines)', EN: 'Dark spots / Lentigines', JP: '老人性色素斑', 'ZH-CN': '老年斑/雀斑样痣' }, value: 'lentigines' },
+      { label: { KO: '기미 (Melasma)', EN: 'Melasma', JP: '肝斑（かんぱん）', 'ZH-CN': '黄褐斑' }, value: 'melasma' },
+      { label: { KO: '여드름 자국 (PIH)', EN: 'Post-inflammatory marks (PIH)', JP: '炎症後色素沈着（PIH）', 'ZH-CN': '炎症后色素沉着（PIH）' }, value: 'pih' },
+      { label: { KO: '전체적 칙칙함/톤 불균일', EN: 'Overall dullness/uneven tone', JP: '全体的なくすみ・色ムラ', 'ZH-CN': '整体暗沉/肤色不均' }, value: 'dullness' },
+    ],
+    priority: 2,
+  },
+
+  aging_priority: {
+    question: {
+      KO: '노화 고민 중 가장 우선적인 것은?',
+      EN: 'What is your top anti-aging priority?',
+      JP: 'エイジングケアで最も優先したいのは？',
+      'ZH-CN': '您最优先想改善的衰老问题是？',
+    },
+    options: [
+      { label: { KO: '주름 (이마/눈가/입가)', EN: 'Wrinkles (forehead/eyes/mouth)', JP: 'しわ（額・目元・口元）', 'ZH-CN': '皱纹（额头/眼周/嘴角）' }, value: 'wrinkles' },
+      { label: { KO: '처짐/탄력 저하', EN: 'Sagging/loss of firmness', JP: 'たるみ・弾力低下', 'ZH-CN': '松弛/弹性下降' }, value: 'sagging' },
+      { label: { KO: '볼륨 감소 (꺼짐)', EN: 'Volume loss (hollowing)', JP: 'ボリューム減少（くぼみ）', 'ZH-CN': '容量流失（凹陷）' }, value: 'volume_loss' },
+      { label: { KO: '전반적 노화 예방', EN: 'Overall anti-aging prevention', JP: '全体的なアンチエイジング', 'ZH-CN': '整体抗衰老预防' }, value: 'prevention' },
+    ],
+    priority: 3,
+  },
+
+  texture_concern: {
+    question: {
+      KO: '피부결 고민은 어떤 유형인가요?',
+      EN: 'What type of skin texture issue do you have?',
+      JP: '肌質の悩みはどのタイプですか？',
+      'ZH-CN': '您的皮肤质地问题是哪种类型？',
+    },
+    options: [
+      { label: { KO: '모공 확대', EN: 'Enlarged pores', JP: '毛穴の開き', 'ZH-CN': '毛孔粗大' }, value: 'pores' },
+      { label: { KO: '거칠고 울퉁불퉁', EN: 'Rough/bumpy texture', JP: 'ザラつき・凹凸', 'ZH-CN': '粗糙/不平整' }, value: 'roughness' },
+      { label: { KO: '여드름 자국/흉터', EN: 'Acne marks/scars', JP: 'ニキビ跡・傷跡', 'ZH-CN': '痘印/疤痕' }, value: 'acne_marks' },
+      { label: { KO: '전반적 피부결 개선', EN: 'Overall texture refinement', JP: '全体的な肌質改善', 'ZH-CN': '整体肤质改善' }, value: 'overall_texture' },
+    ],
+    priority: 3,
+  },
+
+  laxity_severity: {
+    question: {
+      KO: '처짐의 정도는 어느 수준인가요?',
+      EN: 'How severe is your skin laxity?',
+      JP: 'たるみの程度はどのくらいですか？',
+      'ZH-CN': '您的皮肤松弛程度如何？',
+    },
+    options: [
+      { label: { KO: '초기 (미세한 느슨함)', EN: 'Early (subtle looseness)', JP: '初期（微かなゆるみ）', 'ZH-CN': '初期（轻微松弛）' }, value: 'mild' },
+      { label: { KO: '중등도 (눈에 띄는 처짐)', EN: 'Moderate (noticeable sagging)', JP: '中程度（目立つたるみ）', 'ZH-CN': '中度（明显下垂）' }, value: 'moderate' },
+      { label: { KO: '심한 처짐 (윤곽 변화)', EN: 'Severe (contour change)', JP: '重度（輪郭の変化）', 'ZH-CN': '严重（轮廓变化）' }, value: 'severe' },
+    ],
+    priority: 3,
+  },
+
+  treatment_budget: {
+    question: {
+      KO: '시술 예산대는 어느 정도인가요?',
+      EN: 'What is your treatment budget range?',
+      JP: '施術のご予算は？',
+      'ZH-CN': '您的治疗预算范围是？',
+    },
+    options: [
+      { label: { KO: '가성비 우선', EN: 'Budget-friendly', JP: 'コスパ重視', 'ZH-CN': '性价比优先' }, value: 'budget' },
+      { label: { KO: '중간', EN: 'Mid-range', JP: '中程度', 'ZH-CN': '中等' }, value: 'mid' },
+      { label: { KO: '프리미엄 (최고 결과 우선)', EN: 'Premium (best results first)', JP: 'プレミアム（最高の結果優先）', 'ZH-CN': '高端（效果优先）' }, value: 'premium' },
+    ],
+    priority: 5,
+  },
 };
 
 // ─── 국가 → 기본 언어 매핑 ─────────────────────────────────
