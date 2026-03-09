@@ -108,19 +108,19 @@ export default function SkinSimulationContainer({
             : language === 'CN' ? '个性化皮肤蓝图' : 'Personalized Skin Blueprint';
 
     return (
-        <div className="w-full bg-[#03060A] border-t border-white/5 relative overflow-hidden" id="simulation">
+        <div className="w-full bg-[#0a0a2a] border-t border-white/5 relative overflow-hidden" id="simulation">
             {/* Background glows */}
-            <div className="absolute top-0 right-0 w-1/2 h-full bg-[#00FFA0]/5 blur-3xl rounded-full translate-x-1/2 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-[#00FFA0]/5 blur-3xl rounded-full -translate-x-1/2 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-1/2 h-full bg-blue-900/5 blur-3xl rounded-full translate-x-1/2 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-cyan-900/5 blur-3xl rounded-full -translate-x-1/2 pointer-events-none" />
 
             <div className="relative z-10 container mx-auto px-6 py-10">
                 {/* Section Header */}
-                <div className="text-center mb-12 space-y-3">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00FFA0]/10 border border-[#00FFA0]/20 text-[#00FFA0] text-xs font-mono font-bold uppercase tracking-widest">
+                <div className="text-center mb-8 space-y-3">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-mono">
                         <BrainCircuit className="w-3 h-3" />
                         {sectionTitle.toUpperCase()}
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight uppercase italic block">
+                    <h2 className="text-2xl md:text-3xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 inline-block">
                         {sectionTitle}
                     </h2>
                 </div>
@@ -153,8 +153,8 @@ export default function SkinSimulationContainer({
 
                     {/* Why this protocol */}
                     {selectedProtocol?.reasonWhy?.why_suitable && (
-                        <div className="mt-4 rounded-xl px-5 py-3 text-sm font-mono italic"
-                            style={{ background: 'rgba(0,255,160,0.04)', border: '1px solid rgba(0,255,160,0.1)', color: 'rgba(0,255,160,0.8)' }}>
+                        <div className="mt-4 rounded-xl px-5 py-3 text-sm font-mono"
+                            style={{ background: 'rgba(0,255,255,0.04)', border: '1px solid rgba(0,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }}>
                             💡 {selectedProtocol.reasonWhy.why_suitable}
                         </div>
                     )}
@@ -165,7 +165,7 @@ export default function SkinSimulationContainer({
 
                 {/* Part 2: What-If Sliders + Radar */}
                 <div className="mb-3 text-center">
-                    <span className="text-[10px] font-mono tracking-[0.2em] uppercase font-bold" style={{ color: 'rgba(0,255,160,0.5)' }}>
+                    <span className="text-[10px] font-mono tracking-[0.2em]" style={{ color: 'rgba(0,255,255,0.5)' }}>
                         {language === 'KO' ? '조건 변경 시 어떤 시술이 더 가능해지는지 탐색하세요'
                             : language === 'JP' ? '条件を変えてさらなる可能性を探ってください'
                                 : language === 'CN' ? '调整条件，探索更多可能性'
@@ -205,7 +205,7 @@ export default function SkinSimulationContainer({
                         <p className="text-gray-300 font-medium mb-4 text-sm">{t.evaluation}</p>
                         <button
                             onClick={() => { setPain(2); setDowntime(2); setBudget(2); }}
-                            className="text-sm text-[#00FFA0] hover:text-[#00FFA0]/80 hover:underline flex items-center justify-center gap-2 mx-auto font-mono uppercase font-bold">
+                            className="text-sm text-cyan-400 hover:text-cyan-300 hover:underline flex items-center justify-center gap-2 mx-auto">
                             <RefreshCw className="w-4 h-4" />
                             {t.retry}
                         </button>
@@ -239,23 +239,23 @@ function parseTargetLayers(raw: string | string[] | undefined): string[] {
 // Fallback zone derivation from goal string
 function deriveZonesFromGoal(goal: string): string[] {
     const zones = new Set<string>();
-    if (/lift|sag|jaw|neck|v.line|contour/i.test(goal)) { zones.add('Jawline'); zones.add('Neck'); zones.add('Submental'); }
+    if (/lift|sag|jaw|neck|v.line|contour/i.test(goal)) { zones.add('Jawline'); zones.add('Neck'); }
     if (/firm|elast|cheek|volume/i.test(goal)) zones.add('Cheek');
     if (/texture|pore|glow|bright|tone|glass/i.test(goal)) { zones.add('Forehead'); zones.add('Cheek'); }
-    if (/wrinkle|frown|forehead/i.test(goal)) { zones.add('Forehead'); }
-    if (/pigment|melasma|spot|redness/i.test(goal)) { zones.add('Cheek'); }
-    if (/eye|orbital/i.test(goal)) zones.add('Periorbital');
-    if (zones.size === 0) { zones.add('Cheek'); zones.add('Forehead'); zones.add('Jawline'); } // universal fallback
+    if (/wrinkle|frown|forehead/i.test(goal)) { zones.add('EyeArea'); zones.add('Forehead'); }
+    if (/pigment|melasma|spot|redness/i.test(goal)) { zones.add('Cheek'); zones.add('Nose'); }
+    if (/eye/i.test(goal)) zones.add('EyeArea');
+    if (zones.size === 0) { zones.add('Cheek'); zones.add('Forehead'); } // universal fallback
     return Array.from(zones);
 }
 
 // Fallback skin layer derivation from goal string
 function deriveLayersFromGoal(goal: string): string[] {
     const layers: string[] = [];
-    if (/lift|sag|jaw|contour|v.line|smas/i.test(goal)) { layers.push('SMAS'); layers.push('SubQ_Fat'); }
-    if (/firm|elast|collagen|dermis/i.test(goal)) { layers.push('Papillary_Dermis'); layers.push('Reticular_Dermis'); }
-    if (/texture|pore|glow|bright|tone|glass|skin/i.test(goal)) { layers.push('Stratum_Corneum'); layers.push('Epidermis'); layers.push('DE_Junction'); }
+    if (/lift|sag|jaw|contour|v.line|smas/i.test(goal)) layers.push('SMAS');
+    if (/firm|elast|collagen|dermis/i.test(goal)) layers.push('Dermis');
+    if (/texture|pore|glow|bright|tone|glass|skin/i.test(goal)) layers.push('Epidermis');
     if (/muscle|jaw|sculpt/i.test(goal)) layers.push('Muscle');
-    if (layers.length === 0) { layers.push('Epidermis'); layers.push('Reticular_Dermis'); } // fallback
+    if (layers.length === 0) { layers.push('Epidermis'); layers.push('Dermis'); } // fallback
     return layers;
 }

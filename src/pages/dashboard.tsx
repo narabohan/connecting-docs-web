@@ -3,30 +3,29 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
-import { Loader2, Plus, FileText, MessageSquare } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+import { LanguageCode } from '@/utils/translations';
 import PatientDashboard from '@/components/dashboard/PatientDashboard';
 import DoctorDashboard from '@/components/dashboard/DoctorDashboard';
 
 export default function Dashboard() {
     const { user, loading } = useAuth();
     const router = useRouter();
-    const [reports, setReports] = useState<any[]>([]);
-    const [fetching, setFetching] = useState(true);
+    const [currentLang, setCurrentLang] = useState<LanguageCode>('EN');
 
     useEffect(() => {
         if (!loading && !user) {
             router.push('/login');
-        } else if (user) {
-            fetchReports();
         }
     }, [user, loading]);
 
-    const fetchReports = async () => {
-        // TODO: Implement fetch logic from /api/reports?userId=...
-        // For now, simulate empty or mock
-        setTimeout(() => setFetching(false), 1000);
-    };
+    // Initialise language from user profile if available
+    useEffect(() => {
+        const saved = (user as any)?.language as LanguageCode | undefined;
+        if (saved && ['EN', 'KO', 'JP', 'CN'].includes(saved)) {
+            setCurrentLang(saved);
+        }
+    }, [user]);
 
     if (loading || !user) {
         return (
@@ -36,15 +35,18 @@ export default function Dashboard() {
         );
     }
 
-    const isDoctor = user.role === 'doctor'; // use strict role
+    const isDoctor = user.role === 'doctor';
 
     return (
         <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-cyan-500/30">
-            <Header currentLang={((user as any).language as any) || 'EN'} onLangChange={() => { }} />
+            <Header currentLang={currentLang} onLangChange={setCurrentLang} />
 
-            {isDoctor ? <DoctorDashboard /> : <PatientDashboard />}
+            {isDoctor
+                ? <DoctorDashboard language={currentLang} />
+                : <PatientDashboard language={currentLang} />
+            }
 
-            <Footer language={((user as any).language as any) || 'EN'} />
+            <Footer language={currentLang} />
         </div>
     );
 }

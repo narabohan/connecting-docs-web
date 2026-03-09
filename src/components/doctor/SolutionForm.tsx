@@ -8,7 +8,6 @@ export default function SolutionForm() {
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [upgradeRequired, setUpgradeRequired] = useState(false);
 
     // Form State for Gamification Calculation
     const [formData, setFormData] = useState({
@@ -21,8 +20,7 @@ export default function SolutionForm() {
         description: '',
         downtime: 'None',
         pain: 'Low',
-        price: '',
-        tier: 'Standard' as 'Entry' | 'Standard' | 'VIP'
+        price: ''
     });
 
     const [inventory, setInventory] = useState<any>({});
@@ -100,14 +98,7 @@ export default function SolutionForm() {
                 body: JSON.stringify(finalPayload),
             });
 
-            const result = await res.json();
-
-            if (!res.ok) {
-                if (result.upgradeRequired) {
-                    setUpgradeRequired(true);
-                }
-                throw new Error(result.message || "Failed to save solution");
-            }
+            if (!res.ok) throw new Error("Failed to save solution");
 
             router.push('/dashboard');
         } catch (err: any) {
@@ -127,43 +118,7 @@ export default function SolutionForm() {
 
             <div className="mt-8">
                 <h3 className="text-lg font-bold text-gray-900 mb-1">Register Your Signature Solution</h3>
-                <p className="text-sm text-gray-500 mb-2">Define the treatment protocol that represents your clinical philosophy.</p>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
-                    <p className="text-xs text-blue-800 font-medium">
-                        💡 <strong>1st solution FREE</strong> · 3+ solutions unlock Global VIP Matching · Customize your patient mix (Entry/Standard/VIP)
-                    </p>
-                </div>
-            </div>
-
-            {/* Solution Tier Selection */}
-            <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">Solution Tier</label>
-                <div className="grid grid-cols-3 gap-4">
-                    {[
-                        { value: 'Entry', label: 'Entry', desc: 'High-volume, accessible treatments', icon: '🌱', color: 'border-green-500 bg-green-50' },
-                        { value: 'Standard', label: 'Standard', desc: 'Your signature protocol', icon: '⭐', color: 'border-blue-500 bg-blue-50' },
-                        { value: 'VIP', label: 'VIP Premium', desc: 'Exclusive high-end treatments', icon: '👑', color: 'border-yellow-500 bg-yellow-50' }
-                    ].map(tier => (
-                        <label
-                            key={tier.value}
-                            className={`relative cursor-pointer p-4 rounded-xl border-2 transition-all ${formData.tier === tier.value ? tier.color : 'border-gray-200 hover:border-gray-300'}`}
-                        >
-                            <input
-                                type="radio"
-                                name="tier"
-                                value={tier.value}
-                                checked={formData.tier === tier.value}
-                                onChange={handleChange}
-                                className="sr-only"
-                            />
-                            <div className="text-center">
-                                <div className="text-2xl mb-1">{tier.icon}</div>
-                                <div className="font-bold text-gray-900 text-sm mb-1">{tier.label}</div>
-                                <div className="text-xs text-gray-600">{tier.desc}</div>
-                            </div>
-                        </label>
-                    ))}
-                </div>
+                <p className="text-sm text-gray-500 mb-6">Define the treatment protocol that represents your clinical philosophy.</p>
             </div>
 
             {/* Title & Focus */}
@@ -298,20 +253,7 @@ export default function SolutionForm() {
                 </div>
             </div>
 
-            {error && (
-                <div className={`text-sm p-4 rounded-lg ${upgradeRequired ? 'bg-yellow-50 border border-yellow-200' : 'bg-red-50'}`}>
-                    <p className={upgradeRequired ? 'text-yellow-800 font-medium' : 'text-red-500'}>{error}</p>
-                    {upgradeRequired && (
-                        <button
-                            type="button"
-                            onClick={() => router.push('/#pricing')}
-                            className="mt-2 text-xs bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-bold transition-all"
-                        >
-                            View Pricing Plans
-                        </button>
-                    )}
-                </div>
-            )}
+            {error && <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg">{error}</p>}
 
             <button
                 type="submit"

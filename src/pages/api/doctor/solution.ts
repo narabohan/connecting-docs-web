@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { email, title, concept, description, machines, downtime, pain, price, skin_boosters, injection_methods, treatment_focus, tier } = req.body;
+    const { email, title, concept, description, machines, downtime, pain, price, skin_boosters, injection_methods, treatment_focus } = req.body;
 
     if (!email || !title) {
         return res.status(400).json({ error: 'Missing required fields' });
@@ -27,51 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const doctorId = doctorRecords[0].id;
 
-        // 2. Check solution count and tier limits
-        const existingSolutions = await base('Signature_Solutions').select({
-            filterByFormula: `FIND('${doctorId}', {Doctor})`
-        }).all();
-
-        const solutionCount = existingSolutions.length;
-        const vipCount = existingSolutions.filter(s => s.fields.Tier === 'VIP').length;
-
-        // Get doctor's plan from Users table
-        const userRecords = await base('Users').select({
-            filterByFormula: `{email} = '${email}'`,
-            maxRecords: 1
-        }).firstPage();
-
-        const userPlan = userRecords.length > 0 ? (userRecords[0].fields.subscription_tier as string || 'Free') : 'Free';
-
-        // Plan limits
-        const limits: Record<string, { maxSolutions: number; maxVIP: number }> = {
-            'Free': { maxSolutions: 1, maxVIP: 1 },
-            'Standard': { maxSolutions: 3, maxVIP: 1 },
-            'Premium': { maxSolutions: 5, maxVIP: 5 },
-            'Platinum': { maxSolutions: 999, maxVIP: 999 }
-        };
-
-        const currentLimit = limits[userPlan] || limits['Free'];
-
-        // Check solution count limit
-        if (solutionCount >= currentLimit.maxSolutions) {
-            return res.status(403).json({
-                error: 'Solution limit reached',
-                message: `Your ${userPlan} plan allows up to ${currentLimit.maxSolutions} solution(s). Upgrade to add more.`,
-                upgradeRequired: true
-            });
-        }
-
-        // Check VIP tier limit
-        if (tier === 'VIP' && vipCount >= currentLimit.maxVIP) {
-            return res.status(403).json({
-                error: 'VIP solution limit reached',
-                message: `Your ${userPlan} plan allows up to ${currentLimit.maxVIP} VIP solution(s). Upgrade for more VIP slots.`,
-                upgradeRequired: true
-            });
-        }
-
-        // 3. Create Signature Solution Record
+        // 2. Create Signature Solution Record
         await base('Signature_Solutions').create([
             {
                 fields: {
@@ -80,35 +36,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     Concept: concept,
                     Description: description,
                     Devices: machines, // Text field
-                    Skin_Boosters: skin_boosters,
-                    Injection_Methods: injection_methods,
-                    Treatment_Focus: treatment_focus,
-                    Tier: tier || 'Standard', // New Field: Entry/Standard/VIP
+                    Skin_Boosters: skin_boosters, // New Field
+                    Injection_Methods: injection_methods, // New Field
+                    Treatment_Focus: treatment_focus, // New Field
                     Downtime: downtime, // Single select
                     Pain_Level: pain,    // Single select
                     Price_Range: price,
-                    Status: 'Active'
+                    Status: 'Pending Review'
                 },
             },
         ]);
 
         console.log(`[DOCTOR] Signature Solution created for ${email}`);
 
-        // 4. Update Doctor Status
+        // 3. Update Doctor Status
         await base('Doctors').update([
             {
                 id: doctorId,
                 fields: {
-                    status: 'Active'
+                    status: 'Under Review'
                 }
             }
         ]);
 
-        res.status(200).json({
-            success: true,
-            solutionCount: solutionCount + 1,
-            limit: currentLimit.maxSolutions
-        });
+        res.status(200).json({ success: true });
     } catch (error: any) {
         console.error('Signature Solution Error:', error);
         res.status(500).json({ error: error.message || 'Internal Server Error' });

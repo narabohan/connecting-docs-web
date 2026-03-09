@@ -1,63 +1,6 @@
-# ═══════════════════════════════════════════════════════════════
-#  ConnectingDocs — Netlify Deployment Configuration
-#  Next.js 16.1 (Pages Router) + @netlify/plugin-nextjs
-# ═══════════════════════════════════════════════════════════════
-
 [build]
   command = "npm run build"
   publish = ".next"
 
-# ─── Netlify Next.js Runtime Plugin ──────────────────────────
-# Automatically handles SSR, API routes, ISR, and image optimization
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-# ─── Environment Variables ───────────────────────────────────
-# Set these in Netlify Dashboard → Site settings → Environment variables:
-#
-#  ANTHROPIC_API_KEY        — Anthropic API key (for Haiku + Sonnet)
-#  AIRTABLE_API_KEY         — Airtable Personal Access Token
-#  AIRTABLE_BASE_ID         — Airtable Base ID (appS8kd8H48DMYXct)
-#  RESEND_API_KEY           — Resend email API key
-#  RESEND_FROM_EMAIL        — Sender email (verified domain)
-#  ADMIN_EMAIL              — Admin notification email
-#  NEXT_PUBLIC_BASE_URL     — Production URL (https://connectingdocs.com)
-#
-#  NEXT_PUBLIC_FIREBASE_*   — Firebase config (6 vars, public)
-
-# ─── Functions ───────────────────────────────────────────────
-# Extend serverless function timeout for AI-heavy API routes
-# Free tier: 10s, Pro: 26s — SSE streaming keeps connection alive
-# but function runtime is hard-capped by plan
-[functions]
-  external_node_modules = ["@anthropic-ai/sdk"]
-
-# ─── Headers ─────────────────────────────────────────────────
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-
-# Cache static assets aggressively
-[[headers]]
-  for = "/_next/static/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-# ─── Redirects ───────────────────────────────────────────────
-# Force HTTPS
-[[redirects]]
-  from = "http://connectingdocs.com/*"
-  to = "https://connectingdocs.com/:splat"
-  status = 301
-  force = true
-
-# www → apex
-[[redirects]]
-  from = "https://www.connectingdocs.com/*"
-  to = "https://connectingdocs.com/:splat"
-  status = 301
-  force = true

@@ -33,7 +33,6 @@
   ],
   "exclude": [
     "node_modules",
-    "testAirtable.ts",
-    "src/__tests__"
+    "testAirtable.ts"
   ]
 }

@@ -7,10 +7,9 @@ interface UnlockModalProps {
     onClose: () => void;
     language?: LanguageCode;
     reportId?: string;
-    selectedProtocolId?: string | null;
 }
 
-export default function UnlockModal({ isOpen, onClose, language = 'EN', reportId, selectedProtocolId }: UnlockModalProps) {
+export default function UnlockModal({ isOpen, onClose, language = 'EN', reportId }: UnlockModalProps) {
     const t = (REPORT_TRANSLATIONS[language] || REPORT_TRANSLATIONS['EN']).report?.modal || {
         title: 'Unlock Your Master Profile',
         subtitle: 'Get personalized doctor recommendations + instant consultation booking.',
@@ -34,7 +33,7 @@ export default function UnlockModal({ isOpen, onClose, language = 'EN', reportId
             const res = await fetch('/api/report/unlock', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, reportId, selectedProtocolId })
+                body: JSON.stringify({ email, reportId })
             });
             if (res.ok) {
                 setSubmitted(true);
@@ -57,18 +56,18 @@ export default function UnlockModal({ isOpen, onClose, language = 'EN', reportId
 
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-            style={{ backdropFilter: 'blur(16px)', background: 'rgba(0,0,10,0.85)' }}
+            style={{ backdropFilter: 'blur(16px)', background: 'rgba(0,0,10,0.7)' }}
             onClick={e => e.target === e.currentTarget && onClose()}>
 
             <div className="relative w-full max-w-md rounded-2xl overflow-hidden"
                 style={{
-                    background: 'linear-gradient(135deg, #02050A 0%, #050A1A 100%)',
-                    border: '1px solid rgba(0,255,160,0.2)',
-                    boxShadow: '0 0 60px rgba(0,255,160,0.1), 0 40px 80px rgba(0,0,0,0.9)',
+                    background: 'linear-gradient(135deg, #0a0a2a 0%, #0d1040 100%)',
+                    border: '1px solid rgba(0,255,255,0.2)',
+                    boxShadow: '0 0 60px rgba(0,255,255,0.1), 0 40px 80px rgba(0,0,0,0.8)',
                 }}>
 
                 {/* Glow top strip */}
-                <div className="h-0.5 w-full" style={{ background: 'linear-gradient(to right, transparent, #00FFA0, transparent)' }} />
+                <div className="h-0.5 w-full" style={{ background: 'linear-gradient(to right, transparent, #00FFFF, transparent)' }} />
 
                 {/* Close */}
                 <button onClick={onClose}
@@ -81,8 +80,8 @@ export default function UnlockModal({ isOpen, onClose, language = 'EN', reportId
                     {submitted ? (
                         <div className="flex flex-col items-center text-center py-6 gap-4">
                             <div className="w-16 h-16 rounded-full flex items-center justify-center"
-                                style={{ background: 'rgba(0,255,160,0.1)', border: '2px solid #00FFA0', boxShadow: '0 0 20px rgba(0,255,160,0.3)' }}>
-                                <Check className="w-8 h-8" style={{ color: '#00FFA0' }} />
+                                style={{ background: 'rgba(0,255,255,0.1)', border: '2px solid #00FFFF', boxShadow: '0 0 20px rgba(0,255,255,0.3)' }}>
+                                <Check className="w-8 h-8" style={{ color: '#00FFFF' }} />
                             </div>
                             <div className="text-lg font-bold text-white font-mono">{t.success}</div>
                         </div>
@@ -102,7 +101,7 @@ export default function UnlockModal({ isOpen, onClose, language = 'EN', reportId
 
                             {/* What you get */}
                             <div className="mb-6 rounded-xl p-4"
-                                style={{ background: 'rgba(0,255,160,0.04)', border: '1px solid rgba(0,255,160,0.1)' }}>
+                                style={{ background: 'rgba(0,255,255,0.04)', border: '1px solid rgba(0,255,255,0.1)' }}>
                                 {(t.benefits ?? [
                                     'Top 3 Matched Master Doctors',
                                     'Full Clinical Risk Breakdown',
@@ -111,8 +110,8 @@ export default function UnlockModal({ isOpen, onClose, language = 'EN', reportId
                                 ]).map((item: string) => (
                                     <div key={item} className="flex items-center gap-2 py-1.5">
                                         <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-                                            style={{ background: 'rgba(0,255,160,0.15)', border: '1px solid rgba(0,255,160,0.3)' }}>
-                                            <Check className="w-2.5 h-2.5" style={{ color: '#00FFA0' }} />
+                                            style={{ background: 'rgba(0,255,255,0.15)', border: '1px solid rgba(0,255,255,0.3)' }}>
+                                            <Check className="w-2.5 h-2.5" style={{ color: '#00FFFF' }} />
                                         </div>
                                         <span className="text-xs font-mono" style={{ color: 'rgba(255,255,255,0.7)' }}>{item}</span>
                                     </div>
@@ -130,20 +129,20 @@ export default function UnlockModal({ isOpen, onClose, language = 'EN', reportId
                                     className="w-full px-4 py-3 rounded-xl text-sm font-mono outline-none transition-all"
                                     style={{
                                         background: 'rgba(255,255,255,0.05)',
-                                        border: '1px solid rgba(0,255,160,0.2)',
+                                        border: '1px solid rgba(0,255,255,0.2)',
                                         color: 'white',
                                     }}
-                                    onFocus={e => { e.target.style.borderColor = 'rgba(0,255,160,0.6)'; e.target.style.boxShadow = '0 0-12px rgba(0,255,160,0.1)'; }}
-                                    onBlur={e => { e.target.style.borderColor = 'rgba(0,255,160,0.2)'; e.target.style.boxShadow = 'none'; }}
+                                    onFocus={e => { e.target.style.borderColor = 'rgba(0,255,255,0.6)'; e.target.style.boxShadow = '0 0 12px rgba(0,255,255,0.1)'; }}
+                                    onBlur={e => { e.target.style.borderColor = 'rgba(0,255,255,0.2)'; e.target.style.boxShadow = 'none'; }}
                                 />
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full py-3 rounded-xl text-sm font-bold font-mono flex items-center justify-center gap-2 transition-all uppercase tracking-widest"
+                                    className="w-full py-3 rounded-xl text-sm font-bold font-mono flex items-center justify-center gap-2 transition-all"
                                     style={{
-                                        background: loading ? 'rgba(0,255,160,0.2)' : 'linear-gradient(135deg, #00FFA0, #00d480)',
-                                        color: '#03060A',
-                                        boxShadow: loading ? 'none' : '0 0 25px rgba(0,255,160,0.3)',
+                                        background: loading ? 'rgba(0,255,255,0.2)' : 'linear-gradient(135deg, #00FFFF, #00b4d8)',
+                                        color: '#0a0a2a',
+                                        boxShadow: loading ? 'none' : '0 0 20px rgba(0,255,255,0.3)',
                                     }}>
                                     {loading
                                         ? <span className="animate-pulse">{t.verifying ?? 'VERIFYING...'}</span>

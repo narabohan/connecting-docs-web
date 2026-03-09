@@ -123,7 +123,7 @@ export default function AlignmentHero({ score = 92, radarData, language, termina
     });
 
     const renderTick = ({ x, y, payload }: any) => (
-        <text x={x} y={y} dy={4} fill="#00FFA0" fontSize={9} textAnchor="middle" fontFamily="monospace" opacity={0.6}>{payload.value}</text>
+        <text x={x} y={y} dy={4} fill="#6ee7f7" fontSize={9} textAnchor="middle" fontFamily="monospace">{payload.value}</text>
     );
 
     const r = 52;
@@ -132,39 +132,39 @@ export default function AlignmentHero({ score = 92, radarData, language, termina
 
     return (
         <section className="relative w-full rounded-2xl overflow-hidden mb-6"
-            style={{ background: 'linear-gradient(135deg, #02050A 0%, #050A1A 60%, #03060A 100%)', border: '1px solid rgba(0,255,160,0.15)' }}>
+            style={{ background: 'linear-gradient(135deg, #0a0a2a 0%, #0d1040 60%, #081828 100%)', border: '1px solid rgba(0,255,255,0.15)' }}>
             {/* Ambient glow */}
             <div className="absolute inset-0 pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse at 15% 50%, rgba(0,255,160,0.07) 0%, transparent 55%)' }} />
+                style={{ background: 'radial-gradient(ellipse at 15% 50%, rgba(0,255,255,0.07) 0%, transparent 55%)' }} />
 
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-0 min-h-[360px]">
 
                 {/* ── LEFT: Score Ring + Badges ── */}
                 <div className="flex flex-col items-center justify-center p-8 gap-4"
-                    style={{ borderRight: '1px solid rgba(0,255,160,0.06)' }}>
-                    <div className="text-[10px] font-mono tracking-[0.3em] text-[#00FFA0]/70 uppercase flex items-center gap-2">
+                    style={{ borderRight: '1px solid rgba(0,255,255,0.06)' }}>
+                    <div className="text-[10px] font-mono tracking-[0.3em] text-cyan-400/70 uppercase flex items-center gap-2">
                         <Activity className="w-3 h-3" /> {t.score}
                     </div>
                     <div className="relative">
                         <svg width="148" height="148" className="-rotate-90">
-                            <circle cx="74" cy="74" r={r} fill="none" stroke="rgba(0,255,160,0.07)" strokeWidth="7" />
-                            <circle cx="74" cy="74" r={r} fill="none" stroke="#00FFA0" strokeWidth="7"
+                            <circle cx="74" cy="74" r={r} fill="none" stroke="rgba(0,255,255,0.07)" strokeWidth="7" />
+                            <circle cx="74" cy="74" r={r} fill="none" stroke="#00FFFF" strokeWidth="7"
                                 strokeLinecap="round"
                                 strokeDasharray={`${progress} ${circum}`}
-                                style={{ filter: 'drop-shadow(0 0 10px #00FFA0)', transition: 'stroke-dasharray 0.04s linear' }}
+                                style={{ filter: 'drop-shadow(0 0 10px #00FFFF)', transition: 'stroke-dasharray 0.04s linear' }}
                             />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className="text-5xl font-bold text-white font-mono" style={{ textShadow: '0 0 24px rgba(0,255,160,0.45)' }}>
+                            <span className="text-5xl font-bold text-white font-mono" style={{ textShadow: '0 0 24px rgba(0,255,255,0.45)' }}>
                                 {displayScore}
                             </span>
-                            <span className="text-[10px] text-[#00FFA0] font-mono tracking-widest">/100</span>
+                            <span className="text-[10px] text-cyan-400 font-mono tracking-widest">/100</span>
                         </div>
                     </div>
                     <div className="text-center">
-                        <div className="text-sm font-bold text-white font-mono uppercase italic">{t.scoreLabel}</div>
+                        <div className="text-sm font-bold text-white font-mono">{t.scoreLabel}</div>
                         {patientName && patientName !== 'Guest' && (
-                            <div className="text-xs text-[#00FFA0]/60 font-mono mt-1">{patientName}</div>
+                            <div className="text-xs text-cyan-400/60 font-mono mt-1">{patientName}</div>
                         )}
                     </div>
                     <div className="flex gap-1.5 flex-wrap justify-center">
@@ -174,7 +174,7 @@ export default function AlignmentHero({ score = 92, radarData, language, termina
                             t.badges?.logic || 'LOGIC VERIFIED',
                         ].map(badge => (
                             <span key={badge} className="text-[9px] font-mono px-2 py-1 rounded border tracking-widest"
-                                style={{ borderColor: 'rgba(0,255,160,0.25)', color: '#00FFA0', background: 'rgba(0,255,160,0.05)' }}>
+                                style={{ borderColor: 'rgba(0,255,255,0.25)', color: '#00FFFF', background: 'rgba(0,255,255,0.05)' }}>
                                 ✓ {badge}
                             </span>
                         ))}
@@ -183,24 +183,24 @@ export default function AlignmentHero({ score = 92, radarData, language, termina
 
                 {/* ── CENTER: 5-Axis Radar ── */}
                 <div className="flex flex-col p-7"
-                    style={{ borderRight: '1px solid rgba(0,255,160,0.06)' }}>
-                    <div className="text-[10px] font-mono tracking-[0.3em] text-[#00FFA0]/70 uppercase mb-3">
+                    style={{ borderRight: '1px solid rgba(0,255,255,0.06)' }}>
+                    <div className="text-[10px] font-mono tracking-[0.3em] text-cyan-400/70 uppercase mb-3">
                         {t.matrixTitle || 'CLINICAL PROFILE MATRIX'}
                     </div>
                     <div className="flex-1 min-h-[260px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <RadarChart cx="50%" cy="50%" outerRadius="72%" data={localizedData}>
-                                <PolarGrid stroke="rgba(0,255,160,0.1)" />
+                                <PolarGrid stroke="rgba(0,255,255,0.1)" />
                                 <PolarAngleAxis dataKey="subject" tick={renderTick} />
                                 <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                                <Radar name="Profile" dataKey="A" stroke="#00FFA0" strokeWidth={2}
-                                    fill="#00FFA0" fillOpacity={0.12}
-                                    style={{ filter: 'drop-shadow(0 0 6px #00FFA0)' }}
+                                <Radar name="Profile" dataKey="A" stroke="#00FFFF" strokeWidth={2}
+                                    fill="#00FFFF" fillOpacity={0.12}
+                                    style={{ filter: 'drop-shadow(0 0 6px #00FFFF)' }}
                                 />
                             </RadarChart>
                         </ResponsiveContainer>
                     </div>
-                    <div className="text-[9px] font-mono text-right text-[#00FFA0]/40 mt-1">
+                    <div className="text-[9px] font-mono text-right text-cyan-400/40 mt-1">
                         {t.toleranceZone || 'TOLERANCE_ZONE: MATCHED ✓'}
                     </div>
                 </div>
@@ -211,7 +211,7 @@ export default function AlignmentHero({ score = 92, radarData, language, termina
                         <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#FF3B30' }} />
                         <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#FFD60A' }} />
                         <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#30D158' }} />
-                        <span className="text-[9px] font-mono ml-2 uppercase" style={{ color: 'rgba(0,255,160,0.4)' }}>
+                        <span className="text-[9px] font-mono ml-2" style={{ color: 'rgba(0,255,255,0.4)' }}>
                             CLINICAL_ANALYSIS.log
                         </span>
                     </div>
@@ -219,28 +219,28 @@ export default function AlignmentHero({ score = 92, radarData, language, termina
                         className="flex-1 rounded-xl p-4 overflow-y-auto font-mono text-[11px] leading-relaxed"
                         style={{
                             background: 'rgba(0,0,0,0.5)',
-                            border: '1px solid rgba(0,255,160,0.1)',
-                            color: 'rgba(0,255,160,0.75)',
+                            border: '1px solid rgba(0,255,255,0.1)',
+                            color: 'rgba(0,255,255,0.75)',
                             minHeight: '220px',
                             maxHeight: '300px',
                             scrollbarWidth: 'thin',
                         }}>
                         {termLines.map((line, i) => (
                             <div key={i} className="mb-1">
-                                <span style={{ color: 'rgba(0,255,160,0.35)' }}>{String(i).padStart(2, '0')} </span>
+                                <span style={{ color: 'rgba(0,255,255,0.35)' }}>{String(i).padStart(2, '0')} </span>
                                 <span>{line}</span>
                             </div>
                         ))}
                         {/* currently typing line */}
                         {currentLine < lines.length && (
                             <div className="mb-1">
-                                <span style={{ color: 'rgba(0,255,160,0.35)' }}>{String(currentLine).padStart(2, '0')} </span>
+                                <span style={{ color: 'rgba(0,255,255,0.35)' }}>{String(currentLine).padStart(2, '0')} </span>
                                 <span>{lines[currentLine].slice(0, currentChar)}</span>
-                                <span className="animate-pulse" style={{ color: '#00FFA0' }}>█</span>
+                                <span className="animate-pulse" style={{ color: '#00FFFF' }}>█</span>
                             </div>
                         )}
                         {currentLine >= lines.length && terminalText && (
-                            <div className="mt-3 pt-3 text-[10px]" style={{ borderTop: '1px solid rgba(0,255,160,0.08)', color: 'rgba(255,255,255,0.4)' }}>
+                            <div className="mt-3 pt-3 text-[10px]" style={{ borderTop: '1px solid rgba(0,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>
                                 {terminalText}
                             </div>
                         )}

@@ -29,11 +29,11 @@ const LEVEL_CONFIG = {
         label: '🟡',
     },
     safe: {
-        dot: '#00FFA0',
-        glow: 'rgba(0,255,160,0.4)',
-        bg: 'rgba(0,255,160,0.05)',
-        border: 'rgba(0,255,160,0.2)',
-        text: '#00FFB0',
+        dot: '#30D158',
+        glow: 'rgba(48,209,88,0.4)',
+        bg: 'rgba(48,209,88,0.05)',
+        border: 'rgba(48,209,88,0.2)',
+        text: '#4AE06A',
         label: '🟢',
     },
 };
@@ -67,9 +67,9 @@ export default function TrafficLightRisk({ risks, language = 'EN' }: TrafficLigh
 
     return (
         <section className="w-full mb-6">
-            <div className="text-[10px] font-mono tracking-[0.3em] mb-4 flex items-center gap-2 font-bold uppercase"
-                style={{ color: 'rgba(0,255,160,0.6)' }}>
-                <span style={{ color: '#00FFA0' }}>◈</span> {t.title}
+            <div className="text-[10px] font-mono tracking-[0.3em] mb-4 flex items-center gap-2"
+                style={{ color: 'rgba(0,255,255,0.6)' }}>
+                <span style={{ color: '#00FFFF' }}>◈</span> {t.title}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

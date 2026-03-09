@@ -1,60 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  /* Dark Mode Base - ConnectingDocs High-End System */
-  --background: #050505;
-  --foreground: #ffffff;
-
+  /* Dark Mode Base */
+  --background: #0f172a; /* Slate 900 */
+  --foreground: #f8fafc; /* Slate 50 */
+  
   /* Brand Colors */
-  --medical-cyan: #00F0FF;
-  --surface-gray: #111111;
-  --border-slate: #1F1F1F;
-  --muted-slate: #888888;
-
-  /* Layout Gaps */
-  --container-px: 1.5rem;
+  --primary: #0077b6; /* Medical Blue */
+  --secondary: #00b4d8; /* Lighter Blue */
+  --accent: #90e0ef; /* Cyan/Ice */
+  --dark-accent: #03045e; /* Deep Blue */
+  
+  /* Font fallbacks (Geist is Next.js default) */
+  --font-sans: Arial, Helvetica, sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-medical-cyan: var(--medical-cyan);
-  --color-surface-gray: var(--surface-gray);
-  --color-border-slate: var(--border-slate);
-  --color-muted-slate: var(--muted-slate);
-
-  @keyframes shimmer {
-    0% {
-      transform: translateX(-100%);
-    }
-
-    100% {
-      transform: translateX(100%);
-    }
-  }
-
-  @keyframes scan-down {
-    0% {
-      top: 0;
-    }
-
-    100% {
-      top: 100%;
-    }
-  }
-
-  --animate-shimmer: shimmer 2s infinite linear;
-  --animate-scan-down: scan-down 8s infinite linear;
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-dark-accent: var(--dark-accent);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  word-break: keep-all;
-  overflow-wrap: break-word;
-}
-
-.selection\:bg-cyan-500\/30 ::selection {
-  background-color: rgba(6, 182, 212, 0.3);
+  font-family: var(--font-sans);
 }

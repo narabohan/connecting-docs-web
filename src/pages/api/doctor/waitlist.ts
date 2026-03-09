@@ -39,48 +39,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const waitlist = await Promise.all(matchRecords.map(async doc => {
             let patientEmail = 'Anonymous';
-            let primaryObject = 'General Rejuvenation';
-            let riskFactors: string[] = [];
-            let reportId = '';
-
             if (doc.fields.Patient && Array.isArray(doc.fields.Patient) && doc.fields.Patient.length > 0) {
                 const patientId = doc.fields.Patient[0];
                 try {
-                    const p = await base('Patients_v1').find(patientId);
-                    patientEmail = p.fields.email as string || patientEmail;
-
-                    // Basic risk parsing if available on Patient record
-                    if (p.fields.Age) primaryObject = `Age ${p.fields.Age}`;
+                    // Try Users
+                    const u = await base('Users').find(patientId);
+                    patientEmail = u.fields.email as string || patientEmail;
                 } catch (e) {
                     try {
-                        const u = await base('Users').find(patientId);
-                        patientEmail = u.fields.email as string || patientEmail;
+                        const p = await base('Patients_v1').find(patientId);
+                        patientEmail = p.fields.email as string || patientEmail;
                     } catch (e2) { }
                 }
-            }
-
-            // Attempt to load rich data from the linked Report if it exists
-            if (doc.fields.Report && Array.isArray(doc.fields.Report) && doc.fields.Report.length > 0) {
-                try {
-                    reportId = doc.fields.Report[0];
-                    const reportDoc = await base('Reports').find(reportId);
-                    const rawJson = reportDoc.fields.Raw_JSON as string;
-                    if (rawJson) {
-                        const parsed = JSON.parse(rawJson);
-                        if (parsed.Survey_Responses) {
-                            if (parsed.Survey_Responses['1. Primary Goal']) {
-                                primaryObject = parsed.Survey_Responses['1. Primary Goal'];
-                            }
-
-                            // Check common risk boolean strings
-                            const risks: string[] = [];
-                            if (parsed.Survey_Responses['5. Melasma/Pigmentation']?.toLowerCase() === 'yes') risks.push('Melasma Risk');
-                            if (parsed.Survey_Responses['6. Active Acne']?.toLowerCase() === 'yes') risks.push('Active Acne');
-                            if (parsed.Survey_Responses['7. Sensitive Skin/Redness']?.toLowerCase() === 'yes') risks.push('Sensitive');
-                            riskFactors = risks;
-                        }
-                    }
-                } catch (e) { console.error('Error parsing report data in waitlist payload', e); }
             }
 
             return {
@@ -90,9 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 score: doc.fields.Algorithm_Score || 'N/A',
                 solutionId: doc.fields.Solution_ID || '',
                 createdAt: doc.fields.Match_Date || doc._rawJson.createdTime || new Date().toISOString(),
-                reportId: reportId,
-                primaryObject,
-                riskFactors
+                reportId: '' // No direct link unless added in future
             };
         }));
 

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Globe, ChevronDown, Check, LogOut, FileText, User, ChevronUp } from 'lucide-react';
+import { Globe, ChevronDown, Check, LogOut, FileText, User, ChevronUp, Menu, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { LanguageCode, REPORT_TRANSLATIONS } from '@/utils/translations';
 import { useAuth } from '@/context/AuthContext';
@@ -21,6 +21,7 @@ export default function Header({ currentLang, onLangChange }: HeaderProps) {
     const [isLangOpen, setIsLangOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
     const { user, signOut, loading } = useAuth();
@@ -42,26 +43,34 @@ export default function Header({ currentLang, onLangChange }: HeaderProps) {
 
     return (
         <>
-            <header className="fixed top-0 w-full z-50 bg-[#050505]/60 backdrop-blur-xl border-b border-white/5">
+            <header className="fixed top-0 w-full z-50 bg-[#050505]/80 backdrop-blur-md border-b border-white/5">
                 <div className="container mx-auto px-6 h-20 flex items-center justify-between">
                     {/* Logo */}
-                    <Link href="/" className="text-xl font-bold tracking-tighter text-white hover:opacity-80 transition-opacity flex items-center gap-1">
-                        <span className="bg-cyan-500 w-1.5 h-6 rounded-full inline-block mr-1" />
+                    <Link href="/" className="text-xl font-bold tracking-tighter text-white hover:opacity-80 transition-opacity">
                         Connecting<span className="text-cyan-400">Docs</span>
                     </Link>
 
                     {/* Navigation (Desktop) */}
-                    <nav className="hidden md:flex items-center gap-10">
-                        <Link href="#patients" className="text-[13px] font-bold uppercase tracking-widest text-slate-500 hover:text-white transition-colors">
+                    <nav className="hidden md:flex items-center gap-8">
+                        <Link href="#patients" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">
                             {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.patients || 'For Patients'}
                         </Link>
-                        <Link href="#doctors" className="text-[13px] font-bold uppercase tracking-widest text-slate-500 hover:text-white transition-colors">
+                        <Link href="#doctors" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">
                             {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.doctors || 'For Doctors'}
                         </Link>
-                        <Link href="#pricing" className="text-[13px] font-bold uppercase tracking-widest text-slate-500 hover:text-white transition-colors">
+                        <Link href="#pricing" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">
                             {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.pricing || 'Pricing'}
                         </Link>
                     </nav>
+
+                    {/* Mobile Menu Button */}
+                    <button
+                        className="md:hidden p-2 text-gray-400 hover:text-white transition-colors"
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        aria-label="Toggle mobile menu"
+                    >
+                        {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                    </button>
 
                     {/* Actions */}
                     <div className="flex items-center gap-3">
@@ -155,13 +164,13 @@ export default function Header({ currentLang, onLangChange }: HeaderProps) {
                                 <>
                                     <button
                                         onClick={() => setIsAuthModalOpen(true)}
-                                        className="text-[13px] font-bold text-slate-500 hover:text-white transition-colors hidden lg:block uppercase tracking-widest"
+                                        className="text-sm font-medium text-gray-400 hover:text-white transition-colors hidden sm:block"
                                     >
                                         {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.login || 'Log In'}
                                     </button>
                                     <button
                                         onClick={() => setIsAuthModalOpen(true)}
-                                        className="px-6 py-2.5 text-xs font-black text-black bg-cyan-400 rounded-full hover:bg-cyan-300 transition-all shadow-[0_0_20px_rgba(34,211,238,0.2)] hover:shadow-[0_0_30px_rgba(34,211,238,0.4)] uppercase tracking-widest"
+                                        className="px-5 py-2 text-sm font-bold text-black bg-white rounded-full hover:bg-gray-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)]"
                                     >
                                         {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.getReport || 'Get Report'}
                                     </button>
@@ -171,6 +180,45 @@ export default function Header({ currentLang, onLangChange }: HeaderProps) {
                     </div>
                 </div>
             </header>
+
+            {/* Mobile Navigation Menu */}
+            {isMobileMenuOpen && (
+                <div className="fixed top-20 left-0 right-0 z-40 md:hidden bg-[#0A0A0A]/95 backdrop-blur-md border-b border-white/10 shadow-2xl">
+                    <nav className="container mx-auto px-6 py-4 flex flex-col gap-1">
+                        <Link
+                            href="#patients"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="px-4 py-3 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                        >
+                            {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.patients || 'For Patients'}
+                        </Link>
+                        <Link
+                            href="#doctors"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="px-4 py-3 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                        >
+                            {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.doctors || 'For Doctors'}
+                        </Link>
+                        <Link
+                            href="#pricing"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="px-4 py-3 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                        >
+                            {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.pricing || 'Pricing'}
+                        </Link>
+                        <div className="border-t border-white/10 mt-2 pt-3">
+                            {!user && (
+                                <button
+                                    onClick={() => { setIsAuthModalOpen(true); setIsMobileMenuOpen(false); }}
+                                    className="w-full px-4 py-3 text-sm font-bold text-black bg-white rounded-xl hover:bg-gray-200 transition-colors"
+                                >
+                                    {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.getReport || 'Get Report'}
+                                </button>
+                            )}
+                        </div>
+                    </nav>
+                </div>
+            )}
 
             {/* Auth Modal */}
             <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />

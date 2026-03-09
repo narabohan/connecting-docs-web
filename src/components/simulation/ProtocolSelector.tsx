@@ -42,8 +42,8 @@ export default function ProtocolSelector({ protocols, selected, onSelect, langua
     const hint = SELECT_HINT[language] || SELECT_HINT['EN'];
 
     return (
-        <div className="mb-8">
-            <div className="text-[10px] font-mono tracking-[0.25em] mb-4 text-center uppercase font-bold" style={{ color: 'rgba(0,255,160,0.5)' }}>
+        <div className="mb-6">
+            <div className="text-[10px] font-mono tracking-[0.25em] mb-3 text-center" style={{ color: 'rgba(0,255,255,0.5)' }}>
                 ◈ {hint}
             </div>
             <div className="grid grid-cols-3 gap-3">
@@ -53,27 +53,27 @@ export default function ProtocolSelector({ protocols, selected, onSelect, langua
                         <button
                             key={proto.id}
                             onClick={() => onSelect(proto.rank)}
-                            className="relative rounded-xl p-4 text-left transition-all duration-300 group overflow-hidden"
+                            className="relative rounded-xl p-4 text-left transition-all duration-300 group"
                             style={{
                                 background: isSelected
-                                    ? 'linear-gradient(135deg, rgba(0,255,160,0.12), rgba(0,180,255,0.08))'
+                                    ? 'linear-gradient(135deg, rgba(0,255,255,0.12), rgba(0,180,255,0.08))'
                                     : 'rgba(255,255,255,0.03)',
                                 border: isSelected
-                                    ? '1.5px solid rgba(0,255,160,0.6)'
+                                    ? '1.5px solid rgba(0,255,255,0.6)'
                                     : '1px solid rgba(255,255,255,0.08)',
-                                boxShadow: isSelected ? '0 0 20px rgba(0,255,160,0.15), inset 0 0 20px rgba(0,255,160,0.03)' : 'none',
+                                boxShadow: isSelected ? '0 0 20px rgba(0,255,255,0.15), inset 0 0 20px rgba(0,255,255,0.03)' : 'none',
                             }}
                         >
                             {/* Active indicator */}
                             {isSelected && (
-                                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#00FFA0] animate-pulse shadow-[0_0_8px_#00FFA0]" />
+                                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#00FFFF]" />
                             )}
 
                             {/* Medal + Label */}
                             <div className="flex items-center gap-1.5 mb-2">
                                 <span className="text-base">{MEDALS[idx]}</span>
-                                <span className="text-[9px] font-mono tracking-wider uppercase font-bold"
-                                    style={{ color: isSelected ? 'rgba(0,255,160,0.9)' : 'rgba(255,255,255,0.35)' }}>
+                                <span className="text-[9px] font-mono tracking-wider"
+                                    style={{ color: isSelected ? 'rgba(0,255,255,0.9)' : 'rgba(255,255,255,0.35)' }}>
                                     {labels[idx]}
                                 </span>
                             </div>
@@ -85,8 +85,8 @@ export default function ProtocolSelector({ protocols, selected, onSelect, langua
                             </div>
 
                             {/* Score */}
-                            <div className="text-[10px] font-mono font-bold"
-                                style={{ color: isSelected ? 'rgba(0,255,160,0.8)' : 'rgba(255,255,255,0.25)' }}>
+                            <div className="text-[10px] font-mono"
+                                style={{ color: isSelected ? 'rgba(0,255,255,0.8)' : 'rgba(255,255,255,0.25)' }}>
                                 {proto.matchScore}% Match
                             </div>
 

@@ -1,23 +1,23 @@
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
-import PremiumHero from '@/components/premium/PremiumHero';
-import IntelligenceEngine from '@/components/premium/IntelligenceEngine';
-import SignatureGallery from '@/components/premium/SignatureGallery';
-import SkinBoosterRecommendations from '@/components/curation/SkinBoosterRecommendations';
+import Hero from '@/components/landing/Hero';
+import SignatureRanking from '@/components/curation/SignatureRanking';
 import DeepDiveModal from '@/components/curation/DeepDiveModal';
+import HowItWorks from '@/components/HowItWorks';
 import ForPatients from '@/components/landing/ForPatients';
+import SocialProof from '@/components/landing/SocialProof';
 import ForDoctors from '@/components/landing/ForDoctors';
+import AiRoadmap from '@/components/landing/AiRoadmap';
+import FAQ from '@/components/landing/FAQ';
 import PricingTable from '@/components/landing/PricingTable';
 import Footer from '@/components/Footer';
-import AiRoadmap from '@/components/landing/AiRoadmap';
 import AuthModal from '@/components/auth/AuthModal';
 import { LanguageCode } from '@/utils/translations';
 import { useAuth } from '@/context/AuthContext';
 import { WizardData } from '@/components/landing/DiagnosisWizard';
 import DiagnosisWizard from '@/components/landing/DiagnosisWizard';
 import { useRouter } from 'next/router';
-import { AnalysisResponseV2 } from '@/types/airtable';
 
 export default function Home() {
   const router = useRouter();
@@ -29,112 +29,85 @@ export default function Home() {
   const [wizardData, setWizardData] = useState<WizardData | null>(null);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [analysisData, setAnalysisData] = useState<AnalysisResponseV2 | null>(null);
 
   useEffect(() => {
-    if (router.query.start_wizard || router.query.auth === 'required') {
-      if (user) {
-        router.push('/survey-v2');
-      } else {
-        setIsAuthModalOpen(true);
-      }
+    if (router.query.start_wizard) {
+      // No auth gate: open wizard directly for all users
+      setIsWizardOpen(true);
     }
-  }, [router.query, user]);
+  }, [router.query]);
 
   const handleSelectSolution = (rank: 1 | 2 | 3) => {
     setSelectedRank(rank);
     setIsModalOpen(true);
   };
 
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
-
-  const handleDiagnosisComplete = async (data: WizardData) => {
+  const handleDiagnosisComplete = (data: WizardData) => {
     setWizardData(data);
-    setAnalyzeError(null);
-    setIsAnalyzing(true);
-    setIsModalOpen(true); // Open modal immediately — shows skeleton/loading state
-
-    try {
-      const res = await fetch('/api/engine/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          primaryGoal: data.primaryGoal,
-          secondaryGoal: data.secondaryGoal,
-          risks: data.risks,
-          painTolerance: data.painTolerance,
-          downtimeTolerance: data.downtimeTolerance,
-          budget: data.budget,
-          skinType: data.skinType,
-          areas: data.areas,
-          volumePreference: data.volumePreference,
-          language: currentLang,
-          userId: data.email || undefined,
-          userEmail: data.email,
-        }),
-      });
-
-      if (!res.ok) throw new Error(`API ${res.status}`);
-
-      const result = await res.json();
-      setAnalysisData(result); // AnalysisResponseV2 with runId
-    } catch (err: any) {
-      console.error('[analyze] error:', err);
-      setAnalyzeError(err.message);
-    } finally {
-      setIsAnalyzing(false);
-    }
+    setIsModalOpen(true);
   };
 
+  // ── Wizard start: No login required to start ────────────────────────────────
+  // Wizard is open to all users. Auth is only required when viewing the saved report.
   const handleStartAnalysis = () => {
-    // Route to Survey V2 hybrid pipeline (auth-gated)
-    if (user) {
-      router.push('/survey-v2');
-    } else {
-      setIsAuthModalOpen(true);
-    }
+    setIsWizardOpen(true);
   };
 
+  // Handle global event to open AuthModal
+  useEffect(() => {
+    const handleOpenAuth = () => setIsAuthModalOpen(true);
+    window.addEventListener('open-auth-modal', handleOpenAuth);
+    return () => window.removeEventListener('open-auth-modal', handleOpenAuth);
+  }, []);
+
+  // When user logs in via AuthModal while trying to start analysis
   useEffect(() => {
     if (user && isAuthModalOpen) {
       setIsAuthModalOpen(false);
-      router.push('/survey-v2');
+      // If we already have wizardData, navigate to the report
+      // If not, open the wizard
+      if (!wizardData) {
+        setIsWizardOpen(true);
+      }
     }
   }, [user]);
 
   return (
-    <div className="bg-[#050505] min-h-screen text-slate-50 font-sans selection:bg-cyan-500/30 selection:text-white scroll-smooth relative">
+    <div className="bg-[#050505] min-h-screen text-slate-50 font-sans selection:bg-blue-500/30 selection:text-white scroll-smooth relative">
       <Head>
-        <title>ConnectingDocs | Find Your Perfect Skin Treatment in 3 Minutes</title>
-        <meta name="description" content="Find Your Perfect Skin Treatment in 3 Minutes — Free AI Analysis. Stop Guessing. Start Designing." />
+        <title>Connecting Docs | The Global Medical Intelligence Platform</title>
+        <meta name="description" content="Stop Guessing. Start Designing. We translate your skin concerns into data-driven protocols." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
+
+        {/* Open Graph / Social Sharing */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Connecting Docs | The Global Medical Intelligence Platform" />
+        <meta property="og:description" content="Stop Guessing. Start Designing. We translate your skin concerns into data-driven protocols in 4 languages." />
+        <meta property="og:url" content="https://connectingdocs.ai" />
+        <meta property="og:image" content="https://connectingdocs.ai/og-image.png" />
+        <meta property="og:site_name" content="Connecting Docs" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Connecting Docs | AI Skin Treatment Analysis" />
+        <meta name="twitter:description" content="Stop Guessing. Start Designing. Data-driven skin treatment protocols powered by AI." />
+        <meta name="twitter:image" content="https://connectingdocs.ai/og-image.png" />
+
+        {/* Canonical URL */}
+        <link rel="canonical" href="https://connectingdocs.ai" />
       </Head>
 
       <Header currentLang={currentLang} onLangChange={setCurrentLang} />
 
       <main>
-        {/* 1. Premium Hero Section */}
-        <PremiumHero
-          language={currentLang}
-          onStartAnalysis={handleStartAnalysis}
-        />
+        <Hero language={currentLang} onDiagnosisComplete={handleDiagnosisComplete} onStartAnalysis={handleStartAnalysis} />
+        <SignatureRanking language={currentLang} onSelectSolution={handleSelectSolution} />
 
-        {/* 2. Signature Gallery (Moved Up) */}
-        <SignatureGallery
-          language={currentLang}
-          onStartAnalysis={handleStartAnalysis}
-          onViewDeepDive={handleSelectSolution}
-        />
+        {/* How It Works — overview of the 3-step analysis process */}
+        <HowItWorks language={currentLang} />
 
-        {/* 3. Clinical Intelligence Engine (Visualization) */}
-        <IntelligenceEngine language={currentLang} />
-
-        {/* 4. Combination Skin Boosters */}
-        <SkinBoosterRecommendations language={currentLang} />
-
-        {/* Diagnosis Wizard (Auth-gated) */}
+        {/* Diagnosis Wizard (open to all users) */}
         <DiagnosisWizard
           isOpen={isWizardOpen}
           onClose={() => setIsWizardOpen(false)}
@@ -149,14 +122,24 @@ export default function Home() {
         <DeepDiveModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          runId={analysisData?.runId ?? null}
-          analysisData={analysisData ?? undefined}
+          rank={selectedRank}
           language={currentLang}
+          tallyData={wizardData}
         />
 
         <ForPatients language={currentLang} onStartSurvey={handleStartAnalysis} />
+
+        {/* Social Proof — stats & testimonials */}
+        <SocialProof language={currentLang} />
+
         <ForDoctors language={currentLang} />
-        <AiRoadmap language={currentLang} />
+
+        {/* AI Architecture — visible to logged-in users only (internal details) */}
+        {user && <AiRoadmap language={currentLang} />}
+
+        {/* FAQ — common questions before purchase */}
+        <FAQ language={currentLang} />
+
         <div id="pricing">
           <PricingTable language={currentLang} />
         </div>

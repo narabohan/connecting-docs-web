@@ -1,251 +1,555 @@
-import React, { useReducer, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
-import { AnalysisResponseV2 } from '@/types/airtable';
-import { useAsyncDataPolling, ModalAction, ModalState } from '@/hooks/useAsyncDataPolling';
-import { RankCard } from './deep-dive/RankCard';
+import { X, ArrowRight, CheckCircle, Shield, Award, Sparkles, Loader2, RefreshCw, Download, Sliders, Settings2, MapPin, Star, Stethoscope, ChevronRight } from 'lucide-react';
+import FaceMannequin from '@/components/simulation/FaceMannequin';
+import SkinLayerSection from '@/components/simulation/SkinLayerSection';
 import LiveRadar from '@/components/simulation/LiveRadar';
+import Image from 'next/image';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { jsPDF } from 'jspdf';
 
-// We map the incoming initial data into RankCardData for the state
-type RankCardData = {
-    rank: number;
-    category: any;
-    devices: any[];
-    boosters: any[];
-};
-
-interface DeepDiveModalV3Props {
+interface DeepDiveModalProps {
     isOpen: boolean;
     onClose: () => void;
-    runId: string | null;
-    analysisData?: AnalysisResponseV2;
-    language?: LanguageCode;
+    rank: 1 | 2 | 3 | null;
+    language: LanguageCode;
+    tallyData?: any; // Pass Tally data for analysis
 }
 
-const initialState: ModalState = {
-    rankCards: [],
-    riskFlag: undefined,
-    radarScore: { efficacy: 0, downtime: 0, discomfort: 0, cost_efficiency: 0, maintenance: 0 },
-    whyCatKO: {},
-    whyCatEN: {},
-    boosterDeliveryJson: {},
-    categoryImages: {},
-    activeView: 'patient',
-    expandedRank: 1,
-    expandedBoosterIdx: { 1: 0, 2: 0, 3: 0 },
-    pollingStatus: 'idle',
-    pollingAttempts: 0
+// Fallback Data (Skeleton)
+const SKELETON_DATA = {
+    primaryZones: [],
+    secondaryZones: [],
+    activeLayers: [],
+    painLevel: 0,
+    radar: { lifting: 0, firmness: 0, texture: 0, glow: 0, safety: 0 }
 };
 
-function modalReducer(state: ModalState, action: ModalAction): ModalState {
-    switch (action.type) {
-        case 'INIT': {
-            const { rank1, rank2, rank3, riskFlag, radarScore } = action.payload as AnalysisResponseV2;
-            const cards: RankCardData[] = [];
-            if (rank1) cards.push({ rank: 1, category: rank1, devices: rank1.top_devices || [], boosters: rank1.top_boosters || [] });
-            if (rank2) cards.push({ rank: 2, category: rank2, devices: rank2.top_devices || [], boosters: rank2.top_boosters || [] });
-            if (rank3) cards.push({ rank: 3, category: rank3, devices: rank3.top_devices || [], boosters: rank3.top_boosters || [] });
+export default function DeepDiveModal({ isOpen, onClose, rank, language, tallyData }: DeepDiveModalProps) {
+    const t = (REPORT_TRANSLATIONS[language]?.curation || REPORT_TRANSLATIONS['EN'].curation);
+    const tRadar = (REPORT_TRANSLATIONS[language]?.simulation || REPORT_TRANSLATIONS['EN'].simulation).radar;
+    const td = (REPORT_TRANSLATIONS[language]?.deepDive || REPORT_TRANSLATIONS['EN'].deepDive)!;
+    const { user } = useAuth();
 
-            return {
-                ...state,
-                rankCards: cards,
-                riskFlag,
-                radarScore: radarScore || state.radarScore,
-                pollingStatus: 'polling'
-            };
-        }
-        case 'POLL_SUCCESS':
-            return { ...state, ...action.payload };
-        case 'POLL_TIMEOUT':
-            return { ...state, pollingStatus: 'timeout' };
-        case 'SET_EXPANDED_RANK':
-            return { ...state, expandedRank: action.rank };
-        case 'TOGGLE_VIEW':
-            return { ...state, activeView: state.activeView === 'patient' ? 'doctor' : 'patient' };
-        case 'SET_BOOSTER_IDX':
-            return { ...state, expandedBoosterIdx: { ...state.expandedBoosterIdx, [action.rank]: action.idx } };
-        default:
-            return state;
-    }
-}
+    // State for API Data
+    const [analysisData, setAnalysisData] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-export default function DeepDiveModalV3({
-    isOpen, onClose, runId, analysisData, language = 'KO'
-}: DeepDiveModalV3Props) {
-    const [state, dispatch] = useReducer(modalReducer, initialState);
-    const { user } = useAuth(); // for possible role checking
-    const [isAnimating, setIsAnimating] = useState(false);
+    // Matching State
+    const [matches, setMatches] = useState<any[]>([]);
+    const [matchLoading, setMatchLoading] = useState(false);
 
-    // Sync initial data from parent
+    // Tuning State
+    const [isTuning, setIsTuning] = useState(false);
+    const [tuningParams, setTuningParams] = useState({
+        painTolerance: 'Moderate',
+        downtimeTolerance: 'Short (2-3 days)',
+        budget: 'Standard'
+    });
+
+    // Fetch Analysis when Modal Opens
+    // Fetch Analysis when Modal Opens
     useEffect(() => {
-        if (isOpen && analysisData) {
-            dispatch({ type: 'INIT', payload: analysisData });
+        if (isOpen) {
+            if (tallyData) {
+                // Initialize tuning params from tallyData if available
+                setTuningParams({
+                    painTolerance: tallyData.painTolerance || 'Moderate',
+                    downtimeTolerance: tallyData.downtimeTolerance || 'Short (2-3 days)',
+                    budget: tallyData.budget || 'Standard'
+                });
+                fetchAnalysis(tallyData);
+            } else if (rank) {
+                // Static mode: No API call needed, UI uses rankInfo
+                setAnalysisData(null);
+            }
         }
-    }, [isOpen, analysisData]);
+    }, [isOpen, rank, tallyData]);
 
-    // Hook handles active polling while modal is open & runId exists
-    useAsyncDataPolling(isOpen && state.pollingStatus === 'polling' ? runId || undefined : undefined, dispatch);
+    const fetchAnalysis = async (requestData: any) => {
+        if (!requestData) return;
 
-    // Close animation hook trick
-    useEffect(() => {
-        if (isOpen) setIsAnimating(true);
-    }, [isOpen]);
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await fetch('/api/engine/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...requestData,
+                    userId: user?.uid,
+                    userEmail: user?.email,
+                    language,
+                }),
+            });
 
-    const handleClose = () => {
-        setIsAnimating(false);
-        setTimeout(onClose, 300);
+            if (!res.ok) throw new Error("Analysis Failed");
+
+            const result = await res.json();
+            setAnalysisData(result);
+
+            // Fetch Matches if reportId exists
+            if (result.reportId) {
+                fetchMatches(result.reportId);
+            }
+        } catch (err) {
+            console.error(err);
+            setError("Failed to load AI analysis. Showing standard protocol.");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    if (!isOpen && !isAnimating) return null;
+    const fetchMatches = async (reportId: string) => {
+        setMatchLoading(true);
+        try {
+            const res = await fetch('/api/engine/match', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reportId })
+            });
+            const data = await res.json();
+            setMatches(data.matches || []);
+
+            // Trigger Email (Mock)
+            if (data.matches && data.matches.length > 0) {
+                fetch('/api/email/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: 'patient@example.com', // Mock recipient
+                        subject: 'Your ConnectingDocs Analysis & Matches',
+                        data: {
+                            reportId: reportId,
+                            matchCount: data.matches.length,
+                            topMatch: data.matches[0].doctorName
+                        }
+                    })
+                }).catch(err => console.error("Email trigger failed", err));
+            }
+        } catch (e) {
+            console.error("Match fetch failed", e);
+        } finally {
+            setMatchLoading(false);
+        }
+    };
+
+    const handleReTune = () => {
+        // Merge original tallyData with new tuning params
+        const newRequest = {
+            ...tallyData,
+            ...tuningParams
+        };
+        fetchAnalysis(newRequest);
+        setIsTuning(false);
+    };
+
+    const handleDownloadPDF = () => {
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFontSize(20);
+        doc.text("Connecting Docs - Clinical Report", 20, 20);
+
+        doc.setFontSize(12);
+        doc.text(`Generated for: ${user?.email || 'Guest'}`, 20, 30);
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 36);
+
+        // Protocol
+        if (displayData) {
+            doc.setFontSize(16);
+            doc.setTextColor(0, 100, 200);
+            doc.text(`Recommended Protocol: ${displayData.protocolName}`, 20, 50);
+
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            const splitReason = doc.splitTextToSize(`Clinical Logic: ${displayData.reason}`, 170);
+            doc.text(splitReason, 20, 60);
+
+            // Specs
+            let yPos = 60 + (splitReason.length * 5) + 10;
+            doc.text(`Downtime: ${displayData.downtime || 'N/A'}`, 20, yPos);
+            doc.text(`Pain Level: ${displayData.painLevel}/3`, 20, yPos + 6);
+        }
+
+        // Footer
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text("This report is generated by AI Key Doctor Logic.", 20, 280);
+
+        doc.save("ConnectingDocs_Report.pdf");
+    };
+
+    if (!isOpen || (!rank && !tallyData) || !t) return null;
+
+    const effectiveRank = rank || 1;
+    const rankInfo = t?.ranking?.[`rank${effectiveRank}` as keyof typeof t.ranking];
+
+    // Determine which data to show (API > Static Translation)
+    const currentRankKey = `rank${effectiveRank}`;
+    const aiRankData = analysisData ? analysisData[currentRankKey] : null;
+
+    const displayData = aiRankData ? {
+        primaryZones: ['Cheek', 'Jawline'], // AI placeholder
+        secondaryZones: ['EyeArea'],
+        activeLayers: ['SMAS', 'Dermis'],
+        radar: { lifting: aiRankData.score, firmness: 80, texture: 70, glow: 60, safety: 90 },
+        protocolName: aiRankData.protocol,
+        reason: aiRankData.reason,
+        downtime: aiRankData.downtime,
+        painLevel: aiRankData.pain === 'High' ? 3 : aiRankData.pain === 'Moderate' ? 2 : 1
+    } : {
+        // Fallback to Static Data from Translations
+        primaryZones: ['Cheek', 'Jawline'],
+        secondaryZones: ['EyeArea'],
+        activeLayers: ['SMAS', 'Dermis'],
+        radar: { lifting: 85, firmness: 80, texture: 75, glow: 70, safety: 95 },
+        protocolName: (rankInfo?.title || "Unknown Protocol") + " (" + (rankInfo?.combo || "Custom") + ")",
+        reason: rankInfo?.reason || "Loading clinical logic...",
+        downtime: "N/A",
+        painLevel: 2
+    };
+
+
+    // Standard Radar Data Construction
+    const radarChartData = [
+        { subject: tRadar.lifting, A: displayData.radar.lifting, fullMark: 100 },
+        { subject: tRadar.firmness, A: displayData.radar.firmness, fullMark: 100 },
+        { subject: tRadar.texture, A: displayData.radar.texture, fullMark: 100 },
+        { subject: tRadar.glow, A: displayData.radar.glow, fullMark: 100 },
+        { subject: tRadar.safety, A: displayData.radar.safety, fullMark: 100 },
+    ];
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
-            {/* Backdrop */}
+        <AnimatePresence>
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
-                onClick={handleClose}
-            />
-
-            {/* Modal Container */}
-            <motion.div
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="relative w-full sm:w-[500px] h-[90vh] sm:h-[85vh] bg-white sm:rounded-2xl rounded-t-3xl shadow-2xl overflow-hidden flex flex-col"
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                onClick={onClose}
             >
-                {/* Sticky Header */}
-                <div className="flex-shrink-0 border-b border-slate-100 bg-white px-5 py-4 flex items-center justify-between sticky top-0 z-10">
-                    <div>
-                        <h2 className="text-xl font-bold tracking-tight text-slate-800">
-                            Personalized Clinical Blueprint
-                        </h2>
-                        <div className="text-sm font-medium text-slate-500 mt-1 flex items-center gap-2">
-                            <span className={`w-2 h-2 rounded-full ${state.pollingStatus === 'polling' ? 'bg-amber-400 animate-pulse' : state.pollingStatus === 'done' ? 'bg-emerald-400' : 'bg-slate-300'}`} />
-                            {state.pollingStatus === 'polling' ? 'AI 엔진이 최적의 조합을 생성하는 중...' : '분석 완료'}
+                <div
+                    className="relative w-full max-w-6xl max-h-[90vh] overflow-hidden bg-[#0a0a0f] border border-white/10 rounded-3xl shadow-2xl flex flex-col"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {/* Header */}
+                    <div className="flex-none flex items-start justify-between p-6 md:p-8 bg-[#0a0a0f]/95 backdrop-blur-md border-b border-white/5 z-20">
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider text-cyan-400 uppercase border border-cyan-400/30 rounded-full bg-cyan-400/10">
+                                    {td.badge} No.0{effectiveRank}
+                                </span>
+                                {loading && <span className="flex items-center gap-1 text-xs text-blue-400"><Loader2 className="w-3 h-3 animate-spin" /> {td.analyzing}</span>}
+                            </div>
+                            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white tracking-tight">
+                                {loading ? td.analyzing : (displayData.protocolName || rankInfo.title)}
+                            </h2>
+                            <p className="max-w-2xl text-gray-400 text-sm md:text-base leading-relaxed mt-2">
+                                {loading ? td.analyzingDesc : (displayData.reason || rankInfo.reason)}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setIsTuning(!isTuning)}
+                                className={`p-2 rounded-full transition-colors ${isTuning ? 'bg-cyan-500 text-black' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                                title="Tune Protocol"
+                            >
+                                <Settings2 className="w-6 h-6" />
+                            </button>
+                            <button
+                                onClick={handleDownloadPDF}
+                                className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors"
+                                title="Download PDF"
+                            >
+                                <Download className="w-6 h-6" />
+                            </button>
+                            <button onClick={onClose} className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors">
+                                <X className="w-6 h-6" />
+                            </button>
                         </div>
                     </div>
-                    <button
-                        onClick={handleClose}
-                        className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-800"
-                    >
-                        ✕
-                    </button>
-                </div>
 
-                {/* Scrollable Content Body */}
-                <div className="flex-1 overflow-y-auto bg-slate-50 relative pb-10">
-
-                    {/* Risk Flag Banner */}
-                    {state.riskFlag?.triggered && (
-                        <div className="bg-red-50 border-b border-red-100 p-4 sticky top-0 z-0">
-                            <div className="flex gap-3">
-                                <span className="text-red-500 text-xl">⚠️</span>
-                                <div>
-                                    <h4 className="font-bold text-red-800 text-sm mb-1">임상적 주의 (Risk Flag)</h4>
-                                    <p className="text-red-700 text-sm leading-snug">
-                                        {language === 'KO' ? state.riskFlag.reason_KO : state.riskFlag.reason_EN}
-                                    </p>
+                    {/* Tuning Panel */}
+                    <AnimatePresence>
+                        {isTuning && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="bg-[#111116] border-b border-white/10 overflow-hidden"
+                            >
+                                <div className="p-6 grid md:grid-cols-4 gap-6 items-end">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{td.painLevel}</label>
+                                        <select
+                                            value={tuningParams.painTolerance}
+                                            onChange={(e) => setTuningParams(prev => ({ ...prev, painTolerance: e.target.value }))}
+                                            className="w-full bg-black/50 border border-white/20 rounded-lg p-2 text-white text-sm focus:border-cyan-500 outline-none"
+                                        >
+                                            <option value="Low">{td.painOptions[0]}</option>
+                                            <option value="Moderate">{td.painOptions[1]}</option>
+                                            <option value="High">{td.painOptions[2]}</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{td.depthPenetration.split(' ')[0]}</label>
+                                        <select
+                                            value={tuningParams.downtimeTolerance}
+                                            onChange={(e) => setTuningParams(prev => ({ ...prev, downtimeTolerance: e.target.value }))}
+                                            className="w-full bg-black/50 border border-white/20 rounded-lg p-2 text-white text-sm focus:border-cyan-500 outline-none"
+                                        >
+                                            <option value="None">{td.downtimeOptions[0]}</option>
+                                            <option value="Short (2-3 days)">{td.downtimeOptions[1]}</option>
+                                            <option value="Long (1 week+)">{td.downtimeOptions[2]}</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Budget</label>
+                                        <select
+                                            value={tuningParams.budget}
+                                            onChange={(e) => setTuningParams(prev => ({ ...prev, budget: e.target.value }))}
+                                            className="w-full bg-black/50 border border-white/20 rounded-lg p-2 text-white text-sm focus:border-cyan-500 outline-none"
+                                        >
+                                            <option value="Economy">{td.budgetOptions[0]}</option>
+                                            <option value="Standard">{td.budgetOptions[1]}</option>
+                                            <option value="Premium">{td.budgetOptions[2]}</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        onClick={handleReTune}
+                                        disabled={loading}
+                                        className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                                    >
+                                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                                        {td.updateProtocol}
+                                    </button>
                                 </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="p-4 sm:p-5">
-                        <div className="mb-6 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="mb-4">
-                                <h3 className="font-bold text-slate-700 mb-1">
-                                    예상 효과 프로필
-                                </h3>
-                                <p className="text-sm text-slate-500">조합 1순위 시술을 진행했을 때 예상되는 효과망입니다.</p>
-                            </div>
-                            {/* Pass radarScore strictly matching LiveRadar API expectations */}
-                            {state.radarScore && (
-                                <LiveRadar
-                                    data={[
-                                        { subject: 'Lifting', A: state.radarScore.lifting ?? state.radarScore.efficacy ?? 80 },
-                                        { subject: 'Firmness', A: state.radarScore.firmness ?? state.radarScore.downtime ?? 80 },
-                                        { subject: 'Texture', A: state.radarScore.texture ?? state.radarScore.discomfort ?? 75 },
-                                        { subject: 'Glow', A: state.radarScore.glow ?? state.radarScore.cost_efficiency ?? 85 },
-                                        { subject: 'Safety', A: state.radarScore.safety ?? state.radarScore.maintenance ?? 90 },
-                                    ]}
-                                    language={language}
-                                />
-                            )}
-                        </div>
-
-                        {/* Tab Bar Toggle (Patient vs Doctor) */}
-                        <div className="bg-slate-200/50 p-1 mb-6 rounded-xl flex">
-                            <button
-                                onClick={() => dispatch({ type: 'TOGGLE_VIEW' })}
-                                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${state.activeView === 'patient' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                            >
-                                💁‍♀️ 환자 뷰 (Patient)
-                            </button>
-                            <button
-                                onClick={() => dispatch({ type: 'TOGGLE_VIEW' })}
-                                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${state.activeView === 'doctor' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                            >
-                                👨‍⚕️ 닥터 뷰 (Pro)
-                            </button>
-                        </div>
-
-                        {/* Patient View Payload */}
-                        {state.activeView === 'patient' && (
-                            <div className="space-y-4">
-                                {state.rankCards.map((card) => (
-                                    <RankCard
-                                        key={card.category?.category_id || card.rank}
-                                        rank={card.rank}
-                                        data={card.category}
-                                        isExpanded={state.expandedRank === card.rank}
-                                        onToggle={() => dispatch({ type: 'SET_EXPANDED_RANK', rank: card.rank as any })}
-                                        whyCatKO={language === 'KO' ? state.whyCatKO?.[card.category?.category_id] : state.whyCatEN?.[card.category?.category_id]}
-                                        categoryImageUrl={state.categoryImages?.[card.category?.category_id]}
-                                    />
-                                ))}
-                            </div>
+                            </motion.div>
                         )}
+                    </AnimatePresence>
 
-                        {/* Doctor View Payload */}
-                        {state.activeView === 'doctor' && (
-                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-sm">
-                                    <h4 className="font-bold text-slate-800 mb-4 border-b pb-3">Clinical Score Breakdown</h4>
-                                    {state.rankCards.map(c => (
-                                        <div key={c.rank} className="mb-4 last:mb-0">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <div className="flex gap-2 items-center">
-                                                    <span className="bg-slate-200 w-6 h-6 flex items-center justify-center rounded font-bold text-slate-600 text-xs">{c.rank}</span>
-                                                    <span className="font-semibold text-slate-700">{c.category?.category_id}</span>
+                    {/* Scrollable Content */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                        {loading ? (
+                            <div className="flex flex-col items-center justify-center h-96 gap-4">
+                                <Loader2 className="w-12 h-12 text-cyan-500 animate-spin" />
+                                <p className="text-gray-400">{td.analyzingDesc}</p>
+                            </div>
+                        ) : (
+                            <div className="grid lg:grid-cols-2 gap-0 lg:divide-x divide-white/10">
+                                {/* Left: Visual Simulation */}
+                                <div className="p-6 md:p-8 space-y-8 bg-[#0a0a0f]">
+                                    {/* Face Map */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                                <div className="w-1 h-5 bg-cyan-500 rounded-full" />
+                                                {td.targetZones}
+                                            </h3>
+                                        </div>
+                                        <div className="relative aspect-[3/4] bg-black/40 rounded-2xl overflow-hidden border border-white/5">
+                                            <FaceMannequin
+                                                primaryZones={displayData.primaryZones}
+                                                secondaryZones={displayData.secondaryZones}
+                                                language={language}
+                                            />
+                                            {/* Overlay Info */}
+                                            <div className="absolute bottom-4 left-4 right-4 p-4 bg-black/60 backdrop-blur-md rounded-xl border border-white/10">
+                                                <div className="flex gap-4 text-xs">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-3 h-3 bg-red-500/80 rounded-full animate-pulse" />
+                                                        <span className="text-gray-300">{td.maxIntensity}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-3 h-3 bg-blue-400/80 rounded-full" />
+                                                        <span className="text-gray-300">{td.collagenRemodeling}</span>
+                                                    </div>
                                                 </div>
-                                                <span className="font-bold text-indigo-600 font-mono">{c.category?.score}pt</span>
-                                            </div>
-                                            <div className="text-slate-500 text-xs flex flex-wrap gap-2 mt-1 px-8">
-                                                <span className="bg-slate-100 px-2 flex py-0.5 rounded">Indications: 35/35</span>
-                                                <span className="bg-slate-100 px-2 flex py-0.5 rounded">Pain: 8/12</span>
-                                                <span className="bg-slate-100 px-2 flex py-0.5 rounded">Budget: 15/15</span>
                                             </div>
                                         </div>
-                                    ))}
+                                    </div>
 
-                                    <div className="p-4 bg-slate-50 rounded-xl mt-6 border border-slate-100">
-                                        <h5 className="font-semibold text-slate-700 mb-2">Engine Injection Safety Trace</h5>
-                                        <p className="text-slate-500 leading-relaxed">
-                                            System checked `{state.rankCards[0]?.category?.top_boosters?.[0]?.booster_id}` against `injectable_method_rules`. Patient passed High pain tolerance constraint.
-                                            <br /><br /><strong>Output:</strong> `{state.rankCards[0]?.category?.top_boosters?.[0]?.delivery_name || 'N/A'}` selected.
-                                        </p>
+                                    {/* Skin Layers */}
+                                    <div className="space-y-4">
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <div className="w-1 h-5 bg-purple-500 rounded-full" />
+                                            {td.depthPenetration}
+                                        </h3>
+                                        <SkinLayerSection
+                                            activeLayers={displayData.activeLayers}
+                                            language={language}
+                                        />
                                     </div>
                                 </div>
-                            </div>
-                        )}
 
+                                {/* Right: Clinical Data */}
+                                <div className="p-6 md:p-8 space-y-8 bg-[#0a0a0f/50]">
+                                    {/* Radar Chart */}
+                                    <div className="space-y-4">
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <div className="w-1 h-5 bg-emerald-500 rounded-full" />
+                                            {td.efficacyProfile}
+                                        </h3>
+                                        <div className="h-[320px] w-full flex items-center justify-center p-4 bg-black/20 rounded-2xl border border-white/5 overflow-visible">
+                                            <LiveRadar data={radarChartData} language={language} />
+                                        </div>
+                                    </div>
+
+                                    {/* Clinical Logic - AI Generated */}
+                                    <div className="space-y-4">
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <div className="w-1 h-5 bg-amber-500 rounded-full" />
+                                            Clinical Logic (AI)
+                                        </h3>
+                                        <div className="p-6 rounded-2xl bg-gradient-to-br from-gray-900 to-black border border-white/10 relative overflow-hidden group">
+                                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                                <Sparkles className="w-24 h-24 text-white" />
+                                            </div>
+
+                                            <h4 className="text-xl font-bold text-white mb-2 relative z-10">
+                                                {td.whyProtocol}
+                                            </h4>
+                                            <p className="text-gray-400 leading-relaxed mb-6 relative z-10">
+                                                {displayData.reason}
+                                            </p>
+
+                                            <div className="grid grid-cols-2 gap-4 relative z-10">
+                                                <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                                    <span className="text-xs text-gray-500 uppercase tracking-wider">{td.estimatedDowntime}</span>
+                                                    <div className="text-white font-medium mt-1">
+                                                        {aiRankData?.downtime || "Minimal"}
+                                                    </div>
+                                                </div>
+                                                <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                                    <span className="text-xs text-gray-500 uppercase tracking-wider">{td.painLevel}</span>
+                                                    <div className="flex gap-1 mt-1">
+                                                        {[...Array(5)].map((_, i) => (
+                                                            <div
+                                                                key={i}
+                                                                className={`h-1.5 w-4 rounded-full ${i < (aiRankData?.pain === 'High' ? 4 : aiRankData?.pain === 'Moderate' ? 2 : 1)
+                                                                    ? 'bg-red-500'
+                                                                    : 'bg-gray-700'
+                                                                    }`}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 text-xs text-gray-500 justify-end">
+                                            <RefreshCw className="w-3 h-3" />
+                                            <span>{td.poweredBy}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Matched Doctors Section */}
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                        <div className="w-1 h-5 bg-blue-500 rounded-full" />
+                                        {td.topSpecialists}
+                                    </h3>
+
+                                    {matchLoading ? (
+                                        <div className="p-8 text-center text-gray-500 border border-white/5 rounded-2xl bg-white/5">
+                                            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                                            {td.runningMatch}
+                                        </div>
+                                    ) : matches.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {matches.map((doc, idx) => (
+                                                <div key={idx} className="group relative bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/50 rounded-xl p-4 transition-all duration-300">
+                                                    {/* Badge */}
+                                                    {doc.score >= 90 && (
+                                                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-yellow-300/30 flex items-center gap-1">
+                                                            <Star className="w-3 h-3 fill-white" />
+                                                            {doc.score}% MATCH
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex justify-between items-start mb-3">
+                                                        <div>
+                                                            <h4 className="font-bold text-white text-base">{doc.doctorName}</h4>
+                                                            <div className="flex items-center gap-1 text-gray-400 text-xs mt-0.5">
+                                                                <MapPin className="w-3 h-3" />
+                                                                {doc.hospitalName}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="text-cyan-400 font-bold text-sm tracking-wide">{doc.solutionTitle}</div>
+                                                            <div className="text-gray-500 text-xs">{doc.priceRange}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Match Details */}
+                                                    <div className="space-y-1 mb-3">
+                                                        {doc.matchDetails.slice(0, 2).map((detail: string, i: number) => (
+                                                            <div key={i} className="flex items-start gap-2 text-xs text-gray-300">
+                                                                <CheckCircle className="w-3 h-3 text-emerald-500 mt-0.5 flex-shrink-0" />
+                                                                {detail}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    <button className="w-full py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-bold rounded-lg border border-cyan-500/30 transition-colors flex items-center justify-center gap-1 group-hover:text-cyan-300">
+                                                        View Clinical Profile <ChevronRight className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="p-6 text-center text-gray-500 border border-white/5 rounded-2xl bg-white/5 text-sm">
+                                            {td.noMatches}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex-none p-6 md:p-8 border-t border-white/5 bg-[#0a0a0f] flex flex-col sm:flex-row justify-between items-center gap-4 z-20">
+                        <div className="text-sm text-gray-500 text-center sm:text-left">
+                            {td.resultsDisclaimer}
+                        </div>
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <button
+                                onClick={onClose}
+                                className="flex-1 sm:flex-none border border-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/5 transition-colors"
+                            >
+                                {td.closeAnalysis}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (user) {
+                                        // If reportId exists, redirect to permanent report page
+                                        if (analysisData?.reportId) {
+                                            window.location.href = `/report/${analysisData.reportId}`;
+                                        } else {
+                                            onClose();
+                                        }
+                                    } else {
+                                        // Trigger Auth Modal via parent
+                                        (window as any).dispatchEvent(new CustomEvent('open-auth-modal'));
+                                        onClose();
+                                    }
+                                }}
+                                className="flex-1 sm:flex-none bg-cyan-500 text-black px-8 py-3 rounded-full font-bold hover:bg-cyan-400 transition-transform active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+                            >
+                                <Shield className="w-5 h-5" />
+                                {language === 'KO' ? '리포트 저장 & 상담 예약' :
+                                    language === 'JP' ? 'レポート保存 & 相談予約' :
+                                        'Save Report & Book'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </motion.div>
-        </div>
+        </AnimatePresence >
     );
 }

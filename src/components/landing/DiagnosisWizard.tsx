@@ -371,14 +371,14 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
         <button
             onClick={onClick}
             className={cn(
-                "p-4 rounded-xl border transition-all text-left flex items-center justify-between group h-full",
+                "p-4 rounded-xl border transition-all text-left flex items-center justify-between group",
                 selected
-                    ? "bg-[#00F0FF]/10 border-[#00F0FF] text-white shadow-[0_0_15px_rgba(0,240,255,0.1)]"
-                    : "bg-[#111111] border-[#1F1F1F] text-[#888888] hover:border-[#00F0FF]/30 hover:text-white"
+                    ? "bg-blue-500/20 border-blue-500 text-white"
+                    : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
             )}
         >
-            <span className="text-sm md:text-base font-medium leading-tight">{label}</span>
-            {selected && <Check className="w-4 h-4 text-[#00F0FF] shrink-0 ml-2" />}
+            <span className="text-sm md:text-base font-medium">{label}</span>
+            {selected && <Check className="w-4 h-4 text-blue-400" />}
         </button>
     );
 
@@ -393,12 +393,12 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                 key={currentStep.id}
                 initial={{ scale: 0.95, opacity: 0, y: 10 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
-                className="relative w-full max-w-2xl bg-[#050505] border border-[#1F1F1F] rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+                className="relative w-full max-w-2xl bg-[#0F0F0F] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
             >
                 {/* Progress Bar */}
-                <div className="h-1 bg-[#111111] w-full">
+                <div className="h-1 bg-white/5 w-full">
                     <motion.div
-                        className="h-full bg-gradient-to-r from-cyan-600 to-[#00F0FF]"
+                        className="h-full bg-blue-500"
                         initial={{ width: 0 }}
                         animate={{ width: `${((step + 1) / activeSteps.length) * 100}%` }}
                     />
@@ -410,13 +410,13 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                     {/* --- INTRO STEP --- */}
                     {currentStep.id === 'intro' && (
                         <div className="flex flex-col items-center justify-center flex-1 text-center space-y-8 py-10">
-                            <div className="w-20 h-20 rounded-full bg-[#00F0FF]/10 flex items-center justify-center relative">
-                                <Sparkles className="w-10 h-10 text-[#00F0FF]" />
-                                <div className="absolute inset-0 bg-[#00F0FF]/20 blur-xl rounded-full" />
+                            <div className="w-20 h-20 rounded-full bg-blue-500/10 flex items-center justify-center relative">
+                                <Sparkles className="w-10 h-10 text-blue-400" />
+                                <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full" />
                             </div>
                             <div>
-                                <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">{currentStep.title?.[language]}</h2>
-                                <p className="text-[#888888] text-lg max-w-md mx-auto">{currentStep.desc?.[language]}</p>
+                                <h2 className="text-3xl font-bold text-white mb-4">{currentStep.title?.[language]}</h2>
+                                <p className="text-gray-400 text-lg max-w-md mx-auto">{currentStep.desc?.[language]}</p>
                             </div>
                             <button
                                 onClick={handleNext}
@@ -431,11 +431,11 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                     {currentStep.id === 'analysis' && (
                         <div className="flex flex-col items-center justify-center flex-1 text-center space-y-8 py-20">
                             <div className="relative">
-                                <Loader2 className="w-16 h-16 text-[#00F0FF] animate-spin" />
-                                <div className="absolute inset-0 bg-[#00F0FF]/20 blur-2xl rounded-full" />
+                                <Loader2 className="w-16 h-16 text-blue-500 animate-spin" />
+                                <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full" />
                             </div>
                             <h2 className="text-2xl font-bold text-white animate-pulse">{currentStep.title?.[language]}</h2>
-                            <p className="text-[#888888] text-sm font-mono uppercase tracking-widest">{{ EN: 'Consulting 80+ Protocols...', KO: '80개 이상의 프로토콜 분석 중...', JP: '80以上のプロトコルを照合中...', CN: '正在匹配80+个临床方案...' }[language]}</p>
+                            <p className="text-gray-500 text-sm">{{ EN: 'Consulting 80+ Protocols...', KO: '80개 이상의 프로토콜 분석 중...', JP: '80以上のプロトコルを照合中...', CN: '正在匹配80+个临床方案...' }[language]}</p>
                         </div>
                     )}
 
@@ -458,13 +458,13 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                                         <div className="grid grid-cols-3 gap-2">
                                             {OPTIONS.age.map((a) => (
                                                 <button key={a.id} onClick={() => updateData('age', a.id)}
-                                                    className={cn("p-3 rounded-xl border text-sm transition-all", data.age === a.id ? "bg-[#00F0FF]/10 border-[#00F0FF] text-white shadow-[0_0_15px_rgba(0,240,255,0.1)]" : "bg-[#111111] border-[#1F1F1F] text-[#888888] hover:border-[#00F0FF]/30 hover:text-white")}
+                                                    className={cn("p-3 rounded-xl border text-sm transition-all", data.age === a.id ? "bg-blue-500/20 border-blue-500 text-white" : "bg-white/5 border-white/10 text-gray-400")}
                                                 >{(a.label as Record<string, string>)[language]}</button>
                                             ))}
                                         </div>
                                         <select
                                             value={data.country} onChange={(e) => updateData('country', e.target.value)}
-                                            className="w-full p-4 bg-[#111111] border border-[#1F1F1F] rounded-xl text-white outline-none focus:border-[#00F0FF]/50 transition-colors"
+                                            className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white"
                                         >
                                             {OPTIONS.countries.map(c => <option key={c.id} value={c.id}>{(c.label as Record<string, string>)[language]}</option>)}
                                         </select>
@@ -521,7 +521,7 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                                             </label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {OPTIONS.pain.map(o => (
-                                                    <button key={o.id} onClick={() => updateData('painTolerance', o.id)} className={cn("p-3 rounded-lg border text-xs text-left transition-all", data.painTolerance === o.id ? "bg-[#00F0FF]/10 border-[#00F0FF] text-white shadow-[0_0_15px_rgba(0,240,255,0.1)]" : "bg-[#111111] border-[#1F1F1F] text-[#888888] hover:border-[#00F0FF]/30 hover:text-white")}>{(o.label as Record<string, string>)[language]}</button>
+                                                    <button key={o.id} onClick={() => updateData('painTolerance', o.id)} className={cn("p-3 rounded-lg border text-xs text-left", data.painTolerance === o.id ? "bg-blue-500/20 border-blue-500 text-white" : "bg-white/5 border-white/10 text-gray-400")}>{(o.label as Record<string, string>)[language]}</button>
                                                 ))}
                                             </div>
                                         </div>
@@ -531,7 +531,7 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                                             </label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {OPTIONS.downtime.map(o => (
-                                                    <button key={o.id} onClick={() => updateData('downtimeTolerance', o.id)} className={cn("p-3 rounded-lg border text-xs text-left transition-all", data.downtimeTolerance === o.id ? "bg-[#00F0FF]/10 border-[#00F0FF] text-white shadow-[0_0_15px_rgba(0,240,255,0.1)]" : "bg-[#111111] border-[#1F1F1F] text-[#888888] hover:border-[#00F0FF]/30 hover:text-white")}>{(o.label as Record<string, string>)[language]}</button>
+                                                    <button key={o.id} onClick={() => updateData('downtimeTolerance', o.id)} className={cn("p-3 rounded-lg border text-xs text-left", data.downtimeTolerance === o.id ? "bg-blue-500/20 border-blue-500 text-white" : "bg-white/5 border-white/10 text-gray-400")}>{(o.label as Record<string, string>)[language]}</button>
                                                 ))}
                                             </div>
                                         </div>
@@ -541,7 +541,7 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                                             </label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {OPTIONS.budget.map(o => (
-                                                    <button key={o.id} onClick={() => updateData('budget', o.id)} className={cn("p-3 rounded-lg border text-xs text-left transition-all", data.budget === o.id ? "bg-[#00F0FF]/10 border-[#00F0FF] text-white shadow-[0_0_15px_rgba(0,240,255,0.1)]" : "bg-[#111111] border-[#1F1F1F] text-[#888888] hover:border-[#00F0FF]/30 hover:text-white")}>{(o.label as Record<string, string>)[language]}</button>
+                                                    <button key={o.id} onClick={() => updateData('budget', o.id)} className={cn("p-3 rounded-lg border text-xs text-left", data.budget === o.id ? "bg-blue-500/20 border-blue-500 text-white" : "bg-white/5 border-white/10 text-gray-400")}>{(o.label as Record<string, string>)[language]}</button>
                                                 ))}
                                             </div>
                                         </div>
@@ -551,7 +551,7 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                                             </label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {OPTIONS.frequency.map(o => (
-                                                    <button key={o.id} onClick={() => updateData('frequency', o.id)} className={cn("p-3 rounded-lg border text-xs text-left transition-all", data.frequency === o.id ? "bg-[#00F0FF]/10 border-[#00F0FF] text-white shadow-[0_0_15px_rgba(0,240,255,0.1)]" : "bg-[#111111] border-[#1F1F1F] text-[#888888] hover:border-[#00F0FF]/30 hover:text-white")}>{(o.label as Record<string, string>)[language]}</button>
+                                                    <button key={o.id} onClick={() => updateData('frequency', o.id)} className={cn("p-3 rounded-lg border text-xs text-left", data.frequency === o.id ? "bg-blue-500/20 border-blue-500 text-white" : "bg-white/5 border-white/10 text-gray-400")}>{(o.label as Record<string, string>)[language]}</button>
                                                 ))}
                                             </div>
                                         </div>
@@ -579,11 +579,11 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
                                             placeholder={{ EN: 'Enter your email to receive the report', KO: '리포트를 받을 이메일 주소', JP: 'レポートを受け取るメールアドレス', CN: '输入邮箱以接收报告' }[language] || 'Enter your email'}
                                             value={data.email}
                                             onChange={(e) => updateData('email', e.target.value)}
-                                            className="w-full p-4 bg-[#111111] border border-[#1F1F1F] rounded-xl text-white focus:border-[#00F0FF]/50 outline-none transition-colors"
+                                            className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white focus:border-blue-500 outline-none"
                                         />
-                                        <div className="flex items-start gap-3 p-4 bg-[#00F0FF]/10 rounded-xl border border-[#00F0FF]/20">
-                                            <AlertTriangle className="w-5 h-5 text-[#00F0FF] shrink-0" />
-                                            <p className="text-sm text-slate-300">
+                                        <div className="flex items-start gap-3 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                                            <AlertTriangle className="w-5 h-5 text-blue-400 shrink-0" />
+                                            <p className="text-sm text-gray-300">
                                                 {{ EN: 'By continuing, you agree to our processing of your personal health data for the purpose of generating this clinical report.', KO: '계속 진행하면 임상 리포트 생성을 위한 개인 건강 정보 처리에 동의하는 것으로 간주됩니다.', JP: '続行することで、臨床レポート生成のための個人健康情報の処理に同意したものとみなされます。', CN: '继续即表示您同意我们处理您的个人健康数据以生成本临床报告。' }[language]}
                                             </p>
                                         </div>
@@ -592,14 +592,14 @@ export default function DiagnosisWizard({ isOpen, onClose, onComplete, language 
 
                             </div>
 
-                            <div className="mt-8 flex justify-between pt-4 border-t border-[#1F1F1F]">
-                                <button onClick={handleBack} className="text-[#888888] hover:text-white flex items-center gap-2 transition-colors">
+                            <div className="mt-8 flex justify-between pt-4 border-t border-white/5">
+                                <button onClick={handleBack} className="text-gray-400 hover:text-white flex items-center gap-2">
                                     <ChevronLeft className="w-4 h-4" /> {{ EN: 'Back', KO: '이전', JP: '前へ', CN: '上一步' }[language]}
                                 </button>
                                 <button
                                     onClick={handleNext}
                                     disabled={currentStep.id === 'contact' && !data.email.includes('@')}
-                                    className="bg-white text-black hover:bg-[#00F0FF] disabled:opacity-50 disabled:cursor-not-allowed px-8 py-3 rounded-xl font-bold transition-all shadow-lg"
+                                    className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-blue-900/20"
                                 >
                                     {isLastStep ? { EN: 'Analyze Now', KO: '지금 분석하기', JP: '今すぐ分析', CN: '立即分析' }[language] : { EN: 'Next', KO: '다음', JP: '次へ', CN: '下一步' }[language]}
                                 </button>

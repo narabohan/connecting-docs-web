@@ -8,32 +8,89 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ message: 'Method Not Allowed' });
     }
 
-    try {
-        const payload = req.body;
+    const {
+        patientEmail,
+        reportId,
+        overallSatisfaction,
+        resultAchieved,
+        sideEffects,
+        painActual,
+        downtimeActual,
+        wouldReturn,
+        wouldRecommend,
+        openFeedback,
+        treatmentDate,
+        clinicName,
+        submittedAt,
+    } = req.body;
 
-        // We gracefully verify if the table 'Patient_Feedback' exists by attempting to create a record.
-        // If it throws an error (table not found), we fallback to the 'Reports' table as a note, 
-        // to prevent hard failure if the Airtable schema isn't fully migrated yet.
+    try {
+        const feedbackFields: Record<string, any> = {
+            Patient_Email: patientEmail || 'anonymous',
+            Report_ID: reportId || '',
+            Overall_Satisfaction: overallSatisfaction,
+            Result_Achieved: resultAchieved,
+            Side_Effects: Array.isArray(sideEffects) ? sideEffects.join(', ') : '',
+            Pain_Actual: painActual,
+            Downtime_Actual: downtimeActual,
+            Would_Return: wouldReturn === true ? 'Yes' : wouldReturn === false ? 'No' : 'Not answered',
+            Would_Recommend: wouldRecommend === true ? 'Yes' : wouldRecommend === false ? 'No' : 'Not answered',
+            Open_Feedback: openFeedback || '',
+            Treatment_Date: treatmentDate || '',
+            Clinic_Name: clinicName || '',
+            Submitted_At: submittedAt || new Date().toISOString(),
+        };
+
         try {
-            const table = base('Patient_Feedback');
-            await table.create([
-                {
-                    fields: Object.keys(payload).reduce((acc, key) => {
-                        // Airtable requires matching field names. 
-                        // If exact fields don't exist yet, passing raw JSON safely requires exact mappings or a generic field.
-                        acc[key] = String(payload[key]);
-                        return acc;
-                    }, {} as any)
+            // Try Patient_Feedback table first
+            await base('Patient_Feedback').create(feedbackFields);
+        } catch {
+            // Fall back: update Reports record with feedback summary
+            if (reportId) {
+                try {
+                    await base('Reports').update(reportId, {
+                        Patient_Feedback: JSON.stringify({
+                            overallSatisfaction,
+                            resultAchieved,
+                            sideEffects,
+                            painActual,
+                            downtimeActual,
+                            wouldReturn,
+                            wouldRecommend,
+                            openFeedback,
+                            submittedAt,
+                        }),
+                        Feedback_Score: overallSatisfaction,
+                    });
+                } catch {
+                    console.log('Feedback: no Airtable table configured, skipping storage');
                 }
-            ]);
-        } catch (e: any) {
-            console.log('Patient_Feedback table potentially missing, safely recording to console for now', e.message);
-            // Example Fallback logic could be placed here if absolutely needed.
+            }
+        }
+
+        // Update linked Match record if exists
+        if (reportId) {
+            try {
+                const matches = await base('Matches').select({
+                    filterByFormula: `{Report_ID} = '${reportId}'`,
+                    maxRecords: 1,
+                }).firstPage();
+
+                if (matches.length > 0) {
+                    await base('Matches').update(matches[0].id, {
+                        Patient_Feedback_Score: overallSatisfaction,
+                        Patient_Feedback_Note: openFeedback || '',
+                    });
+                }
+            } catch {
+                // Non-critical — ignore
+            }
         }
 
         return res.status(200).json({ success: true });
     } catch (error: any) {
-        console.error('Error saving feedback:', error);
-        return res.status(500).json({ error: error.message });
+        console.error('Feedback API error:', error);
+        // Return 200 to avoid bad UX — feedback logging failures shouldn't block the user
+        return res.status(200).json({ success: true, warning: 'Feedback logged locally' });
     }
 }

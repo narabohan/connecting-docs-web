@@ -98,6 +98,7 @@ export interface TranslationStructure {
             typing: { patient: string[]; doctor: string[] };
             dynamicTitle: { patient: { main: string; sub: string }; doctor: { main: string; sub: string } };
             dynamicDesc: { patient: string; doctor: string };
+            dynamicSubDesc: { patient: string; doctor: string };
             dynamicCta: { patient: string; doctor: string };
             floatingText: string;
         };
@@ -108,33 +109,6 @@ export interface TranslationStructure {
             quote: string;
             desc: string;
             cta: string;
-            visualMatch: {
-                title: string;
-                power: string;
-                synergy: string;
-                pain: string;
-                downtime: string;
-                fit: string;
-                score: string;
-            };
-            deviceSuitability: {
-                targetArea: string;
-                layer: string;
-                pain: string;
-                downtime: string;
-                suitability: string;
-                status: {
-                    suitable: string;
-                    caution: string;
-                    unsuitable: string;
-                };
-                levels: {
-                    low: string;
-                    medium: string;
-                    high: string;
-                };
-                learnMore: string;
-            };
             simulator: {
                 inputTitle: string;
                 outputTitle: string;
@@ -269,12 +243,6 @@ export interface TranslationStructure {
             cta: string;
             locked: string;
         };
-    };
-    usageGuide?: {
-        title: string;
-        step1: { title: string; desc: string };
-        step2: { title: string; desc: string };
-        step3: { title: string; desc: string };
     };
     deepDive?: {
         badge: string;
@@ -425,58 +393,35 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 },
                 dynamicTitle: {
                     patient: {
-                        main: "Find Your Perfect Skin Treatment",
-                        sub: "in 3 Minutes"
+                        main: "Find Your Perfect Skin Treatment in 3 Minutes",
+                        sub: "Free AI Analysis & Expert Matching"
                     },
                     doctor: {
-                        main: "Systematize Your Expertise",
-                        sub: "Turn Clinical Judgment into Assests"
+                        main: "Medical Intelligence v2.0",
+                        sub: "Turn Clinical Judgment into Tradable Assets"
                     }
                 },
                 dynamicDesc: {
-                    patient: "Free AI Analysis. Don't look for the cheapest machine. Find the Master who understands your clinical logic.",
-                    doctor: "The Global Medical Intelligence Platform. Connect with patients actively seeking your specific protocols and expertise."
+                    patient: "Experience the Triple-Linked Skin Simulation. Visualize how Pain, Downtime, and Budget shape your ideal result.",
+                    doctor: "Billionaire OS v2.1 Applied. Architecting the Standard of Global Medical Aesthetics."
+                },
+                dynamicSubDesc: {
+                    patient: "From Price Wars to Logic-Driven Choices: Empowering Top 1% Connections.",
+                    doctor: "Be the Chef with Signature Courses, Not Just a Menu Seller."
                 },
                 dynamicCta: {
-                    patient: "Start My Evaluation",
-                    doctor: "Submit Protocol"
+                    patient: "Get My Free Skin Report",
+                    doctor: "Inquire Signature Registration"
                 },
-                floatingText: "Find the 'Glass Skin' solution you've been looking for."
+                floatingText: "Discover the 'Glass Skin' answer you didn't know existed."
             },
             judgment: {
-                badge: "AI MATCHING SYSTEM",
+                badge: "v2.0 SYSTEM ONLINE",
                 title: "Your skin is not a testing ground.",
-                titleHighlight: "Data-Driven Choices.",
-                desc: "Don't let your face be an experiment. We analyze your clinical variables to find the safest, most effective protocol. Understand exactly why a treatment fits you best based on pain, downtime, and efficacy.",
+                titleHighlight: "Design your outcome before the treatment.",
+                desc: "Exhausted by marketing hype and factory-style consultations? Don't let your face be an experiment. We analyze your clinical variables to find the 'Safe-Optimal' for you. Choose a logic-driven solution that suits your skin, not just a price tag.",
                 quote: "We say the 'Honest No' to protect you. If a treatment doesn't fit your skin logic, we simply don't recommend it.",
-                cta: "Calculate My Match Score",
-                visualMatch: {
-                    title: "Live Analysis Scoring",
-                    power: "Device Power",
-                    synergy: "Skin-Booster Synergy",
-                    pain: "Pain Index",
-                    downtime: "Downtime",
-                    fit: "Personal Fit",
-                    score: "Match Rate"
-                },
-                deviceSuitability: {
-                    targetArea: 'Primary Area',
-                    layer: 'Target Layer',
-                    pain: 'Pain Level',
-                    downtime: 'Downtime',
-                    suitability: 'Suitability',
-                    status: {
-                        suitable: 'Suitable',
-                        caution: 'Caution',
-                        unsuitable: 'Unsuitable'
-                    },
-                    levels: {
-                        low: 'Low',
-                        medium: 'Medium',
-                        high: 'High'
-                    },
-                    learnMore: 'CLICK TO LEARN MORE'
-                },
+                cta: "Start My Blueprint",
                 simulator: {
                     inputTitle: "Set Your Constraints",
                     outputTitle: "Achievable Ideal Skin",
@@ -644,21 +589,6 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             },
             footer: { cta: "🔒 Unlock Master Profile & Book", locked: "View full personalized recommendations" },
         },
-        usageGuide: {
-            title: "📋 How to Use This Report",
-            step1: {
-                title: "1. Review AI Insights",
-                desc: "Understand the core logic behind the AI-selected combination based on your skin condition and preferences."
-            },
-            step2: {
-                title: "2. Compare Devices & Boosters",
-                desc: "The AI provides a curated selection of devices and skin boosters designed to maximize synergy for your specific needs."
-            },
-            step3: {
-                title: "3. Connect with a Master Doctor",
-                desc: "Your report is your prescription. Unlock the profile of a specialized 'Master Doctor' who can perfectly execute this specific protocol logic on you."
-            }
-        },
         deepDive: {
             badge: "Curated Solution",
             analyzing: "Analyzing Protocol...",
@@ -671,8 +601,8 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             painLevel: "Pain Level",
             poweredBy: "Powered by Clinical Engine",
             topSpecialists: "Top Matched Specialists",
-            updateProtocol: "Recalculate Fit",
-            closeAnalysis: "Save Report & Create Account",
+            updateProtocol: "Update Protocol",
+            closeAnalysis: "Close Analysis",
             maxIntensity: "Max Intensity",
             collagenRemodeling: "Collagen Remodeling",
             resultsDisclaimer: "* Results may vary. Consultation required.",
@@ -806,58 +736,35 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                 },
                 dynamicTitle: {
                     patient: {
-                        main: "내 피부에 딱 맞는 시술 찾기",
-                        sub: "3분 무료 AI 진단"
+                        main: "3분 만에 찾는 나만의 인생 피부 시술",
+                        sub: "무료 AI 분석 및 전문의 매칭"
                     },
                     doctor: {
                         main: "가격 경쟁의 늪에서 벗어나",
-                        sub: "원장님만의 '시그니처 솔루션'을\n자산화하세요"
+                        sub: "원장님만의 '시그니처 솔루션'으로 독보적인 팬덤을 구축하세요"
                     }
                 },
                 dynamicDesc: {
-                    patient: "무료 AI 진단. 가장 저렴한 장비만 찾지 마세요. 당신의 임상적 특성을 이해하는 마스터 닥터를 찾아보세요.",
-                    doctor: "오직 결과로 말하는 실력있는 의사들의 플랫폼. 원장님의 임상 로직을 디지털 IP로 자산화하고, 준비된 VIP 환자들과 직접 연결합니다. 코스 요리를 대접하는 셰프가 되어보세요."
+                    patient: "아픈 건 싫고, 예산은 한정적이라면? 통증부터 비용까지—나의 조건에 맞춘 '최적의 시술 시나리오'를 한눈에 확인하세요.",
+                    doctor: "단순한 홍보가 아닙니다. 원장님의 임상 로직을 디지털 IP로 자산화하여, 준비된 VIP 환자에게 직접 전달합니다. 시그니처 코스요리를 내는 셰프가 되어 보세요."
+                },
+                dynamicSubDesc: {
+                    patient: "가격표에 내 얼굴을 맞추지 마세요. 데이터가 증명하는 '나만을 위한 유일한 처방'을 선택하세요. 최저가 검색 대신 의학적 확신을 드립니다.",
+                    doctor: "원장님의 시술 노하우, 이제 병원 벽을 넘어 전 세계 VIP 환자를 위한 '디지털 자산'이 됩니다."
                 },
                 dynamicCta: {
-                    patient: "내 피부 적합성 설계하기",
+                    patient: "나만의 인생 시술 설계하기",
                     doctor: "시그니처 자산 등록하기"
                 },
-                floatingText: "당신도 몰랐던 '글래스 스킨'의 정답을 커넥팅닥스에서 찾아보세요."
+                floatingText: "내 피부가 가질 수 있는 가장 투명한 빛, 당신도 몰랐던 '글래스 스킨'의 정답을 찾아보세요."
             },
             judgment: {
-                badge: "AI 매칭 시스템",
+                badge: "v2.0 SYSTEM ONLINE",
                 title: "피부는 실험실이 아닙니다.",
-                titleHighlight: "시술 전, 나에게 맞는지 '피팅'해 보세요.",
-                desc: "수많은 마케팅 노이즈에 지치셨나요? 커넥팅독스는 당신의 피부 두께와 리스크 수용도를 분석해 가장 안전한 '최적'을 찾아냅니다. 비싼 시술이 아닌, 원리가 검증된 당신만의 정답을 선택하세요.",
+                titleHighlight: "시술 전, 데이터로 먼저 '피팅'해 보세요.",
+                desc: "수많은 마케팅 노이즈와 3분도 안 되는 짧은 상담 시간에 지치셨나요? 커넥팅독스는 당신의 피부 두께와 리스크 수용도를 분석해 가장 안전한 '최적'을 찾아냅니다. 비싼 시술이 아닌, 당신의 피부 로직에 맞는 정답을 선택하세요.",
                 quote: "우리는 당신의 안전을 위해 '정직한 No'를 말합니다. 내 피부에 맞지 않는 시술은 결코 정답이 될 수 없기 때문입니다.",
-                cta: "내 피부 매칭 점수 확인하기",
-                visualMatch: {
-                    title: "실시간 적합도 분석",
-                    power: "장비 파워",
-                    synergy: "스킨부스터 시너지",
-                    pain: "통증 지수",
-                    downtime: "다운타임",
-                    fit: "피부 적합도",
-                    score: "매칭률"
-                },
-                deviceSuitability: {
-                    targetArea: '주요 시술 영역',
-                    layer: '시술 Layer',
-                    pain: '통증 정도',
-                    downtime: '다운타임 정도',
-                    suitability: '시술 적합도',
-                    status: {
-                        suitable: '적합',
-                        caution: '주의',
-                        unsuitable: '부적합'
-                    },
-                    levels: {
-                        low: 'Low',
-                        medium: 'Medium',
-                        high: 'High'
-                    },
-                    learnMore: '클릭하여 더 알아보기'
-                },
+                cta: "내 피부 설계 시작하기",
                 simulator: {
                     inputTitle: "나의 시술 조건 설정",
                     outputTitle: "달성 가능한 이상향",
@@ -1025,21 +932,6 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             },
             footer: { cta: "🔒 마스터 프로필 잠금 해제 & 예약", locked: "맞춤형 전체 추천 보기" },
         },
-        usageGuide: {
-            title: "📋 리포트 활용 가이드",
-            step1: {
-                title: "1. AI 추천 로직 확인",
-                desc: "내 피부와 예산, 통증 민감도에 맞춰 이 조합이 왜 최적인지 AI의 분석 로직을 먼저 꼼꼼히 읽어보세요."
-            },
-            step2: {
-                title: "2. 장비 및 부스터 비교 검토",
-                desc: "추천된 메인 강호 장비와 시너지를 낼 수 있는 스킨 부스터의 조합을 확인하세요."
-            },
-            step3: {
-                title: "3. '마스터 닥터'에게 진료 예약",
-                desc: "이 리포트는 일종의 처방전입니다. 이 정교한 로직을 실제로 구현할 수 있는 검증된 '마스터 닥터'를 찾아 상담을 예약하세요."
-            }
-        },
         deepDive: {
             badge: "큐레이티드 솔루션",
             analyzing: "프로토콜 분석 중...",
@@ -1053,7 +945,7 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             poweredBy: "임상 엔진 기반",
             topSpecialists: "최적 매칭 전문의",
             updateProtocol: "프로토콜 재분석",
-            closeAnalysis: "리포트 저장 및 계정 생성하기",
+            closeAnalysis: "분석 닫기",
             maxIntensity: "최대 강도",
             collagenRemodeling: "콜라겐 리모델링",
             resultsDisclaimer: "* 결과는 개인에 따라 다를 수 있습니다. 상담 필요.",
@@ -1186,50 +1078,36 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                     doctor: ["臨床プロトコル資産を分析中...", "独自の肌変数をスキャン中..."]
                 },
                 dynamicTitle: {
-                    patient: { main: "あなたに最適な肌治療を", sub: "3分で無料AI診断" },
-                    doctor: { main: "価格競争から抜け出し,", sub: "独自の「シグネチャーソリューション」でファンダムを構築" }
+                    patient: {
+                        main: "肌の正解を探す旅、",
+                        sub: "AIと共にデザインしましょう"
+                    },
+                    doctor: {
+                        main: "「先生のこだわり」をデジタル資産に。",
+                        sub: "実力で選ばれるメディカルプラットフォーム"
+                    }
                 },
                 dynamicDesc: {
-                    patient: "無料AI診断。一番安い機器を探すのはやめましょう。あなたの臨床ロジックを理解するマスタードクターを見つけてください。",
-                    doctor: "単なる広報ではありません。院長の臨床ロジックをデジタルIPとして資産化し、準備されたVIP患者に直接届けます。シグネチャーコース料理を提供するシェフになりましょう。"
+                    patient: "「痛み・ダウンタイム・予算」3つの変数で描く、理想の肌シミュレーション。",
+                    doctor: "単純な診療を超えて、あなたのロジックを求める準備された患者に出会いましょう。"
                 },
-                dynamicCta: { patient: "私だけの施術設計を始める", doctor: "シグネチャー資産を登録" },
-                floatingText: "肌が持つ究極の透明感。あなたが知らなかった「Glass Skin」の正解を見つけてください。"
+                dynamicSubDesc: {
+                    patient: "価格競争ではなく、ロジックに基づいた最適な選択。",
+                    doctor: "メニューの売り手ではなく、シグネチャーコースを提供するシェフになりましょう。"
+                },
+                dynamicCta: {
+                    patient: "無料肌レポートを受け取る",
+                    doctor: "シグネチャー登録の問い合わせ"
+                },
+                floatingText: "あなたの肌が持つことのできる最も透明な光、あなたも知らなかった「グラススキン」の正解を見つけてください。"
             },
             judgment: {
-                badge: "AIマッチングシステム",
-                title: "肌は実験室ではありません。",
-                titleHighlight: "データで先に「フィッティング」してください。",
-                desc: "数多くのマーケティングノイズに疲れていませんか？ConnectingDocsはあなたの肌の厚さとリスク受容度を分析し、最も安全な「最適」を見つけ出します。高価な施術ではなく、あなただけの正解を選んでください。",
-                quote: "私たちはあなたの安全のために「正直なノー」を言います。肌に合わない施術は決して正解にはなりません。",
-                cta: "マイブループリント作成",
-                visualMatch: {
-                    title: "リアルタイム適合度分析",
-                    power: "機器出力",
-                    synergy: "スキンブースター相乗効果",
-                    pain: "痛み指数",
-                    downtime: "ダウンタイム",
-                    fit: "皮膚適合度",
-                    score: "マッチング率"
-                },
-                deviceSuitability: {
-                    targetArea: '主な施術部位',
-                    layer: 'ターゲット層',
-                    pain: '痛みの程度',
-                    downtime: 'ダウンタイム',
-                    suitability: '施術適合度',
-                    status: {
-                        suitable: '適合',
-                        caution: '注意',
-                        unsuitable: '不適合'
-                    },
-                    levels: {
-                        low: '低',
-                        medium: '中',
-                        high: '高'
-                    },
-                    learnMore: 'クリックして詳細を見る'
-                },
+                badge: "v2.0 SYSTEM ONLINE",
+                title: "お肌に試行錯誤はいりません。",
+                titleHighlight: "データで導き出す、あなただけの「美の設計図」。",
+                desc: "SNSの噂や短すぎるカウンセリングに不安を感じていませんか？AIがあなたの肌質や予算に合わせ、「失敗しない選択」を可視化します。もう迷わない、確信に基づいた美容を。",
+                quote: "「NO」と言えるのが、本当のプロフェッショナル。 あなたのリスクを避けるための、誠実な診断を提供します。",
+                cta: "私の肌設計を始める",
                 simulator: {
                     inputTitle: "施術条件の設定",
                     outputTitle: "達成可能な理想像",
@@ -1274,7 +1152,6 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             pricing: {
                 title: "プランの選択",
                 subtitle: "完璧を求める患者であれ、それを実現する医師であれ、私たちはあなたのためのプランを用意しています。",
-                mostPopular: "一番人気",
                 toggles: { patient: "患者用", doctor: "医師用" },
                 tiers: {
                     patient: {
@@ -1337,7 +1214,8 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                             missing: []
                         }
                     }
-                }
+                },
+                mostPopular: "一番人気"
             }
         },
         auth: {
@@ -1397,21 +1275,6 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             },
             footer: { cta: "🔒 マスタープロファイル解除＆予約", locked: "カスタマイズされた全推薦を表示" },
         },
-        usageGuide: {
-            title: "📋 レポートの活用方法",
-            step1: {
-                title: "1. AI インサイトの確認",
-                desc: "あなたの肌の状態と好みに基づき、AIが選んだ組み合わせの背後にある核となるロジックを理解してください。"
-            },
-            step2: {
-                title: "2. 機器とブースターの比較",
-                desc: "AIがあなたの特定のニーズに対する相乗効果を最大化するように設計された、厳選された機器とスキンブースターを提供します。"
-            },
-            step3: {
-                title: "3. マスタードクターに接続",
-                desc: "このレポートはあなたの処方箋です。この特定のプロトコルロジックを完璧に実行できる専門の「マスタードクター」プロファイルをロック解除します。"
-            }
-        },
         deepDive: {
             badge: "キュレーテッドソリューション",
             analyzing: "プロトコル分析中...",
@@ -1425,7 +1288,7 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             poweredBy: "臨床エンジン搭載",
             topSpecialists: "最適マッチング専門医",
             updateProtocol: "プロトコル再分析",
-            closeAnalysis: "レポートを保存してアカウントを作成",
+            closeAnalysis: "分析を閉じる",
             maxIntensity: "最大強度",
             collagenRemodeling: "コラーゲンリモデリング",
             resultsDisclaimer: "※ 結果は個人によって異なります。要カウンセリング。",
@@ -1558,66 +1421,52 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
                     doctor: ["正在分析临床方案资产...", "正在扫描您独特的皮肤变量..."]
                 },
                 dynamicTitle: {
-                    patient: { main: "寻找最适合您的皮肤治疗", sub: "3分钟免费AI分析" },
-                    doctor: { main: "摆脱价格战泥潭", sub: "用独家「招牌方案」建立死忠粉" }
+                    patient: {
+                        main: "拒绝盲从，开启“私享皮肤设计”",
+                        sub: "AI为您精准匹配全球前1%的招牌方案"
+                    },
+                    doctor: {
+                        main: "让医生的临床经验成为“数字资产”",
+                        sub: "告别价格战，用专业逻辑筛选全球顶级VIP"
+                    }
                 },
                 dynamicDesc: {
-                    patient: "免费AI分析。不要只找最便宜的设备。找到理解您临床逻辑的大师。",
-                    doctor: "这不仅仅是宣传。将院长的临床逻辑转化为数字IP，直接对接已准备好的VIP患者。成为提供招牌套餐的大厨吧。"
+                    patient: "疼痛、恢复期、预算——三重维度实时模拟，预见您的理想肌肤。",
+                    doctor: "咨询疲劳？将您的专有技术转化为吸引VIP患者的资产。"
                 },
-                dynamicCta: { patient: "开始我的专属施术设计", doctor: "注册招牌资产" },
-                floatingText: "你的皮肤所能拥有的最纯粹的光泽，找到你未曾发现的「水光肌」答案。"
+                dynamicSubDesc: {
+                    patient: "从价格战到逻辑驱动的选择：赋能前1%的连接。",
+                    doctor: "成为拥有签名课程的主厨，而不仅仅是菜单推销员。"
+                },
+                dynamicCta: {
+                    patient: "获取我的免费皮肤报告",
+                    doctor: "咨询签名注册"
+                },
+                floatingText: "发现您未曾知晓的“水光肌”答案。"
             },
             judgment: {
-                badge: "AI匹配系统",
-                title: "皮肤不是实验室。",
-                titleHighlight: "施术前用数据先进行「试穿」。",
-                desc: "厌倦了无数的营销噪音？ConnectingDocs分析您的皮肤厚度和风险承受度，找出最安全的「最优解」。选择基于原理的独家答案，而不是昂贵的施术。",
-                quote: "为了您的安全，我们要说「诚实的不」。因为不适合您皮肤的施术绝不可能是正确答案。",
-                cta: "开始我的蓝图设计",
-                visualMatch: {
-                    title: "实时适合度分析",
-                    power: "设备功率",
-                    synergy: "焕肤液协同",
-                    pain: "疼痛指数",
-                    downtime: "恢复期",
-                    fit: "皮肤适合度",
-                    score: "匹配率"
-                },
-                deviceSuitability: {
-                    targetArea: '主要治疗部位',
-                    layer: '目标层次',
-                    pain: '疼痛程度',
-                    downtime: '恢复期',
-                    suitability: '治疗适合度',
-                    status: {
-                        suitable: '适合',
-                        caution: '注意',
-                        unsuitable: '不适合'
-                    },
-                    levels: {
-                        low: '低',
-                        medium: '中',
-                        high: '高'
-                    },
-                    learnMore: '点击了解更多'
-                },
+                badge: "v2.0 SYSTEM ONLINE",
+                title: "您的皮肤不是试验场。",
+                titleHighlight: "治疗前，先用数据进行‘预演’。",
+                desc: "厌倦了营销噱头和流水线式咨询？不要拿自己的脸做实验。我们分析您的临床变量，为您找到‘安全且最优’的方案。选择符合您皮肤逻辑的方案，而不仅仅是看价格。",
+                quote: "为了您的安全，我们会诚实地说‘不’。如果方案不符合您的皮肤逻辑，我们绝不推荐。",
+                cta: "开始我的皮肤设计",
                 simulator: {
                     inputTitle: "设定您的治疗条件",
                     outputTitle: "可达成的理想状态",
                     sliders: {
-                        pain: "痛感容忍度",
-                        downtime: "可接受恢复期",
+                        pain: "疼痛耐受度",
+                        downtime: "恢复期",
                         budget: "预算范围",
                         sessions: "期望疗程次数",
                         speed: "见效速度"
                     },
                     radar: {
-                        lifting: "轮廓与提升",
-                        firmness: "紧致与密度",
-                        texture: "肤质与毛孔",
-                        glow: "内透与光泽",
-                        safety: "安全与屏障"
+                        lifting: "轮廓提拉",
+                        firmness: "紧致密度",
+                        texture: "肤质毛孔",
+                        glow: "焕采光泽",
+                        safety: "安全护屏"
                     }
                 }
             },
@@ -1769,21 +1618,6 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             },
             footer: { cta: "🔒 解锁主档案并预约", locked: "查看完整个性化推荐" },
         },
-        usageGuide: {
-            title: "📋 如何使用此报告",
-            step1: {
-                title: "1. 审查AI见解",
-                desc: "了解基于您的皮肤状况和偏好，AI选择该组合背后的核心逻辑。"
-            },
-            step2: {
-                title: "2. 比较设备和助推器",
-                desc: "AI提供一系列精选的设备和皮肤助推器，旨在最大化满足您特定需求的协同效应。"
-            },
-            step3: {
-                title: "3. 联系专家医生",
-                desc: "您的报告就是您的处方。解锁能为您完美执行此特定方案逻辑的专科“专家医生”档案。"
-            }
-        },
         deepDive: {
             badge: "精选方案",
             analyzing: "正在分析方案...",
@@ -1797,7 +1631,7 @@ export const REPORT_TRANSLATIONS: Record<string, TranslationStructure> = {
             poweredBy: "由临床引擎提供支持",
             topSpecialists: "最优匹配专家",
             updateProtocol: "更新方案",
-            closeAnalysis: "保存报告并创建账户",
+            closeAnalysis: "关闭分析",
             maxIntensity: "最大强度",
             collagenRemodeling: "胶原重塑",
             resultsDisclaimer: "* 效果因人而异。需要专业咨询。",

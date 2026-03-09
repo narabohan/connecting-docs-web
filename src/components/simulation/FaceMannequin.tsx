@@ -1,171 +1,151 @@
 'use client';
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { LanguageCode } from '@/utils/translations';
 
 interface FaceMannequinProps {
-    primaryZones: string[];   // External selection (from survey/protocol)
-    secondaryZones?: string[]; // Secondary selection (optional)
+    primaryZones: string[];   // Main target zones (Cyan highlight)
+    secondaryZones?: string[]; // Secondary zones (Amber)
     language?: LanguageCode;
     protocolName?: string;
 }
 
 const ZONE_LABELS: Record<LanguageCode, Record<string, string>> = {
-    EN: { Forehead: 'FOREHEAD', Periorbital: 'PERIORBITAL', Cheek: 'CHEEK', Jawline: 'JAWLINE', Submental: 'SUBMENTAL', Neck: 'NECK' },
-    KO: { Forehead: '이마', Periorbital: '눈가', Cheek: '광대/볼', Jawline: '턱선', Submental: '이중턱/턱밑', Neck: '목' },
-    JP: { Forehead: '額', Periorbital: '目元', Cheek: '頬', Jawline: 'あご線', Submental: '顎下', Neck: '首' },
-    CN: { Forehead: '额头', Periorbital: '眼周', Cheek: '脸颊', Jawline: '下颌线', Submental: '下颌下', Neck: '颈部' },
+    EN: { Forehead: 'FOREHEAD', Cheek: 'CHEEK', Jawline: 'JAWLINE', EyeArea: 'EYE AREA', Nose: 'NOSE', Neck: 'NECK' },
+    KO: { Forehead: '이마', Cheek: '볼', Jawline: '턱선', EyeArea: '눈가', Nose: '코', Neck: '목' },
+    JP: { Forehead: '額', Cheek: '頬', Jawline: 'あご', EyeArea: '目元', Nose: '鼻', Neck: '首' },
+    CN: { Forehead: '额头', Cheek: '脸颊', Jawline: '下颌', EyeArea: '眼周', Nose: '鼻子', Neck: '颈部' },
 };
 
-/**
- * Precision Polygon Coordinates.
- * Forehead is updated with the exact coordinates provided by the user from the mapping tool.
- * The viewBox is set to 800x1000 to match high-res input precision.
- */
-const ZONES = [
-    { id: 'Forehead', points: "241,285 187,298 140,312 159,254 170,206 191,169 225,129 266,106 322,106 377,125 504,199 625,306 575,334 489,298 423,260 378,259 329,268 291,277 246,284 243,285 243,285", labelPos: { x: 380, y: 200 } },
-    { id: 'Periorbital', points: "301,326 400,291 483,304 577,334 625,339 632,385 521,450 395,500 309,494 307,409 305,327 302,327 302,327", labelPos: { x: 420, y: 400 } },
-    { id: 'Cheek', points: "309,494 408,491 522,454 635,392 670,464 651,537 537,620 446,653 381,654 366,600 329,569 310,496 310,496 310,496", labelPos: { x: 500, y: 550 } },
-    { id: 'Jawline', points: "368,674 446,656 534,625 648,542 687,522 699,577 669,643 615,703 553,759 478,804 412,833 314,857 260,801 252,720 307,706 367,673 368,673 368,673", labelPos: { x: 550, y: 780 } },
-    { id: 'Submental', points: "305,857 412,835 489,801 553,761 617,703 666,652 702,589 714,610 674,669 633,721 566,789 502,828 435,861 399,854 382,844 382,844", labelPos: { x: 500, y: 920 } },
-    { id: 'Neck', points: "398,857 436,861 521,821 568,791 624,736 651,705 678,672 704,646 721,731 737,799 762,869 725,936 648,1002 581,1023 524,1024 483,1023 448,994 411,966 397,858 396,855 396,855", labelPos: { x: 580, y: 950 } },
-];
+const NO_ZONE_MSG: Record<LanguageCode, string> = {
+    EN: 'Select a treatment above',
+    KO: '위의 시술을 선택하세요',
+    JP: '上の治療を選択してください',
+    CN: '请选择上方的治疗方案',
+};
 
-export default function FaceMannequin({ primaryZones = [], secondaryZones = [], language = 'EN', protocolName }: FaceMannequinProps) {
-    const [hoveredZone, setHoveredZone] = useState<string | null>(null);
+// Zone position + shape on the face SVG canvas (cx, cy, rx, ry in %)
+const ZONE_SHAPES: Record<string, { cx: number; cy: number; rx: number; ry: number; labelDy?: number }> = {
+    Forehead: { cx: 50, cy: 22, rx: 28, ry: 10 },
+    EyeArea: { cx: 50, cy: 38, rx: 32, ry: 7 },
+    Nose: { cx: 50, cy: 50, rx: 8, ry: 10 },
+    Cheek: { cx: 50, cy: 55, rx: 30, ry: 9 },
+    Jawline: { cx: 50, cy: 68, rx: 25, ry: 7 },
+    Neck: { cx: 50, cy: 82, rx: 15, ry: 9 },
+};
+
+export default function FaceMannequin({ primaryZones, secondaryZones = [], language = 'EN', protocolName }: FaceMannequinProps) {
     const zoneLabels = ZONE_LABELS[language] || ZONE_LABELS['EN'];
-
-    // Define color constants
-    const COLOR_CYAN = "#00F0FF";
+    const noZoneMsg = NO_ZONE_MSG[language] || NO_ZONE_MSG['EN'];
+    const hasZones = primaryZones.length > 0 || secondaryZones.length > 0;
 
     return (
-        <div className="flex flex-col h-full bg-[#03060A] rounded-2xl border border-white/5 overflow-hidden shadow-[0_0_80px_rgba(0,240,255,0.05)_inset]">
+        <div className="flex flex-col h-full bg-[#060618] rounded-2xl border border-white/5 overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.6)]">
             {/* Header */}
-            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-black/40 backdrop-blur-md relative z-30">
-                <div className="flex flex-col">
-                    <span className="text-[10px] font-mono tracking-[0.3em] text-[#00F0FF] flex items-center gap-2 font-bold uppercase">
-                        <span className="w-2 h-2 rounded-full bg-[#00F0FF] animate-pulse shadow-[0_0_8px_#00F0FF]" />
-                        Anatomical Precision Scan
-                    </span>
-                    <span className="text-[9px] text-white/30 font-mono mt-0.5 tracking-wider">MAPPED_COORDS: ACTIVE</span>
-                </div>
+            <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+                <span className="text-[9px] font-mono tracking-[0.25em]" style={{ color: 'rgba(0,255,255,0.6)' }}>
+                    ◈ TREATMENT ZONES
+                </span>
                 {protocolName && (
-                    <div className="text-right">
-                        <div className="text-[10px] font-mono text-white/50 uppercase tracking-tighter italic truncate max-w-[120px]">{protocolName}</div>
-                    </div>
+                    <span className="text-[9px] font-mono truncate max-w-[120px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                        {protocolName}
+                    </span>
                 )}
             </div>
 
-            {/* Analysis Interactive Area */}
-            <div className="flex-1 relative flex items-center justify-center p-4 bg-[#03060A]">
-
-                {/* Image & SVG Overlay */}
-                <div className="relative w-full aspect-[818/1024] rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-black">
-
-                    {/* The Provided Face Illustration */}
-                    <img
-                        src="/images/concepts/face_blueprint.png"
-                        alt="Facial Analysis Base"
-                        className="w-full h-full object-cover opacity-80 mix-blend-screen"
-                    />
-
-                    {/* SVG INTERACTIVE OVERLAY - ViewBox matched to high-res input */}
-                    <svg
-                        viewBox="0 0 818 1024"
-                        className="absolute inset-0 w-full h-full cursor-crosshair z-20"
-                    >
-                        <defs>
-                            <filter id="neonCyanGlow" x="-50%" y="-50%" width="200%" height="200%">
-                                <feGaussianBlur stdDeviation="15" result="blur" />
-                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                            </filter>
-                        </defs>
-
-                        {ZONES.map((zone) => {
-                            const isExternalActive = primaryZones.includes(zone.id);
-                            const isHovered = hoveredZone === zone.id;
-                            const isActive = isExternalActive || isHovered;
-
-                            return (
-                                <g
-                                    key={zone.id}
-                                    onMouseEnter={() => setHoveredZone(zone.id)}
-                                    onMouseLeave={() => setHoveredZone(null)}
-                                    className="cursor-pointer pointer-events-auto"
-                                >
-                                    {/* Precision Polygon Zone */}
-                                    <polygon
-                                        points={zone.points}
-                                        fill={isExternalActive ? "rgba(0, 240, 255, 0.2)" : (secondaryZones.includes(zone.id) ? "rgba(255, 191, 0, 0.15)" : "transparent")}
-                                        stroke={isExternalActive ? "#00F0FF" : (secondaryZones.includes(zone.id) ? "#FFBF00" : "rgba(0, 240, 255, 0.05)")}
-                                        strokeWidth={isActive ? "4" : "1"}
-                                        filter={isActive ? "url(#neonCyanGlow)" : "none"}
-                                        className="transition-all duration-300 ease-in-out"
-                                        style={{
-                                            strokeDasharray: isActive ? "none" : "8, 4"
-                                        }}
-                                    />
-
-                                    {/* Data Labels & Markers */}
-                                    <AnimatePresence>
-                                        {isActive && (
-                                            <motion.g
-                                                initial={{ opacity: 0, scale: 0.9 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                exit={{ opacity: 0, scale: 0.9 }}
-                                            >
-                                                {/* Label Box */}
-                                                <rect
-                                                    x={zone.labelPos.x - 60}
-                                                    y={zone.labelPos.y - 15}
-                                                    width="120"
-                                                    height="30"
-                                                    fill="black"
-                                                    stroke="#00F0FF"
-                                                    strokeWidth="1.5"
-                                                    rx="4"
-                                                />
-                                                <text
-                                                    x={zone.labelPos.x}
-                                                    y={zone.labelPos.y + 6}
-                                                    textAnchor="middle"
-                                                    fontSize="14"
-                                                    fill="white"
-                                                    fontFamily="monospace"
-                                                    fontWeight="bold"
-                                                    className="uppercase tracking-widest"
-                                                >
-                                                    {zoneLabels[zone.id]}
-                                                </text>
-                                            </motion.g>
-                                        )}
-                                    </AnimatePresence>
-                                </g>
-                            );
-                        })}
-                    </svg>
-
-                    {/* Scanning Optical Effect */}
-                    <div className="absolute inset-0 pointer-events-none opacity-10 overflow-hidden">
-                        <div className="w-full h-1 bg-[#00F0FF] blur-md animate-[scan_10s_linear_infinite]" />
+            {/* SVG Face Map */}
+            <div className="flex-1 flex items-center justify-center p-4 relative">
+                {!hasZones && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                        <p className="text-[10px] font-mono text-center px-4" style={{ color: 'rgba(255,255,255,0.3)' }}>{noZoneMsg}</p>
                     </div>
-                </div>
+                )}
+
+                <svg viewBox="0 0 100 100" className="w-full max-w-[200px] h-auto" style={{ opacity: hasZones ? 1 : 0.3 }}>
+                    {/* Face silhouette */}
+                    <ellipse cx="50" cy="48" rx="30" ry="40"
+                        fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5" />
+                    {/* Neck */}
+                    <rect x="40" y="85" width="20" height="12" rx="3"
+                        fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />
+                    {/* Face feature guides (subtle) */}
+                    {/* Eyes */}
+                    <ellipse cx="38" cy="38" rx="5" ry="3" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="0.4" />
+                    <ellipse cx="62" cy="38" rx="5" ry="3" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="0.4" />
+                    {/* Nose hint */}
+                    <path d="M 47 46 Q 50 54 53 46" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="0.4" />
+                    {/* Mouth */}
+                    <path d="M 42 62 Q 50 67 58 62" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="0.4" />
+                    {/* Jaw line */}
+                    <path d="M 20 55 Q 50 88 80 55" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />
+
+                    {/* Secondary zones (orange/amber) */}
+                    {secondaryZones.filter(z => !primaryZones.includes(z)).map(zone => {
+                        const shape = ZONE_SHAPES[zone];
+                        if (!shape) return null;
+                        return (
+                            <g key={`sec-${zone}`}>
+                                <ellipse
+                                    cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry}
+                                    fill="rgba(251,146,60,0.18)"
+                                    stroke="rgba(251,146,60,0.7)"
+                                    strokeWidth="0.8"
+                                    className="animate-pulse"
+                                    style={{ filter: 'drop-shadow(0 0 4px rgba(251,146,60,0.6))' }}
+                                />
+                                <text x={shape.cx} y={shape.cy + (shape.labelDy || 1)} textAnchor="middle"
+                                    fontSize="3.5" fill="rgba(251,146,60,0.9)" fontFamily="monospace" fontWeight="bold">
+                                    {zoneLabels[zone] || zone}
+                                </text>
+                            </g>
+                        );
+                    })}
+
+                    {/* Primary zones (cyan — full highlight) */}
+                    {primaryZones.map(zone => {
+                        const shape = ZONE_SHAPES[zone];
+                        if (!shape) return null;
+                        return (
+                            <g key={`pri-${zone}`}>
+                                <ellipse
+                                    cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry}
+                                    fill="rgba(0,255,255,0.2)"
+                                    stroke="rgba(0,255,255,0.9)"
+                                    strokeWidth="1"
+                                    className="animate-pulse"
+                                    style={{ filter: 'drop-shadow(0 0 6px rgba(0,255,255,0.8))' }}
+                                />
+                                <text x={shape.cx} y={shape.cy + (shape.labelDy || 1)} textAnchor="middle"
+                                    fontSize="3.5" fill="white" fontFamily="monospace" fontWeight="bold"
+                                    style={{ textShadow: '0 0 4px rgba(0,255,255,1)' }}>
+                                    {zoneLabels[zone] || zone}
+                                </text>
+                            </g>
+                        );
+                    })}
+                </svg>
             </div>
 
-            {/* Precision Legend */}
-            <div className="px-5 py-4 bg-black/60 border-t border-white/5 backdrop-blur-lg flex items-center justify-between z-30">
-                <div className="flex gap-4">
-                    <div className="flex items-center gap-1.5 font-mono">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#00F0FF] shadow-[0_0_5px_#00F0FF]" />
-                        <span className="text-[9px] text-white/70 uppercase tracking-widest">Target Core</span>
+            {/* Zone Legend */}
+            <div className="px-4 pb-3 space-y-1">
+                {primaryZones.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                        {primaryZones.map(z => (
+                            <span key={z} className="text-[9px] px-2 py-0.5 rounded font-mono"
+                                style={{ background: 'rgba(0,255,255,0.1)', border: '1px solid rgba(0,255,255,0.4)', color: '#00FFFF' }}>
+                                ● {zoneLabels[z] || z}
+                            </span>
+                        ))}
                     </div>
-                    <div className="text-[9px] text-white/30 uppercase mono tracking-tighter">
-                        {primaryZones.length > 0 ? `${primaryZones.length} Zones Targeted` : 'Standby Mode'}
+                )}
+                {secondaryZones.filter(z => !primaryZones.includes(z)).length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                        {secondaryZones.filter(z => !primaryZones.includes(z)).map(z => (
+                            <span key={z} className="text-[9px] px-2 py-0.5 rounded font-mono"
+                                style={{ background: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.35)', color: 'rgb(251,146,60)' }}>
+                                ○ {zoneLabels[z] || z}
+                            </span>
+                        ))}
                     </div>
-                </div>
-                <div className="text-[9px] font-mono text-[#00F0FF] animate-pulse uppercase tracking-[0.2em] font-bold">
-                    Scan Active
-                </div>
+                )}
             </div>
         </div>
     );

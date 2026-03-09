@@ -1,19 +1,18 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
-import { Loader2, Download, Lock, Activity, Stethoscope } from 'lucide-react';
+import { Loader2, Download, Lock, ArrowLeft, Stethoscope, Sparkles } from 'lucide-react';
 
 import AlignmentHero from '@/components/report/AlignmentHero';
 import WhatIfSliders from '@/components/report/WhatIfSliders';
 import TrafficLightRisk from '@/components/report/TrafficLightRisk';
-import IntelligenceEngine from '@/components/premium/IntelligenceEngine';
-import SignatureGallery from '@/components/premium/SignatureGallery';
-import SkinBoosterRecommendations from '@/components/curation/SkinBoosterRecommendations';
+import Top3Solutions from '@/components/report/Top3Solutions';
 import UnlockModal from '@/components/report/UnlockModal';
+import PatientProfileSummary from '@/components/report/PatientProfileSummary';
 import SkinSimulationContainer from '@/components/simulation/SkinSimulationContainer';
-import DoctorClinicalPanel from '@/components/doctor/DoctorClinicalPanel';
+import DoctorClinicalPanel, { WizardData } from '@/components/report/DoctorClinicalPanel';
 import { REPORT_TRANSLATIONS, LanguageCode } from '@/utils/translations';
-
+import { useAuth } from '@/context/AuthContext';
 
 const DEFAULT_RADAR_DATA = [
     { subject: 'Skin Thickness', A: 72, fullMark: 100 },
@@ -33,17 +32,17 @@ const DEFAULT_RISKS = [
 export default function ReportPage() {
     const router = useRouter();
     const { id } = router.query;
+    const { user } = useAuth();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
-    const [isSimulationModalOpen, setIsSimulationModalOpen] = useState(false);
-    const [selectedProtocolId, setSelectedProtocolId] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [alignmentScore, setAlignmentScore] = useState(92);
     const [isRecalculating, setIsRecalculating] = useState(false);
+    const [doctorPanelOpen, setDoctorPanelOpen] = useState(true);
+    const [selectedProtocol, setSelectedProtocol] = useState<any>(null);
 
-    // Check if the current viewer is a doctor
-    const isDoctor = router.query.role === 'doctor';
+    const isDoctor = user?.role === 'doctor';
 
     useEffect(() => {
         if (!id) return;
@@ -70,11 +69,10 @@ export default function ReportPage() {
             if (res.ok) {
                 const json = await res.json();
                 setData(json);
-                // Scroll to top to see new recommendations
                 window.scrollTo({ top: 300, behavior: 'smooth' });
             }
         } catch (error) {
-            console.error("Recalculate failed", error);
+            console.error('Recalculate failed', error);
         } finally {
             setIsRecalculating(false);
         }
@@ -87,10 +85,10 @@ export default function ReportPage() {
     if (loading) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center font-mono"
-                style={{ background: '#03060A', color: 'white' }}>
-                <Loader2 className="w-12 h-12 animate-spin mb-4" style={{ color: '#00FFA0' }} />
-                <div className="text-sm tracking-widest animate-pulse" style={{ color: 'rgba(0,255,160,0.8)' }}>
-                    {t.loading?.title || 'GENERATING CLINICAL REPORT...'}
+                style={{ background: '#0a0a2a', color: 'white' }}>
+                <Loader2 className="w-12 h-12 animate-spin mb-4" style={{ color: '#00FFFF' }} />
+                <div className="text-sm tracking-widest animate-pulse" style={{ color: 'rgba(0,255,255,0.8)' }}>
+                    {isDoctor ? 'LOADING CLINICAL DATA...' : (t.loading?.title || 'GENERATING CLINICAL REPORT...')}
                 </div>
                 <div className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
                     {t.loading?.subtitle || 'Cross-referencing 847 protocols'}
@@ -115,20 +113,10 @@ export default function ReportPage() {
     const risks = data?.logic?.risks?.length > 0 ? data.logic.risks : DEFAULT_RISKS;
     const recommendations = data?.recommendations || [];
 
-    // PDF Download Handler
-    const handleDownloadPDF = () => {
-        // Automatically print background colors and UI styling using the browser's high-fidelity print engine.
-        window.print();
-    };
-
-    const openDeepDive = (selId: string | null) => {
-        setSelectedProtocolId(selId);
-        if (isDoctor) {
-            setIsSimulationModalOpen(true);
-        } else {
-            setIsUnlockModalOpen(true);
-        }
-    };
+    // Try to parse WizardData from report data
+    const wizardData: WizardData | null = data?.wizardData || data?.patient?.wizardData || null;
+    const patientEmail = data?.patient?.email || '';
+    const matchScore = data?.alignmentScore || alignmentScore;
 
     return (
         <div className="min-h-screen selection:bg-cyan-500/30 font-mono"
@@ -150,35 +138,56 @@ export default function ReportPage() {
                 style={{
                     background: 'rgba(10,10,42,0.88)',
                     backdropFilter: 'blur(20px)',
-                    borderBottom: '1px solid rgba(0,255,255,0.08)',
+                    borderBottom: isDoctor ? '1px solid rgba(0,255,180,0.15)' : '1px solid rgba(0,255,255,0.08)',
                 }}>
                 <div className="container mx-auto px-6 h-14 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => router.push(isDoctor ? '/doctor/waitlist' : '/dashboard')}
-                            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/60 hover:text-white"
-                        >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                            </svg>
-                        </button>
-                        <div className="font-bold tracking-tighter text-sm uppercase hidden sm:block">
-                            Connecting<span style={{ color: '#00FFA0' }}>Docs</span>
+                    <div className="flex items-center gap-3">
+                        {/* Back navigation */}
+                        {isDoctor && (
+                            <button
+                                onClick={() => router.push('/doctor/waitlist')}
+                                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                                title="Back to Waitlist"
+                            >
+                                <ArrowLeft className="w-4 h-4 text-gray-400" />
+                            </button>
+                        )}
+                        {!isDoctor && (
+                            <button
+                                onClick={() => router.push('/dashboard')}
+                                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                                title="Back to Dashboard"
+                            >
+                                <ArrowLeft className="w-4 h-4 text-gray-400" />
+                            </button>
+                        )}
+                        <div className="font-bold tracking-tighter text-sm">
+                            Connecting<span style={{ color: '#00FFFF' }}>Docs</span>
                             <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded font-normal"
-                                style={{ background: 'rgba(0,255,160,0.08)', color: 'rgba(0,255,160,0.6)', border: '1px solid rgba(0,255,160,0.15)' }}>
-                                INTELLIGENCE REPORT
+                                style={{ background: 'rgba(0,255,255,0.08)', color: 'rgba(0,255,255,0.6)', border: '1px solid rgba(0,255,255,0.15)' }}>
+                                {isDoctor ? 'DOCTOR VIEW' : 'INTELLIGENCE REPORT'}
                             </span>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button className="text-xs font-mono transition-colors flex items-center gap-1 hover:text-white"
+                        {isDoctor && (
+                            <button
+                                className="text-xs font-mono transition-colors flex items-center gap-1 px-3 py-1 rounded-lg border"
+                                style={{ color: '#00FFB4', borderColor: 'rgba(0,255,180,0.2)', background: 'rgba(0,255,180,0.05)' }}
+                                onClick={() => setDoctorPanelOpen(!doctorPanelOpen)}
+                            >
+                                <Stethoscope className="w-3.5 h-3.5" />
+                                {doctorPanelOpen ? 'Hide' : 'Show'} Clinical Panel
+                            </button>
+                        )}
+                        <button className="text-xs font-mono transition-colors flex items-center gap-1"
                             style={{ color: 'rgba(255,255,255,0.4)' }}
-                            onClick={handleDownloadPDF}>
+                            onClick={() => window.print()}>
                             <Download className="w-3.5 h-3.5" /> Export PDF
                         </button>
                         <div className="h-3 w-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
                         <div className="text-[10px] font-bold tracking-widest px-2 py-1 rounded"
-                            style={{ color: '#00FFA0', background: 'rgba(0,255,160,0.08)', border: '1px solid rgba(0,255,160,0.15)' }}>
+                            style={{ color: '#00FFFF', background: 'rgba(0,255,255,0.08)', border: '1px solid rgba(0,255,255,0.15)' }}>
                             {language}
                         </div>
                     </div>
@@ -187,11 +196,30 @@ export default function ReportPage() {
 
             <main className="container mx-auto px-6 pt-20 pb-28">
 
-                {isDoctor && (
-                    <DoctorClinicalPanel data={data} language={language} />
+                {/* ── Doctor Clinical Panel (shown above standard report) ── */}
+                {isDoctor && doctorPanelOpen && (
+                    <section className="mb-8 mt-4">
+                        <div className="p-6 rounded-2xl border"
+                            style={{ background: 'rgba(0,15,30,0.8)', borderColor: 'rgba(0,255,180,0.15)' }}>
+                            <DoctorClinicalPanel
+                                wizardData={wizardData}
+                                patientEmail={patientEmail}
+                                score={matchScore}
+                            />
+                        </div>
+                    </section>
                 )}
 
-                {/* ① Section A: Hero — Score Ring + Radar + AI Terminal */}
+                {/* ① Patient Profile Summary */}
+                {!isDoctor && (
+                    <PatientProfileSummary
+                        patientSummary={data?.patientSummary}
+                        wizardData={data?.wizardData || data?.patient}
+                        language={language}
+                    />
+                )}
+
+                {/* ② Section A: Hero — Score Ring + Radar + AI Terminal */}
                 <AlignmentHero
                     score={alignmentScore}
                     radarData={profileData}
@@ -199,24 +227,6 @@ export default function ReportPage() {
                     terminalText={logicText}
                     patientName={patientName}
                 />
-
-                {/* ①-2 Clinical Analysis Summary (Reason Why) */}
-                {logicText && (
-                    <section className="mb-12 mt-6">
-                        <div className="bg-[#111111] border border-[#00FFA0]/20 rounded-2xl p-6 relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-[#00FFA0]" />
-                            <div className="flex items-center gap-2 mb-4">
-                                <Activity className="w-5 h-5 text-[#00FFA0]" />
-                                <h3 className="text-white font-bold text-lg font-mono tracking-tighter uppercase italic">
-                                    Clinical Analysis Summary
-                                </h3>
-                            </div>
-                            <div className="text-slate-300 leading-relaxed font-sans text-sm md:text-base whitespace-pre-line">
-                                {logicText}
-                            </div>
-                        </div>
-                    </section>
-                )}
 
                 {/* ② Section D: What-If Sliders */}
                 <WhatIfSliders
@@ -228,154 +238,124 @@ export default function ReportPage() {
                 {/* ③ Section B: Traffic Light Risk Filter */}
                 <TrafficLightRisk risks={risks} language={language} />
 
-                {/* ④ Premium Intelligence & Curation */}
-                <IntelligenceEngine language={language} recommendations={recommendations} />
-
-                <SignatureGallery
-                    language={language}
+                {/* ④ Section C: Top 3 Signature Solutions */}
+                <Top3Solutions
                     recommendations={recommendations}
-                    onStartAnalysis={() => setIsUnlockModalOpen(true)}
-                    onViewDeepDive={(rank) => {
-                        const sel = recommendations[rank - 1]?.id || null;
-                        openDeepDive(sel);
-                    }}
+                    language={language}
+                    goals={goals}
+                    onUnlock={() => !isDoctor && setIsModalOpen(true)}
+                    onSelectProtocol={!isDoctor ? (p) => setSelectedProtocol(p) : undefined}
+                    selectedProtocolId={selectedProtocol?.id}
                 />
 
-                <SkinBoosterRecommendations language={language} recommendations={recommendations} />
+                {/* ⑤ Skin Simulation */}
+                <section className="mb-8">
+                    <SkinSimulationContainer
+                        language={language}
+                        simulationData={data?.patient?.simulationData}
+                        recommendations={recommendations}
+                        onRecalculate={handleRecalculate}
+                        isRecalculating={isRecalculating}
+                    />
+                </section>
 
-                {/* <SkinSimulationContainer> intentional omission: User requested that face layers should only appear when expanding specific solutions in the modal */}
-
-                {/* ⑥ How to Use This Report (Patient Only) */}
-                {!isDoctor && t.usageGuide && (
-                    <section className="mb-12 mt-16 max-w-4xl mx-auto">
-                        <div className="bg-[#111111] border border-[#00FFA0]/30 rounded-2xl p-6 lg:p-8 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#00FFA0]/5 rounded-bl-full pointer-events-none" />
-                            <h2 className="text-[#00FFA0] text-xl md:text-2xl font-bold font-mono uppercase tracking-tight mb-8">
-                                {t.usageGuide.title}
-                            </h2>
-                            <div className="space-y-6">
-                                {[
-                                    { icon: <Activity className="w-5 h-5" />, title: t.usageGuide.step1.title, desc: t.usageGuide.step1.desc },
-                                    { icon: <Stethoscope className="w-5 h-5" />, title: t.usageGuide.step2.title, desc: t.usageGuide.step2.desc },
-                                    { icon: <Lock className="w-5 h-5" />, title: t.usageGuide.step3.title, desc: t.usageGuide.step3.desc }
-                                ].map((step, idx) => (
-                                    <div key={idx} className="flex gap-4 items-start">
-                                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#00FFA0]/10 border border-[#00FFA0]/30 flex items-center justify-center text-[#00FFA0]">
-                                            {step.icon}
-                                        </div>
-                                        <div>
-                                            <h4 className="text-white font-bold font-mono text-[15px] mb-1">{step.title}</h4>
-                                            <p className="text-slate-400 text-sm leading-relaxed">{step.desc}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                {/* ⑥ Next Steps / Guidance */}
+                <section className="mb-20">
+                    <div className="p-8 rounded-3xl border border-white/10 bg-gradient-to-br from-black to-[#05051a]">
+                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                            <Sparkles className="w-5 h-5 text-cyan-400" />
+                            {language === 'KO' ? '다음 단계 가이드' : 'Next Steps & Guidance'}
+                        </h3>
+                        <div className="grid md:grid-cols-3 gap-6">
+                            {[
+                                {
+                                    title: language === 'KO' ? '1. 리포트 저장' : '1. Save Report',
+                                    desc: language === 'KO' ? '마스터 프로필을 잠금 해제하여 전체 내용을 소장하세요.' : 'Unlock the Master Profile to save all details securely.'
+                                },
+                                {
+                                    title: language === 'KO' ? '2. 전문가 상담' : '2. Consult Master',
+                                    desc: language === 'KO' ? '매칭된 원장님께 리포트 ID를 공유하고 정밀 상담을 예약하세요.' : 'Share your Report ID with the matched doctor for precise consultation.'
+                                },
+                                {
+                                    title: language === 'KO' ? '3. 프로토콜 적용' : '3. Apply Protocol',
+                                    desc: language === 'KO' ? 'AI가 추천한 장비 조합으로 시술 계획을 확정하고 진행하세요.' : 'Finalize and proceed with the AI-recommended treatment plan.'
+                                }
+                            ].map((step, i) => (
+                                <div key={i} className="p-5 rounded-2xl bg-white/5 border border-white/5">
+                                    <div className="text-cyan-400 font-bold mb-2">{step.title}</div>
+                                    <p className="text-xs text-gray-400 leading-relaxed">{step.desc}</p>
+                                </div>
+                            ))}
                         </div>
-                    </section>
-                )}
+                    </div>
+                </section>
 
             </main>
 
-            {/* ── Sticky Footer CTA (Section E) ── */}
-            <div className="fixed bottom-0 left-0 right-0 z-40"
-                style={{ backdropFilter: 'blur(20px)', background: 'rgba(10,10,42,0.95)', borderTop: '1px solid rgba(0,255,255,0.12)' }}>
-                <div className="container mx-auto px-6 py-3 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#00FFA0', boxShadow: '0 0 8px #00FFA0' }} />
-                        <span className="text-xs font-mono hidden sm:block" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                            {isDoctor
-                                ? 'Patient profile & contact preferences are ready'
-                                : (rt?.footer?.locked || 'Master Doctor profile & clinic details are ready to unlock')}
-                        </span>
+            {/* ── Sticky Footer CTA — hidden for doctors ── */}
+            {!isDoctor && (
+                <div className="fixed bottom-0 left-0 right-0 z-40"
+                    style={{ backdropFilter: 'blur(20px)', background: 'rgba(10,10,42,0.95)', borderTop: '1px solid rgba(0,255,255,0.12)' }}>
+                    <div className="container mx-auto px-6 py-3 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#00FFFF', boxShadow: '0 0 8px #00FFFF' }} />
+                            <span className="text-xs font-mono hidden sm:block" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                                {rt?.footer?.locked || 'Master Doctor profile & clinic details are ready to unlock'}
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold font-mono transition-all hover:scale-105"
+                            style={{
+                                background: 'linear-gradient(135deg, #00FFFF, #00b4d8)',
+                                color: '#0a0a2a',
+                                boxShadow: '0 0 20px rgba(0,255,255,0.4), 0 0 40px rgba(0,255,255,0.15)',
+                                animation: 'pulse-glow 2s ease-in-out infinite',
+                            }}>
+                            <Lock className="w-3.5 h-3.5" />
+                            {rt?.footer?.cta || '🔒 Unlock Master Profile & Book'}
+                        </button>
                     </div>
-                    <button
-                        onClick={() => setIsUnlockModalOpen(true)}
-                        className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold font-mono transition-all hover:scale-105"
-                        style={{
-                            background: 'linear-gradient(135deg, #00FFA0, #00d480)',
-                            color: '#03060A',
-                            boxShadow: '0 0 20px rgba(0,255,160,0.4), 0 0 40px rgba(0,255,160,0.15)',
-                            animation: 'pulse-glow 2s ease-in-out infinite',
-                        }}>
-                        <Lock className="w-3.5 h-3.5" />
-                        {isDoctor
-                            ? 'Connect with Patient'
-                            : (rt?.footer?.cta || '🔒 Unlock Master Profile & Book')}
-                    </button>
                 </div>
-            </div>
+            )}
+
+            {/* ── Doctor Footer Bar ── */}
+            {isDoctor && (
+                <div className="fixed bottom-0 left-0 right-0 z-40"
+                    style={{ backdropFilter: 'blur(20px)', background: 'rgba(0,10,20,0.95)', borderTop: '1px solid rgba(0,255,180,0.12)' }}>
+                    <div className="container mx-auto px-6 py-3 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <Stethoscope className="w-4 h-4 text-emerald-400" />
+                            <span className="text-xs font-mono text-emerald-400 font-bold">Doctor Mode Active</span>
+                            <span className="text-xs text-gray-500">Patient: {patientEmail || patientName}</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => router.push('/doctor/waitlist')}
+                                className="px-4 py-1.5 rounded-lg border border-white/15 bg-white/5 text-white text-xs font-bold hover:bg-white/10 transition-colors"
+                            >
+                                ← Waitlist
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <style>{`
                 @keyframes pulse-glow {
                     0%, 100% { box-shadow: 0 0 20px rgba(0,255,255,0.4), 0 0 40px rgba(0,255,255,0.15); }
                     50% { box-shadow: 0 0 30px rgba(0,255,255,0.7), 0 0 60px rgba(0,255,255,0.3); }
                 }
-                
-                /* Sensible Korean line breaks */
-                p, h1, h2, h3, h4, h5, h6, span, div {
-                    word-break: keep-all;
-                    overflow-wrap: break-word;
-                }
-
-                @media print {
-                    header, .fixed.bottom-0, .fixed.z-40, button { display: none !important; }
-                    body, .min-h-screen, main { background: #fff !important; color: #000 !important; margin: 0 !important; padding: 0 !important; }
-                    * {
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                        color-adjust: exact !important;
-                    }
-                    /* Remove dark mode inversion so the PDF exactly mirrors the neo-cybernetic UI */
-                    .bg-\[\#0a0a2a\], .bg-\[\#050505\], .bg-\[\#02050A\] { background-color: #050505 !important; }
-                    .bg-\[\#111111\] { background-color: #111111 !important; border: 1px solid rgba(0,255,160,0.3) !important; box-shadow: none !important; }
-
-                    .border-\[\#1F1F1F\], .border-\[\#00FFA0\]\\/20, .border-\[\#00FFA0\]\\/30 { border-color: #e5e7eb !important; }
-                    
-                    /* Text legibility retention */
-                    .text-white { color: #ffffff !important; }
-                    .text-slate-300 { color: #cbd5e1 !important; }
-                    .text-slate-400 { color: #94a3b8 !important; }
-                    .text-slate-500 { color: #64748b !important; }
-                    
-                    /* Block splitting prevention */
-                    section, .grid > div { break-inside: avoid; page-break-inside: avoid; }
-                    
-                    /* Reduce huge margins/paddings */
-                    .py-24, .py-32, .pt-20, .pb-28 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
-                    .mb-20, .mb-16, .mb-12 { margin-bottom: 2rem !important; }
-                }
             `}</style>
 
-            {/* Email Capture & Doctor Connect Modal */}
-            <UnlockModal
-                isOpen={isUnlockModalOpen}
-                onClose={() => { setIsUnlockModalOpen(false); setSelectedProtocolId(null); }}
-                language={language}
-                reportId={id as string}
-                selectedProtocolId={selectedProtocolId}
-            />
-
-            {/* Deep Dive / Simulation Modal */}
-            {isSimulationModalOpen && selectedProtocolId && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl shrink-0"
-                    onClick={(e) => { if (e.target === e.currentTarget) setIsSimulationModalOpen(false) }}>
-                    <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#0a0a0f] border border-[#00FFA0]/20 shadow-[0_0_60px_rgba(0,255,160,0.1)] custom-scrollbar">
-                        <div className="sticky top-0 right-0 left-0 bg-transparent flex justify-end p-4 z-10 pointer-events-none">
-                            <button onClick={() => setIsSimulationModalOpen(false)} className="pointer-events-auto p-2 rounded-full bg-black/50 border border-white/10 hover:border-[#00FFA0]/50 text-white transition-all">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                            </button>
-                        </div>
-                        <div className="-mt-12">
-                            <SkinSimulationContainer
-                                language={language}
-                                simulationData={data?.patient?.simulationData}
-                                recommendations={recommendations}
-                                onRecalculate={handleRecalculate}
-                                isRecalculating={isRecalculating}
-                            />
-                        </div>
-                    </div>
-                </div>
+            {/* Email Capture Modal — patient only */}
+            {!isDoctor && (
+                <UnlockModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    language={language}
+                    reportId={id as string}
+                />
             )}
         </div>
     );
