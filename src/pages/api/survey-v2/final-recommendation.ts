@@ -396,7 +396,8 @@ CRITICAL RULES:
 4. Scores must be integers 0-10
 5. Confidence scores must reflect realistic accuracy (typically 80-95 range)
 6. Patient-facing content must be in the patient's language, doctor tab in bilingual KO+EN
-7. Respond ONLY with valid JSON, no other text`;
+7. Respond ONLY with valid JSON, no other text
+8. CONCISENESS IS CRITICAL — keep all HTML fields to 1-2 short sentences max. Keep summary_html under 40 words, why_fit_html under 60 words, moa_description_html under 50 words. Omit verbose explanations. The JSON MUST fit within 4000 tokens total.`;
 
 /** Build dynamic system prompt — changes per patient */
 function buildDynamicSystemPrompt(
@@ -457,6 +458,13 @@ Safety Follow-up Answers: ${JSON.stringify(req.safety_followup_answers)}
 ${safetySection}`;
 }
 
+// ─── API Route Config ────────────────────────────────────────
+// Extend Netlify function timeout (default 10s is too short for Sonnet 4.6)
+// Netlify Pro supports up to 26s; Background Functions up to 15min
+export const config = {
+  maxDuration: 60, // seconds — Netlify will cap to plan max
+};
+
 // ─── API Handler (Streaming to avoid Netlify timeout) ────────
 
 export default async function handler(
@@ -489,7 +497,7 @@ export default async function handler(
     // We collect the full text, then parse JSON at the end
     const stream = anthropic.messages.stream({
       model: 'claude-sonnet-4-6',
-      max_tokens: 12000,
+      max_tokens: 4096,
       temperature: 0.3,
       system: [
         {
@@ -519,12 +527,16 @@ export default async function handler(
     let inputTokens = 0;
     let outputTokens = 0;
     let modelUsed = 'claude-sonnet-4-6';
+    let lastProgressAt = 0;
 
-    // Stream progress events to keep connection alive
+    // Stream progress events to keep connection alive (throttled to every 500 chars)
     stream.on('text', (text) => {
       fullText += text;
-      // Send a heartbeat to keep connection alive
-      res.write(`data: ${JSON.stringify({ type: 'progress', chars: fullText.length })}\n\n`);
+      // Send heartbeat every ~500 chars to avoid excessive SSE events
+      if (fullText.length - lastProgressAt >= 500) {
+        lastProgressAt = fullText.length;
+        res.write(`data: ${JSON.stringify({ type: 'progress', chars: fullText.length })}\n\n`);
+      }
     });
 
     // Wait for stream to complete

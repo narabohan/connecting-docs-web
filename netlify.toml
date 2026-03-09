@@ -25,6 +25,13 @@
 #
 #  NEXT_PUBLIC_FIREBASE_*   — Firebase config (6 vars, public)
 
+# ─── Functions ───────────────────────────────────────────────
+# Extend serverless function timeout for AI-heavy API routes
+# Free tier: 10s, Pro: 26s — SSE streaming keeps connection alive
+# but function runtime is hard-capped by plan
+[functions]
+  external_node_modules = ["@anthropic-ai/sdk"]
+
 # ─── Headers ─────────────────────────────────────────────────
 [[headers]]
   for = "/*"
