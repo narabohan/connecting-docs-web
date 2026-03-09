@@ -202,6 +202,106 @@ function getCountryContext(country: string): string {
   return COUNTRY_CONTEXTS['KR']; // fallback
 }
 
+// ─── Age Bracket Logic (Issue #6) ────────────────────────────
+// Determines age-specific clinical weighting context for the AI prompt.
+// Detailed clinical rules per bracket will be added with clinical data.
+
+type AgeBracket = '20s' | '30s' | '40s' | '50+';
+
+function parseAgeBracket(ageStr: string): AgeBracket {
+  // d_age format: "20-29", "30-39", "40-49", "50-59", "60+"
+  const num = parseInt(ageStr, 10);
+  if (isNaN(num) || num < 30) return '20s';
+  if (num < 40) return '30s';
+  if (num < 50) return '40s';
+  return '50+';
+}
+
+const AGE_BRACKET_CONTEXTS: Record<AgeBracket, string> = {
+  '20s': `[AGE_CONTEXT: 20s]
+예방적 케어 중심. 콜라겐 자극 기초 시술 + 스킨부스터 위주.
+Zone priority: 전체 균일. Device preference: low-energy + prevention-focused.
+── TODO: 20대 세부 임상 규칙 추가 예정 ──`,
+
+  '30s': `[AGE_CONTEXT: 30s]
+초기 노화 징후 대응. 콜라겐 리모델링 + 탄력 유지 핵심.
+Zone priority: 눈가 > 팔자 > 턱선. Device preference: MN-RF + HIFU low-mid energy.
+Weight adjustments: tightening +1, elasticity +1, prevention +1.
+── TODO: 30대 세부 임상 규칙 추가 예정 ──`,
+
+  '40s': `[AGE_CONTEXT: 40s]
+중등도 노화. 볼륨 감소 + 중안부 처짐 본격화. 복합 시술 필요.
+Zone priority: 중안부(볼/광대) > 하안부(턱선) > 상안부(이마).
+Device preference: HIFU mid-high energy + Thread + MN-RF combination.
+Weight adjustments: lifting +2, volume +2, synergy +1.
+Injectable preference: Biostimulator (Sculptra/Lanluma) 우선 고려.
+── TODO: 40대 세부 임상 규칙 추가 예정 ──`,
+
+  '50+': `[AGE_CONTEXT: 50+]
+심한 처짐 + 볼륨 손실 + 피부 위축. 다층 접근 필수.
+Zone priority: 중안부 타이트닝 ≠ 하안부 리프팅 (구분 치료 필요).
+Device preference: HIFU high energy (SMAS layer) + RF + 필러/Biostimulator layered approach.
+Weight adjustments: lifting +3, volume +3, longevity +2, safety +1.
+Injectable preference: HA filler (volume restoration) + Biostimulator (collagen).
+IMPORTANT: 50+ 환자는 중안부(mid-face volume)와 하안부(jawline lift)를 별도 목표로 치료.
+Energy parameter: conservative start → gradual escalation. Multi-session preferred.
+── TODO: 50+ 세부 임상 규칙 추가 예정 ──`,
+};
+
+function getAgeBracketContext(ageStr: string): string {
+  const bracket = parseAgeBracket(ageStr);
+  return AGE_BRACKET_CONTEXTS[bracket];
+}
+
+// ─── Enhanced Country Clinical Rules (Issue #6) ──────────────
+// More granular country-specific clinical rules beyond general preferences.
+// Skeleton with placeholders for clinical data.
+
+const COUNTRY_CLINICAL_RULES: Record<string, string> = {
+  KR: `[COUNTRY_CLINICAL: KR]
+Fitzpatrick: III-IV typical. PIH risk: moderate.
+Preferred combo patterns: MN-RF + HIFU layering, 스킨부스터 routine (2-4주 간격).
+Price sensitivity: high → ROI score weight +2.
+Device familiarity: very high → can recommend advanced combinations.
+── TODO: KR 세부 임상 규칙 추가 예정 ──`,
+
+  JP: `[COUNTRY_CLINICAL: JP]
+Fitzpatrick: II-III typical. PIH risk: moderate-low.
+Conservative approach mandatory: lowest effective energy first.
+Preferred: single-device clarity over multi-device combos.
+Safety documentation requirement: very high → evidence score weight +2.
+── TODO: JP 세부 임상 규칙 추가 예정 ──`,
+
+  CN: `[COUNTRY_CLINICAL: CN]
+Fitzpatrick: III-IV typical. PIH risk: moderate-high.
+Brand prestige weight: +3 for globally recognized premium brands.
+Single-session maximization: prefer high-energy single sessions over multiple low-energy.
+Dramatic result expectation: confidence threshold higher (recommend only >85 confidence).
+── TODO: CN 세부 임상 규칙 추가 예정 ──`,
+
+  SEA: `[COUNTRY_CLINICAL: SEA]
+Fitzpatrick: IV-V typical. PIH risk: HIGH — critical parameter.
+Mandatory: PIH-safe devices only (1064nm preferred over 532nm).
+Energy limits: conservative for all ablative. Non-ablative preferred.
+K-Beauty trend awareness: trend score weight +1.
+Cost optimization: ROI score weight +2.
+── TODO: SEA 세부 임상 규칙 추가 예정 ──`,
+
+  'SG/US': `[COUNTRY_CLINICAL: SG/US]
+Fitzpatrick: mixed (II-V). Must estimate from demographics.
+Evidence-based approach: evidence score weight +3.
+FDA/CE certification: must explicitly mention in device descriptions.
+Transparency expectation: detailed MOA explanations expected.
+── TODO: SG/US 세부 임상 규칙 추가 예정 ──`,
+};
+
+function getCountryClinicalRules(country: string): string {
+  if (COUNTRY_CLINICAL_RULES[country]) return COUNTRY_CLINICAL_RULES[country];
+  if (['TH', 'VN', 'MY', 'ID', 'PH'].includes(country)) return COUNTRY_CLINICAL_RULES['SEA'];
+  if (['SG', 'US', 'AU', 'GB', 'CA'].includes(country)) return COUNTRY_CLINICAL_RULES['SG/US'];
+  return COUNTRY_CLINICAL_RULES['KR'];
+}
+
 // ─── Safety Flag → Device Filter ─────────────────────────────
 
 const SAFETY_DEVICE_FILTERS: Record<SafetyFlag, string> = {
@@ -278,6 +378,24 @@ Your task: Given a patient's complete profile and clinical context, generate a c
 - PROTO_01 + PROTO_02 simultaneous → Exclude Genius RF/Thermage (melasma risk) → Use HIFU + Sylfirm X PW
 - PROTO_03 + PROTO_06 simultaneous → Vascular first (4 weeks) → then Pigmentation
 - Safety flags → ALWAYS override protocol preferences
+
+═══ TREND & POPULARITY WEIGHTING (Issue #5) ═══
+When scoring each device and injectable, apply these trend/popularity rules:
+
+TREND SCORE (0-10): How recent and cutting-edge the device/technology is.
+- 2024-2025 launch or major update: trend = 8-10
+- 2022-2023 established: trend = 5-7
+- Pre-2022 legacy: trend = 2-4
+- Key trend signals: Sylfirm X (PW MN-RF, 2023 → trend 9), Potenza (MN-RF, 2022 → trend 7), Morpheus8 (2020 → trend 5), ASCE+ Exosome (2024 → trend 9), Juvelook Vol (2024 → trend 9), LaseMD Ultra (2024 → trend 8)
+
+POPULARITY SCORE (0-10): How widely adopted and demanded this device is in the patient's market.
+- KR market leaders: Ultraformer MPT (10), Sylfirm X (9), Rejuran Healer (9), Juvelook (8)
+- JP market leaders: Thermage FLX (10), Ulthera (9), Rejuran (8)
+- CN market leaders: Thermage FLX (10), Ulthera (9), Sculptra (8)
+- SEA market leaders: Ulthera (9), Rejuran (8), PICO laser (8)
+- SG/US market leaders: Ulthera (9), Morpheus8 (8), Sculptra (8)
+
+RANKING IMPACT: When confidence scores between two devices are within 5 points, use (trend + popularity) / 2 as the tiebreaker — the higher trend+popularity device ranks above.
 
 ═══ SKINBOOSTER MATCHING LOGIC ═══
 Select injectables based on:
@@ -397,7 +515,8 @@ CRITICAL RULES:
 5. Confidence scores must reflect realistic accuracy (typically 80-95 range)
 6. Patient-facing content must be in the patient's language, doctor tab in bilingual KO+EN
 7. Respond ONLY with valid JSON, no other text
-8. CONCISENESS IS CRITICAL — keep all HTML fields to 1-2 short sentences max. Keep summary_html under 40 words, why_fit_html under 60 words, moa_description_html under 50 words. Omit verbose explanations. The complete JSON MUST fit within 7500 tokens.`;
+8. CONCISENESS IS CRITICAL — keep all HTML fields to 1-2 short sentences max. Keep summary_html under 40 words, why_fit_html under 60 words, moa_description_html under 50 words. Omit verbose explanations. The complete JSON MUST fit within 7500 tokens.
+9. TREND & POPULARITY SCORES ARE MANDATORY — every device and injectable must have realistic trend (0-10) and popularity (0-10) scores based on the rules in the TREND & POPULARITY WEIGHTING section. Use them as tiebreaker when confidence is within 5 points.`;
 
 /** Build dynamic system prompt — changes per patient */
 function buildDynamicSystemPrompt(
@@ -411,6 +530,8 @@ function buildDynamicSystemPrompt(
   );
 
   const countryContext = getCountryContext(req.demographics.detected_country);
+  const ageBracketContext = getAgeBracketContext(req.demographics.d_age);
+  const countryClinicalRules = getCountryClinicalRules(req.demographics.detected_country);
 
   const safetySection = req.safety_flags.length > 0
     ? req.safety_flags.map(f => `- ${f}: ${SAFETY_DEVICE_FILTERS[f]}`).join('\n')
@@ -431,6 +552,12 @@ Triggered protocols: [${protocols.join(', ')}]
 ═══ COUNTRY CONTEXT ═══
 ${countryContext}
 
+═══ AGE-SPECIFIC CLINICAL CONTEXT (Issue #6) ═══
+${ageBracketContext}
+
+═══ COUNTRY CLINICAL RULES (Issue #6) ═══
+${countryClinicalRules}
+
 ═══ PATIENT DATA ═══
 Demographics: ${req.demographics.d_age} ${req.demographics.d_gender}, Country: ${req.demographics.detected_country}
 Language: ${req.demographics.detected_language}
@@ -446,6 +573,12 @@ Past Experience: ${req.q7_past_experience || 'None disclosed'}
 Risk Flags: ${(req.q2_risk_flags || []).length > 0 ? req.q2_risk_flags.join(', ') : 'None'}
 Pigment Pattern: ${req.q2_pigment_pattern || 'N/A'}
 Volume Logic: ${req.q3_volume_logic || 'N/A'}
+
+Clinical Chip Responses (Issue #1 depth signals):
+${Object.entries(req.chip_responses || {})
+  .filter(([k]) => ['tightening_zone','scar_type','pigment_detail','aging_priority','texture_concern','laxity_severity','treatment_budget'].includes(k))
+  .map(([k, v]) => `  ${k}: ${v}`)
+  .join('\n') || '  (none collected)'}
 
 Open Response (original): "${req.open_question_raw}"
 
