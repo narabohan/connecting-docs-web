@@ -286,6 +286,7 @@ demographics.d_gender            // 정확한 필드명
 | 2026-03-09 | #1 | `d4ab215` | Clinical depth chips 7종 추가 (ChipType, i18n, generate-chips, analyze-open) |
 | 2026-03-09 | #5+#6 | `ed0aa19` | Trend/Popularity 가중치 + 나이/국가 분기 skeleton 추가 |
 | 2026-03-09 | #6 | `22c75f2` | 나이 브라켓(20s~50+) + 국가별(KR/JP/CN/SEA/SG-US) 실제 임상 규칙으로 업그레이드 |
+| 2026-03-09 | — | `05257f1` | feature/cto-ux-fixes → main 머지 (기준 아키텍처 통합, survey-v2 파이프라인 보존) |
 
 ---
 *이 파일은 대화 컨텍스트 보존용입니다. 새 세션에서 "PROJECT_MEMORY.md를 읽고 이어서 진행해"라고 말하세요.*
