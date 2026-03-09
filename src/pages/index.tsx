@@ -32,9 +32,9 @@ export default function Home() {
   const [analysisData, setAnalysisData] = useState<AnalysisResponseV2 | null>(null);
 
   useEffect(() => {
-    if (router.query.start_wizard) {
+    if (router.query.start_wizard || router.query.auth === 'required') {
       if (user) {
-        setIsWizardOpen(true);
+        router.push('/survey-v2');
       } else {
         setIsAuthModalOpen(true);
       }
@@ -88,14 +88,18 @@ export default function Home() {
   };
 
   const handleStartAnalysis = () => {
-    // Route to Survey V2 hybrid pipeline instead of V1 modal
-    router.push('/survey-v2');
+    // Route to Survey V2 hybrid pipeline (auth-gated)
+    if (user) {
+      router.push('/survey-v2');
+    } else {
+      setIsAuthModalOpen(true);
+    }
   };
 
   useEffect(() => {
     if (user && isAuthModalOpen) {
       setIsAuthModalOpen(false);
-      setIsWizardOpen(true);
+      router.push('/survey-v2');
     }
   }, [user]);
 
