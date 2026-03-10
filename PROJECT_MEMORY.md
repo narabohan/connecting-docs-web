@@ -287,6 +287,9 @@ demographics.d_gender            // 정확한 필드명
 | 2026-03-09 | #5+#6 | `ed0aa19` | Trend/Popularity 가중치 + 나이/국가 분기 skeleton 추가 |
 | 2026-03-09 | #6 | `22c75f2` | 나이 브라켓(20s~50+) + 국가별(KR/JP/CN/SEA/SG-US) 실제 임상 규칙으로 업그레이드 |
 | 2026-03-09 | — | `05257f1` | feature/cto-ux-fixes → main 머지 (기준 아키텍처 통합, survey-v2 파이프라인 보존) |
+| 2026-03-10 | 0-4 | `63f7fce` | 환자 리포트 3층 구조 (거울→확신→솔루션) — OpusMirrorSection, OpusConfidenceSection, 시스템 프롬프트 확장 |
+| 2026-03-10 | 0-5 | `63f7fce` | 의사 인텔리전스 3요소 — HaikuAnalysis 확장 (expectation_tag, communication_style, lifestyle_context), OpusDoctorTab patient_intelligence + consultation_strategy |
+| 2026-03-10 | 0-6 | `63f7fce` | OpenQuestion 프롬프트 리디자인 — "어떤 순간에 가장 고민이 되시나요?" 4개 국어 (KO/EN/JP/ZH-CN) |
 
 ---
 *이 파일은 대화 컨텍스트 보존용입니다. 새 세션에서 "PROJECT_MEMORY.md를 읽고 이어서 진행해"라고 말하세요.*
