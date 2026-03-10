@@ -20,7 +20,7 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export interface FinalRecommendationRequest {
   demographics: Demographics;
-  haiku_analysis: HaikuAnalysis;
+  haiku_analysis: HaikuAnalysis;  // includes expectation_tag, communication_style, lifestyle_context
   chip_responses: Record<string, string>;
   prior_applied: string[];
   prior_values: Record<string, string>;
@@ -54,12 +54,30 @@ export interface OpusRecommendationOutput {
   model: string;
   patient: OpusPatientProfile;
   safety_flags: Record<string, unknown>;
+  // ─── 3-Layer Patient Report (Issue 0-4) ───────────────────
+  mirror_section: OpusMirrorSection;       // 1층 거울
+  confidence_section: OpusConfidenceSection; // 2층 확신
+  // 3층 솔루션 = ebd_recommendations + injectable_recommendations + signature_solutions
   ebd_recommendations: OpusDeviceRecommendation[];
   injectable_recommendations: OpusInjectableRecommendation[];
   signature_solutions: OpusSignatureSolution[];
   treatment_plan: OpusTreatmentPlan;
   homecare: OpusHomecare;
   doctor_tab: OpusDoctorTab;
+}
+
+// ─── 1층 거울: 환자가 "이게 나야" 느끼는 감성 텍스트 ────────
+export interface OpusMirrorSection {
+  headline: string;        // 짧은 공감 한줄 (e.g. "요즘 거울 보기가 싫어지셨나요?")
+  body_html: string;       // 2-3문단 감성 텍스트 (환자 일상 언어)
+  concern_tags: string[];  // 환자 핵심 키워드 뱃지 (e.g. ["탄력", "볼륨", "팔자주름"])
+}
+
+// ─── 2층 확신: "해결 가능하다"는 자신감 ─────────────────────
+export interface OpusConfidenceSection {
+  headline: string;        // (e.g. "방법이 있습니다")
+  body_html: string;       // 임상 지식을 환자 언어로 2-3문단
+  key_insight: string;     // 핵심 한줄 (e.g. "진피 깊은 층의 콜라겐을 자극하면 자연스러운 회복이 가능합니다")
 }
 
 export interface OpusPatientProfile {
@@ -164,6 +182,24 @@ export interface OpusDoctorTab {
   parameter_guidance: Record<string, string>;
   contraindications: string[];
   alternative_options: string[];
+  // ─── Doctor Intelligence 3요소 (Issue 0-5) ─────────────────
+  patient_intelligence: {
+    expectation_tag: 'REALISTIC' | 'AMBITIOUS' | 'CAUTION';
+    expectation_note: string;          // 기대치 관련 간단 설명
+    budget_timeline: {
+      budget_tier: 'Economy' | 'Standard' | 'Premium';
+      decision_speed: 'Slow' | 'Normal' | 'Fast';
+      urgency: 'LOW' | 'MEDIUM' | 'HIGH';
+      stay_duration: string | null;    // 체류 기간 (의료관광 환자)
+    };
+    communication_style: 'LOGICAL' | 'EMOTIONAL' | 'ANXIOUS';
+    communication_note: string;        // 상담 시 권장 접근법
+  };
+  consultation_strategy: {
+    recommended_order: string[];       // 설명 순서 (e.g. ["안전성", "비포/애프터", "옵션 제시"])
+    expected_complaints: string[];     // 예상 컴플레인 포인트
+    scenario_summary: string;          // 추천 상담 시나리오 요약
+  };
 }
 
 // ─── Country Context Blocks ──────────────────────────────────
@@ -485,12 +521,69 @@ Select injectables based on:
 - Biostimulator (Sculptra, Lanluma): collagen stimulation, good for volume loss
 - Exosome (ASCE+): regeneration, good for all skin types
 
+═══ 3-LAYER PATIENT REPORT STRUCTURE (Issue 0-4) ═══
+The patient report follows a 3-layer philosophy: Mirror → Confidence → Solution.
+
+LAYER 1 — MIRROR (거울): Make the patient feel "이게 나야" (this is me).
+- Use the patient's OWN words from OpenQuestion. Reference their lifestyle context.
+- Tone: warm, empathetic, everyday language. NOT clinical. NOT salesy.
+- Structure: headline (1 short empathetic question) + body_html (2-3 paragraphs) + concern_tags (3-5 keywords).
+- End with a bridge sentence: "많은 분들이 같은 고민을 하고 계세요. 그리고 방법이 있습니다."
+- MUST be in the patient's language.
+
+LAYER 2 — CONFIDENCE (확신): Give confidence that solutions exist.
+- Explain the clinical WHY in patient-friendly language. No jargon.
+- Reference collagen/elastin science at the right depth for the patient's age.
+- Structure: headline + body_html (2-3 paragraphs) + key_insight (1 powerful sentence).
+- End with: "당신의 상황에 맞는 여러 옵션이 있어요."
+- MUST be in the patient's language.
+
+LAYER 3 — SOLUTION (솔루션): Present options, NOT recommendations.
+- Frame as "옵션 A / B / C" not "추천 1 / 2 / 3".
+- This layer = ebd_recommendations + injectable_recommendations + signature_solutions.
+- Use patient-friendly language in summary_html (e.g. "깊은 층부터 탄력을 회복하는 방법").
+
+═══ DOCTOR INTELLIGENCE (Issue 0-5) ═══
+The doctor_tab MUST include patient_intelligence with 3 elements:
+
+① expectation_tag: Infer from OpenQuestion text tone + goals.
+- REALISTIC: measured language, "자연스러운", "개선", "조금씩" → natural improvement
+- AMBITIOUS: superlatives, "확 바뀌고 싶어", "완전히", "드라마틱" → dramatic change
+- CAUTION: unrealistic comparisons, celebrity references, multiple unrelated goals → needs management
+
+② budget_timeline: Infer from treatment_budget chip + country + stay patterns.
+- budget_tier: Economy (<₩1M), Standard (₩1M-3M), Premium (₩3M+)
+- decision_speed: based on urgency cues in text
+- stay_duration: if medical tourist, estimate from country
+
+③ communication_style: Infer from OpenQuestion text analysis.
+- LOGICAL: structured text, questions about "왜", mechanism inquiries, data-oriented
+- EMOTIONAL: descriptive text, lifestyle impact, before/after desires, image-focused
+- ANXIOUS: many questions, safety concerns, "~하면 어쩌지", risk-focused
+
+ALSO include consultation_strategy with:
+- recommended_order: 3-4 step consultation sequence based on communication_style
+- expected_complaints: 2-3 likely patient concerns post-treatment
+- scenario_summary: 2-3 sentence recommended consultation flow
+
 ═══ OUTPUT JSON SCHEMA ═══
 Required JSON fields:
 {
   "lang": "<language code>",
   "generated_at": "<ISO timestamp>",
   "model": "claude-sonnet-4-6",
+
+  "mirror_section": {
+    "headline": "<empathetic 1-line question in patient language>",
+    "body_html": "<2-3 paragraphs using patient's own words, warm tone>",
+    "concern_tags": ["<keyword1>", "<keyword2>", "<keyword3>"]
+  },
+
+  "confidence_section": {
+    "headline": "<e.g. '방법이 있습니다'>",
+    "body_html": "<2-3 paragraphs explaining WHY in patient language>",
+    "key_insight": "<1 powerful sentence summarizing the clinical key>"
+  },
 
   "patient": {
     "age": "<age range>",
@@ -584,7 +677,24 @@ Required JSON fields:
     "country_note": "<bilingual country-specific patient note>",
     "parameter_guidance": { "<device>": "<specific parameter recommendations>" },
     "contraindications": ["<contraindication1>", ...],
-    "alternative_options": ["<alternative1>", ...]
+    "alternative_options": ["<alternative1>", ...],
+    "patient_intelligence": {
+      "expectation_tag": "REALISTIC|AMBITIOUS|CAUTION",
+      "expectation_note": "<why this tag was assigned>",
+      "budget_timeline": {
+        "budget_tier": "Economy|Standard|Premium",
+        "decision_speed": "Slow|Normal|Fast",
+        "urgency": "LOW|MEDIUM|HIGH",
+        "stay_duration": "<duration or null>"
+      },
+      "communication_style": "LOGICAL|EMOTIONAL|ANXIOUS",
+      "communication_note": "<recommended approach for this patient>"
+    },
+    "consultation_strategy": {
+      "recommended_order": ["<step1>", "<step2>", "<step3>"],
+      "expected_complaints": ["<complaint1>", "<complaint2>"],
+      "scenario_summary": "<2-3 sentence recommended consultation flow>"
+    }
   }
 }
 
@@ -596,8 +706,9 @@ CRITICAL RULES:
 5. Confidence scores must reflect realistic accuracy (typically 80-95 range)
 6. Patient-facing content must be in the patient's language, doctor tab in bilingual KO+EN
 7. Respond ONLY with valid JSON, no other text
-8. CONCISENESS IS CRITICAL — keep all HTML fields to 1-2 short sentences max. Keep summary_html under 40 words, why_fit_html under 60 words, moa_description_html under 50 words. Omit verbose explanations. The complete JSON MUST fit within 7500 tokens.
-9. TREND & POPULARITY SCORES ARE MANDATORY — every device and injectable must have realistic trend (0-10) and popularity (0-10) scores based on the rules in the TREND & POPULARITY WEIGHTING section. Use them as tiebreaker when confidence is within 5 points.`;
+8. CONCISENESS IS CRITICAL — keep EBD/injectable HTML fields to 1-2 short sentences max. Keep summary_html under 40 words, why_fit_html under 60 words, moa_description_html under 50 words. EXCEPTION: mirror_section.body_html and confidence_section.body_html can be 2-3 paragraphs (80-120 words each) — these are the emotional core of the report. The complete JSON MUST fit within 9000 tokens.
+9. TREND & POPULARITY SCORES ARE MANDATORY — every device and injectable must have realistic trend (0-10) and popularity (0-10) scores based on the rules in the TREND & POPULARITY WEIGHTING section. Use them as tiebreaker when confidence is within 5 points.
+10. MIRROR + CONFIDENCE + DOCTOR INTELLIGENCE ARE MANDATORY — mirror_section and confidence_section must be generated for every patient. doctor_tab.patient_intelligence and doctor_tab.consultation_strategy must be fully populated. These are the emotional and strategic core of the report.`;
 
 /** Build dynamic system prompt — changes per patient */
 function buildDynamicSystemPrompt(
@@ -661,6 +772,12 @@ ${Object.entries(req.chip_responses || {})
   .map(([k, v]) => `  ${k}: ${v}`)
   .join('\n') || '  (none collected)'}
 
+Haiku Intelligence Signals:
+  expectation_tag: ${req.haiku_analysis?.expectation_tag || 'unknown'}
+  communication_style: ${req.haiku_analysis?.communication_style || 'unknown'}
+  lifestyle_context: ${req.haiku_analysis?.lifestyle_context || 'none'}
+  emotion_tone: ${req.haiku_analysis?.emotion_tone || 'unknown'}
+
 Open Response (original): "${req.open_question_raw}"
 
 Prior Applied: [${req.prior_applied.join(', ')}]
@@ -711,7 +828,7 @@ export default async function handler(
     // We collect the full text, then parse JSON at the end
     const stream = anthropic.messages.stream({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 8192,
+      max_tokens: 10000,
       temperature: 0.3,
       system: [
         {

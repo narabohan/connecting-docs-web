@@ -103,10 +103,10 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       age_60plus: '60대+',
     },
     step2: {
-      title: '오늘 어떤 피부 고민으로\n상담을 받고 싶으신가요?',
-      subtitle: '편하게 말씀해 주세요.',
-      placeholder: '피부 고민을 자유롭게 적어주세요...',
-      hint: '예: "볼이 처지고 기미가 생겼어요"',
+      title: '피부에서 가장 신경 쓰이는\n순간이 있으신가요?',
+      subtitle: '거울을 볼 때, 사진을 찍을 때, 사람들을 만날 때 —\n어떤 순간에 가장 고민이 되시나요?',
+      placeholder: '피부에서 가장 신경 쓰이는 순간을 자유롭게 적어주세요...',
+      hint: '예: "사진 찍을 때 팔자주름이 보여서 자신감이 없어요"',
       min_chars: '5자 이상 입력해 주세요',
     },
     step3: {
@@ -177,10 +177,10 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       age_60plus: '60+',
     },
     step2: {
-      title: 'What skin concerns would you\nlike to discuss today?',
-      subtitle: 'Feel free to share in your own words.',
-      placeholder: 'Describe your skin concerns...',
-      hint: 'e.g. "My cheeks are sagging and I have dark spots"',
+      title: 'When do you notice your skin\nconcerns the most?',
+      subtitle: 'For example, looking in the mirror, taking photos,\nmeeting people — when does it bother you most?',
+      placeholder: 'Describe the moments when your skin concerns bother you...',
+      hint: 'e.g. "I avoid photos because of my smile lines"',
       min_chars: 'Please enter at least 5 characters',
     },
     step3: {
@@ -251,10 +251,10 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       age_60plus: '60代+',
     },
     step2: {
-      title: '今日はどんなお肌のお悩みで\nご相談されたいですか？',
-      subtitle: 'お気軽にお聞かせください。',
-      placeholder: 'お肌のお悩みを自由にお書きください...',
-      hint: '例：「顔がたるんで老けて見えます」',
+      title: 'お肌で一番気になる\n瞬間はありますか？',
+      subtitle: '鏡を見る時、写真を撮る時、人に会う時 —\nどんな瞬間に一番気になりますか？',
+      placeholder: 'お肌が一番気になる瞬間を自由にお書きください...',
+      hint: '例：「写真を撮る時にほうれい線が気になって」',
       min_chars: '5文字以上入力してください',
     },
     step3: {
@@ -325,10 +325,10 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       age_60plus: '60岁+',
     },
     step2: {
-      title: '今天您想咨询\n什么皮肤问题？',
-      subtitle: '请随意描述您的困扰。',
-      placeholder: '请描述您的皮肤问题...',
-      hint: '例如："脸上长斑了，皮肤松弛"',
+      title: '皮肤最让您在意的\n时刻是什么？',
+      subtitle: '比如照镜子的时候、拍照的时候、见人的时候 —\n什么时刻最让您困扰？',
+      placeholder: '请描述皮肤最让您在意的时刻...',
+      hint: '例如："拍照的时候法令纹很明显，没有自信"',
       min_chars: '请至少输入5个字',
     },
     step3: {

@@ -107,10 +107,13 @@ export default function ReportV2Page() {
     const lang = LANG_MAP[payload.survey_state.demographics.detected_language] || 'en';
 
     // Build the data object that initReport() expects
+    // Includes 3-layer sections (mirror, confidence) + enhanced doctor intelligence
     const reportData = {
       ...payload.recommendation,
       lang,
       safety_flags: buildSafetyFlagsObject(payload.survey_state.safety_flags),
+      // Pass open_question for mirror section context in HTML renderer
+      _open_question_raw: payload.survey_state.open_question_raw,
     };
 
     iframeRef.current.contentWindow.postMessage(

@@ -161,6 +161,10 @@ function mockHaikuAnalysis(scenario: TestScenario): HaikuAnalysis {
     prior_alignment: Object.keys(getPriors(scenario.demographics.detected_country)).length > 0 ? 'aligned' : 'neutral',
     already_known_signals: alreadyKnown,
     needs_confirmation: needsConfirmation,
+    // ─── Doctor Intelligence signals (Issue 0-5) ──────────────
+    expectation_tag: 'REALISTIC',
+    communication_style: 'LOGICAL',
+    lifestyle_context: null,
   };
 }
 

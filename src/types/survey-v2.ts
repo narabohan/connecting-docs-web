@@ -25,6 +25,10 @@ export interface HaikuAnalysis {
   prior_alignment: 'aligned' | 'diverged' | 'neutral';
   already_known_signals: string[];
   needs_confirmation: string[];
+  // ─── Doctor Intelligence signals (Issue 0-5) ──────────────
+  expectation_tag: 'REALISTIC' | 'AMBITIOUS' | 'CAUTION';
+  communication_style: 'LOGICAL' | 'EMOTIONAL' | 'ANXIOUS';
+  lifestyle_context: string | null;  // e.g. "사진 찍을 때 팔자주름이 보여서"
 }
 
 // ─── Smart Chip ─────────────────────────────────────────────

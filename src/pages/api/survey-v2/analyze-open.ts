@@ -60,6 +60,24 @@ Output a JSON object with these fields:
     - "laxity_severity" — if sagging/lifting is discussed but severity is unknown
     - "treatment_budget" — if no budget preference is expressed
 
+─── Doctor Intelligence Signals (Issue 0-5) ───
+Analyze the patient's text to infer these 3 additional fields for doctor-facing intelligence:
+
+- expectation_tag: One of ["REALISTIC", "AMBITIOUS", "CAUTION"]
+  - REALISTIC: Patient has measured, natural-improvement expectations (e.g., "자연스럽게 개선", "subtle change")
+  - AMBITIOUS: Patient wants dramatic transformation (e.g., "완전히 달라지고 싶어", "want to look 10 years younger")
+  - CAUTION: Unrealistic expectations detected (e.g., "한번에 다 해결", "one session fix everything"). Flag for doctor to manage expectations.
+
+- communication_style: One of ["LOGICAL", "EMOTIONAL", "ANXIOUS"]
+  - LOGICAL: Uses factual, specific language. Mentions devices/procedures by name, asks about evidence/data.
+  - EMOTIONAL: Focuses on feelings, self-image, social situations. Rich in emotional context.
+  - ANXIOUS: Expresses fear, doubt, past bad experiences. Mentions pain, side effects, risks prominently.
+  Determine from the overall tone, vocabulary, sentence structure, and emotional content of the text.
+
+- lifestyle_context: A short string (max 80 chars) capturing the specific real-life situation or moment the patient mentions as their trigger. Extract their exact lifestyle context.
+  Examples: "사진 찍을 때 팔자주름이 보여서", "wedding in 2 months", "job interviews coming up"
+  If no specific lifestyle moment is mentioned, set to null.
+
 Respond ONLY with valid JSON, no other text.`;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

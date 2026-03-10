@@ -157,6 +157,10 @@ describe('Step 2: generate-chips', () => {
     prior_alignment: 'aligned',
     already_known_signals: ['q1_primary_goal', 'concern_area'],
     needs_confirmation: ['pain_tolerance', 'downtime_tolerance', 'skin_profile'],
+    // ─── Doctor Intelligence signals (Issue 0-5) ──────────────
+    expectation_tag: 'REALISTIC',
+    communication_style: 'LOGICAL',
+    lifestyle_context: null,
   };
 
   test('JP scenario → generates 3-6 smart chips', async () => {
