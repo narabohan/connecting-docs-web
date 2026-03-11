@@ -290,6 +290,7 @@ demographics.d_gender            // 정확한 필드명
 | 2026-03-10 | 0-4 | `63f7fce` | 환자 리포트 3층 구조 (거울→확신→솔루션) — OpusMirrorSection, OpusConfidenceSection, 시스템 프롬프트 확장 |
 | 2026-03-10 | 0-5 | `63f7fce` | 의사 인텔리전스 3요소 — HaikuAnalysis 확장 (expectation_tag, communication_style, lifestyle_context), OpusDoctorTab patient_intelligence + consultation_strategy |
 | 2026-03-10 | 0-6 | `63f7fce` | OpenQuestion 프롬프트 리디자인 — "어떤 순간에 가장 고민이 되시나요?" 4개 국어 (KO/EN/JP/ZH-CN) |
+| 2026-03-11 | 0-7 | `bc1aa3e` | Mirror+Confidence 레이어 구현 (MIRROR_CONFIDENCE_PROMPT §6) — 국가별 감정언어 라이브러리, Reason Why 지식베이스, Social Proof 패턴, OpenQuestionStep TW/CN 분기, 리포트 3층 렌더링, max_tokens→10240 |
 
 ---
 *이 파일은 대화 컨텍스트 보존용입니다. 새 세션에서 "PROJECT_MEMORY.md를 읽고 이어서 진행해"라고 말하세요.*
