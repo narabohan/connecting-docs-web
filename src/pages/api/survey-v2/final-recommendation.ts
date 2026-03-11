@@ -632,34 +632,89 @@ Based on the patient's concern category, country, and age, generate:
 - "자연스러운 결과가 가장 높은 만족도" — Natural-looking results consistently rank as #1 satisfaction factor
 
 === Concern-Specific Reason Why ===
+(※ 각 카테고리의 환자 언어는 흔한 오해를 먼저 짚고 → 실제 원리를 설명하는 "아~그렇구나" 구조로 작성)
+(※ 교차참조: CLINICAL_QUESTIONS.md v2.1 장비 스펙/에너지 타입과 일관성 검증 완료 — CONFIDENCE_LAYER_AUDIT.md)
 
 For TIGHTENING concerns:
-- Mechanism: Collagen + elastin regeneration in dermis/SMAS layers
-- Patient language (KR): "진피 깊은 곳의 콜라겐을 자극해서 피부가 스스로 차오르는 원리"
-- Patient language (US): "It works by stimulating your skin's own collagen deep below the surface"
-- Patient language (JP): "真皮の深い層でコラーゲンを刺激して、お肌自身の力で回復する仕組み"
-- Key reassurance: This is your skin healing itself, not artificial change
+- Mechanism: Collagen contraction + neocollagenesis in dermis via RF bulk heating
+  (※ Tightening = 진피층 열 에너지. SMAS는 Lifting 카테고리. 혼동 금지)
+  (※ RF 유형 참고: Thermage/XERF/Volnewmer/Oligio = Monopolar RF | Alltite = DLTD® 유전가열(Dielectric Heating) — Monopolar도 Bipolar도 아닌 독자 방식. 수분 분자 회전 마찰열로 중/하부 진피~섬유격막~SMAS 상부까지 체적 가열)
+- Patient language (KR): "보통 '콜라겐을 채워 넣는다'고 생각하기 쉬운데, 사실은 반대입니다. 진피층에 있는 기존 콜라겐 섬유를 열 에너지로 수축시키는 것이 첫 번째 원리예요. 느슨해진 스프링을 다시 팽팽하게 당기는 것과 비슷합니다. 그리고 이 열 자극이 신호가 되어 수주에 걸쳐 새로운 콜라겐이 만들어지면서, 피부가 스스로 탄탄해지는 두 번째 단계가 이어집니다."
+- Patient language (US): "Many people think tightening means 'adding something to the skin,' but it actually works the opposite way. Targeted heat energy contracts existing collagen fibers in your dermis — like tightening a loose spring. That heat then signals your body to produce fresh collagen over the following weeks, so your skin firms up naturally from within."
+- Patient language (JP): "「コラーゲンを注入する」と思われがちですが、実は逆の仕組みです。熱エネルギーが真皮層の既存コラーゲン線維を収縮させます — 緩んだバネをキュッと引き締めるイメージです。さらにその熱刺激がシグナルとなり、数週間かけて新しいコラーゲンが生成され、お肌が自ら引き締まっていきます。"
+- Key reassurance: Your skin's own collagen contracts immediately and rebuilds naturally over weeks — nothing artificial is added
 
 For LIFTING concerns:
-- Mechanism: SMAS layer tightening + volume redistribution
-- Patient language (KR): "중력에 의해 아래로 처진 조직을 본래 위치로 되돌리는 과정"
-- Patient language (US): "Lifting works by repositioning tissue that has naturally shifted with time"
-- Patient language (JP): "重力で下がった組織を元の位置に戻すプロセス"
-- Key reassurance: Modern techniques prioritize natural contours
+- Mechanism: Focused energy (HIFU/SUPERB) creates thermal coagulation points in deep tissue layers, causing tissue elevation
+  (※ "volume redistribution"이 아님 — 볼륨 재분배는 Injectable 영역)
+- Patient language (KR): "'처진 피부를 당겨 올린다'고 하면 물리적으로 잡아당기는 걸 떠올리시죠? 실제로는 조금 다릅니다. 초음파 에너지가 피부 깊은 조직층에 아주 정밀한 수축 포인트를 만들어요. 이 포인트들이 마치 보이지 않는 앵커처럼 조직을 위로 끌어올리는 역할을 합니다. 그래서 흉터 없이도 자연스러운 거상이 가능한 거예요."
+- Patient language (US): "When you hear 'lifting,' you might imagine something physically pulling your skin upward. It's actually more precise than that. Focused energy creates tiny contraction points deep in your tissue — like invisible anchors that draw everything back up to where it used to be. That's how modern lifting achieves natural results without any incisions."
+- Patient language (JP): "「リフティング」と聞くと、物理的に皮膚を引っ張るイメージかもしれません。実際はもう少し精密です。集束エネルギーが深い組織層に微細な収縮ポイントを作り、見えないアンカーのように組織を元の位置に引き上げます。だから傷跡なしで自然なリフトアップが実現できるのです。"
+- Key reassurance: Modern lifting techniques create precise contraction points that restore your natural contours — no pulling, no cutting
+- ※ Age ≥ 50 conditional — "경고(Warning)"가 아니라 "맞춤형 추천 근거(Confidence Insight)"로 활용:
+  HIFU는 SMAS층에 강한 에너지를 전달하므로, 피부 두께에 따라 볼패임을 유발할 수 있음.
+  이것을 "위험합니다!" 식 경고 팝업이 아닌, "왜 이 장비를 추천하는지"의 명시적 이유(Reasoning)로 전환.
+  → KR: "고객님의 피부 상태를 고려해서, 볼륨은 보존하면서 처진 부분만 정밀하게 올려주는 장비를 추천드립니다. 이 장비를 선택한 이유는, 50대 이후에는 강한 초음파가 볼 쪽 볼륨을 줄일 수 있기 때문이에요."
+  → US: "Based on your profile, we're recommending a device that lifts precisely without compromising your facial volume. We chose this approach specifically because, for patients in their 50s and beyond, stronger ultrasound energy can sometimes reduce volume in the cheeks."
+  → JP: "お客様の肌状態を考慮して、ボリュームを保ちながらたるみだけを精密にリフトする機器をお勧めします。この機器を選んだ理由は、50代以降は強い超音波がお顔のボリュームを減らす可能性があるためです。"
+  (※ CDJ 관점: 추천 결과의 신뢰도를 높이는 '맞춤형 코멘트' = AI 개인화의 최고 차별화 포인트)
 
 For BRIGHTENING concerns:
-- Mechanism: Melanin targeting + cell turnover acceleration
-- Patient language (KR): "멜라닌 색소를 정밀하게 타겟팅해서 피부 본연의 톤을 되찾는 방식"
-- Patient language (US): "It precisely targets excess pigment while boosting your skin's natural renewal"
-- Patient language (JP): "メラニン色素を精密にターゲットし、お肌本来のトーンを取り戻す方法"
+- ※ CRITICAL: 색소 치료는 병변 유형에 따라 기전이 완전히 다름. 단일 설명 금지.
+  환자의 concern sub-type에 따라 반드시 분기할 것.
+
+  [Sub-type A: 일반 톤업/잡티 — Pico Toning, Q-switched Toning, BBL]
+  - Mechanism: Pico/Q-switched laser photoacoustic or photothermal melanin fragmentation
+  - ※ CRITICAL: 동일 1064nm이라도 펄스폭에 따라 환자 설명 분기 필수:
+    * Q-switched (나노초 / Hollywood Spectra, RevLite 등):
+      → 환자향 키워드: "부드럽고 점진적인 토닝"
+      → 열(Thermal) 변환으로 색소를 천천히 분해. 피부 자극 적어 예민한 기미 피부에도 적합.
+      → 10회+ 꾸준한 관리형. Smart Chip 매핑: "자극 없이 꾸준한 관리" 선호 시.
+    * Pico (피코초 / PicoPlus, PicoWay 등):
+      → 환자향 키워드: "빠르고 강력한 색소 파괴"
+      → 나노초보다 1000배 짧은 펄스(450ps 등)로 열 손상 최소화 + 광음향 충격파로 색소 미세 분쇄.
+      → 적은 횟수로 난치성 잡티 빠르게 개선. Smart Chip 매핑: "비용이 들더라도 빠른 개선" 선호 시.
+  - Patient language (KR): "색소 치료라고 하면 '레이저로 태워서 없앤다'고 생각하시는 분이 많은데, 최신 레이저는 다릅니다. 피코 레이저는 아주 짧은 광음향 충격파로 색소 입자를 미세하게 분쇄해요. 큰 돌을 잘게 부수면 물에 쓸려 나가듯이, 잘게 부서진 색소는 우리 몸의 면역 세포가 자연스럽게 청소합니다. 빠른 개선을 원하시면 피코, 자극 없이 꾸준히 관리하시려면 Q-switched 방식이 적합합니다."
+  - Patient language (US): "You might think laser treatment 'burns away' dark spots, but modern lasers work differently. Pico lasers use ultra-short pulses to create shockwaves that shatter pigment into tiny particles — like breaking a boulder into sand. Your body's immune cells then naturally sweep up the fragments. If you prefer faster results, pico technology can clear stubborn spots in fewer sessions; if you'd rather take a gentler, gradual approach, Q-switched toning builds clarity over time with minimal irritation."
+  - Patient language (JP): "レーザーで「焼いて消す」イメージを持つ方が多いですが、最新のレーザーは違います。ピコレーザーは超短パルスの衝撃波でメラニン粒子を微細に粉砕します。大きな石を砂に砕くと水に流されるように、砕かれた色素は体の免疫細胞が自然に掃除してくれます。早い改善をご希望ならピコ、刺激を抑えてじっくりケアするならQ-スイッチ方式が適しています。"
+
+  [Sub-type B: 기미(Melasma) — Sylfirm X PW mode, low-fluence toning]
+  - Mechanism: Basement membrane zone (BMZ) stabilization via pulsed-wave microneedle RF — calms overactive melanocytes rather than destroying pigment
+  - Patient language (KR): "기미는 일반 색소와 다릅니다. 보통 '레이저로 색소를 깨면 되지 않나?'라고 생각하시는데, 기미는 색소 공장(멜라노사이트) 자체가 과흥분된 상태예요. 색소만 깨면 공장이 더 자극받아서 오히려 짙어질 수 있습니다. 그래서 최신 접근법은 색소를 직접 파괴하는 대신, 색소 공장 아래층(기저막)을 안정화시켜서 과잉 생산 자체를 진정시키는 방식입니다."
+  - Patient language (US): "Melasma is different from regular dark spots. You might think 'just laser it off,' but melasma means the pigment-producing cells themselves are overactive. Destroying pigment alone can actually stimulate them to produce even more. That's why the latest approach stabilizes the deeper layer beneath those cells — calming the overproduction at its source rather than chasing the pigment it creates."
+  - Patient language (JP): "肝斑は普通のシミとは違います。「レーザーで色素を壊せばいいのでは？」と思われがちですが、肝斑はメラノサイト（色素工場）自体が過剰に活性化した状態です。色素だけ壊すと、かえって工場が刺激されて濃くなることも。そのため最新のアプローチでは、色素を直接破壊するのではなく、その下層（基底膜）を安定させて過剰生産そのものを鎮める方法をとります。"
+
+  [Sub-type C: 흑자/Solar Lentigo — Reepot VSLS, high-energy single shot]
+  - Mechanism: High-energy single-shot selective thermolysis targeting discrete dark lesions
+  - Patient language (KR): "확실하게 경계가 보이는 검은 흑자는 또 다른 접근이 필요합니다. 기미처럼 '진정시키는' 치료가 아니라, 고출력 에너지를 정확히 그 병변에만 조사해서 1회로 확실하게 제거하는 방식이에요. 흑자와 기미를 같은 치료로 접근하면 안 되는 이유가 바로 이겁니다 — 병변의 성격 자체가 다르기 때문입니다."
+  - Patient language (US): "Clearly defined dark spots like solar lentigines need a completely different approach from melasma. Instead of calming overactive cells, a single high-energy pulse precisely targets and removes the lesion — often in just one session. That's exactly why treating all dark spots the same way doesn't work: the underlying cause is fundamentally different."
+  - Patient language (JP): "くっきりとした境界のある黒い色素斑（日光黒子）は、肝斑とはまた違うアプローチが必要です。「鎮める」治療ではなく、高出力エネルギーを病変だけに精密に照射して1回で確実に除去する方法です。肝斑と同じ治療をしてはいけない理由がまさにこれです — 病変の性質そのものが異なるからです。"
+
+- Key reassurance: Not all dark spots are the same — matching the right approach to your specific type of pigmentation is what makes the difference
 
 For VOLUME concerns:
-- Mechanism: Volume restoration at specific tissue planes
-- Key reassurance: Multiple options from non-invasive to minimally invasive
+- Mechanism: Biocompatible materials (PDLLA/PLLA) trigger gradual neocollagenesis over weeks to months — NOT instant filler
+- Patient language (KR): "'볼륨=필러 주입'이라고 생각하시는 분이 많은데, 최근에는 다른 접근도 있습니다. 바이오스티뮬레이터라는 것은 볼륨을 직접 채우는 게 아니라, 체내에서 콜라겐 생성을 촉진하는 '씨앗'을 심는 개념이에요. 2~6개월에 걸쳐 내 몸이 만든 콜라겐으로 서서히 볼륨이 차오르기 때문에, 주변에서 '뭐 했어?'가 아니라 '요즘 좋아 보인다'라는 반응이 나옵니다."
+- Patient language (US): "When people hear 'volume restoration,' they usually think of filler injections. But there's a different approach: biostimulators work by planting 'seeds' that trigger your body to produce its own collagen over 2-6 months. Because the volume comes from your own collagen building gradually, the change looks completely natural — people notice you look great, not that you had something done."
+- Patient language (JP): "「ボリューム＝フィラー注入」と思われがちですが、最近は別のアプローチもあります。バイオスティミュレーターは直接ボリュームを入れるのではなく、体内でコラーゲン生成を促す「種」を植える概念です。2〜6ヶ月かけて自分のコラーゲンで徐々にボリュームが出るので、周りから「何かした？」ではなく「最近キレイになったね」という反応になります。"
+- Key reassurance: Results develop gradually from your own collagen — that's why they look so natural
 
 For TEXTURE / ACNE / SCAR concerns:
-- Mechanism: Controlled micro-injury → collagen remodeling cycle
-- Key reassurance: Even long-standing scars can show significant improvement
+- ※ 2가지 기전 분기: EBD(에너지 디바이스) vs Injectable(주사형)
+
+  [EBD approach: MN-RF (Genius/Potenza), CO2 fractional (UltraPulse)]
+  - Mechanism: Precisely controlled energy creates microscopic treatment zones, triggering collagen remodeling cascade that replaces scar tissue
+  - Patient language (KR): "흉터 치료라고 하면 '깎아낸다'거나 '태운다'는 이미지가 있죠? 실제 원리는 좀 다릅니다. 정밀한 에너지가 흉터 조직에 아주 미세한 리모델링 신호를 보내면, 우리 몸이 그 부분의 오래된 콜라겐을 새 콜라겐으로 교체하는 자연 치유 과정을 시작합니다. 특히 최신 장비는 실시간으로 피부 저항값을 측정하면서 에너지를 조절하기 때문에, 불필요한 손상 없이 필요한 깊이에만 정확하게 작용합니다."
+  - Patient language (US): "Scar treatment might sound like 'sanding down' or 'burning away' damaged skin, but the actual principle is different. Precisely targeted energy sends remodeling signals to scar tissue, triggering your body to replace old, disorganized collagen with fresh, healthy collagen. The latest devices even measure your skin's resistance in real-time, adjusting energy on the spot — so it works exactly where needed without unnecessary damage."
+  - Patient language (JP): "傷跡治療というと「削る」や「焼く」イメージがありますよね？実際の原理は少し違います。精密なエネルギーが瘢痕組織にリモデリングのシグナルを送り、古い乱れたコラーゲンを新しい健康なコラーゲンに置き換える自然治癒プロセスを起動させます。最新の機器は皮膚の抵抗値をリアルタイムで計測しながらエネルギーを調整するので、必要な深さにだけ正確に作用します。"
+
+  [Injectable approach: Biostimulators (Juvelook Vol / Sculptra / Re2O)]
+  - Mechanism: Biocompatible materials injected beneath depressed scars stimulate neocollagenesis from within
+  - Patient language (KR): "움푹 들어간 흉터의 경우, 에너지 장비와는 또 다른 접근이 가능합니다. 바이오스티뮬레이터를 흉터 아래에 주입하면, 그 부위에서 새로운 콜라겐이 안쪽부터 차올라 흉터의 깊이를 채워 올립니다. 에너지 장비로 표면을 리모델링하고 + 주사로 깊이를 채우는 복합 접근이 오래된 흉터에 특히 효과적입니다."
+  - Patient language (US): "For depressed scars, there's also an approach from the inside out. Biocompatible materials injected beneath the scar stimulate new collagen growth that fills in the depth from below. Combining surface remodeling with energy devices and depth restoration with injectables is especially effective for long-standing scars."
+  - Patient language (JP): "陥凹した傷跡には、内側からのアプローチもあります。瘢痕の下にバイオスティミュレーターを注入すると、その部位で新しいコラーゲンが内側から盛り上がり、傷跡の深さを埋めていきます。エネルギー機器で表面をリモデリング＋注射で深さを埋める複合アプローチが、長年の傷跡に特に効果的です。"
+
+- Key reassurance: Even scars you've had for years can improve — your skin retains its ability to rebuild when given the right signal, and multiple approaches can be combined
 
 [COUNTRY-SPECIFIC SOCIAL PROOF PATTERNS]
 
