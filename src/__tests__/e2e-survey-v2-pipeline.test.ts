@@ -797,6 +797,129 @@ describe('Survey v2 E2E Pipeline', () => {
     });
   });
 
+  // ─── 5.5b v1.2 Mirror + Confidence Layer Verification ──────
+  // Tests: KR 42F Tightening, US 35F Body, JP 52F Lifting
+  describe('v1.2 Mirror + Confidence layer verification', () => {
+    test('Scenario D: KR 42F Tightening — v1.2 열 에너지, 콜라겐 수축+신생', () => {
+      const mock: OpusRecommendationOutput = {
+        ...createMockOpusOutput_ScenarioA(),
+        lang: 'ko',
+        patient: {
+          age: '40s', gender: 'female', country: 'KR',
+          aesthetic_goal: '볼살 빠지면서 더 나이들어 보이는 느낌 개선',
+          top3_concerns: ['탄력저하', '볼살빠짐', '주름'],
+          past_treatments: [],
+          fitzpatrick: 'III',
+          pain_sensitivity: 3,
+        },
+        mirror: {
+          headline: '관리해도 달라지지 않는 느낌, 아시죠?',
+          empathy_paragraphs: '운동도 열심히 하시고, 관리도 꾸준히 하시는데 — 거울을 볼 때마다 볼살이 빠지면서 오히려 더 나이들어 보이는 느낌.\n\n40대에 접어들면서 \"꾸준히 하는데도 왜 달라지지 않지?\"라는 생각이 드셨을 거예요.',
+          transition: '많은 분들이 같은 고민을 하고 계세요. 그리고 방법이 있습니다.',
+        },
+        confidence: {
+          reason_why: '보통 \'콜라겐을 채워 넣는다\'고 생각하기 쉬운데, 사실은 반대입니다. 진피층에 있는 기존 콜라겐 섬유를 열 에너지로 수축시키는 것이 첫 번째 원리예요. 느슨해진 스프링을 다시 팽팽하게 당기는 것과 비슷합니다. 그리고 이 열 자극이 신호가 되어 수주에 걸쳐 새로운 콜라겐이 만들어지면서, 피부가 스스로 탄탄해지는 두 번째 단계가 이어집니다.',
+          social_proof: '비슷한 고민으로 상담받으신 분들 중 대부분이 \'진작에 할걸\'이라고 하세요. 충분히 알아보신 후에 결정하시는 것 — 가장 현명한 방법입니다.',
+          commitment: '당신의 피부가 다시 달라질 수 있는 방법이 있습니다. 그리고 그 방법은 하나가 아닙니다.',
+        },
+      };
+
+      // v1.2 check: "열 에너지" used (NOT "고주파 열")
+      expect(mock.confidence.reason_why).toContain('열 에너지');
+      expect(mock.confidence.reason_why).not.toContain('고주파 열');
+      // v1.2 check: 콜라겐 수축 + 신콜라겐 생성 2단계
+      expect(mock.confidence.reason_why).toContain('수축');
+      expect(mock.confidence.reason_why).toContain('새로운 콜라겐');
+      // Mirror layer KR tone
+      expect(mock.mirror.headline.length).toBeLessThanOrEqual(30);
+      expect(mock.mirror.empathy_paragraphs).toContain('거울');
+      expect(mock.mirror.transition).toContain('방법이 있습니다');
+      // JSON parse round-trip
+      const roundTrip = JSON.parse(JSON.stringify(mock));
+      expect(roundTrip.mirror.headline).toBe(mock.mirror.headline);
+      expect(roundTrip.confidence.reason_why).toBe(mock.confidence.reason_why);
+    });
+
+    test('Scenario E: US 35F Body Contouring — post-pregnancy narrative', () => {
+      const mock: OpusRecommendationOutput = {
+        ...createMockOpusOutput_ScenarioA(),
+        lang: 'en',
+        patient: {
+          age: '30s', gender: 'female', country: 'US',
+          aesthetic_goal: 'Post-pregnancy body restoration',
+          top3_concerns: ['loose skin', 'stubborn fat', 'stretch marks'],
+          past_treatments: [],
+          fitzpatrick: 'II',
+          pain_sensitivity: 3,
+        },
+        mirror: {
+          headline: 'Your body changed. Your identity didn\'t.',
+          empathy_paragraphs: 'After pregnancy, your body went through something extraordinary. You\'ve done everything right — diet, exercise — but some changes are structural, not behavioral.\n\nWanting your body back isn\'t vanity — it\'s about feeling like yourself again.',
+          transition: 'You\'re definitely not alone — and there are real options.',
+        },
+        confidence: {
+          reason_why: 'Pregnancy permanently changes certain tissue structures — diastasis recti, skin laxity, and stubborn fat deposits. These changes aren\'t about willpower or effort. They\'re structural changes that respond to targeted medical approaches.',
+          social_proof: 'Many women describe this as reclaiming something that pregnancy changed — and finding that it was absolutely worth it. Patients who take the time to research consistently report the highest satisfaction.',
+          commitment: 'There are proven approaches designed for exactly what you\'re experiencing. And you have options.',
+        },
+      };
+
+      // v1.2 check: recovery narrative
+      expect(mock.mirror.empathy_paragraphs).toContain('pregnancy');
+      expect(mock.mirror.empathy_paragraphs).toContain('feeling like yourself');
+      // v1.2 check: social proof with "reclaiming"
+      expect(mock.confidence.social_proof).toContain('reclaiming');
+      // v1.2 check: post-pregnancy context
+      expect(mock.confidence.reason_why).toContain('structural');
+      // Mirror in English
+      expect(mock.mirror.headline.length).toBeLessThanOrEqual(60);
+      // JSON round-trip
+      const roundTrip = JSON.parse(JSON.stringify(mock));
+      expect(roundTrip.confidence.commitment).toBe(mock.confidence.commitment);
+    });
+
+    test('Scenario F: JP 52F Lifting — Age≥50 Confidence Insight (NOT Warning)', () => {
+      const mock: OpusRecommendationOutput = {
+        ...createMockOpusOutput_ScenarioA(),
+        lang: 'jp',
+        patient: {
+          age: '50s', gender: 'female', country: 'JP',
+          aesthetic_goal: 'たるみ改善',
+          top3_concerns: ['たるみ', '輪郭ぼやけ', '法令線'],
+          past_treatments: [],
+          fitzpatrick: 'III-IV',
+          pain_sensitivity: 4,
+        },
+        mirror: {
+          headline: '写真を避けてしまう気持ち、わかります',
+          empathy_paragraphs: 'たるみが気になって写真を撮るのを避けてしまう方は本当に多いです。\n\n50歳を過ぎたから仕方ない…と思いつつも、やっぱり気になる。その気持ちはとても自然なことです。',
+          transition: '同じお悩みの方がたくさんいらっしゃいます。そして、方法があります。',
+        },
+        confidence: {
+          // v1.2: Age≥50 Confidence Insight embedded in reason_why (NOT Warning popup)
+          reason_why: '「リフティング」と聞くと、物理的に皮膚を引っ張るイメージかもしれません。実際はもう少し精密です。集束エネルギーが深い組織層に微細な収縮ポイントを作り、見えないアンカーのように組織を元の位置に引き上げます。お客様の肌状態を考慮して、ボリュームを保ちながらたるみだけを精密にリフトする機器をお勧めします。この機器を選んだ理由は、50代以降は強い超音波がお顔のボリュームを減らす可能性があるためです。',
+          social_proof: '同じお悩みでカウンセリングを受けた方の多くが「もっと早くやればよかった」とおっしゃいます。回復期間は最小限に抑えられます。',
+          commitment: 'お悩みに対する方法があります。そして、選択肢は一つではありません。',
+        },
+      };
+
+      // v1.2 check: Age≥50 Confidence Insight (NOT Warning)
+      expect(mock.confidence.reason_why).toContain('ボリュームを保ちながら');
+      expect(mock.confidence.reason_why).toContain('50代以降');
+      // v1.2 check: This is reasoning, not a warning message
+      expect(mock.confidence.reason_why).toContain('この機器を選んだ理由');
+      // v1.2 check: JP ダウンタイム mention in social proof
+      expect(mock.confidence.social_proof).toContain('もっと早くやればよかった');
+      // Mirror: バレたくない sensitivity (photo avoidance)
+      expect(mock.mirror.empathy_paragraphs).toContain('写真');
+      expect(mock.mirror.empathy_paragraphs).toContain('50歳');
+      // JSON round-trip
+      const roundTrip = JSON.parse(JSON.stringify(mock));
+      expect(roundTrip.mirror.headline).toBe(mock.mirror.headline);
+      expect(roundTrip.confidence.reason_why).toContain('ボリュームを保ちながら');
+    });
+  });
+
   // ─── 5.6 Score Validation ──────────────────────────────────
   describe('Score validation', () => {
     const output = createMockOpusOutput_ScenarioA();
