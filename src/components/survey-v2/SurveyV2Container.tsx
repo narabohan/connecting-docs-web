@@ -113,6 +113,7 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
               <OpenQuestionStep
                 key="open"
                 lang={lang}
+                country={demographics.detected_country}
                 value={openResponse}
                 onChange={setOpenResponse}
                 onSubmit={submitOpen}

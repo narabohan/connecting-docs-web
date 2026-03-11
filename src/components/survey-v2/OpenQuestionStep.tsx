@@ -1,12 +1,32 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import type { SurveyLang } from '@/types/survey-v2';
 import { SURVEY_V2_I18N } from '@/utils/survey-v2-i18n';
 
+// ─── Country-based question text (MIRROR_CONFIDENCE_PROMPT §5.1) ──
+// TW and CN are separate countries sharing ZH-CN lang but need distinct questions.
+const COUNTRY_QUESTION_OVERRIDES: Record<string, {
+  title: string;
+  subtitle: string;
+  placeholder: string;
+}> = {
+  TW: {
+    title: '皮膚最讓您在意的時刻是什麼？',
+    subtitle: '例如照鏡子的時候、拍照的時候、見朋友的時候 — 什麼時候最困擾？',
+    placeholder: '自由填寫您的皮膚煩惱...',
+  },
+  CN: {
+    title: '皮肤最让您在意的时刻是什么？',
+    subtitle: '比如照镜子的时候、拍照的时候、见朋友的时候 — 什么时候最困扰？',
+    placeholder: '自由填写您的皮肤烦恼...',
+  },
+};
+
 interface OpenQuestionStepProps {
   lang: SurveyLang;
+  country?: string;  // detected_country for TW/CN branching (§5.1)
   value: string;
   onChange: (v: string) => void;
   onSubmit: () => void;
@@ -18,13 +38,22 @@ const MIN_CHARS = 5;
 
 export default function OpenQuestionStep({
   lang,
+  country,
   value,
   onChange,
   onSubmit,
   isLoading,
   onBack,
 }: OpenQuestionStepProps) {
-  const t = SURVEY_V2_I18N[lang].step2;
+  // Country-based override for TW/CN; otherwise fall back to lang-based i18n
+  const countryOverride = country ? COUNTRY_QUESTION_OVERRIDES[country] : undefined;
+  const t = useMemo(() => {
+    const base = SURVEY_V2_I18N[lang].step2;
+    if (countryOverride) {
+      return { ...base, ...countryOverride };
+    }
+    return base;
+  }, [lang, countryOverride]);
   const tc = SURVEY_V2_I18N[lang].common;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 

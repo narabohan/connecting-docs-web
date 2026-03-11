@@ -1407,6 +1407,23 @@ button:focus-visible,.equip-chip:focus-visible,.sb-chip:focus-visible,.deb-chip:
 .lang-btn.active{color:var(--cyan);text-shadow:0 0 8px rgba(34,211,238,0.3);}
 .lang-btn:not(:last-child){border-right:1px solid var(--border);}
 
+/* ── Mirror Layer (감성적 디자인) ── */
+.mirror-layer{padding:32px 24px;margin-bottom:20px;border-radius:var(--radius);background:linear-gradient(135deg, rgba(34,211,238,0.06) 0%, rgba(167,139,250,0.06) 100%);border:1px solid rgba(34,211,238,0.15);}
+.mirror-headline{font-size:22px;font-weight:700;line-height:1.35;color:var(--text-hi);margin-bottom:20px;text-align:center;letter-spacing:-0.01em;}
+.mirror-empathy{font-size:14px;line-height:1.75;color:var(--text);margin-bottom:16px;white-space:pre-line;}
+.mirror-transition{font-size:13px;font-weight:500;color:var(--cyan);margin-top:20px;padding-top:16px;border-top:1px solid rgba(34,211,238,0.15);text-align:center;letter-spacing:0.01em;}
+/* ── Confidence Layer (신뢰감 디자인) ── */
+.confidence-layer{padding:24px;margin-bottom:20px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);}
+.confidence-reason{font-size:13px;line-height:1.7;color:var(--text);margin-bottom:16px;white-space:pre-line;}
+.confidence-proof{font-size:12px;line-height:1.65;color:var(--text-2);padding:12px 16px;background:var(--surface-2);border-radius:var(--radius-sm);margin-bottom:14px;border-left:3px solid var(--cyan);}
+.confidence-commit{font-size:14px;font-weight:600;color:var(--text-hi);text-align:center;letter-spacing:-0.005em;}
+@media(max-width:480px){
+  .mirror-layer{padding:24px 16px;}
+  .mirror-headline{font-size:18px;}
+  .mirror-empathy{font-size:13px;}
+  .confidence-layer{padding:20px 16px;}
+}
+
 </style>
 </head>
 <body>
@@ -1481,6 +1498,20 @@ button:focus-visible,.equip-chip:focus-visible,.sb-chip:focus-visible,.deb-chip:
   <div class="action-bar">
     <button class="action-btn primary" onclick="printReport()" aria-label="리포트 인쇄"><span class="btn-icon">🖨️</span data-i18n="btnPrint"> 리포트 인쇄</button>
     <button class="action-btn" onclick="copySection('tab-patient')" aria-label="텍스트 복사"><span class="btn-icon">📋</span data-i18n="btnCopy"> 텍스트 복사</button>
+  </div>
+
+  <!-- ═══ MIRROR LAYER (거울 — 감성적 공감) ═══ -->
+  <div class="mirror-layer" id="mirror-layer" style="display:none;">
+    <div class="mirror-headline" id="mirror-headline"></div>
+    <div class="mirror-empathy" id="mirror-empathy"></div>
+    <div class="mirror-transition" id="mirror-transition"></div>
+  </div>
+
+  <!-- ═══ CONFIDENCE LAYER (확신 — 임상 자신감) ═══ -->
+  <div class="confidence-layer" id="confidence-layer" style="display:none;">
+    <div class="confidence-reason" id="confidence-reason"></div>
+    <div class="confidence-proof" id="confidence-proof"></div>
+    <div class="confidence-commit" id="confidence-commit"></div>
   </div>
 
   <!-- ═══ ZONE 2: AI Recommended EBD Devices (Layer 1) ═══ -->
@@ -8149,6 +8180,50 @@ setTimeout(()=>{
    *  Replaces hardcoded sample data with dynamic patient data
    * ══════════════════════════════════════════════════════ */
 
+  /* ══════════════════════════════════════════════════════
+   *  MIRROR + CONFIDENCE LAYER RENDERERS (Issue 0-7)
+   * ══════════════════════════════════════════════════════ */
+
+  /**
+   * Render the Mirror layer (거울 — 감성적 공감)
+   * @param {Object} mirror - { headline, empathy_paragraphs, transition }
+   */
+  function renderMirrorLayer(mirror) {
+    if (!mirror) return;
+    const el = document.getElementById('mirror-layer');
+    if (!el) return;
+
+    const headline = document.getElementById('mirror-headline');
+    const empathy = document.getElementById('mirror-empathy');
+    const transition = document.getElementById('mirror-transition');
+
+    if (headline) headline.textContent = mirror.headline || '';
+    if (empathy) empathy.innerHTML = (mirror.empathy_paragraphs || '').replace(/\n/g, '<br>');
+    if (transition) transition.textContent = mirror.transition || '';
+
+    el.style.display = 'block';
+  }
+
+  /**
+   * Render the Confidence layer (확신 — 임상 자신감)
+   * @param {Object} confidence - { reason_why, social_proof, commitment }
+   */
+  function renderConfidenceLayer(confidence) {
+    if (!confidence) return;
+    const el = document.getElementById('confidence-layer');
+    if (!el) return;
+
+    const reason = document.getElementById('confidence-reason');
+    const proof = document.getElementById('confidence-proof');
+    const commit = document.getElementById('confidence-commit');
+
+    if (reason) reason.innerHTML = (confidence.reason_why || '').replace(/\n/g, '<br>');
+    if (proof) proof.innerHTML = (confidence.social_proof || '').replace(/\n/g, '<br>');
+    if (commit) commit.textContent = confidence.commitment || '';
+
+    el.style.display = 'block';
+  }
+
   /**
    * Main entry point: call initReport(opusData) to populate the entire report.
    * @param {Object} data - Opus output JSON (see REPORT_DATA_BINDING_SPEC.md)
@@ -8156,6 +8231,10 @@ setTimeout(()=>{
   function initReport(data) {
     if (!data) return;
     const lang = data.lang || 'ko';
+
+    // 0. Mirror + Confidence layers (Issue 0-7: 거울→확신→솔루션 3-layer)
+    if (data.mirror) renderMirrorLayer(data.mirror);
+    if (data.confidence) renderConfidenceLayer(data.confidence);
 
     // 1. Inject patient-specific i18n values
     if (data.patient) injectPatientI18n(lang, data.patient);
