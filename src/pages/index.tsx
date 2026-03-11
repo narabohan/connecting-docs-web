@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/landing/Hero';
 import SignatureRanking from '@/components/curation/SignatureRanking';
-import DeepDiveModal from '@/components/curation/DeepDiveModal';
 import HowItWorks from '@/components/HowItWorks';
 import ForPatients from '@/components/landing/ForPatients';
 import SocialProof from '@/components/landing/SocialProof';
@@ -15,8 +14,6 @@ import Footer from '@/components/Footer';
 import AuthModal from '@/components/auth/AuthModal';
 import { LanguageCode } from '@/utils/translations';
 import { useAuth } from '@/context/AuthContext';
-import { WizardData } from '@/components/landing/DiagnosisWizard';
-import DiagnosisWizard from '@/components/landing/DiagnosisWizard';
 import { useRouter } from 'next/router';
 
 export default function Home() {
@@ -24,33 +21,11 @@ export default function Home() {
   const { user } = useAuth();
 
   const [currentLang, setCurrentLang] = useState<LanguageCode>('EN');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedRank, setSelectedRank] = useState<1 | 2 | 3 | null>(null);
-  const [wizardData, setWizardData] = useState<WizardData | null>(null);
-  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (router.query.start_wizard) {
-      // No auth gate: open wizard directly for all users
-      setIsWizardOpen(true);
-    }
-  }, [router.query]);
-
-  const handleSelectSolution = (rank: 1 | 2 | 3) => {
-    setSelectedRank(rank);
-    setIsModalOpen(true);
-  };
-
-  const handleDiagnosisComplete = (data: WizardData) => {
-    setWizardData(data);
-    setIsModalOpen(true);
-  };
-
-  // ── Wizard start: No login required to start ────────────────────────────────
-  // Wizard is open to all users. Auth is only required when viewing the saved report.
+  // Navigate to new survey-v2
   const handleStartAnalysis = () => {
-    setIsWizardOpen(true);
+    router.push('/survey-v2');
   };
 
   // Handle global event to open AuthModal
@@ -59,18 +34,6 @@ export default function Home() {
     window.addEventListener('open-auth-modal', handleOpenAuth);
     return () => window.removeEventListener('open-auth-modal', handleOpenAuth);
   }, []);
-
-  // When user logs in via AuthModal while trying to start analysis
-  useEffect(() => {
-    if (user && isAuthModalOpen) {
-      setIsAuthModalOpen(false);
-      // If we already have wizardData, navigate to the report
-      // If not, open the wizard
-      if (!wizardData) {
-        setIsWizardOpen(true);
-      }
-    }
-  }, [user]);
 
   return (
     <div className="bg-[#050505] min-h-screen text-slate-50 font-sans selection:bg-blue-500/30 selection:text-white scroll-smooth relative">
@@ -101,31 +64,11 @@ export default function Home() {
       <Header currentLang={currentLang} onLangChange={setCurrentLang} />
 
       <main>
-        <Hero language={currentLang} onDiagnosisComplete={handleDiagnosisComplete} onStartAnalysis={handleStartAnalysis} />
-        <SignatureRanking language={currentLang} onSelectSolution={handleSelectSolution} />
+        <Hero language={currentLang} onStartAnalysis={handleStartAnalysis} />
+        <SignatureRanking language={currentLang} onSelectSolution={() => handleStartAnalysis()} />
 
         {/* How It Works — overview of the 3-step analysis process */}
         <HowItWorks language={currentLang} />
-
-        {/* Diagnosis Wizard (open to all users) */}
-        <DiagnosisWizard
-          isOpen={isWizardOpen}
-          onClose={() => setIsWizardOpen(false)}
-          onComplete={(data) => {
-            handleDiagnosisComplete(data);
-            setIsWizardOpen(false);
-          }}
-          language={currentLang}
-        />
-
-        {/* Deep Dive Modal */}
-        <DeepDiveModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          rank={selectedRank}
-          language={currentLang}
-          tallyData={wizardData}
-        />
 
         <ForPatients language={currentLang} onStartSurvey={handleStartAnalysis} />
 
