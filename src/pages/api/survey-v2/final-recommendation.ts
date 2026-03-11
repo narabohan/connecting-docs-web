@@ -5,7 +5,6 @@
 //  Based on HYBRID_SURVEY_LOGIC_v2.md §7 + COUNTRY_RECOMMENDATION_WEIGHTS.md
 // ═══════════════════════════════════════════════════════════════
 
-import type { NextApiRequest, NextApiResponse } from 'next';
 import Anthropic from '@anthropic-ai/sdk';
 import type {
   Demographics,
@@ -1006,25 +1005,30 @@ Safety Follow-up Answers: ${JSON.stringify(req.safety_followup_answers)}
 ${safetySection}`;
 }
 
-// ─── API Route Config ────────────────────────────────────────
-// Extend Netlify function timeout (default 10s)
-// Using Haiku 4.5 for speed (~3-5s); Sonnet requires Background Functions
+// ─── Edge Runtime Config ─────────────────────────────────────
+// Edge Runtime avoids Netlify's 26-second serverless function timeout.
+// The Anthropic API call (I/O wait) doesn't count against Edge's CPU limit,
+// allowing the full streaming generation to complete (30-60s+).
 export const config = {
-  maxDuration: 60, // seconds — Netlify will cap to plan max
+  runtime: 'edge',
 };
 
-// ─── API Handler (Streaming to avoid Netlify timeout) ────────
+// ─── API Handler (Edge Runtime + SSE Streaming) ──────────────
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: Request) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
+  // Parse and validate body before entering the stream
+  let body: FinalRecommendationRequest;
+  let dynamicPrompt: string;
+
   try {
-    const body = req.body as FinalRecommendationRequest;
+    body = (await req.json()) as FinalRecommendationRequest;
 
     // Defensive defaults for array/object fields that may be undefined
     body.q2_risk_flags = body.q2_risk_flags || [];
@@ -1036,113 +1040,141 @@ export default async function handler(
 
     // Validate required fields
     if (!body.demographics || !body.q1_primary_goal) {
-      return res.status(400).json({ error: 'Missing required fields: demographics, q1_primary_goal' });
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields: demographics, q1_primary_goal' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
-    const dynamicPrompt = buildDynamicSystemPrompt(body);
-
-    // Use streaming to keep connection alive and avoid Netlify timeout
-    // We collect the full text, then parse JSON at the end
-    const stream = anthropic.messages.stream({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 10240,
-      temperature: 0.3,
-      system: [
-        {
-          type: 'text' as const,
-          text: STATIC_SYSTEM_PROMPT,
-          cache_control: { type: 'ephemeral' as const },
-        },
-        {
-          type: 'text' as const,
-          text: dynamicPrompt,
-        },
-      ],
-      messages: [
-        {
-          role: 'user',
-          content: 'Generate the complete treatment recommendation JSON based on the patient data provided in the system prompt. Output ONLY valid JSON.',
-        },
-      ],
-    });
-
-    // Set headers for streaming (keeps Netlify connection alive)
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-
-    let fullText = '';
-    let inputTokens = 0;
-    let outputTokens = 0;
-    let modelUsed = 'claude-haiku-4-5-20251001';
-    let lastProgressAt = 0;
-
-    // Stream progress events to keep connection alive (throttled to every 500 chars)
-    stream.on('text', (text) => {
-      fullText += text;
-      // Send heartbeat every ~500 chars to avoid excessive SSE events
-      if (fullText.length - lastProgressAt >= 500) {
-        lastProgressAt = fullText.length;
-        res.write(`data: ${JSON.stringify({ type: 'progress', chars: fullText.length })}\n\n`);
-      }
-    });
-
-    // Wait for stream to complete
-    const finalMessage = await stream.finalMessage();
-    inputTokens = finalMessage.usage.input_tokens;
-    outputTokens = finalMessage.usage.output_tokens;
-    modelUsed = finalMessage.model;
-
-    // Parse JSON from collected text
-    let recommendation: OpusRecommendationOutput;
-    try {
-      let jsonStr = fullText.trim();
-      if (jsonStr.startsWith('```')) {
-        jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
-      }
-      recommendation = JSON.parse(jsonStr);
-    } catch {
-      console.error('[final-recommendation] JSON parse error:', fullText.substring(0, 200));
-      res.write(`data: ${JSON.stringify({ type: 'error', error: 'Failed to parse model response as JSON — output may be truncated (max_tokens)' })}\n\n`);
-      res.end();
-      return;
-    }
-
-    // ─── H-1: Validate & fallback for Mirror + Confidence layers ───
-    if (!recommendation.mirror || !recommendation.mirror.headline) {
-      console.warn('[final-recommendation] ⚠️ Mirror layer missing or incomplete — injecting fallback');
-      recommendation.mirror = {
-        headline: recommendation.mirror?.headline || '당신의 피부 고민, 충분히 이해합니다',
-        empathy_paragraphs: recommendation.mirror?.empathy_paragraphs || '많은 분들이 비슷한 고민을 안고 계십니다. 거울을 볼 때마다, 사진을 찍을 때마다 신경이 쓰이는 그 마음을 잘 알고 있습니다.',
-        transition: recommendation.mirror?.transition || '그리고 방법이 있습니다.',
-      };
-    }
-    if (!recommendation.confidence || !recommendation.confidence.reason_why) {
-      console.warn('[final-recommendation] ⚠️ Confidence layer missing or incomplete — injecting fallback');
-      recommendation.confidence = {
-        reason_why: recommendation.confidence?.reason_why || '피부과학적으로 검증된 메커니즘을 기반으로, 당신의 피부 상태에 적합한 접근법이 존재합니다.',
-        social_proof: recommendation.confidence?.social_proof || '유사한 피부 조건의 환자군에서 높은 만족도가 보고되고 있습니다.',
-        commitment: recommendation.confidence?.commitment || '당신에게 맞는 솔루션이 있습니다.',
-      };
-    }
-
-    // Send final result
-    const result: FinalRecommendationResponse = {
-      recommendation_json: recommendation,
-      model: modelUsed,
-      usage: { input_tokens: inputTokens, output_tokens: outputTokens },
-    };
-    res.write(`data: ${JSON.stringify({ type: 'done', ...result })}\n\n`);
-    res.end();
-  } catch (error) {
-    console.error('[final-recommendation] Error:', error);
-    const msg = error instanceof Error ? error.message : 'Unknown error';
-    // Try to send error via stream if headers already sent
-    if (res.headersSent) {
-      res.write(`data: ${JSON.stringify({ type: 'error', error: msg })}\n\n`);
-      res.end();
-    } else {
-      res.status(500).json({ error: msg });
-    }
+    dynamicPrompt = buildDynamicSystemPrompt(body);
+  } catch (e) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid request body' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
   }
+
+  const encoder = new TextEncoder();
+
+  const readable = new ReadableStream({
+    async start(controller) {
+      try {
+        // Use streaming API (async iterable) for Edge compatibility
+        const response = await anthropic.messages.create({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 10240,
+          temperature: 0.3,
+          stream: true,
+          system: [
+            {
+              type: 'text' as const,
+              text: STATIC_SYSTEM_PROMPT,
+              cache_control: { type: 'ephemeral' as const },
+            },
+            {
+              type: 'text' as const,
+              text: dynamicPrompt,
+            },
+          ],
+          messages: [
+            {
+              role: 'user',
+              content: 'Generate the complete treatment recommendation JSON based on the patient data provided in the system prompt. Output ONLY valid JSON.',
+            },
+          ],
+        });
+
+        let fullText = '';
+        let inputTokens = 0;
+        let outputTokens = 0;
+        let modelUsed = 'claude-haiku-4-5-20251001';
+        let lastProgressAt = 0;
+
+        for await (const event of response) {
+          if (event.type === 'content_block_delta' && 'delta' in event && (event.delta as { type: string }).type === 'text_delta') {
+            fullText += (event.delta as { type: string; text: string }).text;
+            // Send heartbeat every ~500 chars to keep client alive
+            if (fullText.length - lastProgressAt >= 500) {
+              lastProgressAt = fullText.length;
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ type: 'progress', chars: fullText.length })}\n\n`)
+              );
+            }
+          } else if (event.type === 'message_start' && 'message' in event) {
+            const msg = event.message as { usage?: { input_tokens?: number }; model?: string };
+            inputTokens = msg.usage?.input_tokens || 0;
+            modelUsed = msg.model || modelUsed;
+          } else if (event.type === 'message_delta' && 'usage' in event) {
+            const usage = event.usage as { output_tokens?: number };
+            outputTokens = usage.output_tokens || 0;
+          }
+        }
+
+        // Parse JSON from collected text
+        let recommendation: OpusRecommendationOutput;
+        try {
+          let jsonStr = fullText.trim();
+          if (jsonStr.startsWith('```')) {
+            jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+          }
+          recommendation = JSON.parse(jsonStr);
+        } catch {
+          console.error('[final-recommendation] JSON parse error:', fullText.substring(0, 200));
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: 'error', error: 'Failed to parse model response as JSON — output may be truncated (max_tokens)' })}\n\n`)
+          );
+          controller.close();
+          return;
+        }
+
+        // ─── H-1: Validate & fallback for Mirror + Confidence layers ───
+        if (!recommendation.mirror || !recommendation.mirror.headline) {
+          console.warn('[final-recommendation] Mirror layer missing — injecting fallback');
+          recommendation.mirror = {
+            headline: recommendation.mirror?.headline || '\uB2F9\uC2E0\uC758 \uD53C\uBD80 \uACE0\uBBFC, \uCDA9\uBD84\uD788 \uC774\uD574\uD569\uB2C8\uB2E4',
+            empathy_paragraphs: recommendation.mirror?.empathy_paragraphs || '\uB9CE\uC740 \uBD84\uB4E4\uC774 \uBE44\uC2B7\uD55C \uACE0\uBBFC\uC744 \uC548\uACE0 \uACC4\uC2ED\uB2C8\uB2E4. \uAC70\uC6B8\uC744 \uBCFC \uB54C\uB9C8\uB2E4, \uC0AC\uC9C4\uC744 \uCC0D\uC744 \uB54C\uB9C8\uB2E4 \uC2E0\uACBD\uC774 \uC4F0\uC774\uB294 \uADF8 \uB9C8\uC74C\uC744 \uC798 \uC54C\uACE0 \uC788\uC2B5\uB2C8\uB2E4.',
+            transition: recommendation.mirror?.transition || '\uADF8\uB9AC\uACE0 \uBC29\uBC95\uC774 \uC788\uC2B5\uB2C8\uB2E4.',
+          };
+        }
+        if (!recommendation.confidence || !recommendation.confidence.reason_why) {
+          console.warn('[final-recommendation] Confidence layer missing — injecting fallback');
+          recommendation.confidence = {
+            reason_why: recommendation.confidence?.reason_why || '\uD53C\uBD80\uACFC\uD559\uC801\uC73C\uB85C \uAC80\uC99D\uB41C \uBA54\uCEE4\uB2C8\uC998\uC744 \uAE30\uBC18\uC73C\uB85C, \uB2F9\uC2E0\uC758 \uD53C\uBD80 \uC0C1\uD0DC\uC5D0 \uC801\uD569\uD55C \uC811\uADFC\uBC95\uC774 \uC874\uC7AC\uD569\uB2C8\uB2E4.',
+            social_proof: recommendation.confidence?.social_proof || '\uC720\uC0AC\uD55C \uD53C\uBD80 \uC870\uAC74\uC758 \uD658\uC790\uAD70\uC5D0\uC11C \uB192\uC740 \uB9CC\uC871\uB3C4\uAC00 \uBCF4\uACE0\uB418\uACE0 \uC788\uC2B5\uB2C8\uB2E4.',
+            commitment: recommendation.confidence?.commitment || '\uB2F9\uC2E0\uC5D0\uAC8C \uB9DE\uB294 \uC194\uB8E8\uC158\uC774 \uC788\uC2B5\uB2C8\uB2E4.',
+          };
+        }
+
+        // Send final result
+        const result: FinalRecommendationResponse = {
+          recommendation_json: recommendation,
+          model: modelUsed,
+          usage: { input_tokens: inputTokens, output_tokens: outputTokens },
+        };
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ type: 'done', ...result })}\n\n`)
+        );
+        controller.close();
+      } catch (error) {
+        console.error('[final-recommendation] Error:', error);
+        const msg = error instanceof Error ? error.message : 'Unknown error';
+        try {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: 'error', error: msg })}\n\n`)
+          );
+          controller.close();
+        } catch {
+          // Controller might already be closed
+        }
+      }
+    },
+  });
+
+  return new Response(readable, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
 }
