@@ -438,11 +438,18 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
         q3_volume_logic: state.q3_volume_logic,
       };
 
+      // H-2: 120s timeout for Opus analysis (SSE streaming may take long)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120_000);
+
       const res = await fetch('/api/survey-v2/final-recommendation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
@@ -552,7 +559,11 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
 
       onComplete(reportId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Analysis failed');
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        setError('분석 시간이 초과되었습니다. 다시 시도해 주세요. (Analysis timed out — please try again)');
+      } else {
+        setError(err instanceof Error ? err.message : 'Analysis failed');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -578,6 +589,7 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
     // Loading / Error
     isLoading,
     error,
+    clearError: () => setError(null),
 
     // Handlers
     setDemographics,

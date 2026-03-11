@@ -42,6 +42,7 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
     priorApplied,
     isLoading,
     error,
+    clearError,
     setDemographics,
     submitDemographics,
     setOpenResponse,
@@ -88,7 +89,7 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-sm text-red-700">{error}</p>
             <button
-              onClick={() => {}}
+              onClick={clearError}
               className="text-xs text-red-600 underline mt-1"
             >
               {t.common.error_generic}

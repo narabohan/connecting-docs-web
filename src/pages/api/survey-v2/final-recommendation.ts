@@ -1108,6 +1108,24 @@ export default async function handler(
       return;
     }
 
+    // ─── H-1: Validate & fallback for Mirror + Confidence layers ───
+    if (!recommendation.mirror || !recommendation.mirror.headline) {
+      console.warn('[final-recommendation] ⚠️ Mirror layer missing or incomplete — injecting fallback');
+      recommendation.mirror = {
+        headline: recommendation.mirror?.headline || '당신의 피부 고민, 충분히 이해합니다',
+        empathy_paragraphs: recommendation.mirror?.empathy_paragraphs || '많은 분들이 비슷한 고민을 안고 계십니다. 거울을 볼 때마다, 사진을 찍을 때마다 신경이 쓰이는 그 마음을 잘 알고 있습니다.',
+        transition: recommendation.mirror?.transition || '그리고 방법이 있습니다.',
+      };
+    }
+    if (!recommendation.confidence || !recommendation.confidence.reason_why) {
+      console.warn('[final-recommendation] ⚠️ Confidence layer missing or incomplete — injecting fallback');
+      recommendation.confidence = {
+        reason_why: recommendation.confidence?.reason_why || '피부과학적으로 검증된 메커니즘을 기반으로, 당신의 피부 상태에 적합한 접근법이 존재합니다.',
+        social_proof: recommendation.confidence?.social_proof || '유사한 피부 조건의 환자군에서 높은 만족도가 보고되고 있습니다.',
+        commitment: recommendation.confidence?.commitment || '당신에게 맞는 솔루션이 있습니다.',
+      };
+    }
+
     // Send final result
     const result: FinalRecommendationResponse = {
       recommendation_json: recommendation,

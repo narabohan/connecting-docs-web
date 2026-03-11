@@ -12,6 +12,21 @@ const COUNTRY_QUESTION_OVERRIDES: Record<string, {
   subtitle: string;
   placeholder: string;
 }> = {
+  KR: {
+    title: '피부 때문에 가장 신경 쓰이는 순간은 언제인가요?',
+    subtitle: '거울 볼 때, 사진 찍을 때, 화장할 때 — 어떤 순간이 가장 불편하세요?',
+    placeholder: '자유롭게 피부 고민을 적어주세요...',
+  },
+  US: {
+    title: 'When does your skin bother you the most?',
+    subtitle: 'Looking in the mirror, taking photos, before a big event — what moment frustrates you?',
+    placeholder: 'Describe your skin concerns freely...',
+  },
+  JP: {
+    title: 'お肌のことで一番気になる瞬間はいつですか？',
+    subtitle: '鏡を見るとき、写真を撮るとき、人に会うとき — どんなときが一番気になりますか？',
+    placeholder: 'お肌のお悩みを自由にお書きください...',
+  },
   TW: {
     title: '皮膚最讓您在意的時刻是什麼？',
     subtitle: '例如照鏡子的時候、拍照的時候、見朋友的時候 — 什麼時候最困擾？',
