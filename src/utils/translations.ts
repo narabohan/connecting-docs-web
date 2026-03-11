@@ -127,6 +127,14 @@ export interface TranslationStructure {
                     safety: string;
                 };
             };
+            deviceSuitability?: {
+                status?: { suitable?: string; caution?: string; unsuitable?: string };
+                levels?: { high?: string; medium?: string; low?: string };
+                targetArea?: string;
+                layer?: string;
+                pain?: string;
+                downtime?: string;
+            };
         };
         patients: {
             title: string;

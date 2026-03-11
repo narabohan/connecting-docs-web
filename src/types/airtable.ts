@@ -70,6 +70,33 @@ export interface IndicationRecord {
     };
 }
 
+export interface DeviceSummary {
+    device_id: string;
+    device_name?: string;
+}
+
+export interface CategoryRankResult {
+    category_id: string;
+    score: number;
+    recommended_sessions?: number;
+    session_interval_weeks?: number;
+    top_devices?: DeviceSummary[];
+    top_boosters?: BoosterDeliveryItem[];
+    recommended_supporting_care?: { supportcare_id: string; supportcare_name: string; canonical_role: string }[];
+    booster_pairing_note_KO?: string;
+}
+
+export interface BoosterDeliveryItem {
+    booster_id: string;
+    booster_name: string;
+    canonical_role: string;
+    delivery_name: string;
+    delivery_pain_level: string;
+    injection_target_layer: string;
+    is_safety_required: boolean;
+    safety_reason_KO?: string;
+}
+
 export interface DoctorSolutionRecord {
     id: string;
     fields: {
