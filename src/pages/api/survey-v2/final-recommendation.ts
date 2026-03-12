@@ -1062,7 +1062,7 @@ export default async function handler(req: Request) {
         // Use streaming API (async iterable) for Edge compatibility
         const response = await anthropic.messages.create({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 6144,
+          max_tokens: 8192,
           temperature: 0.3,
           stream: true,
           system: [
@@ -1114,14 +1114,34 @@ export default async function handler(req: Request) {
         let recommendation: OpusRecommendationOutput;
         try {
           let jsonStr = fullText.trim();
+          // Strip markdown code fences if present
           if (jsonStr.startsWith('```')) {
             jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
           }
+          // Strip any leading text before the first {
+          const firstBrace = jsonStr.indexOf('{');
+          if (firstBrace > 0) {
+            jsonStr = jsonStr.substring(firstBrace);
+          }
+          // If JSON is truncated (no closing brace), attempt to repair
+          if (!jsonStr.endsWith('}')) {
+            // Find the last complete property and close the JSON
+            const lastCloseBrace = jsonStr.lastIndexOf('}');
+            if (lastCloseBrace > 0) {
+              // Count depth to add correct number of closing braces
+              let depth = 0;
+              for (const ch of jsonStr.substring(0, lastCloseBrace + 1)) {
+                if (ch === '{') depth++;
+                if (ch === '}') depth--;
+              }
+              jsonStr = jsonStr.substring(0, lastCloseBrace + 1) + '}'.repeat(depth);
+            }
+          }
           recommendation = JSON.parse(jsonStr);
         } catch {
-          console.error('[final-recommendation] JSON parse error:', fullText.substring(0, 200));
+          console.error('[final-recommendation] JSON parse error. Length:', fullText.length, 'First 300 chars:', fullText.substring(0, 300));
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ type: 'error', error: 'Failed to parse model response as JSON — output may be truncated (max_tokens)' })}\n\n`)
+            encoder.encode(`data: ${JSON.stringify({ type: 'error', error: `Failed to parse model response as JSON (length: ${fullText.length} chars). Output may be truncated.` })}\n\n`)
           );
           controller.close();
           return;
