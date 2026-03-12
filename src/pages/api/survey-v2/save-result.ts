@@ -10,6 +10,10 @@ import type {
   Demographics,
   SafetyFlag,
   SurveyLang,
+  BudgetSelection,
+  ManagementFrequency,
+  EventInfo,
+  LocationPreference,
 } from '@/types/survey-v2';
 import type {
   OpusRecommendationOutput,
@@ -37,6 +41,12 @@ export interface SaveResultRequest {
   // API metadata
   model: string;
   usage: { input_tokens: number; output_tokens: number };
+  // Phase 2 fields
+  budget?: BudgetSelection | null;
+  stay_duration?: number | null;
+  management_frequency?: ManagementFrequency | null;
+  event_info?: EventInfo | null;
+  location_preference?: LocationPreference | null;
   // Auth context (optional — from Firebase)
   user_id?: string;
   user_email?: string;
@@ -155,6 +165,19 @@ export default async function handler(
     chip_responses_json: truncJSON(body.chip_responses),
     doctor_tab_json: truncJSON(body.recommendation?.doctor_tab),
     treatment_plan_json: truncJSON(body.recommendation?.treatment_plan),
+
+    // Phase 2 fields (optional — only sent if non-null)
+    ...(body.budget ? {
+      budget_range: body.budget.range,
+      budget_type: body.budget.type,
+    } : {}),
+    ...(body.stay_duration != null ? { stay_duration: body.stay_duration } : {}),
+    ...(body.management_frequency ? { management_frequency: body.management_frequency } : {}),
+    ...(body.event_info ? {
+      event_type: body.event_info.type,
+      event_date: body.event_info.date || null,
+    } : {}),
+    ...(body.location_preference ? { location_preference: body.location_preference } : {}),
 
     // Auth (anonymized in Airtable — store hash prefix only)
     user_id_prefix: body.user_id ? body.user_id.slice(0, 8) + '...' : '',
