@@ -5,7 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { useRouter } from 'next/router';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import type { OpusRecommendationOutput } from '@/pages/api/survey-v2/final-recommendation';
 import type { SafetyFlag, SurveyLang } from '@/types/survey-v2';
@@ -121,26 +121,45 @@ export default function ReportV2Page() {
     };
   }, []);
 
-  // ─── Send data to iframe when both ready ───────────────────
-  useEffect(() => {
-    if (iframeStatus !== 'ready' || !payload || !iframeRef.current?.contentWindow) return;
-
+  // ─── Build report data helper ────────────────────────────
+  const buildReportData = useCallback(() => {
+    if (!payload) return null;
     const lang = LANG_MAP[payload.survey_state.demographics.detected_language] || 'en';
-
-    // Build the data object that initReport() expects
-    // Includes 3-layer sections (mirror, confidence) + enhanced doctor intelligence
-    const reportData = {
+    return {
       ...payload.recommendation,
       lang,
       safety_flags: buildSafetyFlagsObject(payload.survey_state.safety_flags),
-      // Pass open_question for mirror section context in HTML renderer
       _open_question_raw: payload.survey_state.open_question_raw,
     };
+  }, [payload]);
 
+  // ─── Send data to iframe when both ready ───────────────────
+  const dataSentRef = useRef(false);
+
+  useEffect(() => {
+    if (iframeStatus !== 'ready' || !payload || !iframeRef.current?.contentWindow || dataSentRef.current) return;
+
+    const reportData = buildReportData();
+    if (!reportData) return;
+
+    console.log('[ReportV2] Sending INIT_REPORT to iframe');
+    dataSentRef.current = true;
     iframeRef.current.contentWindow.postMessage(
       { type: 'INIT_REPORT', payload: reportData },
       '*'
     );
+
+    // Fallback: if REPORT_READY postMessage is not received within 5s,
+    // force rendered state (initReport now uses safeRun so it won't throw)
+    setTimeout(() => {
+      setIframeStatus(prev => {
+        if (prev === 'ready') {
+          console.warn('[ReportV2] REPORT_READY not received — forcing rendered via timeout fallback');
+          return 'rendered';
+        }
+        return prev;
+      });
+    }, 5_000);
 
     // Switch to doctor tab if accessed with doctor role
     if (isDoctor) {
@@ -151,7 +170,7 @@ export default function ReportV2Page() {
         );
       }, 300);
     }
-  }, [iframeStatus, payload, isDoctor]);
+  }, [iframeStatus, payload, isDoctor, buildReportData]);
 
   // ─── Phase B: Async Treatment Plan fetch ─────────────────
   useEffect(() => {
@@ -453,6 +472,19 @@ export default function ReportV2Page() {
           className="report-v7-iframe"
           title="ConnectingDocs Premium Report"
           sandbox="allow-scripts allow-same-origin"
+          onLoad={() => {
+            console.log('[ReportV2] iframe onLoad fired, iframeStatus=', iframeStatus);
+            // Fallback: if IFRAME_READY postMessage was missed, force 'ready' after iframe loads
+            setTimeout(() => {
+              setIframeStatus(prev => {
+                if (prev === 'loading') {
+                  console.warn('[ReportV2] IFRAME_READY not received — forcing ready via onLoad fallback');
+                  return 'ready';
+                }
+                return prev;
+              });
+            }, 500); // small delay to let DOMContentLoaded postMessage arrive first
+          }}
           style={{
             opacity: iframeStatus === 'rendered' ? 1 : 0,
             transition: 'opacity 0.4s ease',

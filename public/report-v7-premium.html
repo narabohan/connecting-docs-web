@@ -8286,51 +8286,66 @@ setTimeout(()=>{
    * @param {Object} data - Opus output JSON (see REPORT_DATA_BINDING_SPEC.md)
    */
   function initReport(data) {
-    if (!data) return;
+    if (!data) { console.warn('[initReport] No data'); return; }
     const lang = data.lang || 'ko';
+    const errors = [];
 
-    // 0. Mirror + Confidence layers (Issue 0-7: 거울→확신→솔루션 3-layer)
-    if (data.mirror) renderMirrorLayer(data.mirror);
-    if (data.confidence) renderConfidenceLayer(data.confidence);
-
-    // 1. Inject patient-specific i18n values
-    if (data.patient) injectPatientI18n(lang, data.patient);
-
-    // 2. DYNAMIC HTML — Regenerate card DOM from Opus data
-    if (data.ebd_recommendations) renderEBDCards(data.ebd_recommendations);
-    if (data.injectable_recommendations) renderINJCards(data.injectable_recommendations);
-    if (data.treatment_plan?.phases) renderTreatmentPlan(data.treatment_plan.phases);
-    if (data.homecare) renderHomecareGrid(data.homecare);
-    if (data.ebd_recommendations || data.injectable_recommendations) {
-      renderDoctorEquipBar(data.ebd_recommendations, data.injectable_recommendations);
-      renderDoctorProtocolCards(data.ebd_recommendations, data.injectable_recommendations);
+    function safeRun(label, fn) {
+      try { fn(); } catch (e) {
+        console.error('[initReport] ' + label + ' failed:', e);
+        errors.push(label + ': ' + (e.message || e));
+      }
     }
 
-    // 3. Replace EBD data arrays (scores, practical info for radar/charts)
-    if (data.ebd_recommendations) injectEBDData(data.ebd_recommendations);
+    // 0. Mirror + Confidence layers
+    safeRun('mirror', () => { if (data.mirror) renderMirrorLayer(data.mirror); });
+    safeRun('confidence', () => { if (data.confidence) renderConfidenceLayer(data.confidence); });
+
+    // 1. Inject patient-specific i18n values
+    safeRun('patientI18n', () => { if (data.patient) injectPatientI18n(lang, data.patient); });
+
+    // 2. DYNAMIC HTML — Regenerate card DOM from Opus data
+    safeRun('ebdCards', () => { if (data.ebd_recommendations && data.ebd_recommendations.length > 0) renderEBDCards(data.ebd_recommendations); });
+    safeRun('injCards', () => { if (data.injectable_recommendations && data.injectable_recommendations.length > 0) renderINJCards(data.injectable_recommendations); });
+    safeRun('treatmentPlan', () => { if (data.treatment_plan?.phases?.length > 0) renderTreatmentPlan(data.treatment_plan.phases); });
+    safeRun('homecare', () => { if (data.homecare) renderHomecareGrid(data.homecare); });
+    safeRun('doctorEquipBar', () => {
+      if ((data.ebd_recommendations && data.ebd_recommendations.length > 0) || (data.injectable_recommendations && data.injectable_recommendations.length > 0)) {
+        renderDoctorEquipBar(data.ebd_recommendations || [], data.injectable_recommendations || []);
+        renderDoctorProtocolCards(data.ebd_recommendations || [], data.injectable_recommendations || []);
+      }
+    });
+
+    // 3. Replace EBD data arrays
+    safeRun('ebdData', () => { if (data.ebd_recommendations && data.ebd_recommendations.length > 0) injectEBDData(data.ebd_recommendations); });
 
     // 4. Replace Injectable data arrays
-    if (data.injectable_recommendations) injectINJData(data.injectable_recommendations);
+    safeRun('injData', () => { if (data.injectable_recommendations && data.injectable_recommendations.length > 0) injectINJData(data.injectable_recommendations); });
 
     // 5. Replace Signature Solutions
-    if (data.signature_solutions) injectSignatureSolutions(data.signature_solutions);
+    safeRun('signature', () => { if (data.signature_solutions) injectSignatureSolutions(data.signature_solutions); });
 
     // 6. Inject Safety Flags into Doctor Tab
-    if (data.safety_flags) injectSafetyFlags(data.safety_flags, lang);
+    safeRun('safetyFlags', () => { if (data.safety_flags) injectSafetyFlags(data.safety_flags, lang); });
 
     // 7. Inject Country Intelligence
-    if (data.doctor_tab?.country_intelligence) injectCountryIntel(data.doctor_tab.country_intelligence, lang);
+    safeRun('countryIntel', () => { if (data.doctor_tab?.country_intelligence) injectCountryIntel(data.doctor_tab.country_intelligence, lang); });
 
     // 8. Switch language and re-render
-    switchLang(lang);
+    safeRun('switchLang', () => { switchLang(lang); });
 
-    // 9. Re-initialize interactive components
-    selectEBD(0);
-    selectINJ(0);
-    updateRadar();
-    updateSynergy();
+    // 9. Re-initialize interactive components (only if we have data)
+    safeRun('interactive', () => {
+      if (EBD_SCORES.length > 0) selectEBD(0);
+      if (INJ_SCORES.length > 0) selectINJ(0);
+      updateRadar();
+      updateSynergy();
+    });
 
-    console.log('[ConnectingDocs] Report initialized with Opus data — dynamic renderers + data injection complete');
+    if (errors.length > 0) {
+      console.warn('[initReport] Completed with ' + errors.length + ' section errors:', errors);
+    }
+    console.log('[initReport] Done. Sections rendered: ' + (10 - errors.length) + '/10');
   }
 
   /**
