@@ -1,36 +1,37 @@
 // ═══════════════════════════════════════════════════════════════
 //  Netlify Background Function: run-analysis-background
-//  Processes the AI analysis asynchronously (up to 15 min timeout)
-//  by calling the existing Edge Function endpoint, then saves
-//  results to Airtable via the save-result API.
+//  The "-background" suffix tells Netlify to run this as a
+//  background function (returns 202 immediately, runs up to 15 min).
 //
-//  Background functions automatically return 202 to the client
-//  and run in the background until completion.
+//  Processes the AI analysis asynchronously by calling the existing
+//  Edge Function endpoint, then saves results to Airtable and
+//  sends notifications via the messenger contact.
 // ═══════════════════════════════════════════════════════════════
 
-import type { Config } from "@netlify/functions";
+import type { Handler } from "@netlify/functions";
 
-export default async (req: Request) => {
-  if (req.method !== 'POST') {
-    return; // Background functions don't return responses, but exit early
+interface BackgroundPayload {
+  surveyData: Record<string, unknown>;
+  messengerContact: { type: string; contact_id: string; name: string } | null;
+  demographics: Record<string, unknown>;
+  lang: string;
+  safety_flags: string[];
+  open_question_raw: string;
+  chip_responses: Record<string, string>;
+  siteUrl: string;
+}
+
+const handler: Handler = async (event) => {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Method not allowed' };
   }
 
-  let body: {
-    surveyData: Record<string, unknown>;
-    messengerContact: { type: string; contact_id: string; name: string } | null;
-    demographics: Record<string, unknown>;
-    lang: string;
-    safety_flags: string[];
-    open_question_raw: string;
-    chip_responses: Record<string, string>;
-    siteUrl: string;
-  };
-
+  let body: BackgroundPayload;
   try {
-    body = await req.json();
+    body = JSON.parse(event.body || '{}');
   } catch {
     console.error('[bg-analysis] Failed to parse request body');
-    return;
+    return { statusCode: 400, body: 'Invalid JSON' };
   }
 
   const { surveyData, messengerContact, siteUrl } = body;
@@ -62,14 +63,14 @@ export default async (req: Request) => {
     if (!analysisRes.ok) {
       const errText = await analysisRes.text().catch(() => 'unknown');
       console.error('[bg-analysis] Edge Function error:', analysisRes.status, errText);
-      return;
+      return { statusCode: 500, body: 'Edge Function error' };
     }
 
     // ─── 2. Parse SSE stream ──────────────────────────────────
     const reader = analysisRes.body?.getReader();
     if (!reader) {
       console.error('[bg-analysis] No response body from Edge Function');
-      return;
+      return { statusCode: 500, body: 'No response body' };
     }
 
     const decoder = new TextDecoder();
@@ -83,15 +84,15 @@ export default async (req: Request) => {
           const remaining = buffer.trim();
           if (remaining.startsWith('data: ')) {
             try {
-              const event = JSON.parse(remaining.slice(6));
-              if (event.type === 'done') {
+              const evt = JSON.parse(remaining.slice(6));
+              if (evt.type === 'done') {
                 result = {
-                  recommendation_json: event.recommendation_json,
-                  model: event.model,
-                  usage: event.usage,
+                  recommendation_json: evt.recommendation_json,
+                  model: evt.model,
+                  usage: evt.usage,
                 };
               }
-            } catch {}
+            } catch { /* skip unparseable */ }
           }
         }
         break;
@@ -104,36 +105,35 @@ export default async (req: Request) => {
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
         try {
-          const event = JSON.parse(line.slice(6));
-          if (event.type === 'done') {
+          const evt = JSON.parse(line.slice(6));
+          if (evt.type === 'done') {
             result = {
-              recommendation_json: event.recommendation_json,
-              model: event.model,
-              usage: event.usage,
+              recommendation_json: evt.recommendation_json,
+              model: evt.model,
+              usage: evt.usage,
             };
-          } else if (event.type === 'error') {
-            console.error('[bg-analysis] Stream error:', event.error);
-            return;
-          } else if (event.type === 'progress') {
-            // Log progress periodically
-            if (event.chars % 5000 < 500) {
-              console.log(`[bg-analysis] Progress: ${event.chars} chars generated`);
+          } else if (evt.type === 'error') {
+            console.error('[bg-analysis] Stream error:', evt.error);
+            return { statusCode: 500, body: 'Stream error' };
+          } else if (evt.type === 'progress') {
+            if (evt.chars % 5000 < 500) {
+              console.log(`[bg-analysis] Progress: ${evt.chars} chars generated`);
             }
           }
-        } catch {}
+        } catch { /* skip */ }
       }
     }
 
     if (!result) {
       console.error('[bg-analysis] No final result received from analysis stream');
-      return;
+      return { statusCode: 500, body: 'No result' };
     }
 
     console.log('[bg-analysis] Analysis complete. Model:', result.model, 'Tokens:', result.usage);
 
   } catch (err) {
     console.error('[bg-analysis] Analysis fetch error:', err);
-    return;
+    return { statusCode: 500, body: 'Analysis error' };
   }
 
   // ─── 3. Save to Airtable via the existing save-result endpoint ───
@@ -159,7 +159,7 @@ export default async (req: Request) => {
 
     if (saveRes.ok) {
       const saveData = await saveRes.json();
-      console.log(`[bg-analysis] ✅ Saved to Airtable: record=${saveData.airtable_record_id}`);
+      console.log(`[bg-analysis] Saved to Airtable: record=${saveData.airtable_record_id}`);
     } else {
       console.error('[bg-analysis] Save to Airtable failed:', saveRes.status);
     }
@@ -167,7 +167,7 @@ export default async (req: Request) => {
     console.error('[bg-analysis] Save fetch error:', err);
   }
 
-  // ─── 4. Send notification emails ──────────────────────────
+  // ─── 4. Send notification ──────────────────────────────────
   try {
     const rec = result.recommendation_json as Record<string, unknown>;
     const ebdRecs = rec.ebd_recommendations as Array<{ device_name?: string }> | undefined;
@@ -180,9 +180,9 @@ export default async (req: Request) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         report_id: reportId,
-        patient_country: body.demographics?.detected_country || 'KR',
-        patient_age: body.demographics?.d_age || '',
-        patient_gender: body.demographics?.d_gender || '',
+        patient_country: (body.demographics as Record<string, string>)?.detected_country || 'KR',
+        patient_age: (body.demographics as Record<string, string>)?.d_age || '',
+        patient_gender: (body.demographics as Record<string, string>)?.d_gender || '',
         lang: body.lang || 'KO',
         primary_goal: (surveyData as Record<string, unknown>).q1_primary_goal || '',
         top_device: topDevice,
@@ -193,15 +193,14 @@ export default async (req: Request) => {
       }),
     });
 
-    console.log('[bg-analysis] ✅ Notification sent');
+    console.log('[bg-analysis] Notification sent');
   } catch (err) {
     console.error('[bg-analysis] Notification error:', err);
   }
 
-  console.log('[bg-analysis] ✅ Background analysis complete:', reportId);
+  console.log('[bg-analysis] Background analysis complete:', reportId);
+
+  return { statusCode: 200, body: JSON.stringify({ reportId }) };
 };
 
-export const config: Config = {
-  path: "/.netlify/functions/run-analysis-background",
-  method: "POST",
-};
+export { handler };
