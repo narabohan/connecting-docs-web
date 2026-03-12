@@ -1062,7 +1062,7 @@ export default async function handler(req: Request) {
         // Use streaming API (async iterable) for Edge compatibility
         const response = await anthropic.messages.create({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 10240,
+          max_tokens: 6144,
           temperature: 0.3,
           stream: true,
           system: [

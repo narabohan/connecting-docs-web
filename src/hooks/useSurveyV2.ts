@@ -438,9 +438,9 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
         q3_volume_logic: state.q3_volume_logic,
       };
 
-      // H-2: 120s timeout for Opus analysis (SSE streaming may take long)
+      // H-2: 300s timeout for final analysis (Edge Runtime SSE can take 3-5min with large prompt)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120_000);
+      const timeoutId = setTimeout(() => controller.abort(), 300_000);
 
       const res = await fetch('/api/survey-v2/final-recommendation', {
         method: 'POST',
@@ -466,7 +466,29 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          // Process any remaining data in buffer before exiting
+          if (buffer.trim()) {
+            const remaining = buffer.trim();
+            if (remaining.startsWith('data: ')) {
+              try {
+                const event = JSON.parse(remaining.slice(6));
+                if (event.type === 'done') {
+                  data = {
+                    recommendation_json: event.recommendation_json,
+                    model: event.model,
+                    usage: event.usage,
+                  };
+                } else if (event.type === 'error') {
+                  throw new Error(event.error || 'Analysis stream error');
+                }
+              } catch (parseErr) {
+                if ((parseErr as Error).message?.includes('Analysis stream error')) throw parseErr;
+              }
+            }
+          }
+          break;
+        }
         buffer += decoder.decode(value, { stream: true });
 
         // Parse SSE events from buffer
