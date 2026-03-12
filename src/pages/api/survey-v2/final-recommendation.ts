@@ -1021,6 +1021,7 @@ ${safetySection}`;
 // allowing the full streaming generation to complete (30-60s+).
 export const config = {
   runtime: 'edge',
+  maxDuration: 60, // Netlify Pro: max 60s for edge functions (default 25s)
 };
 
 // ─── API Handler (Edge Runtime + SSE Streaming) ──────────────
@@ -1098,6 +1099,7 @@ export default async function handler(req: Request) {
         let inputTokens = 0;
         let outputTokens = 0;
         let modelUsed = 'claude-haiku-4-5-20251001';
+        let stopReason = '';
         let lastProgressAt = 0;
 
         for await (const event of response) {
@@ -1114,10 +1116,20 @@ export default async function handler(req: Request) {
             const msg = event.message as { usage?: { input_tokens?: number }; model?: string };
             inputTokens = msg.usage?.input_tokens || 0;
             modelUsed = msg.model || modelUsed;
-          } else if (event.type === 'message_delta' && 'usage' in event) {
-            const usage = event.usage as { output_tokens?: number };
-            outputTokens = usage.output_tokens || 0;
+          } else if (event.type === 'message_delta') {
+            const delta = event as { usage?: { output_tokens?: number }; delta?: { stop_reason?: string } };
+            outputTokens = delta.usage?.output_tokens || outputTokens;
+            if (delta.delta?.stop_reason) {
+              stopReason = delta.delta.stop_reason;
+            }
           }
+        }
+
+        console.log(`[final-recommendation] Stream complete. stop_reason=${stopReason}, output_tokens=${outputTokens}, text_length=${fullText.length}`);
+
+        // Warn if output was truncated due to max_tokens
+        if (stopReason === 'max_tokens') {
+          console.warn(`[final-recommendation] ⚠️ Output truncated (max_tokens). output_tokens=${outputTokens}, text_length=${fullText.length}. Will attempt JSON repair.`);
         }
 
         // Parse JSON from collected text
@@ -1148,10 +1160,17 @@ export default async function handler(req: Request) {
             }
           }
           recommendation = JSON.parse(jsonStr);
-        } catch {
-          console.error('[final-recommendation] JSON parse error. Length:', fullText.length, 'First 300 chars:', fullText.substring(0, 300));
+        } catch (parseErr) {
+          console.error(`[final-recommendation] JSON parse error. stop_reason=${stopReason}, output_tokens=${outputTokens}, text_length=${fullText.length}`);
+          console.error('[final-recommendation] First 500 chars:', fullText.substring(0, 500));
+          console.error('[final-recommendation] Last 500 chars:', fullText.substring(Math.max(0, fullText.length - 500)));
+          console.error('[final-recommendation] Parse error:', parseErr instanceof Error ? parseErr.message : parseErr);
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ type: 'error', error: `Failed to parse model response as JSON (length: ${fullText.length} chars). Output may be truncated.` })}\n\n`)
+            encoder.encode(`data: ${JSON.stringify({
+              type: 'error',
+              error: `Failed to parse model response as JSON (length: ${fullText.length} chars, stop_reason: ${stopReason || 'unknown'}, output_tokens: ${outputTokens}). Output may be truncated.`,
+              debug: { stop_reason: stopReason, output_tokens: outputTokens, text_length: fullText.length },
+            })}\n\n`)
           );
           controller.close();
           return;
@@ -1182,7 +1201,7 @@ export default async function handler(req: Request) {
           usage: { input_tokens: inputTokens, output_tokens: outputTokens },
         };
         controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ type: 'done', ...result })}\n\n`)
+          encoder.encode(`data: ${JSON.stringify({ type: 'done', ...result, stop_reason: stopReason })}\n\n`)
         );
         controller.close();
       } catch (error) {

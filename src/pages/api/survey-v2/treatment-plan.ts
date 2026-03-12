@@ -236,6 +236,7 @@ CRITICAL RULES:
 // ─── Edge Runtime Config ─────────────────────────────────────
 export const config = {
   runtime: 'edge',
+  maxDuration: 60, // Netlify Pro: max 60s for edge functions (default 25s)
 };
 
 // ─── API Handler ─────────────────────────────────────────────
@@ -332,6 +333,7 @@ ${Object.keys(body.phase_a_summary.safety_flags).length > 0
         let inputTokens = 0;
         let outputTokens = 0;
         let modelUsed = 'claude-haiku-4-5-20251001';
+        let stopReason = '';
 
         for await (const event of response) {
           if (event.type === 'content_block_delta' && 'delta' in event && (event.delta as { type: string }).type === 'text_delta') {
@@ -340,11 +342,16 @@ ${Object.keys(body.phase_a_summary.safety_flags).length > 0
             const msg = event.message as { usage?: { input_tokens?: number }; model?: string };
             inputTokens = msg.usage?.input_tokens || 0;
             modelUsed = msg.model || modelUsed;
-          } else if (event.type === 'message_delta' && 'usage' in event) {
-            const usage = event.usage as { output_tokens?: number };
-            outputTokens = usage.output_tokens || 0;
+          } else if (event.type === 'message_delta') {
+            const delta = event as { usage?: { output_tokens?: number }; delta?: { stop_reason?: string } };
+            outputTokens = delta.usage?.output_tokens || outputTokens;
+            if (delta.delta?.stop_reason) {
+              stopReason = delta.delta.stop_reason;
+            }
           }
         }
+
+        console.log(`[treatment-plan] Stream complete. stop_reason=${stopReason}, output_tokens=${outputTokens}, text_length=${fullText.length}`);
 
         // Parse JSON
         let treatmentPlan: TreatmentPlanV2;
@@ -369,10 +376,12 @@ ${Object.keys(body.phase_a_summary.safety_flags).length > 0
             }
           }
           treatmentPlan = JSON.parse(jsonStr);
-        } catch {
-          console.error('[treatment-plan] JSON parse error. Length:', fullText.length);
+        } catch (parseErr) {
+          console.error(`[treatment-plan] JSON parse error. stop_reason=${stopReason}, output_tokens=${outputTokens}, text_length=${fullText.length}`);
+          console.error('[treatment-plan] First 300 chars:', fullText.substring(0, 300));
+          console.error('[treatment-plan] Last 300 chars:', fullText.substring(Math.max(0, fullText.length - 300)));
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ type: 'error', error: `Failed to parse treatment plan JSON (length: ${fullText.length})` })}\n\n`)
+            encoder.encode(`data: ${JSON.stringify({ type: 'error', error: `Failed to parse treatment plan JSON (length: ${fullText.length}, stop_reason: ${stopReason || 'unknown'})` })}\n\n`)
           );
           controller.close();
           return;

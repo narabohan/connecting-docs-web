@@ -523,76 +523,127 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
       setStep('analyzing');
 
       // ─── Client-side SSE call to final-recommendation ──────
-      const res = await fetch('/api/survey-v2/final-recommendation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(surveyData),
-      });
+      const controller = new AbortController();
+      const SSE_TIMEOUT_MS = 55_000; // 55s client timeout (server has 60s)
+      const timeoutId = setTimeout(() => {
+        console.error('[submitMessenger] SSE timeout after', SSE_TIMEOUT_MS, 'ms');
+        controller.abort();
+      }, SSE_TIMEOUT_MS);
+
+      let res: Response;
+      try {
+        res = await fetch('/api/survey-v2/final-recommendation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(surveyData),
+          signal: controller.signal,
+        });
+      } catch (fetchErr) {
+        clearTimeout(timeoutId);
+        if (fetchErr instanceof DOMException && fetchErr.name === 'AbortError') {
+          throw new Error('Analysis timed out (55s). Please try again — the AI may need more time.');
+        }
+        throw fetchErr;
+      }
 
       if (!res.ok) {
+        clearTimeout(timeoutId);
         const errText = await res.text().catch(() => 'unknown');
         throw new Error(`Analysis API error: ${res.status} — ${errText}`);
       }
 
       // Parse SSE stream
       const reader = res.body?.getReader();
-      if (!reader) throw new Error('No response body from analysis API');
+      if (!reader) {
+        clearTimeout(timeoutId);
+        throw new Error('No response body from analysis API');
+      }
 
       const decoder = new TextDecoder();
       let buffer = '';
       let result: FinalRecommendationResponse | null = null;
+      let lastEventType = '';
+      let totalCharsReceived = 0;
+      let eventsReceived = 0;
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          // Process remaining buffer
-          if (buffer.trim()) {
-            const remaining = buffer.trim();
-            if (remaining.startsWith('data: ')) {
-              try {
-                const evt = JSON.parse(remaining.slice(6));
-                if (evt.type === 'done') {
-                  result = {
-                    recommendation_json: evt.recommendation_json,
-                    model: evt.model,
-                    usage: evt.usage,
-                  };
-                } else if (evt.type === 'error') {
-                  throw new Error(evt.error || 'Analysis stream error');
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            // Process remaining buffer
+            if (buffer.trim()) {
+              const remaining = buffer.trim();
+              if (remaining.startsWith('data: ')) {
+                try {
+                  const evt = JSON.parse(remaining.slice(6));
+                  lastEventType = evt.type || lastEventType;
+                  eventsReceived++;
+                  if (evt.type === 'done') {
+                    result = {
+                      recommendation_json: evt.recommendation_json,
+                      model: evt.model,
+                      usage: evt.usage,
+                    };
+                    if (evt.stop_reason) {
+                      console.log('[submitMessenger] stop_reason:', evt.stop_reason);
+                    }
+                  } else if (evt.type === 'error') {
+                    console.error('[submitMessenger] SSE error event:', evt);
+                    throw new Error(evt.error || 'Analysis stream error');
+                  }
+                } catch (e) {
+                  if (e instanceof Error && (e.message.includes('Analysis') || e.message.includes('stream error'))) throw e;
+                  console.warn('[submitMessenger] Failed to parse final buffer:', remaining.substring(0, 200));
                 }
-              } catch (e) {
-                if (e instanceof Error && e.message.includes('Analysis')) throw e;
               }
             }
+            break;
           }
-          break;
-        }
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
+          const chunk = decoder.decode(value, { stream: true });
+          totalCharsReceived += chunk.length;
+          buffer += chunk;
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
 
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          try {
-            const evt = JSON.parse(line.slice(6));
-            if (evt.type === 'done') {
-              result = {
-                recommendation_json: evt.recommendation_json,
-                model: evt.model,
-                usage: evt.usage,
-              };
-            } else if (evt.type === 'error') {
-              throw new Error(evt.error || 'Analysis stream error');
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            try {
+              const evt = JSON.parse(line.slice(6));
+              lastEventType = evt.type || lastEventType;
+              eventsReceived++;
+              if (evt.type === 'done') {
+                result = {
+                  recommendation_json: evt.recommendation_json,
+                  model: evt.model,
+                  usage: evt.usage,
+                };
+                if (evt.stop_reason) {
+                  console.log('[submitMessenger] stop_reason:', evt.stop_reason);
+                }
+              } else if (evt.type === 'error') {
+                console.error('[submitMessenger] SSE error event:', evt);
+                throw new Error(evt.error || 'Analysis stream error');
+              }
+            } catch (e) {
+              if (e instanceof Error && (e.message.includes('stream error') || e.message.includes('Analysis'))) throw e;
+              // Skip malformed SSE lines silently
             }
-          } catch (e) {
-            if (e instanceof Error && e.message.includes('stream error')) throw e;
           }
         }
+      } catch (readErr) {
+        if (readErr instanceof DOMException && readErr.name === 'AbortError') {
+          console.error(`[submitMessenger] SSE aborted. events=${eventsReceived}, lastEvent=${lastEventType}, totalChars=${totalCharsReceived}`);
+          throw new Error('Analysis timed out. Please try again.');
+        }
+        throw readErr;
+      } finally {
+        clearTimeout(timeoutId);
       }
 
       if (!result) {
-        throw new Error('No result received from analysis. Output may have been truncated.');
+        console.error(`[submitMessenger] No result. events=${eventsReceived}, lastEvent=${lastEventType}, totalChars=${totalCharsReceived}, bufferLen=${buffer.length}`);
+        throw new Error(`No result received from analysis (events: ${eventsReceived}, lastEvent: ${lastEventType}). The AI response may have been too large — please try again.`);
       }
 
       // ─── Save to sessionStorage for report page ────────────
