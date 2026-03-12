@@ -22,48 +22,48 @@ const I18N: Record<SurveyLang, {
   switch_messenger: string;
 }> = {
   KO: {
-    title: '\uBD84\uC11D \uACB0\uACFC\uB97C \uBC1B\uC544\uBCF4\uC138\uC694',
-    subtitle: 'AI \uBD84\uC11D\uC774 \uC644\uB8CC\uB418\uBA74 \uBA54\uC2E0\uC800\uB85C \uACB0\uACFC\uB97C \uBCF4\uB0B4\uB4DC\uB9BD\uB2C8\uB2E4',
-    name_label: '\uC774\uB984',
-    name_placeholder: '\uC131\uD568 \uB610\uB294 \uB2C9\uB124\uC784',
-    messenger_label: '\uBA54\uC2E0\uC800',
-    contact_label: '\uC5F0\uB77D\uCC98',
-    submit: '\uBD84\uC11D \uC694\uCCAD\uD558\uAE30',
-    privacy_note: '\uC785\uB825\uD558\uC2E0 \uC815\uBCF4\uB294 \uBD84\uC11D \uACB0\uACFC \uC804\uC1A1 \uBAA9\uC801\uC73C\uB85C\uB9CC \uC0AC\uC6A9\uB429\uB2C8\uB2E4',
-    switch_messenger: '\uB2E4\uB978 \uBA54\uC2E0\uC800\uB85C \uBC1B\uAE30',
+    title: '분석 결과를 받아보세요',
+    subtitle: '연락처를 남겨주시면 리포트가 준비되면 안내해 드리겠습니다',
+    name_label: '이름',
+    name_placeholder: '성함 또는 닉네임',
+    messenger_label: '메신저',
+    contact_label: '연락처',
+    submit: '분석 요청하기 →',
+    privacy_note: '입력하신 정보는 분석 결과 안내 목적으로만 사용됩니다',
+    switch_messenger: '다른 메신저로 받기',
   },
   EN: {
     title: 'Get Your Analysis Results',
-    subtitle: "We'll send your personalized results via messenger when ready",
+    subtitle: "Leave your contact info and we'll notify you when your report is ready",
     name_label: 'Name',
     name_placeholder: 'Your name or nickname',
     messenger_label: 'Messenger',
     contact_label: 'Contact',
-    submit: 'Request Analysis',
-    privacy_note: 'Your info is only used to deliver your results',
+    submit: 'Request Analysis →',
+    privacy_note: 'Your info is only used to notify you when results are ready',
     switch_messenger: 'Use a different messenger',
   },
   JP: {
-    title: '\u5206\u6790\u7D50\u679C\u3092\u53D7\u3051\u53D6\u308B',
-    subtitle: 'AI\u5206\u6790\u304C\u5B8C\u4E86\u3057\u305F\u3089\u30E1\u30C3\u30BB\u30F3\u30B8\u30E3\u30FC\u3067\u7D50\u679C\u3092\u304A\u9001\u308A\u3057\u307E\u3059',
-    name_label: '\u304A\u540D\u524D',
-    name_placeholder: '\u304A\u540D\u524D\u307E\u305F\u306F\u30CB\u30C3\u30AF\u30CD\u30FC\u30E0',
-    messenger_label: '\u30E1\u30C3\u30BB\u30F3\u30B8\u30E3\u30FC',
-    contact_label: '\u9023\u7D61\u5148',
-    submit: '\u5206\u6790\u3092\u30EA\u30AF\u30A8\u30B9\u30C8',
-    privacy_note: '\u60C5\u5831\u306F\u7D50\u679C\u306E\u9001\u4FE1\u306E\u307F\u306B\u4F7F\u7528\u3055\u308C\u307E\u3059',
-    switch_messenger: '\u5225\u306E\u30E1\u30C3\u30BB\u30F3\u30B8\u30E3\u30FC\u3092\u4F7F\u3046',
+    title: '分析結果を受け取る',
+    subtitle: 'ご連絡先をお残しいただければ、レポートの準備ができ次第ご案内いたします',
+    name_label: 'お名前',
+    name_placeholder: 'お名前またはニックネーム',
+    messenger_label: 'メッセンジャー',
+    contact_label: '連絡先',
+    submit: '分析をリクエスト →',
+    privacy_note: '情報は結果のご案内のみに使用されます',
+    switch_messenger: '別のメッセンジャーを使う',
   },
   'ZH-CN': {
-    title: '\u83B7\u53D6\u5206\u6790\u7ED3\u679C',
-    subtitle: 'AI\u5206\u6790\u5B8C\u6210\u540E\uFF0C\u6211\u4EEC\u5C06\u901A\u8FC7\u6D88\u606F\u53D1\u9001\u7ED3\u679C',
-    name_label: '\u59D3\u540D',
-    name_placeholder: '\u60A8\u7684\u59D3\u540D\u6216\u6635\u79F0',
-    messenger_label: '\u6D88\u606F\u5E94\u7528',
-    contact_label: '\u8054\u7CFB\u65B9\u5F0F',
-    submit: '\u8BF7\u6C42\u5206\u6790',
-    privacy_note: '\u60A8\u7684\u4FE1\u606F\u4EC5\u7528\u4E8E\u53D1\u9001\u5206\u6790\u7ED3\u679C',
-    switch_messenger: '\u4F7F\u7528\u5176\u4ED6\u6D88\u606F\u5E94\u7528',
+    title: '获取分析结果',
+    subtitle: '请留下您的联系方式，报告准备好后我们会通知您',
+    name_label: '姓名',
+    name_placeholder: '您的姓名或昵称',
+    messenger_label: '消息应用',
+    contact_label: '联系方式',
+    submit: '请求分析 →',
+    privacy_note: '您的信息仅用于通知分析结果就绪',
+    switch_messenger: '使用其他消息应用',
   },
 };
 
@@ -224,7 +224,7 @@ export default function MessengerContactStep({
             ...
           </span>
         ) : (
-          `${t.submit} →`
+          t.submit
         )}
       </button>
     </motion.div>
