@@ -79,6 +79,9 @@ export interface SurveyV2Translations {
     open: string;
     chips: string;
     safety: string;
+    budget: string;
+    stay_duration: string;
+    management_frequency: string;
     messenger: string;
     analyzing: string;
     complete: string;
@@ -156,6 +159,9 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       open: '고민입력',
       chips: '맞춤질문',
       safety: '안전확인',
+      budget: '예산',
+      stay_duration: '체류기간',
+      management_frequency: '관리주기',
       messenger: '연락처',
       analyzing: '분석중',
       complete: '완료',
@@ -232,6 +238,9 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       open: 'Concerns',
       chips: 'Details',
       safety: 'Safety',
+      budget: 'Budget',
+      stay_duration: 'Stay',
+      management_frequency: 'Frequency',
       messenger: 'Contact',
       analyzing: 'Analysis',
       complete: 'Complete',
@@ -308,6 +317,9 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       open: 'お悩み',
       chips: '詳細',
       safety: '安全確認',
+      budget: '予算',
+      stay_duration: '滞在期間',
+      management_frequency: '管理頻度',
       messenger: '連絡先',
       analyzing: '分析中',
       complete: '完了',
@@ -384,6 +396,9 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       open: '问题描述',
       chips: '详细信息',
       safety: '安全确认',
+      budget: '预算',
+      stay_duration: '停留时间',
+      management_frequency: '管理频率',
       messenger: '联系方式',
       analyzing: '分析中',
       complete: '完成',

@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 export type SurveyLang = 'KO' | 'EN' | 'JP' | 'ZH-CN';
-export type SurveyStep = 'demographics' | 'open' | 'chips' | 'safety' | 'messenger' | 'analyzing' | 'complete';
+export type SurveyStep = 'demographics' | 'open' | 'chips' | 'safety' | 'budget' | 'stay_duration' | 'management_frequency' | 'messenger' | 'analyzing' | 'complete';
 
 // ─── Messenger Contact ─────────────────────────────────────
 export type MessengerType = 'kakao' | 'whatsapp' | 'line' | 'wechat' | 'zalo' | 'email';
@@ -122,6 +122,95 @@ export interface SafetyFollowUpOption {
   value: string;
 }
 
+// ─── Phase 2: Survey Input Types ─────────────────────────────
+export type BudgetRange = 'light' | 'standard' | 'premium' | 'vip';
+export type BudgetType = 'monthly' | 'per_visit' | 'per_session';
+export type ManagementFrequency = 'monthly' | 'quarterly' | 'once';
+export type EventType = 'wedding' | 'interview' | 'photoshoot' | 'reunion' | 'other';
+export type PlanType = 'regular' | 'visit' | 'event';
+
+export interface BudgetSelection {
+  range: BudgetRange;
+  type: BudgetType;
+}
+
+export interface StayDuration {
+  days: number;  // 0 = not sure → default 7
+}
+
+export interface EventInfo {
+  type: EventType;
+  date: string;       // ISO date YYYY-MM-DD
+  description?: string; // type=other 일 때
+}
+
+export interface LocationPreference {
+  area?: string;       // "gangnam" | "seocho" | "apgujeong" | "hongdae" | "other"
+  custom?: string;     // area=other 일 때
+}
+
+export interface Phase2SurveyData {
+  budget: BudgetSelection;
+  stay_duration?: number;              // 외국인만
+  management_frequency?: ManagementFrequency; // KR만
+  event_info?: EventInfo;              // 선택
+  location_preference?: LocationPreference;   // 선택 (Phase 3 사전 수집)
+}
+
+// ─── Phase 2: Output Types (AI 응답 스키마) ──────────────────
+export interface TreatmentPlanV2 {
+  plan_type: PlanType;
+  plan_type_label: string;
+  duration: string;
+  budget_total: string;
+  budget_breakdown: BudgetBreakdown;
+  phases: TreatmentPhase[];
+  plan_rationale: string;
+  seasonal_note?: string;
+}
+
+export interface BudgetBreakdown {
+  foundation_pct: number;
+  foundation_label: string;
+  main_pct: number;
+  main_label: string;
+  maintenance_pct: number;
+  maintenance_label: string;
+  roi_note: string;
+}
+
+export interface TreatmentPhase {
+  phase_number: number;
+  timing: string;
+  timing_label: string;
+  procedures: PhaseProcedure[];
+  phase_goal: string;
+  total_downtime: string;
+  estimated_cost: string;
+  lifestyle_note: string;
+}
+
+export interface PhaseProcedure {
+  device_or_injectable: string;
+  category: 'ebd' | 'injectable' | 'homecare';
+  reason_why: string;
+  clinical_basis: string;
+  synergy_note?: string;
+  downtime: string;
+  estimated_cost: string;
+}
+
+/** Type guard: V2 treatment plan has plan_type + phases array */
+export function isTreatmentPlanV2(plan: unknown): plan is TreatmentPlanV2 {
+  return (
+    plan != null &&
+    typeof plan === 'object' &&
+    'plan_type' in plan &&
+    'phases' in plan &&
+    Array.isArray((plan as TreatmentPlanV2).phases)
+  );
+}
+
 // ─── 전체 Signal State ──────────────────────────────────────
 export interface SurveyV2State {
   // Step 1
@@ -144,7 +233,14 @@ export interface SurveyV2State {
   safety_flags: SafetyFlag[];
   safety_followups: SafetyFollowUp[];
 
-  // Step 5 (Messenger contact for async notification)
+  // Step 5 (Phase 2: Budget + conditional steps)
+  budget: BudgetSelection | null;
+  stay_duration: number | null;              // 외국인만
+  management_frequency: ManagementFrequency | null; // KR만
+  event_info: EventInfo | null;
+  location_preference: LocationPreference | null;
+
+  // Step 6 (Messenger contact for async notification)
   messenger_contact: MessengerContact | null;
 
   // Mapped signals (최종 — Opus에 전달)
@@ -207,6 +303,11 @@ export type SurveyAction =
   | { type: 'SET_SAFETY_FLAGS'; payload: SafetyFlag[] }
   | { type: 'SET_SAFETY_FOLLOWUPS'; payload: SafetyFollowUp[] }
   | { type: 'SET_FOLLOWUP_ANSWER'; payload: { flag: SafetyFlag; answer: string } }
+  | { type: 'SET_BUDGET'; payload: BudgetSelection }
+  | { type: 'SET_STAY_DURATION'; payload: number }
+  | { type: 'SET_MANAGEMENT_FREQUENCY'; payload: ManagementFrequency }
+  | { type: 'SET_EVENT_INFO'; payload: EventInfo | null }
+  | { type: 'SET_LOCATION_PREFERENCE'; payload: LocationPreference | null }
   | { type: 'SET_MESSENGER_CONTACT'; payload: MessengerContact }
   | { type: 'RESET' };
 

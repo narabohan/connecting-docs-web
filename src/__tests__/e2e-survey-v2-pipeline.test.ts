@@ -83,6 +83,12 @@ const SCENARIO_A_STATE: SurveyV2State = {
   q2_pigment_pattern: 'hormonal_melasma',
   q3_volume_logic: null,
   q3_primary_vector: null,
+  budget: null,
+  stay_duration: null,
+  management_frequency: null,
+  event_info: null,
+  location_preference: null,
+  messenger_contact: null,
 };
 
 /** Scenario B: CN 25F — Brightening + K-Beauty interest */
@@ -130,6 +136,12 @@ const SCENARIO_B_STATE: SurveyV2State = {
   q2_pigment_pattern: null,
   q3_volume_logic: null,
   q3_primary_vector: null,
+  budget: null,
+  stay_duration: null,
+  management_frequency: null,
+  event_info: null,
+  location_preference: null,
+  messenger_contact: null,
 };
 
 /** Scenario C: SG 40M — Anti-aging + Isotretinoin (danger flag) */
@@ -179,6 +191,12 @@ const SCENARIO_C_STATE: SurveyV2State = {
   q2_pigment_pattern: null,
   q3_volume_logic: null,
   q3_primary_vector: null,
+  budget: null,
+  stay_duration: null,
+  management_frequency: null,
+  event_info: null,
+  location_preference: null,
+  messenger_contact: null,
 };
 
 // ═══════════════════════════════════════════════════════════════

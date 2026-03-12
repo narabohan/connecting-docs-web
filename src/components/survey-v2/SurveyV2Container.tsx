@@ -22,9 +22,12 @@ const STEP_NUMBERS: Record<SurveyStep, number> = {
   open: 2,
   chips: 3,
   safety: 4,
-  messenger: 5,
-  complete: 6,
-  analyzing: 6, // Keep for backward compat (shouldn't be reached)
+  budget: 5,
+  stay_duration: 6,
+  management_frequency: 6,
+  messenger: 7,
+  complete: 8,
+  analyzing: 8, // Keep for backward compat (shouldn't be reached)
 };
 
 interface SurveyV2ContainerProps {
