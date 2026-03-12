@@ -523,12 +523,19 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
       setStep('analyzing');
 
       // ─── Client-side SSE call to final-recommendation ──────
-      const controller = new AbortController();
-      const SSE_TIMEOUT_MS = 55_000; // 55s client timeout (server has 60s)
-      const timeoutId = setTimeout(() => {
-        console.error('[submitMessenger] SSE timeout after', SSE_TIMEOUT_MS, 'ms');
-        controller.abort();
-      }, SSE_TIMEOUT_MS);
+      // Use INACTIVITY timeout (not absolute): resets on each SSE chunk.
+      // Haiku 4.5 generating 8K tokens takes ~80-100s; absolute timeouts fail.
+      const abortCtrl = new AbortController();
+      const INACTIVITY_TIMEOUT_MS = 30_000; // 30s without any data = dead connection
+      let inactivityTimer: ReturnType<typeof setTimeout> | null = null;
+      const resetInactivityTimer = () => {
+        if (inactivityTimer) clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+          console.error('[submitMessenger] SSE inactivity timeout — no data for 30s');
+          abortCtrl.abort();
+        }, INACTIVITY_TIMEOUT_MS);
+      };
+      resetInactivityTimer(); // start initial timer for fetch itself
 
       let res: Response;
       try {
@@ -536,18 +543,20 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(surveyData),
-          signal: controller.signal,
+          signal: abortCtrl.signal,
         });
       } catch (fetchErr) {
-        clearTimeout(timeoutId);
+        if (inactivityTimer) clearTimeout(inactivityTimer);
         if (fetchErr instanceof DOMException && fetchErr.name === 'AbortError') {
-          throw new Error('Analysis timed out (55s). Please try again — the AI may need more time.');
+          throw new Error('Analysis server did not respond. Please try again.');
         }
         throw fetchErr;
       }
 
+      resetInactivityTimer(); // reset after receiving response headers
+
       if (!res.ok) {
-        clearTimeout(timeoutId);
+        if (inactivityTimer) clearTimeout(inactivityTimer);
         const errText = await res.text().catch(() => 'unknown');
         throw new Error(`Analysis API error: ${res.status} — ${errText}`);
       }
@@ -555,7 +564,7 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
       // Parse SSE stream
       const reader = res.body?.getReader();
       if (!reader) {
-        clearTimeout(timeoutId);
+        if (inactivityTimer) clearTimeout(inactivityTimer);
         throw new Error('No response body from analysis API');
       }
 
@@ -565,10 +574,12 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
       let lastEventType = '';
       let totalCharsReceived = 0;
       let eventsReceived = 0;
+      const streamStartTime = Date.now();
 
       try {
         while (true) {
           const { done, value } = await reader.read();
+
           if (done) {
             // Process remaining buffer
             if (buffer.trim()) {
@@ -599,6 +610,9 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
             }
             break;
           }
+
+          // ─── Data received — reset inactivity timer ──────
+          resetInactivityTimer();
 
           const chunk = decoder.decode(value, { stream: true });
           totalCharsReceived += chunk.length;
@@ -633,17 +647,21 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
         }
       } catch (readErr) {
         if (readErr instanceof DOMException && readErr.name === 'AbortError') {
-          console.error(`[submitMessenger] SSE aborted. events=${eventsReceived}, lastEvent=${lastEventType}, totalChars=${totalCharsReceived}`);
-          throw new Error('Analysis timed out. Please try again.');
+          const elapsed = Math.round((Date.now() - streamStartTime) / 1000);
+          console.error(`[submitMessenger] SSE aborted after ${elapsed}s. events=${eventsReceived}, lastEvent=${lastEventType}, totalChars=${totalCharsReceived}`);
+          throw new Error('Analysis connection lost (no data received for 30s). Please try again.');
         }
         throw readErr;
       } finally {
-        clearTimeout(timeoutId);
+        if (inactivityTimer) clearTimeout(inactivityTimer);
       }
+
+      const elapsed = Math.round((Date.now() - streamStartTime) / 1000);
+      console.log(`[submitMessenger] Stream completed in ${elapsed}s. events=${eventsReceived}, totalChars=${totalCharsReceived}`);
 
       if (!result) {
         console.error(`[submitMessenger] No result. events=${eventsReceived}, lastEvent=${lastEventType}, totalChars=${totalCharsReceived}, bufferLen=${buffer.length}`);
-        throw new Error(`No result received from analysis (events: ${eventsReceived}, lastEvent: ${lastEventType}). The AI response may have been too large — please try again.`);
+        throw new Error(`No result received from analysis (events: ${eventsReceived}, lastEvent: ${lastEventType}). Please try again.`);
       }
 
       // ─── Save to sessionStorage for report page ────────────

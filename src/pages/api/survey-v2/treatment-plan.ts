@@ -236,7 +236,6 @@ CRITICAL RULES:
 // ─── Edge Runtime Config ─────────────────────────────────────
 export const config = {
   runtime: 'edge',
-  maxDuration: 60, // Netlify Pro: max 60s for edge functions (default 25s)
 };
 
 // ─── API Handler ─────────────────────────────────────────────

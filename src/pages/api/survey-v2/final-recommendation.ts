@@ -1021,7 +1021,8 @@ ${safetySection}`;
 // allowing the full streaming generation to complete (30-60s+).
 export const config = {
   runtime: 'edge',
-  maxDuration: 60, // Netlify Pro: max 60s for edge functions (default 25s)
+  // Note: Netlify Edge Functions have no wall-clock timeout for I/O waits.
+  // CPU time limit applies, but streaming from Anthropic is pure I/O.
 };
 
 // ─── API Handler (Edge Runtime + SSE Streaming) ──────────────
