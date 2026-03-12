@@ -1,34 +1,22 @@
 // ═══════════════════════════════════════════════════════════════
 //  ConnectingDocs Survey v2 — Master Container
 //  Based on FRONTEND_UI_COMPONENT_DESIGN_v2.md §3
+//  Phase 2: Dynamic step flow (budget → stay_duration / management_frequency)
 // ═══════════════════════════════════════════════════════════════
 
 import { AnimatePresence } from 'framer-motion';
 import { useSurveyV2 } from '@/hooks/useSurveyV2';
 import { SURVEY_V2_I18N } from '@/utils/survey-v2-i18n';
-import type { SurveyStep } from '@/types/survey-v2';
 
 import DemographicStep from './DemographicStep';
 import OpenQuestionStep from './OpenQuestionStep';
 import SmartChipStep from './SmartChipStep';
 import SafetyCheckpoint from './SafetyCheckpoint';
+import BudgetStep from './BudgetStep';
+import StayDurationStep from './StayDurationStep';
+import ManagementFrequencyStep from './ManagementFrequencyStep';
 import MessengerContactStep from './MessengerContactStep';
 import ThankYouStep from './ThankYouStep';
-
-// ─── Progress Config ─────────────────────────────────────────
-const STEPS: SurveyStep[] = ['demographics', 'open', 'chips', 'safety', 'messenger', 'complete'];
-const STEP_NUMBERS: Record<SurveyStep, number> = {
-  demographics: 1,
-  open: 2,
-  chips: 3,
-  safety: 4,
-  budget: 5,
-  stay_duration: 6,
-  management_frequency: 6,
-  messenger: 7,
-  complete: 8,
-  analyzing: 8, // Keep for backward compat (shouldn't be reached)
-};
 
 interface SurveyV2ContainerProps {
   onComplete: (runId: string) => void;
@@ -37,6 +25,7 @@ interface SurveyV2ContainerProps {
 export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps) {
   const {
     step,
+    steps,
     lang,
     demographics,
     openResponse,
@@ -58,6 +47,15 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
     setSafetySelection,
     setFollowupAnswer,
     submitSafety,
+    // Phase 2
+    setBudget,
+    setEventInfo,
+    submitBudget,
+    setStayDuration,
+    submitStayDuration,
+    setManagementFrequency,
+    submitManagementFrequency,
+    // Messenger
     setMessengerContact,
     submitMessenger,
     messengerContact,
@@ -65,8 +63,11 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
   } = useSurveyV2({ onComplete });
 
   const t = SURVEY_V2_I18N[lang];
-  const currentStepNum = STEP_NUMBERS[step];
-  const totalSteps = STEPS.length;
+
+  // Dynamic progress: use the steps array from hook
+  const currentStepIdx = steps.indexOf(step);
+  const currentStepNum = currentStepIdx >= 0 ? currentStepIdx + 1 : 1;
+  const totalSteps = steps.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-start justify-center px-4 py-8">
@@ -153,6 +154,38 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
                 followups={safetyFollowups}
                 onFollowupAnswer={setFollowupAnswer}
                 onSubmit={submitSafety}
+                isLoading={isLoading}
+              />
+            )}
+
+            {step === 'budget' && (
+              <BudgetStep
+                key="budget"
+                lang={lang}
+                country={demographics.detected_country}
+                onSubmit={submitBudget}
+                onBudgetChange={setBudget}
+                onEventChange={setEventInfo}
+                isLoading={isLoading}
+              />
+            )}
+
+            {step === 'stay_duration' && (
+              <StayDurationStep
+                key="stay_duration"
+                lang={lang}
+                onSubmit={submitStayDuration}
+                onDurationChange={setStayDuration}
+                isLoading={isLoading}
+              />
+            )}
+
+            {step === 'management_frequency' && (
+              <ManagementFrequencyStep
+                key="management_frequency"
+                lang={lang}
+                onSubmit={submitManagementFrequency}
+                onFrequencyChange={setManagementFrequency}
                 isLoading={isLoading}
               />
             )}

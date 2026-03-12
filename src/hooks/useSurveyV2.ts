@@ -19,6 +19,9 @@ import type {
   WizardDataCompat,
   ChipType,
   MessengerContact,
+  BudgetSelection,
+  ManagementFrequency,
+  EventInfo,
 } from '@/types/survey-v2';
 import type { FinalRecommendationRequest } from '@/pages/api/survey-v2/final-recommendation';
 import { MEDICATION_FLAG_MAP, CONDITION_FLAG_MAP, FOLLOWUP_ITEMS } from '@/components/survey-v2/SafetyCheckpoint';
@@ -132,6 +135,21 @@ function surveyReducer(state: SurveyV2State, action: SurveyAction): SurveyV2Stat
         ),
       };
 
+    case 'SET_BUDGET':
+      return { ...state, budget: action.payload };
+
+    case 'SET_STAY_DURATION':
+      return { ...state, stay_duration: action.payload };
+
+    case 'SET_MANAGEMENT_FREQUENCY':
+      return { ...state, management_frequency: action.payload };
+
+    case 'SET_EVENT_INFO':
+      return { ...state, event_info: action.payload };
+
+    case 'SET_LOCATION_PREFERENCE':
+      return { ...state, location_preference: action.payload };
+
     case 'SET_MESSENGER_CONTACT':
       return { ...state, messenger_contact: action.payload };
 
@@ -143,8 +161,17 @@ function surveyReducer(state: SurveyV2State, action: SurveyAction): SurveyV2Stat
   }
 }
 
-// ─── Step Order ──────────────────────────────────────────────
-const STEP_ORDER: SurveyStep[] = ['demographics', 'open', 'chips', 'safety', 'messenger', 'complete'];
+// ─── Dynamic Step Order ──────────────────────────────────────
+function buildSteps(country: string): SurveyStep[] {
+  const base: SurveyStep[] = ['demographics', 'open', 'chips', 'safety', 'budget'];
+  if (country === 'KR') {
+    base.push('management_frequency');
+  } else {
+    base.push('stay_duration');
+  }
+  base.push('messenger', 'complete');
+  return base;
+}
 
 // ─── Goal Mapping (v2 → WizardData) ─────────────────────────
 function mapGoalToWizard(goal: string | null): string {
@@ -205,9 +232,9 @@ function mapV2ToWizardData(state: SurveyV2State): WizardDataCompat {
     skinType: state.q4_skin_profile || 'to_be_determined',
     resultStyle: state.q5_style || 'natural',
     downtimeTolerance: state.q6_downtime_tolerance || 'unknown',
-    budget: 'mid',
+    budget: state.budget?.range || 'mid',
     history: state.q7_past_experience || 'none',
-    koreaVisitPlan: 'undecided',
+    koreaVisitPlan: state.stay_duration ? `${state.stay_duration}_days` : 'undecided',
     triggered_protocols: detectProtocolsFromState(state),
     free_text_summary: state.open_question_raw,
   };
@@ -250,14 +277,17 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
   // ─── Language shortcut ────────────────────────────────────
   const lang: SurveyLang = state.demographics.detected_language;
 
+  // ─── Dynamic Steps for this user ─────────────────────────
+  const steps = buildSteps(state.demographics.detected_country);
+
   // ─── Step Navigation ──────────────────────────────────────
   const goBack = useCallback(() => {
-    const idx = STEP_ORDER.indexOf(step);
+    const idx = steps.indexOf(step);
     if (idx > 0 && step !== 'analyzing') {
-      setStep(STEP_ORDER[idx - 1]);
+      setStep(steps[idx - 1]);
       setError(null);
     }
-  }, [step]);
+  }, [step, steps]);
 
   // ─── Demographics Handlers ────────────────────────────────
   const setDemographics = useCallback((d: Demographics) => {
@@ -406,14 +436,50 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
         }
       }
 
-      // Transition to messenger contact collection (instead of direct analysis)
-      setStep('messenger');
+      // Transition to budget step (Phase 2)
+      setStep('budget');
       setIsLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       setIsLoading(false);
     }
   }, [state]);
+
+  // ─── Phase 2: Budget ────────────────────────────────────
+  const setBudget = useCallback((budget: BudgetSelection) => {
+    dispatch({ type: 'SET_BUDGET', payload: budget });
+  }, []);
+
+  const setEventInfo = useCallback((event: EventInfo | null) => {
+    dispatch({ type: 'SET_EVENT_INFO', payload: event });
+  }, []);
+
+  const submitBudget = useCallback(() => {
+    // Go to the next step after budget (depends on country)
+    const isKR = state.demographics.detected_country === 'KR';
+    setStep(isKR ? 'management_frequency' : 'stay_duration');
+    setError(null);
+  }, [state.demographics.detected_country]);
+
+  // ─── Phase 2: Stay Duration (foreigners) ───────────────
+  const setStayDuration = useCallback((days: number) => {
+    dispatch({ type: 'SET_STAY_DURATION', payload: days });
+  }, []);
+
+  const submitStayDuration = useCallback(() => {
+    setStep('messenger');
+    setError(null);
+  }, []);
+
+  // ─── Phase 2: Management Frequency (KR) ────────────────
+  const setManagementFrequency = useCallback((freq: ManagementFrequency) => {
+    dispatch({ type: 'SET_MANAGEMENT_FREQUENCY', payload: freq });
+  }, []);
+
+  const submitManagementFrequency = useCallback(() => {
+    setStep('messenger');
+    setError(null);
+  }, []);
 
   // ─── Messenger Contact ──────────────────────────────────
   const setMessengerContact = useCallback((contact: MessengerContact) => {
@@ -470,6 +536,11 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
           open_question_raw: state.open_question_raw,
           chip_responses: state.chip_responses,
           siteUrl,
+          // Phase 2 data
+          budget: state.budget,
+          stay_duration: state.stay_duration,
+          management_frequency: state.management_frequency,
+          event_info: state.event_info,
         }),
         keepalive: true, // Keep request alive even if page closes
       }).catch((err) => {
@@ -487,8 +558,9 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
 
   // ─── Return ───────────────────────────────────────────────
   return {
-    // Current step
+    // Current step + dynamic steps
     step,
+    steps,
     lang,
 
     // State
@@ -502,6 +574,12 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
     priorApplied: state.prior_applied,
     priorValues: state.prior_values,
     messengerContact: state.messenger_contact,
+
+    // Phase 2 state
+    budget: state.budget,
+    stayDuration: state.stay_duration,
+    managementFrequency: state.management_frequency,
+    eventInfo: state.event_info,
 
     // Loading / Error
     isLoading,
@@ -518,6 +596,15 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
     setSafetySelection,
     setFollowupAnswer,
     submitSafety,
+    // Phase 2 handlers
+    setBudget,
+    setEventInfo,
+    submitBudget,
+    setStayDuration,
+    submitStayDuration,
+    setManagementFrequency,
+    submitManagementFrequency,
+    // Messenger
     setMessengerContact,
     submitMessenger,
     goBack,
