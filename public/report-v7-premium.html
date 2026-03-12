@@ -6429,8 +6429,9 @@ function selectINJ(idx){
 const PD_COLORS = ['','#22c55e','#84cc16','#f59e0b','#f97316','#ef4444'];
 
 function updateRadar(){
-  const eScore = EBD_SCORES[activeEBD] || [0,0,0,0,0,0,0];
-  const iScore = INJ_SCORES[activeINJ] || [0,0,0,0,0,0,0];
+  if (EBD_SCORES.length === 0 && INJ_SCORES.length === 0) { console.warn('[updateRadar] No scores data'); return; }
+  const eScore = EBD_SCORES[activeEBD] || [0,0,0,0,0,0,0,0,0,0,0];
+  const iScore = INJ_SCORES[activeINJ] || [0,0,0,0,0,0,0,0];
   /* Only first 5 axes (effect scores) for radar polygon */
   const ebd5 = eScore.slice(0,5);
   const inj5 = iScore.slice(0,5);
@@ -6466,8 +6467,10 @@ function updateRadar(){
   });
 
   /* ── Device names inside radar center ── */
-  const ebdName = EBD_DATA[activeEBD].name;
-  const injName = INJ_DATA[activeINJ].name;
+  const ebdEntry = EBD_DATA[activeEBD] || {};
+  const injEntry = INJ_DATA[activeINJ] || {};
+  const ebdName = ebdEntry.name || 'EBD';
+  const injName = injEntry.name || 'Injectable';
   document.getElementById('radar-ebd-label').textContent = ebdName;
   document.getElementById('radar-inj-label').textContent = injName;
   const legendEbd = document.getElementById('legend-ebd-name');
@@ -6487,8 +6490,8 @@ function updateRadar(){
   }
 
   /* ── Pain & Downtime: word-based with color ── */
-  const ePD = EBD_PD[activeEBD];
-  const iPD = INJ_PD[activeINJ];
+  const ePD = EBD_PD[activeEBD] || {pain:1, dt:1};
+  const iPD = INJ_PD[activeINJ] || {pain:1, dt:1};
   const combinedPain = Math.max(ePD.pain, iPD.pain);
   const combinedDt = Math.max(ePD.dt, iPD.dt);
 
@@ -8406,12 +8409,12 @@ setTimeout(()=>{
     recs.forEach(r => {
       const s = r.scores || {};
       EBD_SCORES.push([
-        s.tightening||0, s.lifting||0, s.volume||0, s.brightening||0, s.texture||0,
-        s.evidence||0, s.synergy||0, s.longevity||0, s.roi||0, s.trend||0, s.popularity||0
+        s.tightening||5, s.lifting||5, s.volume||5, s.brightening||5, s.texture||5,
+        s.evidence||5, s.synergy||5, s.longevity||5, s.roi||5, s.trend||5, s.popularity||5
       ]);
       EBD_PD.push({pain: r.pain_level||1, dt: r.downtime_level||1});
       EBD_PRACTICAL.push(r.practical || {sessions:'N/A', interval:'N/A', duration:'N/A', onset:'N/A', maintain:'N/A'});
-      AI_EBD_DESC.push({name: r.device_name, conf: r.confidence||0, body: r.ai_description_html||''});
+      AI_EBD_DESC.push({name: r.device_name || 'EBD Device', conf: r.confidence||70, body: r.ai_description_html||'<p>(설명 준비 중)</p>'});
     });
 
     // Update i18n for EBD card content
@@ -8440,11 +8443,11 @@ setTimeout(()=>{
     recs.forEach(r => {
       const s = r.scores || {};
       INJ_SCORES.push([
-        s.tightening||0, s.lifting||0, s.volume||0, s.brightening||0, s.texture||0,
-        s.evidence||0, s.synergy||0, s.longevity||0, s.roi||0, s.trend||0, s.popularity||0
+        s.hydration||5, s.repair||5, s.collagen||5, s.brightening||5,
+        s.elasticity||5, s.evidence||5, s.synergy||5, s.longevity||5
       ]);
       INJ_PD.push({pain: r.pain_level||1, dt: r.downtime_level||1});
-      INJ_PRACTICAL.push(r.practical || {sessions:'N/A', interval:'N/A', duration:'N/A', onset:'N/A', maintain:'N/A'});
+      INJ_PRACTICAL.push(r.practical || {sessions:'N/A', interval:'N/A', onset:'N/A', maintain:'N/A'});
       AI_INJ_DESC.push({name: r.product_name, conf: r.confidence||0, body: r.ai_description_html||''});
     });
   }

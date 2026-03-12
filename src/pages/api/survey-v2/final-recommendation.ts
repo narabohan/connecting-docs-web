@@ -1269,7 +1269,20 @@ export default async function handler(req: Request) {
           messages: [
             {
               role: 'user',
-              content: `Generate the treatment recommendation JSON (3-Layer: Mirror + Confidence + Solution) based on the patient data provided in the system prompt. Do NOT generate treatment_plan — set treatment_plan to { "phases": [] }. CURRENT_MONTH: ${new Date().getMonth() + 1}. IMPORTANT: Keep all text fields concise — summaries ≤2 sentences, HTML fields ≤3 sentences. Limit to top 3 EBD devices, top 2 injectables, top 2 signature solutions. Set homecare to empty arrays. Set doctor_tab fields to minimal content. This keeps output under token limits. Output ONLY valid JSON.`,
+              content: `Generate the treatment recommendation JSON (3-Layer: Mirror + Confidence + Solution) based on the patient data provided in the system prompt. Do NOT generate treatment_plan — set treatment_plan to { "phases": [] }. CURRENT_MONTH: ${new Date().getMonth() + 1}.
+
+TOKEN BUDGET RULES:
+- Limit to top 3 EBD devices, top 2 injectables, top 2 signature solutions.
+- summary_html: 1-2 sentences max. why_fit_html: 2-3 short numbered reasons. moa_description_html: 1-2 sentences.
+- Set homecare arrays to empty []. Set doctor_tab fields to brief strings.
+- mirror.empathy_paragraphs: 2 paragraphs. confidence.reason_why: 1-2 paragraphs.
+
+MANDATORY FIELDS (never omit):
+- Every EBD device MUST have: scores (all 11 keys: tightening, lifting, volume, brightening, texture, evidence, synergy, longevity, roi, trend, popularity), practical (all 5 keys), why_fit_html, summary_html, subtitle, ai_description_html.
+- Every injectable MUST have: scores (all 8 keys: hydration, repair, collagen, brightening, elasticity, evidence, synergy, longevity), practical (all 4 keys), why_fit_html, summary_html, subtitle.
+- patient object MUST be complete.
+
+Output ONLY valid JSON.`,
             },
           ],
         });
@@ -1358,6 +1371,56 @@ export default async function handler(req: Request) {
               },
             } as OpusDoctorTab;
           }
+
+          // ─── Fill defaults for individual EBD device entries ───
+          const DEFAULT_EBD_SCORES: Record<string, number> = {
+            tightening: 5, lifting: 5, volume: 5, brightening: 5, texture: 5,
+            evidence: 5, synergy: 5, longevity: 5, roi: 5, trend: 5, popularity: 5,
+          };
+          const DEFAULT_EBD_PRACTICAL = { sessions: 'N/A', interval: 'N/A', duration: 'N/A', onset: 'N/A', maintain: 'N/A' };
+          for (const ebd of recommendation.ebd_recommendations) {
+            if (!ebd.scores || Object.keys(ebd.scores).length === 0) {
+              console.warn(`[final-recommendation] ⚠️ EBD "${ebd.device_name}" missing scores — applying defaults`);
+              ebd.scores = { ...DEFAULT_EBD_SCORES };
+            } else {
+              // Fill any missing individual score keys
+              for (const [k, v] of Object.entries(DEFAULT_EBD_SCORES)) {
+                if (ebd.scores[k] == null) ebd.scores[k] = v;
+              }
+            }
+            if (!ebd.practical) ebd.practical = { ...DEFAULT_EBD_PRACTICAL };
+            if (!ebd.why_fit_html) ebd.why_fit_html = '<p>(상세 분석 준비 중)</p>';
+            if (!ebd.summary_html) ebd.summary_html = '<p>(요약 준비 중)</p>';
+            if (!ebd.subtitle) ebd.subtitle = ebd.device_name || 'EBD Device';
+            if (!ebd.ai_description_html) ebd.ai_description_html = '<p>(설명 준비 중)</p>';
+            if (ebd.confidence == null) ebd.confidence = 70;
+            if (ebd.pain_level == null) ebd.pain_level = 3;
+            if (ebd.downtime_level == null) ebd.downtime_level = 2;
+          }
+
+          // ─── Fill defaults for individual injectable entries ───
+          const DEFAULT_INJ_SCORES: Record<string, number> = {
+            hydration: 5, repair: 5, collagen: 5, brightening: 5,
+            elasticity: 5, evidence: 5, synergy: 5, longevity: 5,
+          };
+          const DEFAULT_INJ_PRACTICAL = { sessions: 'N/A', interval: 'N/A', onset: 'N/A', maintain: 'N/A' };
+          for (const inj of recommendation.injectable_recommendations) {
+            if (!inj.scores || Object.keys(inj.scores).length === 0) {
+              console.warn(`[final-recommendation] ⚠️ Injectable "${inj.name}" missing scores — applying defaults`);
+              inj.scores = { ...DEFAULT_INJ_SCORES };
+            } else {
+              for (const [k, v] of Object.entries(DEFAULT_INJ_SCORES)) {
+                if (inj.scores[k] == null) inj.scores[k] = v;
+              }
+            }
+            if (!inj.practical) inj.practical = { ...DEFAULT_INJ_PRACTICAL };
+            if (!inj.why_fit_html) inj.why_fit_html = '<p>(상세 분석 준비 중)</p>';
+            if (!inj.summary_html) inj.summary_html = '<p>(요약 준비 중)</p>';
+            if (!inj.subtitle) inj.subtitle = inj.name || 'Injectable';
+            if (inj.confidence == null) inj.confidence = 70;
+          }
+
+          console.log(`[final-recommendation] ✅ Parsed OK. EBD=${recommendation.ebd_recommendations.length}, INJ=${recommendation.injectable_recommendations.length}, SIG=${recommendation.signature_solutions.length}, stop_reason=${stopReason}, output_tokens=${outputTokens}`);
 
           if (stopReason === 'max_tokens') {
             console.warn(`[final-recommendation] ⚠️ Output was truncated but JSON repair succeeded. Some fields may use defaults.`);
