@@ -929,6 +929,184 @@ CRITICAL RULES:
 10. MIRROR + CONFIDENCE + DOCTOR INTELLIGENCE ARE MANDATORY — mirror (headline, empathy_paragraphs, transition) and confidence (reason_why, social_proof, commitment) must be generated for every patient using the COUNTRY-SPECIFIC EMOTIONAL LANGUAGE LIBRARY and REASON WHY KNOWLEDGE BASE. doctor_tab.patient_intelligence and doctor_tab.consultation_strategy must be fully populated.
 11. DO NOT generate treatment_plan in this response. Treatment plan is generated separately via a dedicated API. Include a simple treatment_plan placeholder: { "phases": [] }.`;
 
+// ─── Robust JSON Parse with multiple repair strategies ─────────
+type ParseResult =
+  | { ok: true; value: OpusRecommendationOutput }
+  | { ok: false; errors: string[] };
+
+function robustJsonParse(
+  rawText: string,
+  stopReason: string,
+  outputTokens: number
+): ParseResult {
+  const errors: string[] = [];
+  let jsonStr = rawText.trim();
+
+  // Step 1: Strip markdown code fences
+  if (jsonStr.startsWith('```')) {
+    jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+  }
+  // Strip leading text before first {
+  const firstBrace = jsonStr.indexOf('{');
+  if (firstBrace < 0) {
+    return { ok: false, errors: ['No JSON object found in response'] };
+  }
+  if (firstBrace > 0) {
+    jsonStr = jsonStr.substring(firstBrace);
+  }
+
+  // Step 2: Try direct parse
+  try {
+    return { ok: true, value: JSON.parse(jsonStr) };
+  } catch (e) {
+    errors.push(`Direct parse: ${e instanceof Error ? e.message : 'unknown'}`);
+  }
+
+  // Step 3: Aggressive truncation repair
+  // Strategy: find last well-formed position and close all brackets
+  const repaired = aggressiveJsonRepair(jsonStr);
+  if (repaired) {
+    try {
+      return { ok: true, value: JSON.parse(repaired) };
+    } catch (e) {
+      errors.push(`Repair attempt: ${e instanceof Error ? e.message : 'unknown'}`);
+    }
+  }
+
+  // Step 4: Even more aggressive — strip after last complete key-value at depth 1
+  const stripped = stripToLastCompleteProperty(jsonStr);
+  if (stripped && stripped !== repaired) {
+    try {
+      return { ok: true, value: JSON.parse(stripped) };
+    } catch (e) {
+      errors.push(`Strip attempt: ${e instanceof Error ? e.message : 'unknown'}`);
+    }
+  }
+
+  return { ok: false, errors };
+}
+
+function aggressiveJsonRepair(jsonStr: string): string | null {
+  // Remove any trailing incomplete string literal
+  // Find the last position where we have balanced quotes
+  let inString = false;
+  let escaped = false;
+  let lastSafePos = 0;
+  const brackets: string[] = [];
+
+  for (let i = 0; i < jsonStr.length; i++) {
+    const ch = jsonStr[i];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\' && inString) {
+      escaped = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      if (!inString) {
+        // Just closed a string — this is a safe position
+        lastSafePos = i + 1;
+      }
+      continue;
+    }
+    if (inString) continue;
+    // Outside string: track brackets
+    if (ch === '{' || ch === '[') {
+      brackets.push(ch);
+      lastSafePos = i + 1;
+    } else if (ch === '}' || ch === ']') {
+      brackets.pop();
+      lastSafePos = i + 1;
+    } else if (ch === ',' || ch === ':') {
+      lastSafePos = i + 1;
+    }
+  }
+
+  // If we're inside a string, truncate to last safe position
+  let truncated = jsonStr;
+  if (inString && lastSafePos > 0) {
+    truncated = jsonStr.substring(0, lastSafePos);
+  }
+
+  // Remove trailing commas, colons, or incomplete tokens
+  truncated = truncated.replace(/[,:\s]+$/, '');
+
+  // Count remaining open brackets and close them
+  let openBraces = 0;
+  let openBrackets = 0;
+  inString = false;
+  escaped = false;
+  for (let i = 0; i < truncated.length; i++) {
+    const ch = truncated[i];
+    if (escaped) { escaped = false; continue; }
+    if (ch === '\\' && inString) { escaped = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{') openBraces++;
+    else if (ch === '}') openBraces--;
+    else if (ch === '[') openBrackets++;
+    else if (ch === ']') openBrackets--;
+  }
+
+  // Close all open brackets/braces
+  const closing = ']'.repeat(Math.max(0, openBrackets)) + '}'.repeat(Math.max(0, openBraces));
+  if (!closing) return truncated;
+
+  return truncated + closing;
+}
+
+function stripToLastCompleteProperty(jsonStr: string): string | null {
+  // Strategy: find the last `}` or `]` that reduces depth, then close from there
+  // This works well when truncation happens mid-value in a nested object
+  let bestPos = -1;
+  let inString = false;
+  let escaped = false;
+  let depth = 0;
+
+  for (let i = 0; i < jsonStr.length; i++) {
+    const ch = jsonStr[i];
+    if (escaped) { escaped = false; continue; }
+    if (ch === '\\' && inString) { escaped = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{' || ch === '[') depth++;
+    else if (ch === '}' || ch === ']') {
+      depth--;
+      if (depth <= 1) {
+        // This close bracket brings us back to depth 0 or 1 (root level property)
+        bestPos = i;
+      }
+    }
+  }
+
+  if (bestPos <= 0) return null;
+
+  let truncated = jsonStr.substring(0, bestPos + 1);
+  truncated = truncated.replace(/[,\s]+$/, '');
+
+  // Close remaining
+  let openBraces = 0;
+  let openBrackets = 0;
+  inString = false;
+  escaped = false;
+  for (let i = 0; i < truncated.length; i++) {
+    const ch = truncated[i];
+    if (escaped) { escaped = false; continue; }
+    if (ch === '\\' && inString) { escaped = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{') openBraces++;
+    else if (ch === '}') openBraces--;
+    else if (ch === '[') openBrackets++;
+    else if (ch === ']') openBrackets--;
+  }
+
+  return truncated + ']'.repeat(Math.max(0, openBrackets)) + '}'.repeat(Math.max(0, openBraces));
+}
+
 /** Build dynamic system prompt — changes per patient */
 function buildDynamicSystemPrompt(
   req: FinalRecommendationRequest
@@ -1091,7 +1269,7 @@ export default async function handler(req: Request) {
           messages: [
             {
               role: 'user',
-              content: `Generate the treatment recommendation JSON (3-Layer: Mirror + Confidence + Solution) based on the patient data provided in the system prompt. Do NOT generate treatment_plan — set treatment_plan to { "phases": [] }. CURRENT_MONTH: ${new Date().getMonth() + 1}. Output ONLY valid JSON.`,
+              content: `Generate the treatment recommendation JSON (3-Layer: Mirror + Confidence + Solution) based on the patient data provided in the system prompt. Do NOT generate treatment_plan — set treatment_plan to { "phases": [] }. CURRENT_MONTH: ${new Date().getMonth() + 1}. IMPORTANT: Keep all text fields concise — summaries ≤2 sentences, HTML fields ≤3 sentences. Limit to top 3 EBD devices, top 2 injectables, top 2 signature solutions. Set homecare to empty arrays. Set doctor_tab fields to minimal content. This keeps output under token limits. Output ONLY valid JSON.`,
             },
           ],
         });
@@ -1133,43 +1311,66 @@ export default async function handler(req: Request) {
           console.warn(`[final-recommendation] ⚠️ Output truncated (max_tokens). output_tokens=${outputTokens}, text_length=${fullText.length}. Will attempt JSON repair.`);
         }
 
-        // Parse JSON from collected text
+        // ─── Robust JSON parsing with aggressive repair ───────────
         let recommendation: OpusRecommendationOutput;
-        try {
-          let jsonStr = fullText.trim();
-          // Strip markdown code fences if present
-          if (jsonStr.startsWith('```')) {
-            jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+        const parseResult = robustJsonParse(fullText, stopReason, outputTokens);
+        if (parseResult.ok) {
+          recommendation = parseResult.value;
+
+          // ─── Fill defaults for fields that may be missing due to truncation ───
+          if (!recommendation.lang) recommendation.lang = 'ko';
+          if (!recommendation.generated_at) recommendation.generated_at = new Date().toISOString();
+          if (!recommendation.model) recommendation.model = modelUsed;
+          if (!recommendation.patient) {
+            recommendation.patient = {
+              age: '', gender: '', country: '', aesthetic_goal: '',
+              top3_concerns: [], past_treatments: [], fitzpatrick: '', pain_sensitivity: 3,
+            };
           }
-          // Strip any leading text before the first {
-          const firstBrace = jsonStr.indexOf('{');
-          if (firstBrace > 0) {
-            jsonStr = jsonStr.substring(firstBrace);
+          if (!recommendation.safety_flags) recommendation.safety_flags = {};
+          // mirror & confidence fallbacks are handled below (H-1 section)
+          if (!recommendation.ebd_recommendations) recommendation.ebd_recommendations = [];
+          if (!recommendation.injectable_recommendations) recommendation.injectable_recommendations = [];
+          if (!recommendation.signature_solutions) recommendation.signature_solutions = [];
+          if (!recommendation.treatment_plan) recommendation.treatment_plan = { phases: [] };
+          if (!recommendation.homecare) {
+            recommendation.homecare = { morning: [], evening: [], weekly: [], avoid: [] };
           }
-          // If JSON is truncated (no closing brace), attempt to repair
-          if (!jsonStr.endsWith('}')) {
-            // Find the last complete property and close the JSON
-            const lastCloseBrace = jsonStr.lastIndexOf('}');
-            if (lastCloseBrace > 0) {
-              // Count depth to add correct number of closing braces
-              let depth = 0;
-              for (const ch of jsonStr.substring(0, lastCloseBrace + 1)) {
-                if (ch === '{') depth++;
-                if (ch === '}') depth--;
-              }
-              jsonStr = jsonStr.substring(0, lastCloseBrace + 1) + '}'.repeat(depth);
-            }
+          if (!recommendation.doctor_tab) {
+            recommendation.doctor_tab = {
+              clinical_summary: '',
+              triggered_protocols: [],
+              country_note: '',
+              parameter_guidance: {},
+              contraindications: [],
+              alternative_options: [],
+              patient_intelligence: {
+                expectation_tag: 'REALISTIC',
+                expectation_note: '',
+                budget_timeline: { budget_tier: 'Standard', decision_speed: 'Normal', urgency: 'MEDIUM', stay_duration: null },
+                communication_style: 'LOGICAL',
+                communication_note: '',
+              },
+              consultation_strategy: {
+                recommended_order: [],
+                expected_complaints: [],
+                scenario_summary: '',
+              },
+            } as OpusDoctorTab;
           }
-          recommendation = JSON.parse(jsonStr);
-        } catch (parseErr) {
-          console.error(`[final-recommendation] JSON parse error. stop_reason=${stopReason}, output_tokens=${outputTokens}, text_length=${fullText.length}`);
+
+          if (stopReason === 'max_tokens') {
+            console.warn(`[final-recommendation] ⚠️ Output was truncated but JSON repair succeeded. Some fields may use defaults.`);
+          }
+        } else {
+          console.error(`[final-recommendation] All JSON parse attempts failed. stop_reason=${stopReason}, output_tokens=${outputTokens}, text_length=${fullText.length}`);
           console.error('[final-recommendation] First 500 chars:', fullText.substring(0, 500));
           console.error('[final-recommendation] Last 500 chars:', fullText.substring(Math.max(0, fullText.length - 500)));
-          console.error('[final-recommendation] Parse error:', parseErr instanceof Error ? parseErr.message : parseErr);
+          console.error('[final-recommendation] Errors:', parseResult.errors.join(' | '));
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({
               type: 'error',
-              error: `Failed to parse model response as JSON (length: ${fullText.length} chars, stop_reason: ${stopReason || 'unknown'}, output_tokens: ${outputTokens}). Output may be truncated.`,
+              error: `Failed to parse AI response (${fullText.length} chars, stop_reason: ${stopReason || 'unknown'}). ${parseResult.errors[parseResult.errors.length - 1]}`,
               debug: { stop_reason: stopReason, output_tokens: outputTokens, text_length: fullText.length },
             })}\n\n`)
           );

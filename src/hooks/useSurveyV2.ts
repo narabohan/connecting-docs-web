@@ -603,8 +603,12 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
                     throw new Error(evt.error || 'Analysis stream error');
                   }
                 } catch (e) {
-                  if (e instanceof Error && (e.message.includes('Analysis') || e.message.includes('stream error'))) throw e;
-                  console.warn('[submitMessenger] Failed to parse final buffer:', remaining.substring(0, 200));
+                  // Rethrow any Error from SSE error events; only swallow JSON.parse failures
+                  if (e instanceof SyntaxError) {
+                    console.warn('[submitMessenger] Failed to parse final buffer:', remaining.substring(0, 200));
+                  } else {
+                    throw e;
+                  }
                 }
               }
             }
@@ -640,8 +644,12 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
                 throw new Error(evt.error || 'Analysis stream error');
               }
             } catch (e) {
-              if (e instanceof Error && (e.message.includes('stream error') || e.message.includes('Analysis'))) throw e;
-              // Skip malformed SSE lines silently
+              // Rethrow any Error from SSE error events; only swallow JSON.parse failures
+              if (e instanceof SyntaxError) {
+                // Malformed SSE line — skip silently
+              } else {
+                throw e;
+              }
             }
           }
         }
