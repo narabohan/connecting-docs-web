@@ -87,10 +87,12 @@ export default function ReportV2Page() {
 
       switch (event.data.type) {
         case 'IFRAME_READY':
+          console.log('[ReportV2] iframe ready');
           setIframeStatus('ready');
           break;
         case 'REPORT_READY':
           if (event.data.success) {
+            console.log('[ReportV2] report rendered');
             setIframeStatus('rendered');
           } else {
             console.error('[ReportV2] Render error:', event.data.error);
@@ -101,7 +103,22 @@ export default function ReportV2Page() {
     }
 
     window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+
+    // Timeout fallback: if iframe doesn't respond within 15s, show error
+    const timeout = setTimeout(() => {
+      setIframeStatus(prev => {
+        if (prev === 'loading') {
+          console.error('[ReportV2] Iframe timeout — still loading after 15s');
+          return 'error';
+        }
+        return prev;
+      });
+    }, 15_000);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      clearTimeout(timeout);
+    };
   }, []);
 
   // ─── Send data to iframe when both ready ───────────────────
@@ -390,6 +407,42 @@ export default function ReportV2Page() {
           <div className="report-v7-overlay">
             <div className="report-v7-overlay__spinner" />
             <p>Initializing report...</p>
+          </div>
+        )}
+
+        {/* Error overlay when iframe fails to load or render */}
+        {iframeStatus === 'error' && (
+          <div className="report-v7-overlay">
+            <p style={{ color: '#f87171', fontSize: '14px', marginBottom: '12px' }}>
+              {lang === 'KO' ? '리포트 렌더링에 실패했습니다.' : 'Failed to render report.'}
+            </p>
+            <button
+              onClick={() => {
+                setIframeStatus('loading');
+                iframeRef.current?.contentWindow?.location.reload();
+                // Re-send IFRAME_READY timeout
+                setTimeout(() => {
+                  setIframeStatus(prev => prev === 'loading' ? 'error' : prev);
+                }, 15_000);
+              }}
+              style={{
+                padding: '10px 24px', background: '#22d3ee', color: '#09090b',
+                border: 'none', borderRadius: '24px', fontWeight: 600,
+                fontSize: '14px', cursor: 'pointer', marginRight: '8px',
+              }}
+            >
+              {lang === 'KO' ? '다시 시도' : 'Retry'}
+            </button>
+            <button
+              onClick={() => router.push('/survey-v2')}
+              style={{
+                padding: '10px 24px', background: 'transparent', color: '#a1a1aa',
+                border: '1px solid #3f3f46', borderRadius: '24px', fontWeight: 600,
+                fontSize: '14px', cursor: 'pointer',
+              }}
+            >
+              {lang === 'KO' ? '설문 다시 시작' : 'Start Over'}
+            </button>
           </div>
         )}
 

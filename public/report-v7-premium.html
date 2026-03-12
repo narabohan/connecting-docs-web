@@ -6429,8 +6429,8 @@ function selectINJ(idx){
 const PD_COLORS = ['','#22c55e','#84cc16','#f59e0b','#f97316','#ef4444'];
 
 function updateRadar(){
-  const eScore = EBD_SCORES[activeEBD];
-  const iScore = INJ_SCORES[activeINJ];
+  const eScore = EBD_SCORES[activeEBD] || [0,0,0,0,0,0,0];
+  const iScore = INJ_SCORES[activeINJ] || [0,0,0,0,0,0,0];
   /* Only first 5 axes (effect scores) for radar polygon */
   const ebd5 = eScore.slice(0,5);
   const inj5 = iScore.slice(0,5);
@@ -6774,10 +6774,12 @@ const INJ_DATA = [
 function updateSkinMarkers(){
   const markers = document.getElementById('skin-markers');
   const beams = document.getElementById('skin-beams');
+  if (!markers || !beams) return;
   markers.innerHTML = '';
   beams.innerHTML = '';
   const ebd = EBD_DATA[activeEBD];
   const inj = INJ_DATA[activeINJ];
+  if (!ebd || !inj) return;
 
   /* Highlight active layers — apply to parent <g> for dual-rect structure */
   document.querySelectorAll('#skin-wireframe .skin-layer').forEach(el=>{
