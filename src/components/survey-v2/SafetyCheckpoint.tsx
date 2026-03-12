@@ -248,7 +248,7 @@ export default function SafetyCheckpoint({
         {isLoading ? (
           <><Loader2 className="w-5 h-5 animate-spin" /> {tc.loading}</>
         ) : (
-          <>{tc.submit} →</>
+          <>{tc.next}</>
         )}
       </button>
     </motion.div>

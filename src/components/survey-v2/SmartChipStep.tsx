@@ -98,7 +98,7 @@ export default function SmartChipStep({
             : 'bg-gray-200 text-gray-400 cursor-not-allowed'
         )}
       >
-        {tc.next} →
+        {tc.next}
       </button>
     </motion.div>
   );

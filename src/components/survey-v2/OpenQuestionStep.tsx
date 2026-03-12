@@ -155,7 +155,7 @@ export default function OpenQuestionStep({
             {tc.loading}
           </>
         ) : (
-          <>분석하기 →</>
+          <>{tc.analyze}</>
         )}
       </button>
     </motion.div>

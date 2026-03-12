@@ -63,7 +63,7 @@ const BUDGET_I18N: Record<SurveyLang, BudgetI18n> = {
     },
     event_date_label: '일정',
     event_hint: '일정에 맞춰 시술 타이밍을 조절해 드립니다',
-    next: '다음',
+    next: '다음 →',
   },
   EN: {
     title: "What's your budget for this visit?",
@@ -84,7 +84,7 @@ const BUDGET_I18N: Record<SurveyLang, BudgetI18n> = {
     },
     event_date_label: 'Date',
     event_hint: "We'll time your treatments to look your best on the day",
-    next: 'Next',
+    next: 'Next →',
   },
   JP: {
     title: 'ご予算の目安を教えてください',
@@ -105,7 +105,7 @@ const BUDGET_I18N: Record<SurveyLang, BudgetI18n> = {
     },
     event_date_label: '日程',
     event_hint: 'イベントに合わせた最適なタイミングでご提案します',
-    next: '次へ',
+    next: '次へ →',
   },
   'ZH-CN': {
     title: '您的预算范围是？',
@@ -126,7 +126,7 @@ const BUDGET_I18N: Record<SurveyLang, BudgetI18n> = {
     },
     event_date_label: '日期',
     event_hint: '我们会根据您的日程安排最佳治疗时间',
-    next: '下一步',
+    next: '下一步 →',
   },
 };
 

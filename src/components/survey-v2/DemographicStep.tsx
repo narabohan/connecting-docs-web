@@ -194,7 +194,7 @@ export default function DemographicStep({ demographics, onChange, onNext, lang }
             : 'bg-gray-200 text-gray-400 cursor-not-allowed'
         )}
       >
-        {tc.next} →
+        {tc.next}
       </button>
     </motion.div>
   );

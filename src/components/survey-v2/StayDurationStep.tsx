@@ -35,7 +35,7 @@ const STAY_I18N: Record<SurveyLang, StayI18n> = {
       { label: '2주 이상', emoji: '🏠', days: 21 },
       { label: '아직 미정', emoji: '🤔', days: 0 },
     ],
-    next: '다음',
+    next: '다음 →',
   },
   EN: {
     title: 'How long will you be in Korea?',
@@ -48,7 +48,7 @@ const STAY_I18N: Record<SurveyLang, StayI18n> = {
       { label: '2+ weeks', emoji: '🏠', days: 21 },
       { label: 'Not sure yet', emoji: '🤔', days: 0 },
     ],
-    next: 'Next',
+    next: 'Next →',
   },
   JP: {
     title: '韓国滞在期間はどのくらいですか？',
@@ -61,7 +61,7 @@ const STAY_I18N: Record<SurveyLang, StayI18n> = {
       { label: '2週間以上', emoji: '🏠', days: 21 },
       { label: 'まだ未定', emoji: '🤔', days: 0 },
     ],
-    next: '次へ',
+    next: '次へ →',
   },
   'ZH-CN': {
     title: '您在韩国停留多长时间？',
@@ -74,7 +74,7 @@ const STAY_I18N: Record<SurveyLang, StayI18n> = {
       { label: '2周以上', emoji: '🏠', days: 21 },
       { label: '尚未确定', emoji: '🤔', days: 0 },
     ],
-    next: '下一步',
+    next: '下一步 →',
   },
 };
 

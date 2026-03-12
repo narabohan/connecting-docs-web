@@ -70,6 +70,7 @@ export interface SurveyV2Translations {
     next: string;
     back: string;
     submit: string;
+    analyze: string;
     loading: string;
     error_generic: string;
     progress_step: string; // "{n}단계"
@@ -147,9 +148,10 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       phase3: '맞춤 리포트 생성 중...',
     },
     common: {
-      next: '다음으로',
+      next: '다음 →',
       back: '뒤로',
       submit: '분석 시작하기',
+      analyze: '분석하기 →',
       loading: '분석 중...',
       error_generic: '오류가 발생했습니다. 다시 시도해 주세요.',
       progress_step: '단계',
@@ -226,9 +228,10 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       phase3: 'Generating your report...',
     },
     common: {
-      next: 'Next',
+      next: 'Next →',
       back: 'Back',
       submit: 'Start Analysis',
+      analyze: 'Analyze →',
       loading: 'Analyzing...',
       error_generic: 'Something went wrong. Please try again.',
       progress_step: 'Step',
@@ -305,9 +308,10 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       phase3: 'レポートを生成中...',
     },
     common: {
-      next: '次へ',
+      next: '次へ →',
       back: '戻る',
       submit: '分析を開始',
+      analyze: '分析する →',
       loading: '分析中...',
       error_generic: 'エラーが発生しました。もう一度お試しください。',
       progress_step: 'ステップ',
@@ -384,9 +388,10 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       phase3: '生成报告中...',
     },
     common: {
-      next: '下一步',
+      next: '下一步 →',
       back: '返回',
       submit: '开始分析',
+      analyze: '开始分析 →',
       loading: '分析中...',
       error_generic: '出现错误，请重试。',
       progress_step: '步骤',

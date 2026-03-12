@@ -48,7 +48,7 @@ const FREQ_I18N: Record<SurveyLang, FreqI18n> = {
         emoji: '⚡',
       },
     ],
-    next: '다음',
+    next: '다음 →',
   },
   EN: {
     title: 'How often would you like treatment?',
@@ -73,7 +73,7 @@ const FREQ_I18N: Record<SurveyLang, FreqI18n> = {
         emoji: '⚡',
       },
     ],
-    next: 'Next',
+    next: 'Next →',
   },
   JP: {
     title: 'どのくらいの頻度で施術を受けたいですか？',
@@ -98,7 +98,7 @@ const FREQ_I18N: Record<SurveyLang, FreqI18n> = {
         emoji: '⚡',
       },
     ],
-    next: '次へ',
+    next: '次へ →',
   },
   'ZH-CN': {
     title: '您希望多久接受一次治疗？',
@@ -123,7 +123,7 @@ const FREQ_I18N: Record<SurveyLang, FreqI18n> = {
         emoji: '⚡',
       },
     ],
-    next: '下一步',
+    next: '下一步 →',
   },
 };
 
