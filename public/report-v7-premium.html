@@ -376,6 +376,61 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .pp-meta{display:flex;gap:10px;margin-top:8px;font-size:9px;color:var(--text-3);}
 .pp-meta span{display:flex;align-items:center;gap:3px;}
 
+/* Treatment Plan V2 (Phase 2) */
+.treatment-plan-v2{margin:0;}
+.plan-v2-header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.plan-type-badge{font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:3px 8px;border-radius:10px;color:var(--bg);}
+.plan-type-regular{background:var(--cyan);}
+.plan-type-visit{background:#a78bfa;}
+.plan-type-event{background:#fb7185;}
+.plan-duration{font-size:12px;font-weight:600;color:var(--text-hi);}
+.plan-budget-total{font-size:11px;color:var(--text-2);margin-left:auto;}
+
+.plan-v2-budget{margin-bottom:16px;}
+.budget-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-bottom:6px;}
+.budget-segment.foundation{background:#22d3ee;}
+.budget-segment.main{background:#fb7185;}
+.budget-segment.maintenance{background:#fbbf24;}
+.budget-labels{display:flex;gap:12px;flex-wrap:wrap;}
+.bl-item{font-size:8px;color:var(--text-3);display:flex;align-items:center;gap:4px;}
+.bl-item::before{content:'';width:6px;height:6px;border-radius:50%;display:inline-block;}
+.bl-item.foundation::before{background:#22d3ee;}
+.bl-item.main::before{background:#fb7185;}
+.bl-item.maintenance::before{background:#fbbf24;}
+.budget-roi-note{font-size:9px;color:var(--text-3);font-style:italic;margin-top:6px;}
+
+.phase-card{border-left:3px solid var(--phase-color,var(--border));padding:12px 14px;margin:10px 0;background:var(--surface);border-radius:0 var(--radius-sm) var(--radius-sm) 0;}
+.phase-foundation{--phase-color:#22d3ee;}
+.phase-main{--phase-color:#fb7185;}
+.phase-maintenance{--phase-color:#fbbf24;}
+.phase-card-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+.phase-badge{font-size:8px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--phase-color);background:rgba(255,255,255,0.04);padding:2px 6px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);}
+.phase-timing{font-size:11px;font-weight:600;color:var(--text-hi);}
+.phase-timing-label{font-size:10px;color:var(--text-2);}
+.phase-goal-v2{font-size:10px;color:var(--text-2);margin-bottom:8px;line-height:1.5;}
+
+.procedure-item{padding:8px 0;border-top:1px solid var(--border);}
+.procedure-item:first-child{border-top:none;padding-top:0;}
+.proc-header{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.proc-category{font-size:7px;font-weight:700;letter-spacing:0.06em;padding:1px 5px;border-radius:4px;color:var(--bg);}
+.proc-ebd{background:var(--cyan);}
+.proc-injectable{background:#a78bfa;}
+.proc-homecare{background:#fbbf24;}
+.proc-header strong{font-size:11px;color:var(--text-hi);}
+.proc-reason{font-size:9px;color:var(--text);line-height:1.5;margin-bottom:2px;}
+.proc-clinical{font-size:8px;color:var(--text-3);line-height:1.5;margin-bottom:2px;}
+.proc-synergy{font-size:8px;color:var(--cyan);font-style:italic;line-height:1.5;margin-bottom:4px;}
+.proc-meta{display:flex;gap:10px;font-size:8px;color:var(--text-3);}
+.proc-downtime::before{content:'\23F1 ';}
+.proc-cost::before{content:'\1F4B0 ';}
+
+.phase-footer{display:flex;gap:10px;margin-top:8px;padding-top:6px;border-top:1px dashed var(--border);font-size:8px;color:var(--text-3);flex-wrap:wrap;}
+.phase-downtime,.phase-cost,.phase-lifestyle{display:flex;align-items:center;gap:3px;}
+
+.plan-notes{margin-top:12px;}
+.plan-rationale{font-size:10px;color:var(--text-2);line-height:1.6;margin-bottom:4px;}
+.plan-seasonal{font-size:9px;color:#fbbf24;font-style:italic;line-height:1.5;}
+
 /* Homecare Guide */
 .homecare-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
 @media(min-width:580px){.homecare-grid{grid-template-columns:repeat(4,1fr);}}

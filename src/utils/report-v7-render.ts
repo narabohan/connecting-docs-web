@@ -6,6 +6,7 @@
 
 import type { SurveyLang } from '@/types/survey-v2';
 import type { SafetyFlag } from '@/types/survey-v2';
+import { isTreatmentPlanV2 } from '@/types/survey-v2';
 import type {
   OpusRecommendationOutput,
   OpusDeviceRecommendation,
@@ -224,10 +225,19 @@ function renderTreatmentPlan(
   container: Document | HTMLElement,
   output: OpusRecommendationOutput
 ): boolean {
+  const plan = output.treatment_plan;
+
+  // V2 plan with budget + sequenced phases
+  if (isTreatmentPlanV2(plan)) {
+    return renderTreatmentPlanV2(container, plan);
+  }
+
+  // V1 fallback — simple phase list
   const planContainer = container.querySelector('[data-field="treatment-plan"]');
   if (!planContainer) return false;
 
-  const phasesHtml = output.treatment_plan.phases.map(phase => `
+  const v1Plan = plan as { phases: { phase: number; name: string; period: string; treatments: string[]; goal: string }[] };
+  const phasesHtml = v1Plan.phases.map(phase => `
     <div class="treatment-phase" data-phase="${phase.phase}">
       <div class="phase-header">
         <span class="phase-number">Phase ${phase.phase}</span>
@@ -242,6 +252,102 @@ function renderTreatmentPlan(
   `).join('\n');
 
   planContainer.innerHTML = phasesHtml;
+  return true;
+}
+
+// ─── Treatment Plan V2 Rendering (Phase 2) ───────────────────
+
+function renderTreatmentPlanV2(
+  container: Document | HTMLElement,
+  plan: import('@/types/survey-v2').TreatmentPlanV2
+): boolean {
+  const planContainer = container.querySelector('[data-field="treatment-plan"]');
+  if (!planContainer) return false;
+
+  // Phase color class mapping
+  const phaseColorClass = (idx: number, total: number): string => {
+    if (idx === 0) return 'phase-foundation';
+    if (idx >= total - 1) return 'phase-maintenance';
+    return 'phase-main';
+  };
+
+  // ─── Budget Bar ─────────────────────────
+  const bb = plan.budget_breakdown;
+  const budgetBarHtml = bb ? `
+    <div class="plan-v2-budget">
+      <div class="budget-bar">
+        <div class="budget-segment foundation" style="width:${bb.foundation_pct}%" title="${bb.foundation_label}"></div>
+        <div class="budget-segment main" style="width:${bb.main_pct}%" title="${bb.main_label}"></div>
+        <div class="budget-segment maintenance" style="width:${bb.maintenance_pct}%" title="${bb.maintenance_label}"></div>
+      </div>
+      <div class="budget-labels">
+        <span class="bl-item foundation">${bb.foundation_label} (${bb.foundation_pct}%)</span>
+        <span class="bl-item main">${bb.main_label} (${bb.main_pct}%)</span>
+        <span class="bl-item maintenance">${bb.maintenance_label} (${bb.maintenance_pct}%)</span>
+      </div>
+      ${bb.roi_note ? `<p class="budget-roi-note">${bb.roi_note}</p>` : ''}
+    </div>
+  ` : '';
+
+  // ─── Phase Cards ────────────────────────
+  const total = plan.phases.length;
+  const phasesHtml = plan.phases.map((phase, idx) => {
+    const colorClass = phaseColorClass(idx, total);
+
+    const proceduresHtml = phase.procedures.map(proc => `
+      <div class="procedure-item">
+        <div class="proc-header">
+          <span class="proc-category proc-${proc.category}">${proc.category.toUpperCase()}</span>
+          <strong>${proc.device_or_injectable}</strong>
+        </div>
+        <p class="proc-reason">${proc.reason_why}</p>
+        <p class="proc-clinical">${proc.clinical_basis}</p>
+        ${proc.synergy_note ? `<p class="proc-synergy">${proc.synergy_note}</p>` : ''}
+        <div class="proc-meta">
+          <span class="proc-downtime">${proc.downtime}</span>
+          <span class="proc-cost">${proc.estimated_cost}</span>
+        </div>
+      </div>
+    `).join('\n');
+
+    return `
+      <div class="phase-card ${colorClass}">
+        <div class="phase-card-header">
+          <span class="phase-badge">Phase ${phase.phase_number}</span>
+          <span class="phase-timing">${phase.timing}</span>
+          <span class="phase-timing-label">${phase.timing_label}</span>
+        </div>
+        <p class="phase-goal-v2">${phase.phase_goal}</p>
+        <div class="phase-procedures">${proceduresHtml}</div>
+        <div class="phase-footer">
+          <span class="phase-downtime">${phase.total_downtime}</span>
+          <span class="phase-cost">${phase.estimated_cost}</span>
+          <span class="phase-lifestyle">${phase.lifestyle_note}</span>
+        </div>
+      </div>
+    `;
+  }).join('\n');
+
+  // ─── Plan Notes ─────────────────────────
+  const notesHtml = `
+    ${plan.plan_rationale ? `<p class="plan-rationale">${plan.plan_rationale}</p>` : ''}
+    ${plan.seasonal_note ? `<p class="plan-seasonal">${plan.seasonal_note}</p>` : ''}
+  `;
+
+  // ─── Assemble ───────────────────────────
+  planContainer.innerHTML = `
+    <div class="treatment-plan-v2">
+      <div class="plan-v2-header">
+        <span class="plan-type-badge plan-type-${plan.plan_type}">${plan.plan_type_label}</span>
+        <span class="plan-duration">${plan.duration}</span>
+        <span class="plan-budget-total">${plan.budget_total}</span>
+      </div>
+      ${budgetBarHtml}
+      <div class="phase-cards-container">${phasesHtml}</div>
+      <div class="plan-notes">${notesHtml}</div>
+    </div>
+  `;
+
   return true;
 }
 
