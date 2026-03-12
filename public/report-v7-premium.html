@@ -1513,15 +1513,12 @@ button:focus-visible,.equip-chip:focus-visible,.sb-chip:focus-visible,.deb-chip:
 
 <!-- ═══ STICKY SELECTION BAR (appears on scroll) ═══ -->
 <div class="sticky-bar" id="sticky-bar">
+  <!-- Dynamically rebuilt by rebuildStickyBar() -->
   <span class="sb-label">EBD</span>
-  <span class="sb-chip active-ebd" data-ebd="0" role="button" tabindex="0" onclick="selectEBD(0)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectEBD(0);}">⟡ SOFWAVE</span>
-  <span class="sb-chip" data-ebd="1" role="button" tabindex="0" onclick="selectEBD(1)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectEBD(1);}">⟡ PICO</span>
-  <span class="sb-chip" data-ebd="2" role="button" tabindex="0" onclick="selectEBD(2)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectEBD(2);}">⟡ THERMAGE</span>
+  <span class="sb-chip" style="opacity:0.4;">⟡ 로딩 중...</span>
   <span class="sb-divider"></span>
   <span class="sb-label">INJ</span>
-  <span class="sb-chip active-inj" data-inj="0" role="button" tabindex="0" onclick="selectINJ(0)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectINJ(0);}">◎ Rejuran</span>
-  <span class="sb-chip" data-inj="1" role="button" tabindex="0" onclick="selectINJ(1)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectINJ(1);}">◎ Juvelook</span>
-  <span class="sb-chip" data-inj="2" role="button" tabindex="0" onclick="selectINJ(2)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectINJ(2);}">◎ Sculptra</span>
+  <span class="sb-chip" style="opacity:0.4;">◎ 로딩 중...</span>
 </div>
 
 <div class="p-container">
@@ -1576,10 +1573,10 @@ button:focus-visible,.equip-chip:focus-visible,.sb-chip:focus-visible,.deb-chip:
     <div class="ai-desc-panel ebd-desc" id="ai-desc-ebd">
       <div class="ai-desc-header">
         <span class="ai-tag" data-i18n="aiAnalysis">AI 분석</span>
-        <span class="ai-device-name" id="ai-ebd-name">SOFWAVE</span>
+        <span class="ai-device-name" id="ai-ebd-name">EBD Device</span>
       </div>
       <div class="ai-desc-body" id="ai-ebd-body" data-i18n-html="aiEbdBody">
-        김지영 님의 <strong data-term="Fitzpatrick">Fitzpatrick III</strong> 피부 타입과 <strong class="ai-hl-cyan" data-term="켈로이드">켈로이드 체질</strong>을 고려하여, AI가 비침습 <span data-term="EBD">에너지 기반 장비</span>를 최우선으로 선별했습니다. SOFWAVE의 <span data-term="SUPERB™">SUPERB™</span> 기술은 표피 손상 없이 진피 1.5mm에 정확히 에너지를 전달하므로, 켈로이드 유발 위험이 극히 낮으면서도 <strong class="ai-hl-cyan">탄력 개선 효과</strong>를 극대화할 수 있습니다. 2주 체류 일정 내 다운타임도 최소입니다.
+        AI 분석 결과를 불러오는 중입니다...
       </div>
       <div class="ai-desc-footer">
         <span class="ai-src">📊 Data: ConnectingDocs AI</span>
@@ -1588,369 +1585,8 @@ button:focus-visible,.equip-chip:focus-visible,.sb-chip:focus-visible,.deb-chip:
       </div>
     </div>
     <div class="rec-grid" id="ebd-cards">
-
-      <!-- EBD CARD 1: SOFWAVE -->
-      <div class="rec-card ebd-card active" data-ebd="0" data-layer="upd" role="button" tabindex="0" onclick="selectEBD(0)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectEBD(0);}">
-        <div class="rec-badge"><span class="neon-tag cyan">★ AI Best Pick</span></div>
-        <div class="rec-head">
-          <div class="rec-thumb thumb-us">
-            <svg viewBox="0 0 40 40" fill="none"><ellipse cx="20" cy="20" rx="12" ry="7" stroke="#fff" stroke-width="1.2" fill="none" opacity=".7"/><path d="M10 20Q20 8 30 20" stroke="#fff" stroke-width="1" fill="none" opacity=".5"/></svg>
-          </div>
-          <div class="rec-title-area">
-            <div class="rec-name">SOFWAVE <span class="evidence-badge ev-4"><span class="ev-stars">★★★★</span><span class="ev-label">Strong</span></span></div>
-            <div class="rec-sub" data-i18n="ebdSofwaveSub">SUPERB™ 동시 병렬 초음파 빔 · 진피 1.5mm</div>
-          </div>
-        </div>
-        <div class="rec-summary" data-i18n-html="ebdSofwaveSummary">
-          SUPERB™ 기술이 진피 1.5mm에 7개의 초음파 빔을 <strong class="ebd-hl">동시 병렬 조사</strong>하여 콜라겐 리모델링을 유도합니다. 켈로이드 체질에도 안전한 <strong class="ebd-hl">100% 비침습 방식</strong>입니다.
-        </div>
-        <button class="rec-expand-btn" aria-expanded="false" aria-label="상세 정보 펼치기" data-i18n-attr="aria-label" data-i18n="ariaExpandDetail" onclick="event.stopPropagation();toggleRecDetail(this)">
-          <span data-i18n="whyFitBtn">왜 나에게 맞는가?</span> <span class="arrow">▼</span>
-        </button>
-        <div class="rec-detail" aria-hidden="true">
-          <div class="rec-detail-inner">
-            <div class="rec-gauges">
-              <div class="rec-gauge"><span class="rec-gauge-label" data-i18n="lblPain">통증</span><div class="rec-gauge-bar"><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot"></div></div></div>
-              <div class="rec-gauge"><span class="rec-gauge-label" data-i18n="lblDowntime">다운타임</span><div class="rec-gauge-bar"><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot"></div><div class="rec-gauge-dot"></div></div></div>
-              <div class="rec-gauge"><span class="rec-gauge-label" data-i18n="lblSafety">안전성</span><div class="rec-gauge-bar"><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot g"></div></div></div>
-            </div>
-            <div class="why-fit">
-              <div class="why-fit-title" data-i18n="whyFitTitle">왜 김지영 님에게 적합한가</div>
-              <div class="why-fit-content" data-i18n-html="wfSofwave">
-                1. <span class="hl-cyan">켈로이드 체질 안전</span> — SUPERB™ 초음파는 피부 표면에 열 손상을 주지 않아 켈로이드 유발 위험이 극히 낮습니다.<br>
-                2. <span class="hl-cyan">다운타임 0~1일</span> — 2주 체류 일정에서 회복 기간 부담이 없습니다.<br>
-                3. <span class="hl-cyan">탄력 개선 최적화</span> — 진피 1.5mm 정확 타겟으로 Neo-collagenesis를 유도하여 자연스러운 리프팅 효과를 줍니다.<br>
-                4. <span class="hl-cyan">통증 민감도 5/10 대응</span> — Ultherapy 대비 통증이 현저히 낮아 마취 크림만으로 시술 가능합니다.
-              </div>
-            </div>
-            <div class="moa-section">
-              <span class="moa-cat-badge cat-hifu" data-term="HIFU" data-i18n="moaHifu">HIFU · 고강도 집속 초음파</span>
-              <div class="moa-title" data-i18n="moaTitle">작용 메커니즘 (Mechanism of Action)</div>
-              <div class="moa-infographic" id="moa-ig-hifu" data-moa-cat="HIFU">
-                <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="hifu-beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#22d3ee" stop-opacity="0.8"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0.1"/></linearGradient>
-    <filter id="hifu-glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  </defs>
-  <!-- Title -->
-  <text x="320" y="22" text-anchor="middle" fill="#22d3ee" font-size="11" font-weight="700" letter-spacing="0.1em" opacity="0.9">HIFU — SUPERB™ Mechanism of Action</text>
-  <!-- Skin layers -->
-  <rect x="40" y="60" width="560" height="20" rx="2" fill="#2a1a0a" opacity="0.6"/><text x="610" y="74" text-anchor="end" fill="#d4a574" font-size="8" opacity="0.7">표피 Epidermis</text>
-  <rect x="40" y="80" width="560" height="80" rx="2" fill="#1a1225" opacity="0.5"/><text x="610" y="125" text-anchor="end" fill="#a78bfa" font-size="8" opacity="0.7">진피 Dermis</text>
-  <line x1="40" x2="600" y1="110" y2="110" stroke="#a78bfa" stroke-width="0.5" stroke-dasharray="4,4" opacity="0.3"/>
-  <text x="610" y="112" text-anchor="end" fill="#fbbf24" font-size="7" opacity="0.6">1.5mm</text>
-  <rect x="40" y="160" width="560" height="40" rx="2" fill="#0a1520" opacity="0.4"/><text x="610" y="184" text-anchor="end" fill="#60a5fa" font-size="8" opacity="0.7">피하지방</text>
-  <!-- Handpiece -->
-  <rect x="120" y="32" width="160" height="26" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-  <text x="200" y="49" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="600">SUPERB™ Transducer</text>
-  <!-- 7 parallel beams -->
-  <g filter="url(#hifu-glow)">
-    <line x1="140" y1="58" x2="140" y2="108" stroke="url(#hifu-beam)" stroke-width="2.5"/><circle cx="140" cy="108" r="5" fill="#22d3ee" opacity="0.4"/>
-    <line x1="155" y1="58" x2="155" y2="108" stroke="url(#hifu-beam)" stroke-width="2.5"/><circle cx="155" cy="108" r="5" fill="#22d3ee" opacity="0.4"/>
-    <line x1="170" y1="58" x2="170" y2="108" stroke="url(#hifu-beam)" stroke-width="2.5"/><circle cx="170" cy="108" r="5" fill="#22d3ee" opacity="0.4"/>
-    <line x1="185" y1="58" x2="185" y2="108" stroke="url(#hifu-beam)" stroke-width="2.5"/><circle cx="185" cy="108" r="5" fill="#22d3ee" opacity="0.4"/>
-    <line x1="200" y1="58" x2="200" y2="108" stroke="url(#hifu-beam)" stroke-width="2.5"/><circle cx="200" cy="108" r="5" fill="#22d3ee" opacity="0.4"/>
-    <line x1="215" y1="58" x2="215" y2="108" stroke="url(#hifu-beam)" stroke-width="2.5"/><circle cx="215" cy="108" r="5" fill="#22d3ee" opacity="0.4"/>
-    <line x1="230" y1="58" x2="230" y2="108" stroke="url(#hifu-beam)" stroke-width="2.5"/><circle cx="230" cy="108" r="5" fill="#22d3ee" opacity="0.4"/>
-  </g>
-  <text x="185" y="125" text-anchor="middle" fill="#22d3ee" font-size="7" opacity="0.8">7 Parallel Beams</text>
-  <text x="185" y="135" text-anchor="middle" fill="#fbbf24" font-size="7" opacity="0.7">Thermal Coagulation Zones</text>
-  <!-- Arrow flow -->
-  <g transform="translate(320,50)">
-    <!-- Step boxes -->
-    <rect x="0" y="0" width="100" height="36" rx="6" fill="none" stroke="#22d3ee" stroke-width="1" opacity="0.6"/>
-    <text x="50" y="15" text-anchor="middle" fill="#22d3ee" font-size="8" font-weight="600">열 응고점 형성</text>
-    <text x="50" y="27" text-anchor="middle" fill="#94a3b8" font-size="7">TCZ @ 1.5mm</text>
-    <text x="115" y="20" fill="#22d3ee" font-size="14" opacity="0.6">→</text>
-    <rect x="130" y="0" width="100" height="36" rx="6" fill="none" stroke="#a78bfa" stroke-width="1" opacity="0.6"/>
-    <text x="180" y="15" text-anchor="middle" fill="#a78bfa" font-size="8" font-weight="600">HSP47/70 발현↑</text>
-    <text x="180" y="27" text-anchor="middle" fill="#94a3b8" font-size="7">Heat Shock Proteins</text>
-    <text x="245" y="20" fill="#a78bfa" font-size="14" opacity="0.6">→</text>
-    <rect x="260" y="0" width="100" height="36" rx="6" fill="none" stroke="#4ade80" stroke-width="1" opacity="0.6"/>
-    <text x="310" y="15" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="600">콜라겐 합성↑</text>
-    <text x="310" y="27" text-anchor="middle" fill="#94a3b8" font-size="7">Type I / III</text>
-  </g>
-  <!-- Timeline -->
-  <g transform="translate(320,105)">
-    <line x1="0" x2="300" y1="10" y2="10" stroke="#334155" stroke-width="1.5"/>
-    <circle cx="0" cy="10" r="4" fill="#22d3ee"/><text x="0" y="28" text-anchor="middle" fill="#94a3b8" font-size="7">시술 직후</text>
-    <circle cx="100" cy="10" r="4" fill="#a78bfa"/><text x="100" y="28" text-anchor="middle" fill="#94a3b8" font-size="7">2~4주</text><text x="100" y="38" text-anchor="middle" fill="#a78bfa" font-size="6">효과 발현 시작</text>
-    <circle cx="200" cy="10" r="4" fill="#4ade80"/><text x="200" y="28" text-anchor="middle" fill="#94a3b8" font-size="7">3~6개월</text><text x="200" y="38" text-anchor="middle" fill="#4ade80" font-size="6">최대 효과</text>
-    <circle cx="300" cy="10" r="4" fill="#fbbf24"/><text x="300" y="28" text-anchor="middle" fill="#94a3b8" font-size="7">12~18개월</text><text x="300" y="38" text-anchor="middle" fill="#fbbf24" font-size="6">효과 유지</text>
-  </g>
-  <!-- Key feature box -->
-  <rect x="340" y="160" width="250" height="38" rx="6" fill="rgba(34,211,238,0.05)" stroke="rgba(34,211,238,0.2)" stroke-width="1"/>
-  <text x="355" y="176" fill="#22d3ee" font-size="8" font-weight="600">핵심 차별점</text>
-  <text x="355" y="190" fill="#94a3b8" font-size="7">7개 빔 동시 조사 → 균일한 열 분포 → 안전성↑</text>
-  <!-- Depth indicator -->
-  <g transform="translate(50,210)">
-    <rect x="0" y="0" width="580" height="55" rx="8" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
-    <text x="15" y="16" fill="#22d3ee" font-size="8" font-weight="700">SUPERB™ vs 기존 HIFU</text>
-    <text x="15" y="30" fill="#94a3b8" font-size="7">기존 HIFU: 단일 포커싱 → 점(dot) 형태 응고 → 불균일</text>
-    <text x="15" y="42" fill="#22d3ee" font-size="7">SUPERB™: 7-beam parallel → 선(line) 형태 응고 → 균일 + 넓은 커버리지</text>
-  </g>
-</svg>
-              </div>
-              <div class="moa-inline-summary" onclick="openMoaModal('moa-ig-hifu')" role="button" tabindex="0">
-                <span class="moa-inline-icon">🔊</span>
-                <span class="moa-inline-text"><strong style="color:var(--text-hi);font-size:11px;">HIFU · SUPERB™</strong><br><span style="color:var(--text-2);font-size:10px;">7 Beams → TCZ 1.5mm → HSP47/70 → Collagen ↑</span></span>
-                <span class="moa-inline-btn">View MOA →</span>
-              </div>
-              <div class="moa-content">
-                SUPERB™(Synchronous Ultrasound Parallel Beam Technology)는 <strong>7개의 초음파 빔을 1.5mm 깊이에 동시 조사</strong>하여 진피 내 열 응고점(Thermal Coagulation Zone)을 형성합니다. 이로 인해 <strong>HSP47, HSP70 발현이 증가</strong>하고, Type I/III 콜라겐 합성이 촉진되어 3~6개월에 걸쳐 점진적 탄력 개선이 나타납니다.
-              </div>
-            </div>
-            <div class="rec-targets" style="margin-top:12px;">
-              <span class="rec-target" data-i18n="recTargetDermal">진피 상층 1.5mm</span>
-              <span class="rec-target">Tight ++</span>
-              <span class="rec-target">Lift +</span>
-              <span class="rec-target" data-i18n="recTargetEffect">효과 3~6개월</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- EBD CARD 2: PICO -->
-      <div class="rec-card ebd-card" data-ebd="1" data-layer="epi" role="button" tabindex="0" onclick="selectEBD(1)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectEBD(1);}">
-        <div class="rec-badge"><span class="neon-tag amber" data-i18n="recBadgeGoldStd">색소 Gold Standard</span></div>
-        <div class="rec-head">
-          <div class="rec-thumb thumb-laser">
-            <svg viewBox="0 0 40 40" fill="none"><line x1="20" y1="6" x2="20" y2="34" stroke="#fff" stroke-width="1.5" opacity=".8"/><circle cx="20" cy="34" r="3" stroke="#fff" stroke-width="1" fill="none" opacity=".6"/></svg>
-          </div>
-          <div class="rec-title-area">
-            <div class="rec-name">PICO 레이저 <span class="evidence-badge ev-4"><span class="ev-stars">★★★★</span><span class="ev-label">Strong</span></span></div>
-            <div class="rec-sub" data-i18n-html="ebdPicoSub">피코초(10⁻¹²s) 레이저 · 표피~진피상층</div>
-          </div>
-        </div>
-        <div class="rec-summary" data-i18n-html="ebdPicoSummary">
-          피코초 단위 초고속 레이저가 <strong class="ebd-hl">멜라닌 색소를 미세 분쇄</strong>합니다. Fitz.III에 최적화된 저열 파장으로 <strong class="ebd-hl">PIH 위험 최소화</strong>하면서 색소를 효과적으로 제거합니다.
-        </div>
-        <button class="rec-expand-btn" aria-expanded="false" aria-label="상세 정보 펼치기" onclick="event.stopPropagation();toggleRecDetail(this)">
-          <span data-i18n="whyFitBtn">왜 나에게 맞는가?</span> <span class="arrow">▼</span>
-        </button>
-        <div class="rec-detail" aria-hidden="true">
-          <div class="rec-detail-inner">
-            <div class="rec-gauges">
-              <div class="rec-gauge"><span class="rec-gauge-label" data-i18n="gaugePain">통증</span><div class="rec-gauge-bar"><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot y"></div><div class="rec-gauge-dot"></div></div></div>
-              <div class="rec-gauge"><span class="rec-gauge-label" data-i18n="gaugeDT">다운타임</span><div class="rec-gauge-bar"><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot y"></div><div class="rec-gauge-dot"></div></div></div>
-              <div class="rec-gauge"><span class="rec-gauge-label" data-i18n="gaugeSafety">안전성</span><div class="rec-gauge-bar"><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot"></div></div></div>
-            </div>
-            <div class="why-fit">
-              <div class="why-fit-title" data-i18n="whyFitTitle">왜 김지영 님에게 적합한가</div>
-              <div class="why-fit-content" data-i18n-html="wfPico">
-                1. <span class="hl-cyan">색소 균일화 핵심 타겟</span> — Top 3 목표인 색소 개선에 가장 효과적인 Gold Standard 장비입니다.<br>
-                2. <span class="hl-cyan">Fitz.III 안전 파장</span> — 피코초 펄스 폭으로 주변 조직 열 손상을 최소화하여 PIH(시술 후 과색소침착) 위험이 낮습니다.<br>
-                3. <span class="hl-cyan">누적 효과</span> — 2주 체류 중 2~3회 토닝으로 점진적 색소 개선이 가능합니다.
-              </div>
-            </div>
-            <div class="moa-section">
-              <span class="moa-cat-badge cat-laser" data-i18n="moaPico">Picosecond · 피코초 레이저</span>
-              <div class="moa-title" data-i18n="moaTitle">작용 메커니즘</div>
-              <div class="moa-infographic" id="moa-ig-pico" data-moa-cat="PICO">
-                <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="pico-pulse" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#a78bfa" stop-opacity="0.9"/><stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/></linearGradient>
-    <filter id="pico-glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  </defs>
-  <text x="320" y="22" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="700" letter-spacing="0.1em" opacity="0.9">PICO — Photoacoustic Melanin Shattering</text>
-  <!-- Skin cross section -->
-  <rect x="40" y="50" width="250" height="20" rx="2" fill="#2a1a0a" opacity="0.6"/><text x="45" y="64" fill="#d4a574" font-size="7" opacity="0.7">표피</text>
-  <rect x="40" y="70" width="250" height="70" rx="2" fill="#1a1225" opacity="0.5"/><text x="45" y="110" fill="#a78bfa" font-size="7" opacity="0.7">진피 상층</text>
-  <!-- Melanin clusters (before) -->
-  <text x="100" y="48" text-anchor="middle" fill="#94a3b8" font-size="7" font-weight="600">Before</text>
-  <circle cx="85" cy="82" r="6" fill="#5c3d1a" opacity="0.8"/><circle cx="100" cy="90" r="7" fill="#6b4423" opacity="0.8"/><circle cx="115" cy="78" r="5" fill="#5c3d1a" opacity="0.8"/>
-  <circle cx="130" cy="95" r="8" fill="#7a4d2a" opacity="0.7"/><circle cx="145" cy="82" r="6" fill="#5c3d1a" opacity="0.8"/>
-  <text x="115" y="120" text-anchor="middle" fill="#fbbf24" font-size="7" opacity="0.7">멜라닌 클러스터</text>
-  <!-- Laser pulse hitting -->
-  <g filter="url(#pico-glow)">
-    <line x1="200" y1="42" x2="200" y2="100" stroke="#a78bfa" stroke-width="3" stroke-dasharray="2,3"/>
-    <circle cx="200" cy="85" r="12" fill="none" stroke="#a78bfa" stroke-width="1.5" opacity="0.5">
-      <animate attributeName="r" values="8;16;8" dur="2s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.6;0.1;0.6" dur="2s" repeatCount="indefinite"/>
-    </circle>
-  </g>
-  <text x="200" y="38" text-anchor="middle" fill="#a78bfa" font-size="7" font-weight="600">10⁻¹²s pulse</text>
-  <!-- After: shattered particles -->
-  <text x="240" y="48" text-anchor="middle" fill="#94a3b8" font-size="7" font-weight="600">After</text>
-  <g opacity="0.7">
-    <circle cx="225" cy="80" r="1.5" fill="#d4a574"/><circle cx="230" cy="85" r="1" fill="#d4a574"/><circle cx="220" cy="88" r="1.5" fill="#d4a574"/>
-    <circle cx="235" cy="78" r="1" fill="#d4a574"/><circle cx="228" cy="92" r="1.5" fill="#d4a574"/><circle cx="240" cy="82" r="1" fill="#d4a574"/>
-    <circle cx="245" cy="90" r="1.5" fill="#d4a574"/><circle cx="250" cy="85" r="1" fill="#d4a574"/><circle cx="238" cy="95" r="1" fill="#d4a574"/>
-    <circle cx="260" cy="80" r="1" fill="#d4a574"/><circle cx="255" cy="88" r="1.5" fill="#d4a574"/><circle cx="248" cy="78" r="1" fill="#d4a574"/>
-  </g>
-  <text x="245" y="112" text-anchor="middle" fill="#4ade80" font-size="7" opacity="0.7">나노 분쇄 입자</text>
-  <!-- Flow diagram on right -->
-  <g transform="translate(330,45)">
-    <rect x="0" y="0" width="120" height="32" rx="6" fill="none" stroke="#a78bfa" stroke-width="1" opacity="0.6"/>
-    <text x="60" y="14" text-anchor="middle" fill="#a78bfa" font-size="8" font-weight="600">피코초 레이저</text>
-    <text x="60" y="25" text-anchor="middle" fill="#94a3b8" font-size="7">755nm / 532nm</text>
-    <line x1="60" y1="32" x2="60" y2="48" stroke="#a78bfa" stroke-width="1" opacity="0.5" marker-end="url(#arrow)"/>
-    <text x="60" y="43" fill="#a78bfa" font-size="10" opacity="0.5">↓</text>
-    <rect x="0" y="50" width="120" height="32" rx="6" fill="none" stroke="#fbbf24" stroke-width="1" opacity="0.6"/>
-    <text x="60" y="64" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">광음향 효과</text>
-    <text x="60" y="75" text-anchor="middle" fill="#94a3b8" font-size="7">Photoacoustic Effect</text>
-    <text x="60" y="93" fill="#fbbf24" font-size="10" opacity="0.5">↓</text>
-    <rect x="0" y="100" width="120" height="32" rx="6" fill="none" stroke="#fb923c" stroke-width="1" opacity="0.6"/>
-    <text x="60" y="114" text-anchor="middle" fill="#fb923c" font-size="8" font-weight="600">멜라닌 나노분쇄</text>
-    <text x="60" y="125" text-anchor="middle" fill="#94a3b8" font-size="7">Nano-shattering</text>
-    <text x="60" y="143" fill="#fb923c" font-size="10" opacity="0.5">↓</text>
-    <rect x="0" y="150" width="120" height="32" rx="6" fill="none" stroke="#4ade80" stroke-width="1" opacity="0.6"/>
-    <text x="60" y="164" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="600">대식세포 제거</text>
-    <text x="60" y="175" text-anchor="middle" fill="#94a3b8" font-size="7">Macrophage Clearance</text>
-  </g>
-  <!-- Comparison box -->
-  <g transform="translate(480,45)">
-    <rect x="0" y="0" width="140" height="90" rx="6" fill="rgba(167,139,250,0.05)" stroke="rgba(167,139,250,0.2)" stroke-width="1"/>
-    <text x="70" y="16" text-anchor="middle" fill="#a78bfa" font-size="8" font-weight="600">Pico vs Q-switched</text>
-    <line x1="10" x2="130" y1="22" y2="22" stroke="rgba(167,139,250,0.2)" stroke-width="0.5"/>
-    <text x="15" y="36" fill="#94a3b8" font-size="7">펄스 폭</text><text x="130" y="36" text-anchor="end" fill="#a78bfa" font-size="7">ps vs ns</text>
-    <text x="15" y="50" fill="#94a3b8" font-size="7">분쇄 크기</text><text x="130" y="50" text-anchor="end" fill="#4ade80" font-size="7">nm vs μm</text>
-    <text x="15" y="64" fill="#94a3b8" font-size="7">열 손상</text><text x="130" y="64" text-anchor="end" fill="#4ade80" font-size="7">극소 vs 중간</text>
-    <text x="15" y="78" fill="#94a3b8" font-size="7">PIH 위험</text><text x="130" y="78" text-anchor="end" fill="#4ade80" font-size="7">Low vs Medium</text>
-  </g>
-  <!-- Bottom key insight -->
-  <rect x="40" y="210" width="560" height="55" rx="8" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
-  <text x="55" y="228" fill="#a78bfa" font-size="8" font-weight="700">핵심 원리: 선택적 광열분해(Selective Photothermolysis)</text>
-  <text x="55" y="242" fill="#94a3b8" font-size="7">TRT(열 확산 시간)보다 짧은 펄스 → 멜라닌만 선택적 파괴 → 주변 조직 보존</text>
-  <text x="55" y="255" fill="#fbbf24" font-size="7">Fitz III 최적: 피코초 펄스로 PIH(시술 후 과색소침착) 최소화</text>
-</svg>
-              </div>
-              <div class="moa-inline-summary" onclick="openMoaModal('moa-ig-pico')" role="button" tabindex="0">
-                <span class="moa-inline-icon">⚡</span>
-                <span class="moa-inline-text"><strong style="color:var(--text-hi);font-size:11px;">PICO · PicoSure</strong><br><span style="color:var(--text-2);font-size:10px;">Photoacoustic → Melanin Shatter → Fast Clearance</span></span>
-                <span class="moa-inline-btn">View MOA →</span>
-              </div>
-              <div class="moa-content">
-                피코초(10⁻¹² 초) 펄스가 <strong>광음향 효과(Photoacoustic Effect)</strong>를 통해 멜라닌 입자를 나노 단위로 분쇄합니다. 기존 Q-switched 레이저 대비 <strong>열 확산 시간(TRT)이 극히 짧아</strong> 주변 조직 손상 없이 선택적 색소 파괴가 가능합니다.
-              </div>
-            </div>
-            <div class="rec-targets" style="margin-top:12px;">
-              <span class="rec-target" data-i18n="rtEpiUpper">표피+진피상층</span>
-              <span class="rec-target">Tight +</span>
-              <span class="rec-target">Pain +</span>
-              <span class="rec-target" data-i18n="rtEff2_4w">효과 2~4주 누적</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- EBD CARD 3: THERMAGE FLX -->
-      <div class="rec-card ebd-card" data-ebd="2" data-layer="lod" role="button" tabindex="0" onclick="selectEBD(2)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectEBD(2);}">
-        <div class="rec-badge"><span class="neon-tag green">Good Value</span></div>
-        <div class="rec-head">
-          <div class="rec-thumb thumb-rf">
-            <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="12" stroke="#fff" stroke-width="1" fill="none" opacity=".5"/><circle cx="20" cy="20" r="7" stroke="#fff" stroke-width="1" fill="none" opacity=".7"/><circle cx="20" cy="20" r="2.5" fill="#fff" opacity=".8"/></svg>
-          </div>
-          <div class="rec-title-area">
-            <div class="rec-name">THERMAGE FLX <span class="evidence-badge ev-5"><span class="ev-stars">★★★★★</span><span class="ev-label">Very Strong</span></span></div>
-            <div class="rec-sub" data-i18n-html="ebdThermSub">모노폴라 RF · 진피 전층 3~4mm</div>
-          </div>
-        </div>
-        <div class="rec-summary" data-i18n-html="ebdThermSummary">
-          모노폴라 RF가 <strong class="ebd-hl">진피 전층에 균일한 열 에너지</strong>를 전달하여 즉각적 콜라겐 수축과 장기적 리모델링을 동시에 유도합니다. 단회 시술로 <strong class="ebd-hl">6~12개월 효과</strong> 지속.
-        </div>
-        <button class="rec-expand-btn" aria-expanded="false" aria-label="상세 정보 펼치기" onclick="event.stopPropagation();toggleRecDetail(this)">
-          <span data-i18n="whyFitBtn">왜 나에게 맞는가?</span> <span class="arrow">▼</span>
-        </button>
-        <div class="rec-detail" aria-hidden="true">
-          <div class="rec-detail-inner">
-            <div class="rec-gauges">
-              <div class="rec-gauge"><span class="rec-gauge-label" data-i18n="gaugePain">통증</span><div class="rec-gauge-bar"><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot y"></div><div class="rec-gauge-dot"></div></div></div>
-              <div class="rec-gauge"><span class="rec-gauge-label" data-i18n="gaugeDT">다운타임</span><div class="rec-gauge-bar"><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot"></div><div class="rec-gauge-dot"></div></div></div>
-              <div class="rec-gauge"><span class="rec-gauge-label" data-i18n="gaugeSafety">안전성</span><div class="rec-gauge-bar"><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot"></div></div></div>
-            </div>
-            <div class="why-fit">
-              <div class="why-fit-title" data-i18n="whyFitTitle">왜 김지영 님에게 적합한가</div>
-              <div class="why-fit-content" data-i18n-html="wfThermage">
-                1. <span class="hl-cyan">탄력 리프팅 핵심 장비</span> — 진피 전층 콜라겐 리모델링으로 탄력 개선 효과가 높습니다.<br>
-                2. <span class="hl-cyan">가성비 최적</span> — ₩3~5M 예산 범위에서 단회 시술로 장기 효과를 얻을 수 있어 효율적입니다.<br>
-                3. <span class="hl-cyan">자연스러운 개선</span> — 2~6개월에 걸쳐 점진적으로 리프팅되어 미적 목표에 부합합니다.
-              </div>
-            </div>
-            <div class="moa-section">
-              <span class="moa-cat-badge cat-rf" data-term="RF" data-i18n="moaRf">RF · 고주파 에너지</span>
-              <div class="moa-title" data-i18n="moaTitle">작용 메커니즘</div>
-              <div class="moa-infographic" id="moa-ig-mono-rf" data-moa-cat="MONO_RF">
-                <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="rf-heat" cx="50%" cy="50%"><stop offset="0%" stop-color="#f87171" stop-opacity="0.4"/><stop offset="100%" stop-color="#f87171" stop-opacity="0"/></radialGradient>
-    <filter id="rf-glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  </defs>
-  <text x="320" y="22" text-anchor="middle" fill="#f87171" font-size="11" font-weight="700" letter-spacing="0.1em" opacity="0.9">MONO RF — Volumetric Heating Mechanism</text>
-  <!-- Skin layers with RF penetration -->
-  <rect x="40" y="55" width="260" height="18" rx="2" fill="#2a1a0a" opacity="0.6"/><text x="45" y="67" fill="#d4a574" font-size="7" opacity="0.7">표피</text>
-  <rect x="40" y="73" width="260" height="90" rx="2" fill="#1a1225" opacity="0.5"/><text x="45" y="125" fill="#a78bfa" font-size="7" opacity="0.7">진피 전층 3~4mm</text>
-  <rect x="40" y="163" width="260" height="40" rx="2" fill="#0a1520" opacity="0.4"/><text x="45" y="187" fill="#60a5fa" font-size="7" opacity="0.7">피하</text>
-  <!-- RF field visualization -->
-  <g filter="url(#rf-glow)">
-    <ellipse cx="170" cy="120" rx="80" ry="50" fill="url(#rf-heat)"/>
-    <ellipse cx="170" cy="120" rx="55" ry="35" fill="none" stroke="#f87171" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.5">
-      <animate attributeName="rx" values="50;60;50" dur="3s" repeatCount="indefinite"/>
-    </ellipse>
-    <ellipse cx="170" cy="120" rx="35" ry="22" fill="none" stroke="#fb923c" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.6"/>
-  </g>
-  <text x="170" y="122" text-anchor="middle" fill="#f87171" font-size="7" font-weight="600">65°C</text>
-  <text x="170" y="133" text-anchor="middle" fill="#94a3b8" font-size="6">용적 가열 영역</text>
-  <!-- Handpiece -->
-  <rect x="130" y="35" width="80" height="20" rx="5" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-  <text x="170" y="49" text-anchor="middle" fill="#94a3b8" font-size="7">FLX Tip 4.0cm²</text>
-  <line x1="170" y1="55" x2="170" y2="73" stroke="#f87171" stroke-width="2" opacity="0.6"/>
-  <!-- Dual mechanism flow -->
-  <g transform="translate(340,45)">
-    <text x="130" y="0" text-anchor="middle" fill="#f87171" font-size="9" font-weight="700">이중 메커니즘</text>
-    <!-- Immediate -->
-    <rect x="0" y="10" width="130" height="50" rx="6" fill="none" stroke="#fb923c" stroke-width="1" opacity="0.6"/>
-    <text x="65" y="28" text-anchor="middle" fill="#fb923c" font-size="8" font-weight="600">즉각 반응</text>
-    <text x="65" y="40" text-anchor="middle" fill="#94a3b8" font-size="7">콜라겐 수축</text>
-    <text x="65" y="52" text-anchor="middle" fill="#94a3b8" font-size="6">Immediate Contraction</text>
-    <!-- Long term -->
-    <rect x="145" y="10" width="130" height="50" rx="6" fill="none" stroke="#4ade80" stroke-width="1" opacity="0.6"/>
-    <text x="210" y="28" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="600">장기 반응</text>
-    <text x="210" y="40" text-anchor="middle" fill="#94a3b8" font-size="7">Neo-collagenesis</text>
-    <text x="210" y="52" text-anchor="middle" fill="#94a3b8" font-size="6">6~12개월 리모델링</text>
-    <!-- Arrows connecting -->
-    <text x="137" y="40" fill="#94a3b8" font-size="12" opacity="0.4">+</text>
-  </g>
-  <!-- Temperature profile -->
-  <g transform="translate(340,115)">
-    <rect x="0" y="0" width="270" height="60" rx="6" fill="rgba(248,113,113,0.04)" stroke="rgba(248,113,113,0.15)" stroke-width="0.5"/>
-    <text x="10" y="15" fill="#f87171" font-size="7" font-weight="600">온도 프로파일</text>
-    <!-- Simple bar chart -->
-    <rect x="20" y="22" width="40" height="30" rx="2" fill="rgba(248,113,113,0.3)"/><text x="40" y="56" text-anchor="middle" fill="#94a3b8" font-size="6">표피</text><text x="40" y="36" text-anchor="middle" fill="#f87171" font-size="7">40°C</text>
-    <rect x="80" y="22" width="40" height="30" rx="2" fill="rgba(248,113,113,0.6)"/><text x="100" y="56" text-anchor="middle" fill="#94a3b8" font-size="6">진피상층</text><text x="100" y="36" text-anchor="middle" fill="#fff" font-size="7">65°C</text>
-    <rect x="140" y="22" width="40" height="30" rx="2" fill="rgba(248,113,113,0.5)"/><text x="160" y="56" text-anchor="middle" fill="#94a3b8" font-size="6">진피하층</text><text x="160" y="36" text-anchor="middle" fill="#fb923c" font-size="7">55°C</text>
-    <rect x="200" y="22" width="40" height="30" rx="2" fill="rgba(248,113,113,0.15)"/><text x="220" y="56" text-anchor="middle" fill="#94a3b8" font-size="6">피하</text><text x="220" y="36" text-anchor="middle" fill="#94a3b8" font-size="7">38°C</text>
-  </g>
-  <!-- Bottom insight -->
-  <rect x="40" y="210" width="560" height="55" rx="8" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
-  <text x="55" y="228" fill="#f87171" font-size="8" font-weight="700">핵심: 모노폴라 RF의 깊은 침투 + AccuREP™ 실시간 임피던스 모니터링</text>
-  <text x="55" y="242" fill="#94a3b8" font-size="7">6.78MHz 고주파 → 진피 전층 균일 가열 → 즉각 수축 + 장기 콜라겐 리모델링</text>
-  <text x="55" y="255" fill="#fbbf24" font-size="7">단회 시술 효과 지속: 6~12개월 · FLX 4세대 팁 → 300% 빠른 시술 속도</text>
-</svg>
-              </div>
-              <div class="moa-inline-summary" onclick="openMoaModal('moa-ig-mono-rf')" role="button" tabindex="0">
-                <span class="moa-inline-icon">📡</span>
-                <span class="moa-inline-text"><strong style="color:var(--text-hi);font-size:11px;">RF · THERMAGE</strong><br><span style="color:var(--text-2);font-size:10px;">Volumetric Heat → Contraction + Remodeling</span></span>
-                <span class="moa-inline-btn">View MOA →</span>
-              </div>
-              <div class="moa-content">
-                모노폴라 RF가 <strong>진피 전층(3~4mm)에 균일한 용적 가열(Volumetric Heating)</strong>을 일으킵니다. 즉각적 콜라겐 수축(Immediate Collagen Contraction)과 이후 6~12개월간의 <strong>Neo-collagenesis</strong>가 순차적으로 진행됩니다.
-              </div>
-            </div>
-            <div class="rec-targets" style="margin-top:12px;">
-              <span class="rec-target" data-i18n="rtFullDerm">진피 전층 3~4mm</span>
-              <span class="rec-target">Tight ++</span>
-              <span class="rec-target" data-i18n="rtEff6_12m">효과 6~12개월</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- + Add more devices -->
-      <div class="rec-card add-card-btn" onclick="showAddDeviceHint('ebd')" role="button" tabindex="0">
-        <span class="add-icon">＋</span>
-        <span data-i18n="addDeviceBtn">장비 추가</span>
-      </div>
+      <!-- Cards dynamically generated by renderEBDCards() -->
+      <div style="color:var(--text-3);text-align:center;padding:24px;font-size:12px;grid-column:1/-1;">AI 분석 결과를 불러오는 중...</div>
     </div>
   </div>
 
@@ -1961,10 +1597,10 @@ button:focus-visible,.equip-chip:focus-visible,.sb-chip:focus-visible,.deb-chip:
     <div class="ai-desc-panel inj-desc" id="ai-desc-inj">
       <div class="ai-desc-header">
         <span class="ai-tag">AI 분석</span>
-        <span class="ai-device-name" id="ai-inj-name">Rejuran</span>
+        <span class="ai-device-name" id="ai-inj-name">Injectable</span>
       </div>
       <div class="ai-desc-body" id="ai-inj-body" data-i18n-html="aiInjBody">
-        <span data-term="EBD">EBD</span> 시술과의 <strong class="ai-hl-rose">시너지 극대화</strong>를 위해 AI가 선별한 인젝터블입니다. Rejuran(PN/HB)은 연어 유래 <span data-term="PDRN">PDRN</span> 성분이 손상된 진피 세포의 <strong>자체 재생력을 활성화</strong>하여, SOFWAVE의 콜라겐 리모델링 효과와 상보적으로 작용합니다. 켈로이드 체질에서도 안전한 성분 프로파일을 갖추고 있으며, <strong class="ai-hl-rose">피부결 · 탄력 동시 개선</strong>에 최적화된 선택입니다.
+        AI 분석 결과를 불러오는 중입니다...
       </div>
       <div class="ai-desc-footer">
         <span class="ai-src">📊 Data: ConnectingDocs AI</span>
@@ -1973,373 +1609,9 @@ button:focus-visible,.equip-chip:focus-visible,.sb-chip:focus-visible,.deb-chip:
       </div>
     </div>
     <div class="rec-grid" id="inj-cards">
-
-      <!-- INJ CARD 1: Rejuran -->
-      <div class="rec-card inj-card active" data-inj="0" data-layer="upd" role="button" tabindex="0" onclick="selectINJ(0)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectINJ(0);}">
-        <div class="rec-badge"><span class="neon-tag rose">★ AI Best Pick</span></div>
-        <div class="rec-head">
-          <div class="rec-thumb thumb-inj2">
-            <svg viewBox="0 0 40 40" fill="none"><ellipse cx="20" cy="20" rx="8" ry="10" stroke="#fff" stroke-width="1" opacity=".7" fill="none"/><line x1="20" y1="10" x2="20" y2="30" stroke="#fff" stroke-width=".8" opacity=".5"/></svg>
-          </div>
-          <div class="rec-title-area">
-            <div class="rec-name">Rejuran (리쥬란) <span class="evidence-badge ev-5"><span class="ev-stars">★★★★★</span><span class="ev-label">PN Gold Std</span></span></div>
-            <div class="rec-sub" data-i18n-html="injRejuranSub">PN(Polynucleotide) · 진피상층 1.5mm</div>
-          </div>
-        </div>
-        <div class="rec-summary">
-          <span data-i18n-html="injRejuranSummary">연어 유래 PN 성분이 <strong class="inj-hl">세포 재생 신호를 활성화</strong>하여 진피 상층의 콜라겐 합성을 촉진합니다. SOFWAVE와 병합 시 <strong class="inj-hl">시너지 효과 92%</strong> 달성.</span>
-        </div>
-        <button class="rec-expand-btn" aria-expanded="false" aria-label="상세 정보 펼치기" onclick="event.stopPropagation();toggleRecDetail(this)">
-          <span data-i18n="whyFitBtn">왜 나에게 맞는가?</span> <span class="arrow">▼</span>
-        </button>
-        <div class="rec-detail" aria-hidden="true">
-          <div class="rec-detail-inner">
-            <div class="rec-gauges">
-              <div class="rec-gauge"><span class="rec-gauge-label" data-i18n="gaugePain">통증</span><div class="rec-gauge-bar"><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot"></div><div class="rec-gauge-dot"></div></div></div>
-              <div class="rec-gauge"><span class="rec-gauge-label" data-i18n="gaugeDT">다운타임</span><div class="rec-gauge-bar"><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot y"></div><div class="rec-gauge-dot"></div></div></div>
-            </div>
-            <div class="why-fit">
-              <div class="why-fit-title" data-i18n="whyFitTitle">왜 김지영 님에게 적합한가</div>
-              <div class="why-fit-content" data-i18n-html="wfRejuran">
-                1. <span class="hl-rose">SOFWAVE 시너지 극대화</span> — Sofwave 직후 Rejuran 투여 시 열 자극으로 활성화된 섬유아세포에 PN이 추가 자극을 주어 콜라겐 합성이 극대화됩니다.<br>
-                2. <span class="hl-rose">수분+재생 동시</span> — PN이 세포 성장인자를 활성화하여 탄력뿐 아니라 수분 보유력도 동시에 개선합니다.<br>
-                3. <span class="hl-rose">자연스러운 결과</span> — 필러와 달리 볼륨 변화 없이 피부 질감 자체를 개선하여 "자연스러운 개선" 목표에 부합합니다.
-              </div>
-            </div>
-            <div class="moa-section">
-              <span class="moa-cat-badge cat-pdrn" data-term="PDRN" data-i18n="moaPdrn">PDRN/PN · 폴리뉴클레오타이드</span>
-              <div class="moa-title" data-i18n="moaTitle">작용 메커니즘</div>
-              <div class="moa-infographic" id="moa-ig-skin-booster-pn" data-moa-cat="SKIN_BOOSTER">
-                <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <filter id="pn-glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  </defs>
-  <text x="320" y="22" text-anchor="middle" fill="#fb7185" font-size="11" font-weight="700" letter-spacing="0.1em" opacity="0.9">PN/PDRN — A2A Receptor Regeneration</text>
-  <!-- DNA helix representation -->
-  <g transform="translate(55,40)" filter="url(#pn-glow)">
-    <text x="50" y="0" text-anchor="middle" fill="#fb7185" font-size="8" font-weight="600">PN 분자구조</text>
-    <path d="M20,15 C30,25 70,25 80,15 C90,5 70,5 80,15 C90,25 70,25 80,35 C90,45 70,45 80,55 C90,65 70,65 80,75" fill="none" stroke="#fb7185" stroke-width="1.5" opacity="0.7"/>
-    <path d="M20,15 C10,25 -30,25 -20,15 C-10,5 -30,5 -20,15 C-10,25 -30,25 -20,35 C-10,45 -30,45 -20,55 C-10,65 -30,65 -20,75" fill="none" stroke="#a78bfa" stroke-width="1.5" opacity="0.7" transform="translate(60,0)"/>
-    <line x1="30" y1="20" x2="70" y2="20" stroke="#94a3b8" stroke-width="0.5" opacity="0.4"/>
-    <line x1="25" y1="35" x2="75" y2="35" stroke="#94a3b8" stroke-width="0.5" opacity="0.4"/>
-    <line x1="30" y1="50" x2="70" y2="50" stroke="#94a3b8" stroke-width="0.5" opacity="0.4"/>
-    <line x1="25" y1="65" x2="75" y2="65" stroke="#94a3b8" stroke-width="0.5" opacity="0.4"/>
-    <text x="50" y="98" text-anchor="middle" fill="#94a3b8" font-size="7">Polynucleotide</text>
-    <text x="50" y="110" text-anchor="middle" fill="#94a3b8" font-size="6">(연어유래 DNA 단편)</text>
-  </g>
-  <!-- Mechanism flow -->
-  <g transform="translate(200,40)">
-    <rect x="0" y="0" width="130" height="38" rx="6" fill="none" stroke="#fb7185" stroke-width="1" opacity="0.6"/>
-    <text x="65" y="16" text-anchor="middle" fill="#fb7185" font-size="8" font-weight="600">PN/PDRN 주입</text>
-    <text x="65" y="29" text-anchor="middle" fill="#94a3b8" font-size="7">진피 상층 1.5mm</text>
-    <text x="65" y="50" fill="#fb7185" font-size="10" opacity="0.5">↓</text>
-    <rect x="0" y="55" width="130" height="38" rx="6" fill="none" stroke="#a78bfa" stroke-width="1" opacity="0.6"/>
-    <text x="65" y="71" text-anchor="middle" fill="#a78bfa" font-size="8" font-weight="600">A2A 수용체 결합</text>
-    <text x="65" y="84" text-anchor="middle" fill="#94a3b8" font-size="7">Adenosine A2A Receptor</text>
-    <text x="65" y="105" fill="#a78bfa" font-size="10" opacity="0.5">↓</text>
-    <rect x="0" y="110" width="130" height="38" rx="6" fill="none" stroke="#fbbf24" stroke-width="1" opacity="0.6"/>
-    <text x="65" y="126" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">세포 재생 신호↑</text>
-    <text x="65" y="139" text-anchor="middle" fill="#94a3b8" font-size="7">VEGF, FGF, TGF-β</text>
-    <text x="65" y="160" fill="#fbbf24" font-size="10" opacity="0.5">↓</text>
-    <rect x="0" y="165" width="130" height="38" rx="6" fill="none" stroke="#4ade80" stroke-width="1" opacity="0.6"/>
-    <text x="65" y="181" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="600">진피 재생</text>
-    <text x="65" y="194" text-anchor="middle" fill="#94a3b8" font-size="7">콜라겐 + 엘라스틴↑</text>
-  </g>
-  <!-- Effects panel -->
-  <g transform="translate(380,40)">
-    <rect x="0" y="0" width="230" height="100" rx="6" fill="rgba(251,113,133,0.04)" stroke="rgba(251,113,133,0.15)" stroke-width="0.5"/>
-    <text x="115" y="16" text-anchor="middle" fill="#fb7185" font-size="8" font-weight="700">다중 작용 경로</text>
-    <line x1="10" x2="220" y1="22" y2="22" stroke="rgba(251,113,133,0.15)" stroke-width="0.5"/>
-    <circle cx="20" cy="36" r="3" fill="#fb7185" opacity="0.6"/><text x="30" y="39" fill="#94a3b8" font-size="7">항염증: 염증성 사이토카인 억제</text>
-    <circle cx="20" cy="52" r="3" fill="#a78bfa" opacity="0.6"/><text x="30" y="55" fill="#94a3b8" font-size="7">혈관신생: VEGF 발현 촉진</text>
-    <circle cx="20" cy="68" r="3" fill="#fbbf24" opacity="0.6"/><text x="30" y="71" fill="#94a3b8" font-size="7">세포증식: 섬유아세포 활성화</text>
-    <circle cx="20" cy="84" r="3" fill="#4ade80" opacity="0.6"/><text x="30" y="87" fill="#94a3b8" font-size="7">상처치유: 조직 복구 가속</text>
-  </g>
-  <!-- Synergy note -->
-  <g transform="translate(380,155)">
-    <rect x="0" y="0" width="230" height="55" rx="6" fill="rgba(34,211,238,0.04)" stroke="rgba(34,211,238,0.15)" stroke-width="0.5"/>
-    <text x="10" y="16" fill="#22d3ee" font-size="8" font-weight="600">EBD 시너지 포인트</text>
-    <text x="10" y="30" fill="#94a3b8" font-size="7">열 자극 후 PN 투여 → 활성화된 섬유아세포에</text>
-    <text x="10" y="42" fill="#94a3b8" font-size="7">추가 재생 신호 → 콜라겐 합성 극대화</text>
-  </g>
-  <!-- Bottom -->
-  <rect x="40" y="220" width="560" height="48" rx="8" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
-  <text x="55" y="238" fill="#fb7185" font-size="8" font-weight="700">핵심: A2A 수용체 경로를 통한 내인성 재생 촉진</text>
-  <text x="55" y="252" fill="#94a3b8" font-size="7">PN/PDRN → A2A 수용체 → cAMP↑ → VEGF/FGF/TGF-β → 콜라겐/엘라스틴 합성 + 혈관신생</text>
-</svg>
-              </div>
-              <div class="moa-inline-summary" onclick="openMoaModal('moa-ig-skin-booster-pn')" role="button" tabindex="0">
-                <span class="moa-inline-icon">🧬</span>
-                <span class="moa-inline-text"><strong style="color:var(--text-hi);font-size:11px;">PN · Rejuran</strong><br><span style="color:var(--text-2);font-size:10px;">PDRN → A2A Receptor → Cell Regeneration</span></span>
-                <span class="moa-inline-btn">View MOA →</span>
-              </div>
-              <div class="moa-content">
-                PN(Polynucleotide)은 <strong>A2A 수용체에 결합</strong>하여 VEGF, TGF-β 등 성장인자 분비를 촉진합니다. 이를 통해 섬유아세포의 <strong>Type I 콜라겐 합성이 증가</strong>하고, 동시에 MMP-1(콜라겐 분해 효소)을 억제하여 진피 재생을 유도합니다.
-              </div>
-            </div>
-            <div class="rec-targets" style="margin-top:12px;">
-              <span class="rec-target" data-i18n="rtUpperDerm15">진피상층 1.5mm</span>
-              <span class="rec-target">Pain Low</span>
-              <span class="rec-target">DT Low</span>
-              <span class="rec-target" data-i18n="rtEff6_12m">효과 6~12개월</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- INJ CARD 2: Juvelook -->
-      <div class="rec-card inj-card" data-inj="1" data-layer="upd" role="button" tabindex="0" onclick="selectINJ(1)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectINJ(1);}">
-        <div class="rec-badge"><span class="neon-tag violet">광채+피부결</span></div>
-        <div class="rec-head">
-          <div class="rec-thumb thumb-inj">
-            <svg viewBox="0 0 40 40" fill="none"><rect x="12" y="8" width="16" height="24" rx="5" stroke="#fff" stroke-width="1" opacity=".7" fill="none"/><circle cx="20" cy="20" r="3" fill="#fff" opacity=".5"/></svg>
-          </div>
-          <div class="rec-title-area">
-            <div class="rec-name">Juvelook (쥬베룩) <span class="evidence-badge ev-4"><span class="ev-stars">★★★★</span><span class="ev-label">PDLLA Hybrid</span></span></div>
-            <div class="rec-sub" data-i18n-html="injJuvelookSub">PDLLA+HA 하이브리드 · 진피상층</div>
-          </div>
-        </div>
-        <div class="rec-summary" data-i18n-html="injJuvelookSummary">
-          PDLLA(Poly-D,L-Lactic Acid)와 HA의 하이브리드 구조가 <strong class="inj-hl">즉각적 수분 충전 + 장기적 콜라겐 생성</strong>을 동시에 제공합니다. PICO 레이저와 병합 시 <strong class="inj-hl">광채+피부결 시너지</strong>.
-        </div>
-        <button class="rec-expand-btn" aria-expanded="false" aria-label="상세 정보 펼치기" onclick="event.stopPropagation();toggleRecDetail(this)">
-          <span data-i18n="whyFitBtn">왜 나에게 맞는가?</span> <span class="arrow">▼</span>
-        </button>
-        <div class="rec-detail" aria-hidden="true">
-          <div class="rec-detail-inner">
-            <div class="rec-gauges">
-              <div class="rec-gauge"><span class="rec-gauge-label" data-i18n="gaugePain">통증</span><div class="rec-gauge-bar"><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot y"></div><div class="rec-gauge-dot"></div></div></div>
-              <div class="rec-gauge"><span class="rec-gauge-label" data-i18n="gaugeDT">다운타임</span><div class="rec-gauge-bar"><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot y"></div><div class="rec-gauge-dot"></div></div></div>
-            </div>
-            <div class="why-fit">
-              <div class="why-fit-title" data-i18n="whyFitTitle">왜 김지영 님에게 적합한가</div>
-              <div class="why-fit-content" data-i18n-html="wfJuvelook">
-                1. <span class="hl-rose">피부결·모공 집중 개선</span> — Top 3 목표 중 "피부결·모공"에 직접 작용하는 하이브리드 부스터입니다.<br>
-                2. <span class="hl-rose">PICO 후 완벽 보완</span> — 피코 레이저로 색소를 분해한 후 Juvelook이 진피 볼륨과 광채를 채워줍니다.<br>
-                3. <span class="hl-rose">12~24개월 장기 효과</span> — PDLLA 성분이 서서히 분해되며 콜라겐을 지속 생성합니다.
-              </div>
-            </div>
-            <div class="moa-section">
-              <span class="moa-cat-badge cat-pdlla" data-i18n="moaPdlla">PDLLA+HA · 하이브리드 바이오스티뮬레이터</span>
-              <div class="moa-title" data-i18n="moaTitle">작용 메커니즘</div>
-              <div class="moa-infographic" id="moa-ig-skin-booster-pdlla" data-moa-cat="SKIN_BOOSTER">
-                <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg">
-  <text x="320" y="22" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="700" letter-spacing="0.1em" opacity="0.9">PDLLA+HA — Dual-Action Biostimulation</text>
-  <!-- Dual component visualization -->
-  <g transform="translate(40,40)">
-    <text x="70" y="0" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="600">이중 성분 구조</text>
-    <!-- HA sphere -->
-    <circle cx="40" cy="50" r="25" fill="none" stroke="#60a5fa" stroke-width="1.5" opacity="0.6"/>
-    <circle cx="40" cy="50" r="18" fill="none" stroke="#60a5fa" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.4"/>
-    <text x="40" y="47" text-anchor="middle" fill="#60a5fa" font-size="8" font-weight="600">HA</text>
-    <text x="40" y="57" text-anchor="middle" fill="#94a3b8" font-size="6">즉각 수분</text>
-    <text x="40" y="85" text-anchor="middle" fill="#60a5fa" font-size="7">히알루론산</text>
-    <!-- PDLLA microspheres -->
-    <circle cx="110" cy="40" r="8" fill="none" stroke="#4ade80" stroke-width="1" opacity="0.6"/>
-    <circle cx="100" cy="55" r="6" fill="none" stroke="#4ade80" stroke-width="1" opacity="0.6"/>
-    <circle cx="118" cy="60" r="7" fill="none" stroke="#4ade80" stroke-width="1" opacity="0.6"/>
-    <circle cx="105" cy="42" r="5" fill="none" stroke="#4ade80" stroke-width="1" opacity="0.5"/>
-    <text x="110" y="47" text-anchor="middle" fill="#4ade80" font-size="6" font-weight="600">PDLLA</text>
-    <text x="110" y="85" text-anchor="middle" fill="#4ade80" font-size="7">마이크로스피어</text>
-  </g>
-  <!-- Timeline: dual action -->
-  <g transform="translate(200,38)">
-    <text x="200" y="0" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="600">시간별 이중 작용</text>
-    <!-- HA timeline (top) -->
-    <rect x="0" y="12" width="400" height="35" rx="4" fill="rgba(96,165,250,0.04)" stroke="rgba(96,165,250,0.15)" stroke-width="0.5"/>
-    <text x="10" y="27" fill="#60a5fa" font-size="7" font-weight="600">HA 작용</text>
-    <rect x="80" y="18" width="120" height="22" rx="3" fill="rgba(96,165,250,0.15)"/>
-    <text x="140" y="33" text-anchor="middle" fill="#60a5fa" font-size="7">즉각 수분·볼륨</text>
-    <text x="220" y="33" fill="#94a3b8" font-size="6">→ 2~4주 흡수</text>
-    <!-- PDLLA timeline (bottom) -->
-    <rect x="0" y="52" width="400" height="35" rx="4" fill="rgba(74,222,128,0.04)" stroke="rgba(74,222,128,0.15)" stroke-width="0.5"/>
-    <text x="10" y="67" fill="#4ade80" font-size="7" font-weight="600">PDLLA 작용</text>
-    <rect x="80" y="58" width="300" height="22" rx="3" fill="rgba(74,222,128,0.1)"/>
-    <text x="130" y="73" fill="#4ade80" font-size="7">점진적 분해</text>
-    <text x="230" y="73" text-anchor="middle" fill="#fbbf24" font-size="7">→ 콜라겐 자극 →</text>
-    <text x="340" y="73" fill="#4ade80" font-size="7">9~12개월 유지</text>
-  </g>
-  <!-- Mechanism flow -->
-  <g transform="translate(200,120)">
-    <rect x="0" y="0" width="110" height="34" rx="6" fill="none" stroke="#4ade80" stroke-width="1" opacity="0.6"/>
-    <text x="55" y="15" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="600">PDLLA 분해</text>
-    <text x="55" y="27" text-anchor="middle" fill="#94a3b8" font-size="7">Lactic acid 방출</text>
-    <text x="125" y="20" fill="#4ade80" font-size="12" opacity="0.5">→</text>
-    <rect x="140" y="0" width="110" height="34" rx="6" fill="none" stroke="#fbbf24" stroke-width="1" opacity="0.6"/>
-    <text x="195" y="15" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">이물 반응</text>
-    <text x="195" y="27" text-anchor="middle" fill="#94a3b8" font-size="7">Foreign Body Resp.</text>
-    <text x="265" y="20" fill="#fbbf24" font-size="12" opacity="0.5">→</text>
-    <rect x="280" y="0" width="110" height="34" rx="6" fill="none" stroke="#fb7185" stroke-width="1" opacity="0.6"/>
-    <text x="335" y="15" text-anchor="middle" fill="#fb7185" font-size="8" font-weight="600">섬유아세포 활성</text>
-    <text x="335" y="27" text-anchor="middle" fill="#94a3b8" font-size="7">Fibroblast Stim.</text>
-  </g>
-  <!-- Result -->
-  <g transform="translate(200,170)">
-    <text x="195" y="0" fill="#fb7185" font-size="12" opacity="0.5">↓</text>
-    <rect x="120" y="8" width="150" height="34" rx="6" fill="rgba(74,222,128,0.06)" stroke="rgba(74,222,128,0.3)" stroke-width="1"/>
-    <text x="195" y="24" text-anchor="middle" fill="#4ade80" font-size="9" font-weight="700">Type I 콜라겐 신생</text>
-    <text x="195" y="36" text-anchor="middle" fill="#94a3b8" font-size="7">Neo-collagenesis</text>
-  </g>
-  <!-- Bottom -->
-  <rect x="40" y="220" width="560" height="48" rx="8" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
-  <text x="55" y="238" fill="#4ade80" font-size="8" font-weight="700">핵심: HA 즉각 효과 + PDLLA 점진적 바이오스티뮬레이션 = 시간차 이중 효과</text>
-  <text x="55" y="252" fill="#94a3b8" font-size="7">HA가 먼저 수분/볼륨 제공 → PDLLA 마이크로스피어가 수개월에 걸쳐 분해되며 콜라겐 합성 유도</text>
-</svg>
-              </div>
-              <div class="moa-inline-summary" onclick="openMoaModal('moa-ig-skin-booster-pdlla')" role="button" tabindex="0">
-                <span class="moa-inline-icon">💧</span>
-                <span class="moa-inline-text"><strong style="color:var(--text-hi);font-size:11px;">PDLLA+HA · Juvelook</strong><br><span style="color:var(--text-2);font-size:10px;">HA Hydration + PDLLA Collagen Stimulation</span></span>
-                <span class="moa-inline-btn">View MOA →</span>
-              </div>
-              <div class="moa-content">
-                PDLLA 미립자가 진피 내에서 <strong>이물 반응(Foreign Body Reaction)을 유도</strong>하여 대식세포가 TGF-β를 분비하고, 이로 인해 섬유아세포의 <strong>콜라겐 합성이 12~24개월간 지속</strong>됩니다. HA 성분은 즉각적 수분 보유와 볼륨을 제공합니다.
-              </div>
-            </div>
-            <div class="rec-targets" style="margin-top:12px;">
-              <span class="rec-target" data-i18n="rtUpperDerm">진피상층</span>
-              <span class="rec-target">Pain Low</span>
-              <span class="rec-target">Volume +</span>
-              <span class="rec-target" data-i18n="rtEff12_24m">효과 12~24개월</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- INJ CARD 3: Sculptra -->
-      <div class="rec-card inj-card" data-inj="2" data-layer="lod" role="button" tabindex="0" onclick="selectINJ(2)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectINJ(2);}">
-        <div class="rec-badge"><span class="neon-tag green">Volume Rebuild</span></div>
-        <div class="rec-head">
-          <div class="rec-thumb thumb-inj2">
-            <svg viewBox="0 0 40 40" fill="none"><path d="M14 10h12v20a6 6 0 01-12 0V10z" stroke="#fff" stroke-width="1" opacity=".7" fill="none"/><line x1="20" y1="6" x2="20" y2="10" stroke="#fff" stroke-width="1"/></svg>
-          </div>
-          <div class="rec-title-area">
-            <div class="rec-name">Sculptra (스컬트라) <span class="evidence-badge ev-5"><span class="ev-stars">★★★★★</span><span class="ev-label">Classic PLLA</span></span></div>
-            <div class="rec-sub" data-i18n-html="injSculptraSub">PLLA · 진피하층 3mm</div>
-          </div>
-        </div>
-        <div class="rec-summary" data-i18n-html="injSculptraSummary">
-          PLLA(Poly-L-Lactic Acid)가 진피 하층에서 <strong class="inj-hl">3~6개월간 점진적 콜라겐 볼륨</strong>을 재건합니다. THERMAGE와 병합 시 <strong class="inj-hl">구조적 탄력 시너지</strong>.
-        </div>
-        <button class="rec-expand-btn" aria-expanded="false" aria-label="상세 정보 펼치기" onclick="event.stopPropagation();toggleRecDetail(this)">
-          <span data-i18n="whyFitBtn">왜 나에게 맞는가?</span> <span class="arrow">▼</span>
-        </button>
-        <div class="rec-detail" aria-hidden="true">
-          <div class="rec-detail-inner">
-            <div class="rec-gauges">
-              <div class="rec-gauge"><span class="rec-gauge-label" data-i18n="gaugePain">통증</span><div class="rec-gauge-bar"><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot y"></div><div class="rec-gauge-dot"></div></div></div>
-              <div class="rec-gauge"><span class="rec-gauge-label" data-i18n="gaugeDT">다운타임</span><div class="rec-gauge-bar"><div class="rec-gauge-dot g"></div><div class="rec-gauge-dot y"></div><div class="rec-gauge-dot"></div></div></div>
-            </div>
-            <div class="why-fit">
-              <div class="why-fit-title" data-i18n="whyFitTitle">왜 김지영 님에게 적합한가</div>
-              <div class="why-fit-content" data-i18n-html="wfSculptra">
-                1. <span class="hl-rose">깊은 탄력 보강</span> — Sofwave(상층)+Sculptra(하층)로 진피 전 깊이를 커버하는 멀티레이어 전략입니다.<br>
-                2. <span class="hl-rose">자연스러운 볼륨</span> — 필러 주입이 아닌 자가 콜라겐 생성이므로 "자연스러운 개선" 목표에 최적입니다.<br>
-                3. <span class="hl-rose">장기 효과</span> — 12~24개월 효과 지속으로 비용 효율이 높습니다.
-              </div>
-            </div>
-            <div class="moa-section">
-              <span class="moa-cat-badge cat-plla" data-i18n="moaPlla">PLLA · 폴리-L-락틱산</span>
-              <div class="moa-title" data-i18n="moaTitle">작용 메커니즘</div>
-              <div class="moa-infographic" id="moa-ig-skin-booster-plla" data-moa-cat="SKIN_BOOSTER">
-                <svg viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg">
-  <text x="320" y="22" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700" letter-spacing="0.1em" opacity="0.9">PLLA — Progressive Collagen Reconstruction</text>
-  <!-- PLLA microsphere degradation visual -->
-  <g transform="translate(40,42)">
-    <text x="70" y="0" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">PLLA 마이크로스피어 분해 과정</text>
-    <!-- Stage 1: intact -->
-    <circle cx="35" cy="40" r="16" fill="none" stroke="#fbbf24" stroke-width="1.5" opacity="0.8"/>
-    <circle cx="35" cy="40" r="10" fill="rgba(251,191,36,0.15)"/>
-    <text x="35" y="43" text-anchor="middle" fill="#fbbf24" font-size="6">PLLA</text>
-    <text x="35" y="68" text-anchor="middle" fill="#94a3b8" font-size="6">주입 직후</text>
-    <!-- Arrow -->
-    <text x="67" y="42" fill="#94a3b8" font-size="10" opacity="0.4">→</text>
-    <!-- Stage 2: partial -->
-    <circle cx="100" cy="40" r="16" fill="none" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3,2" opacity="0.6"/>
-    <circle cx="95" cy="36" r="4" fill="rgba(251,191,36,0.2)"/><circle cx="105" cy="44" r="3" fill="rgba(251,191,36,0.2)"/><circle cx="98" cy="48" r="3.5" fill="rgba(251,191,36,0.2)"/>
-    <text x="100" y="68" text-anchor="middle" fill="#94a3b8" font-size="6">2~4개월</text>
-    <text x="132" y="42" fill="#94a3b8" font-size="10" opacity="0.4">→</text>
-    <!-- Stage 3: degraded + collagen -->
-    <circle cx="165" cy="40" r="16" fill="none" stroke="#4ade80" stroke-width="1" stroke-dasharray="2,3" opacity="0.5"/>
-    <line x1="155" y1="32" x2="165" y2="48" stroke="#4ade80" stroke-width="0.8" opacity="0.6"/><line x1="160" y1="30" x2="170" y2="50" stroke="#4ade80" stroke-width="0.8" opacity="0.6"/><line x1="168" y1="33" x2="175" y2="47" stroke="#4ade80" stroke-width="0.8" opacity="0.6"/>
-    <text x="165" y="68" text-anchor="middle" fill="#4ade80" font-size="6">6~12개월</text>
-    <text x="165" y="78" text-anchor="middle" fill="#4ade80" font-size="5">콜라겐 대체</text>
-  </g>
-  <!-- Mechanism cascade -->
-  <g transform="translate(250,38)">
-    <rect x="0" y="0" width="120" height="34" rx="6" fill="none" stroke="#fbbf24" stroke-width="1" opacity="0.6"/>
-    <text x="60" y="15" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">PLLA 주입</text>
-    <text x="60" y="27" text-anchor="middle" fill="#94a3b8" font-size="7">Poly-L-Lactic Acid</text>
-    <text x="60" y="46" fill="#fbbf24" font-size="10" opacity="0.5">↓</text>
-    <rect x="0" y="50" width="120" height="34" rx="6" fill="none" stroke="#fb923c" stroke-width="1" opacity="0.6"/>
-    <text x="60" y="65" text-anchor="middle" fill="#fb923c" font-size="8" font-weight="600">Foreign Body</text>
-    <text x="60" y="77" text-anchor="middle" fill="#94a3b8" font-size="7">이물 반응 유도</text>
-    <text x="60" y="96" fill="#fb923c" font-size="10" opacity="0.5">↓</text>
-    <rect x="0" y="100" width="120" height="34" rx="6" fill="none" stroke="#a78bfa" stroke-width="1" opacity="0.6"/>
-    <text x="60" y="115" text-anchor="middle" fill="#a78bfa" font-size="8" font-weight="600">섬유아세포 동원</text>
-    <text x="60" y="127" text-anchor="middle" fill="#94a3b8" font-size="7">Fibroblast Recruit</text>
-    <text x="60" y="146" fill="#a78bfa" font-size="10" opacity="0.5">↓</text>
-    <rect x="0" y="150" width="120" height="34" rx="6" fill="none" stroke="#4ade80" stroke-width="1" opacity="0.6"/>
-    <text x="60" y="165" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="600">콜라겐 구조 재건</text>
-    <text x="60" y="177" text-anchor="middle" fill="#94a3b8" font-size="7">Type I Collagen↑</text>
-  </g>
-  <!-- Volume restoration graph -->
-  <g transform="translate(410,38)">
-    <rect x="0" y="0" width="200" height="100" rx="6" fill="rgba(251,191,36,0.04)" stroke="rgba(251,191,36,0.15)" stroke-width="0.5"/>
-    <text x="100" y="16" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">볼륨 회복 커브</text>
-    <!-- Axes -->
-    <line x1="30" y1="85" x2="185" y2="85" stroke="#334155" stroke-width="0.5"/>
-    <line x1="30" y1="25" x2="30" y2="85" stroke="#334155" stroke-width="0.5"/>
-    <text x="15" y="55" fill="#94a3b8" font-size="6" transform="rotate(-90,15,55)">Volume</text>
-    <text x="110" y="95" text-anchor="middle" fill="#94a3b8" font-size="6">Time (months)</text>
-    <!-- Initial filler volume (drops fast) -->
-    <polyline points="30,40 50,42 70,55 90,68 110,75" fill="none" stroke="#60a5fa" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>
-    <text x="115" y="78" fill="#60a5fa" font-size="6">Filler vol.</text>
-    <!-- Collagen volume (grows slow) -->
-    <polyline points="30,80 50,78 70,70 90,55 110,42 130,35 150,33 170,32" fill="none" stroke="#4ade80" stroke-width="1.5"/>
-    <text x="175" y="35" fill="#4ade80" font-size="6">Collagen</text>
-    <!-- Net volume -->
-    <polyline points="30,60 50,58 70,55 90,50 110,45 130,37 150,34 170,33" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,2"/>
-    <text x="175" y="22" fill="#fbbf24" font-size="6" font-weight="600">Total</text>
-    <!-- Time labels -->
-    <text x="30" y="98" fill="#94a3b8" font-size="5">0</text><text x="70" y="98" fill="#94a3b8" font-size="5">3</text><text x="110" y="98" fill="#94a3b8" font-size="5">6</text><text x="150" y="98" fill="#94a3b8" font-size="5">12</text><text x="175" y="98" fill="#94a3b8" font-size="5">18</text>
-  </g>
-  <!-- Treatment protocol -->
-  <g transform="translate(410,150)">
-    <rect x="0" y="0" width="200" height="52" rx="6" fill="rgba(251,191,36,0.04)" stroke="rgba(251,191,36,0.15)" stroke-width="0.5"/>
-    <text x="10" y="16" fill="#fbbf24" font-size="7" font-weight="600">권장 프로토콜</text>
-    <text x="10" y="30" fill="#94a3b8" font-size="7">3회 세트 · 4~6주 간격</text>
-    <text x="10" y="42" fill="#94a3b8" font-size="7">효과 발현: 4~8주 · 유지: 18~24개월</text>
-  </g>
-  <!-- Bottom -->
-  <rect x="40" y="220" width="560" height="48" rx="8" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
-  <text x="55" y="238" fill="#fbbf24" font-size="8" font-weight="700">핵심: PLLA의 점진적 분해 → 이물 반응 → 자가 콜라겐으로 볼륨 재건</text>
-  <text x="55" y="252" fill="#94a3b8" font-size="7">필러와 달리 자가 콜라겐이 구조를 형성하므로 자연스럽고 장기 지속 (18~24개월)</text>
-</svg>
-              </div>
-              <div class="moa-inline-summary" onclick="openMoaModal('moa-ig-skin-booster-plla')" role="button" tabindex="0">
-                <span class="moa-inline-icon">🔬</span>
-                <span class="moa-inline-text"><strong style="color:var(--text-hi);font-size:11px;">PLLA · Sculptra</strong><br><span style="color:var(--text-2);font-size:10px;">Microsphere → Gradual Volume + Collagen</span></span>
-                <span class="moa-inline-btn">View MOA →</span>
-              </div>
-              <div class="moa-content">
-                PLLA 미립자가 진피하층에서 <strong>서서히 분해(2~3개월)</strong>되면서 주변 대식세포를 활성화합니다. 대식세포가 TGF-β, PDGF를 분비하여 <strong>섬유아세포의 Type I/III 콜라겐 합성이 12~24개월</strong> 지속됩니다.
-              </div>
-            </div>
-            <div class="rec-targets" style="margin-top:12px;">
-              <span class="rec-target" data-i18n="rtLowerDerm">진피하층 3mm</span>
-              <span class="rec-target">Lift +</span>
-              <span class="rec-target" data-i18n="rtVolRecon">볼륨 재건</span>
-              <span class="rec-target" data-i18n="rtEff12_24m">효과 12~24개월</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- + Add more injectables -->
-      <div class="rec-card add-card-btn" onclick="showAddDeviceHint('inj')" role="button" tabindex="0">
-        <span class="add-icon">＋</span>
-        <span>인젝터블 추가</span>
-      </div>
+      <!-- Cards dynamically generated by renderINJCards() -->
+      <div style="color:var(--text-3);text-align:center;padding:24px;font-size:12px;grid-column:1/-1;">AI 분석 결과를 불러오는 중...</div>
+      <!-- END INJ SKELETON -->
     </div>
   </div>
 
@@ -7998,6 +7270,27 @@ setTimeout(()=>{
     DEFAULT: 'cat-hifu'
   };
 
+  /* ── Rebuild Sticky Bar with real device names ── */
+  function rebuildStickyBar(ebdRecs, injRecs) {
+    const bar = document.getElementById('sticky-bar');
+    if (!bar) return;
+    let html = '<span class="sb-label">EBD</span>';
+    if (ebdRecs && ebdRecs.length > 0) {
+      ebdRecs.forEach((r, i) => {
+        const cls = i === 0 ? ' active-ebd' : '';
+        html += `<span class="sb-chip${cls}" data-ebd="${i}" role="button" tabindex="0" onclick="selectEBD(${i})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectEBD(${i});}">⟡ ${r.device_name||('EBD '+(i+1))}</span>`;
+      });
+    }
+    html += '<span class="sb-divider"></span><span class="sb-label">INJ</span>';
+    if (injRecs && injRecs.length > 0) {
+      injRecs.forEach((r, i) => {
+        const cls = i === 0 ? ' active-inj' : '';
+        html += `<span class="sb-chip${cls}" data-inj="${i}" role="button" tabindex="0" onclick="selectINJ(${i})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectINJ(${i});}">◎ ${r.name||r.product_name||('INJ '+(i+1))}</span>`;
+      });
+    }
+    bar.innerHTML = html;
+  }
+
   /* ── Render EBD Cards ── */
   function renderEBDCards(recs) {
     const container = document.getElementById('ebd-cards');
@@ -8300,6 +7593,14 @@ setTimeout(()=>{
       }
     }
 
+    // ─── CLEAR HARDCODED SAMPLE DATA FIRST ───
+    safeRun('clearSamples', () => {
+      const ebdContainer = document.getElementById('ebd-cards');
+      if (ebdContainer) ebdContainer.innerHTML = '<div style="color:var(--text-3);text-align:center;padding:24px;font-size:12px;">분석 결과 로딩 중...</div>';
+      const injContainer = document.getElementById('inj-cards');
+      if (injContainer) injContainer.innerHTML = '<div style="color:var(--text-3);text-align:center;padding:24px;font-size:12px;">분석 결과 로딩 중...</div>';
+    });
+
     // 0. Mirror + Confidence layers
     safeRun('mirror', () => { if (data.mirror) renderMirrorLayer(data.mirror); });
     safeRun('confidence', () => { if (data.confidence) renderConfidenceLayer(data.confidence); });
@@ -8310,6 +7611,9 @@ setTimeout(()=>{
     // 2. DYNAMIC HTML — Regenerate card DOM from Opus data
     safeRun('ebdCards', () => { if (data.ebd_recommendations && data.ebd_recommendations.length > 0) renderEBDCards(data.ebd_recommendations); });
     safeRun('injCards', () => { if (data.injectable_recommendations && data.injectable_recommendations.length > 0) renderINJCards(data.injectable_recommendations); });
+    // 2b. Rebuild sticky bar with actual device names
+    safeRun('stickyBar', () => { rebuildStickyBar(data.ebd_recommendations || [], data.injectable_recommendations || []); });
+
     safeRun('treatmentPlan', () => { if (data.treatment_plan?.phases?.length > 0) renderTreatmentPlan(data.treatment_plan.phases); });
     safeRun('homecare', () => { if (data.homecare) renderHomecareGrid(data.homecare); });
     safeRun('doctorEquipBar', () => {
