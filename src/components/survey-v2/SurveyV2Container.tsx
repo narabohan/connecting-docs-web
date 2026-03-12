@@ -13,17 +13,18 @@ import OpenQuestionStep from './OpenQuestionStep';
 import SmartChipStep from './SmartChipStep';
 import SafetyCheckpoint from './SafetyCheckpoint';
 import MessengerContactStep from './MessengerContactStep';
-import AnalyzingStep from './AnalyzingStep';
+import ThankYouStep from './ThankYouStep';
 
 // ─── Progress Config ─────────────────────────────────────────
-const STEPS: SurveyStep[] = ['demographics', 'open', 'chips', 'safety', 'messenger', 'analyzing'];
+const STEPS: SurveyStep[] = ['demographics', 'open', 'chips', 'safety', 'messenger', 'complete'];
 const STEP_NUMBERS: Record<SurveyStep, number> = {
   demographics: 1,
   open: 2,
   chips: 3,
   safety: 4,
   messenger: 5,
-  analyzing: 6,
+  complete: 6,
+  analyzing: 6, // Keep for backward compat (shouldn't be reached)
 };
 
 interface SurveyV2ContainerProps {
@@ -68,7 +69,7 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-start justify-center px-4 py-8">
       <div className="w-full max-w-md">
         {/* ─── Progress Bar ──────────────────────────── */}
-        {step !== 'analyzing' && (
+        {step !== 'analyzing' && step !== 'complete' && (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-gray-500">
@@ -164,17 +165,11 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
               />
             )}
 
-            {step === 'analyzing' && (
-              <AnalyzingStep
-                key="analyzing"
+            {step === 'complete' && (
+              <ThankYouStep
+                key="complete"
                 lang={lang}
-                isLoading={isLoading}
-                error={error}
-                onRetry={() => {
-                  // Re-trigger analysis by going back to safety then forward
-                  // The hook's submitSafety will restart the flow
-                  submitSafety();
-                }}
+                messengerContact={messengerContact}
               />
             )}
           </AnimatePresence>

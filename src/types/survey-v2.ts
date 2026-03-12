@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 export type SurveyLang = 'KO' | 'EN' | 'JP' | 'ZH-CN';
-export type SurveyStep = 'demographics' | 'open' | 'chips' | 'safety' | 'messenger' | 'analyzing';
+export type SurveyStep = 'demographics' | 'open' | 'chips' | 'safety' | 'messenger' | 'analyzing' | 'complete';
 
 // ─── Messenger Contact ─────────────────────────────────────
 export type MessengerType = 'kakao' | 'whatsapp' | 'line' | 'wechat' | 'zalo' | 'email';

@@ -20,7 +20,7 @@ import type {
   ChipType,
   MessengerContact,
 } from '@/types/survey-v2';
-import type { FinalRecommendationRequest, FinalRecommendationResponse } from '@/pages/api/survey-v2/final-recommendation';
+import type { FinalRecommendationRequest } from '@/pages/api/survey-v2/final-recommendation';
 import { MEDICATION_FLAG_MAP, CONDITION_FLAG_MAP, FOLLOWUP_ITEMS } from '@/components/survey-v2/SafetyCheckpoint';
 
 // ─── Initial State ───────────────────────────────────────────
@@ -139,7 +139,7 @@ function surveyReducer(state: SurveyV2State, action: SurveyAction): SurveyV2Stat
 }
 
 // ─── Step Order ──────────────────────────────────────────────
-const STEP_ORDER: SurveyStep[] = ['demographics', 'open', 'chips', 'safety', 'messenger', 'analyzing'];
+const STEP_ORDER: SurveyStep[] = ['demographics', 'open', 'chips', 'safety', 'messenger', 'complete'];
 
 // ─── Goal Mapping (v2 → WizardData) ─────────────────────────
 function mapGoalToWizard(goal: string | null): string {
@@ -418,22 +418,15 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
   const submitMessenger = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    setStep('analyzing');
 
-    // Start analysis (will run and save result + send notification)
-    await startAnalysis();
-  }, []);
-
-  // ─── Final Analysis (Opus Final Recommendation) ──────────
-  const startAnalysis = useCallback(async () => {
     try {
-      // Build the request payload from full survey state
+      // Build the request payload for the background function
       const followupAnswers: Record<string, string> = {};
       for (const fu of state.safety_followups) {
         if (fu.answer) followupAnswers[fu.flag] = fu.answer;
       }
 
-      const requestBody: FinalRecommendationRequest = {
+      const surveyData: FinalRecommendationRequest = {
         demographics: state.demographics,
         haiku_analysis: state.haiku_analysis!,
         chip_responses: state.chip_responses,
@@ -455,159 +448,37 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
         q3_volume_logic: state.q3_volume_logic,
       };
 
-      // H-2: 300s timeout for final analysis (Edge Runtime SSE can take 3-5min with large prompt)
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 300_000);
+      // Fire background function (returns 202 immediately)
+      const siteUrl = typeof window !== 'undefined'
+        ? window.location.origin
+        : 'https://connectingdocs.ai';
 
-      const res = await fetch('/api/survey-v2/final-recommendation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Opus analysis failed');
-      }
-
-      // Parse SSE streaming response (keeps connection alive to avoid Netlify timeout)
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error('No response body');
-
-      const decoder = new TextDecoder();
-      let data: FinalRecommendationResponse | null = null;
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          // Process any remaining data in buffer before exiting
-          if (buffer.trim()) {
-            const remaining = buffer.trim();
-            if (remaining.startsWith('data: ')) {
-              try {
-                const event = JSON.parse(remaining.slice(6));
-                if (event.type === 'done') {
-                  data = {
-                    recommendation_json: event.recommendation_json,
-                    model: event.model,
-                    usage: event.usage,
-                  };
-                } else if (event.type === 'error') {
-                  throw new Error(event.error || 'Analysis stream error');
-                }
-              } catch (parseErr) {
-                if ((parseErr as Error).message?.includes('Analysis stream error')) throw parseErr;
-              }
-            }
-          }
-          break;
-        }
-        buffer += decoder.decode(value, { stream: true });
-
-        // Parse SSE events from buffer
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || ''; // Keep incomplete line in buffer
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          try {
-            const event = JSON.parse(line.slice(6));
-            if (event.type === 'done') {
-              data = {
-                recommendation_json: event.recommendation_json,
-                model: event.model,
-                usage: event.usage,
-              };
-            } else if (event.type === 'error') {
-              throw new Error(event.error || 'Analysis stream error');
-            }
-            // 'progress' events are just heartbeats — ignore
-          } catch (parseErr) {
-            // Skip unparseable lines (heartbeats, empty lines)
-            if ((parseErr as Error).message?.includes('Analysis stream error')) throw parseErr;
-          }
-        }
-      }
-
-      if (!data) throw new Error('No final result received from analysis');
-
-      // Store the Opus output in sessionStorage for the report page to consume
-      if (typeof window !== 'undefined') {
-        const reportPayload = {
-          recommendation: data.recommendation_json,
-          model: data.model,
-          usage: data.usage,
-          survey_state: {
-            demographics: state.demographics,
-            safety_flags: state.safety_flags,
-            open_question_raw: state.open_question_raw,
-          },
-          created_at: new Date().toISOString(),
-        };
-        sessionStorage.setItem('connectingdocs_v2_report', JSON.stringify(reportPayload));
-      }
-
-      // Generate a report ID
-      const reportId = `v2_${Date.now()}`;
-
-      // Fire-and-forget: persist to Airtable (non-blocking) — includes messenger contact
-      fetch('/api/survey-v2/save-result', {
+      fetch('/.netlify/functions/run-analysis-background', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          run_id: reportId,
+          surveyData,
+          messengerContact: state.messenger_contact,
           demographics: state.demographics,
           lang: state.demographics.detected_language || 'KO',
           safety_flags: state.safety_flags,
           open_question_raw: state.open_question_raw,
           chip_responses: state.chip_responses,
-          recommendation: data.recommendation_json,
-          model: data.model,
-          usage: data.usage,
-          messenger_contact: state.messenger_contact,
+          siteUrl,
         }),
-      }).catch((err) => console.warn('[save-result] Airtable save failed (non-blocking):', err));
+        keepalive: true, // Keep request alive even if page closes
+      }).catch((err) => {
+        console.warn('[submitMessenger] Background function call failed:', err);
+      });
 
-      // Fire-and-forget: send email notifications (admin + patient if logged in)
-      const topDevice = data.recommendation_json?.ebd_recommendations?.[0]?.device_name || '';
-      const topInjectable = data.recommendation_json?.injectable_recommendations?.[0]?.name || '';
-      const inputCost = (data.usage?.input_tokens || 0) / 1_000_000;
-      const outputCost = (data.usage?.output_tokens || 0) / 1_000_000;
-      // Sonnet pricing: $3/$15 per M tokens
-      const costUsd = inputCost * 3 + outputCost * 15;
-
-      fetch('/api/survey-v2/notify-report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          report_id: reportId,
-          patient_country: state.demographics.detected_country,
-          patient_age: state.demographics.d_age,
-          patient_gender: state.demographics.d_gender,
-          lang: state.demographics.detected_language || 'KO',
-          primary_goal: state.q1_primary_goal || '',
-          top_device: topDevice,
-          top_injectable: topInjectable,
-          model: data.model,
-          cost_usd: costUsd,
-        }),
-      }).catch((err) => console.warn('[notify-report] Email send failed (non-blocking):', err));
-
-      onComplete(reportId);
+      // Immediately transition to thank-you screen
+      setStep('complete');
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        setError('분석 시간이 초과되었습니다. 다시 시도해 주세요. (Analysis timed out — please try again)');
-      } else {
-        setError(err instanceof Error ? err.message : 'Analysis failed');
-      }
+      setError(err instanceof Error ? err.message : 'Failed to submit');
     } finally {
       setIsLoading(false);
     }
-  }, [state, onComplete]);
+  }, [state]);
 
   // ─── Return ───────────────────────────────────────────────
   return {

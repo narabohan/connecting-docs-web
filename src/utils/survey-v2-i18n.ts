@@ -81,6 +81,7 @@ export interface SurveyV2Translations {
     safety: string;
     messenger: string;
     analyzing: string;
+    complete: string;
   };
 }
 
@@ -157,6 +158,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       safety: '안전확인',
       messenger: '연락처',
       analyzing: '분석중',
+      complete: '완료',
     },
   },
 
@@ -232,6 +234,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       safety: 'Safety',
       messenger: 'Contact',
       analyzing: 'Analysis',
+      complete: 'Complete',
     },
   },
 
@@ -307,6 +310,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       safety: '安全確認',
       messenger: '連絡先',
       analyzing: '分析中',
+      complete: '完了',
     },
   },
 
@@ -382,6 +386,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       safety: '安全确认',
       messenger: '联系方式',
       analyzing: '分析中',
+      complete: '完成',
     },
   },
 };
