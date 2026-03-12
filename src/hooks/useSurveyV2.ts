@@ -18,6 +18,7 @@ import type {
   GenerateChipsResponse,
   WizardDataCompat,
   ChipType,
+  MessengerContact,
 } from '@/types/survey-v2';
 import type { FinalRecommendationRequest, FinalRecommendationResponse } from '@/pages/api/survey-v2/final-recommendation';
 import { MEDICATION_FLAG_MAP, CONDITION_FLAG_MAP, FOLLOWUP_ITEMS } from '@/components/survey-v2/SafetyCheckpoint';
@@ -41,6 +42,7 @@ const initialState: SurveyV2State = {
   safety_selection: { medications: [], conditions: [] },
   safety_flags: [],
   safety_followups: [],
+  messenger_contact: null,
   q1_primary_goal: null,
   q1_goal_secondary: null,
   q3_concern_area: null,
@@ -125,6 +127,9 @@ function surveyReducer(state: SurveyV2State, action: SurveyAction): SurveyV2Stat
         ),
       };
 
+    case 'SET_MESSENGER_CONTACT':
+      return { ...state, messenger_contact: action.payload };
+
     case 'RESET':
       return initialState;
 
@@ -134,7 +139,7 @@ function surveyReducer(state: SurveyV2State, action: SurveyAction): SurveyV2Stat
 }
 
 // ─── Step Order ──────────────────────────────────────────────
-const STEP_ORDER: SurveyStep[] = ['demographics', 'open', 'chips', 'safety', 'analyzing'];
+const STEP_ORDER: SurveyStep[] = ['demographics', 'open', 'chips', 'safety', 'messenger', 'analyzing'];
 
 // ─── Goal Mapping (v2 → WizardData) ─────────────────────────
 function mapGoalToWizard(goal: string | null): string {
@@ -396,16 +401,28 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
         }
       }
 
-      // Transition to analyzing
-      setStep('analyzing');
-
-      // Start final analysis
-      await startAnalysis();
+      // Transition to messenger contact collection (instead of direct analysis)
+      setStep('messenger');
+      setIsLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       setIsLoading(false);
     }
   }, [state]);
+
+  // ─── Messenger Contact ──────────────────────────────────
+  const setMessengerContact = useCallback((contact: MessengerContact) => {
+    dispatch({ type: 'SET_MESSENGER_CONTACT', payload: contact });
+  }, []);
+
+  const submitMessenger = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    setStep('analyzing');
+
+    // Start analysis (will run and save result + send notification)
+    await startAnalysis();
+  }, []);
 
   // ─── Final Analysis (Opus Final Recommendation) ──────────
   const startAnalysis = useCallback(async () => {
@@ -537,7 +554,7 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
       // Generate a report ID
       const reportId = `v2_${Date.now()}`;
 
-      // Fire-and-forget: persist to Airtable (non-blocking)
+      // Fire-and-forget: persist to Airtable (non-blocking) — includes messenger contact
       fetch('/api/survey-v2/save-result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -551,6 +568,7 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
           recommendation: data.recommendation_json,
           model: data.model,
           usage: data.usage,
+          messenger_contact: state.messenger_contact,
         }),
       }).catch((err) => console.warn('[save-result] Airtable save failed (non-blocking):', err));
 
@@ -607,6 +625,7 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
     safetyFollowups: state.safety_followups,
     priorApplied: state.prior_applied,
     priorValues: state.prior_values,
+    messengerContact: state.messenger_contact,
 
     // Loading / Error
     isLoading,
@@ -623,6 +642,8 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
     setSafetySelection,
     setFollowupAnswer,
     submitSafety,
+    setMessengerContact,
+    submitMessenger,
     goBack,
   };
 }

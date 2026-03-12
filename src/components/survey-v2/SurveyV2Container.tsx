@@ -12,16 +12,18 @@ import DemographicStep from './DemographicStep';
 import OpenQuestionStep from './OpenQuestionStep';
 import SmartChipStep from './SmartChipStep';
 import SafetyCheckpoint from './SafetyCheckpoint';
+import MessengerContactStep from './MessengerContactStep';
 import AnalyzingStep from './AnalyzingStep';
 
 // ─── Progress Config ─────────────────────────────────────────
-const STEPS: SurveyStep[] = ['demographics', 'open', 'chips', 'safety', 'analyzing'];
+const STEPS: SurveyStep[] = ['demographics', 'open', 'chips', 'safety', 'messenger', 'analyzing'];
 const STEP_NUMBERS: Record<SurveyStep, number> = {
   demographics: 1,
   open: 2,
   chips: 3,
   safety: 4,
-  analyzing: 5,
+  messenger: 5,
+  analyzing: 6,
 };
 
 interface SurveyV2ContainerProps {
@@ -52,6 +54,9 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
     setSafetySelection,
     setFollowupAnswer,
     submitSafety,
+    setMessengerContact,
+    submitMessenger,
+    messengerContact,
     goBack,
   } = useSurveyV2({ onComplete });
 
@@ -144,6 +149,17 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
                 followups={safetyFollowups}
                 onFollowupAnswer={setFollowupAnswer}
                 onSubmit={submitSafety}
+                isLoading={isLoading}
+              />
+            )}
+
+            {step === 'messenger' && (
+              <MessengerContactStep
+                key="messenger"
+                lang={lang}
+                country={demographics.detected_country}
+                onSubmit={submitMessenger}
+                onChange={setMessengerContact}
                 isLoading={isLoading}
               />
             )}

@@ -79,6 +79,7 @@ export interface SurveyV2Translations {
     open: string;
     chips: string;
     safety: string;
+    messenger: string;
     analyzing: string;
   };
 }
@@ -154,6 +155,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       open: '고민입력',
       chips: '맞춤질문',
       safety: '안전확인',
+      messenger: '연락처',
       analyzing: '분석중',
     },
   },
@@ -228,6 +230,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       open: 'Concerns',
       chips: 'Details',
       safety: 'Safety',
+      messenger: 'Contact',
       analyzing: 'Analysis',
     },
   },
@@ -302,6 +305,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       open: 'お悩み',
       chips: '詳細',
       safety: '安全確認',
+      messenger: '連絡先',
       analyzing: '分析中',
     },
   },
@@ -376,6 +380,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       open: '问题描述',
       chips: '详细信息',
       safety: '安全确认',
+      messenger: '联系方式',
       analyzing: '分析中',
     },
   },

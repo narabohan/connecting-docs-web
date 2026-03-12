@@ -4,7 +4,36 @@
 // ═══════════════════════════════════════════════════════════════
 
 export type SurveyLang = 'KO' | 'EN' | 'JP' | 'ZH-CN';
-export type SurveyStep = 'demographics' | 'open' | 'chips' | 'safety' | 'analyzing';
+export type SurveyStep = 'demographics' | 'open' | 'chips' | 'safety' | 'messenger' | 'analyzing';
+
+// ─── Messenger Contact ─────────────────────────────────────
+export type MessengerType = 'kakao' | 'whatsapp' | 'line' | 'wechat' | 'zalo' | 'email';
+
+export interface MessengerContact {
+  type: MessengerType;
+  contact_id: string;  // phone number, kakao ID, Line ID, etc.
+  name: string;        // patient display name
+}
+
+/** Country → preferred messenger mapping */
+export const COUNTRY_MESSENGER_MAP: Record<string, MessengerType> = {
+  KR: 'kakao',
+  JP: 'line',
+  TH: 'line',
+  TW: 'line',
+  CN: 'wechat',
+  VN: 'zalo',
+  // Default to WhatsApp for all others (most global reach)
+};
+
+export const MESSENGER_LABELS: Record<MessengerType, { name: string; icon: string; placeholder: Record<SurveyLang, string> }> = {
+  kakao: { name: 'KakaoTalk', icon: '\uD83D\uDFE1', placeholder: { KO: '\uCE74\uCE74\uC624\uD1A1 \uC544\uC774\uB514 \uB610\uB294 \uD734\uB300\uD3F0 \uBC88\uD638', EN: 'KakaoTalk ID or phone number', JP: 'KakaoTalk ID\u307E\u305F\u306F\u96FB\u8A71\u756A\u53F7', 'ZH-CN': 'KakaoTalk ID\u6216\u624B\u673A\u53F7' } },
+  whatsapp: { name: 'WhatsApp', icon: '\uD83D\uDFE2', placeholder: { KO: 'WhatsApp \uC804\uD654\uBC88\uD638 (+82...)', EN: 'WhatsApp phone number (+1...)', JP: 'WhatsApp\u96FB\u8A71\u756A\u53F7 (+81...)', 'ZH-CN': 'WhatsApp\u624B\u673A\u53F7 (+86...)' } },
+  line: { name: 'LINE', icon: '\uD83D\uDFE2', placeholder: { KO: 'LINE \uC544\uC774\uB514', EN: 'LINE ID', JP: 'LINE ID', 'ZH-CN': 'LINE ID' } },
+  wechat: { name: 'WeChat', icon: '\uD83D\uDFE2', placeholder: { KO: 'WeChat \uC544\uC774\uB514', EN: 'WeChat ID', JP: 'WeChat ID', 'ZH-CN': '\u5FAE\u4FE1\u53F7' } },
+  zalo: { name: 'Zalo', icon: '\uD83D\uDD35', placeholder: { KO: 'Zalo \uC804\uD654\uBC88\uD638', EN: 'Zalo phone number', JP: 'Zalo\u96FB\u8A71\u756A\u53F7', 'ZH-CN': 'Zalo\u624B\u673A\u53F7' } },
+  email: { name: 'Email', icon: '\u2709\uFE0F', placeholder: { KO: '\uC774\uBA54\uC77C \uC8FC\uC18C', EN: 'Email address', JP: '\u30E1\u30FC\u30EB\u30A2\u30C9\u30EC\u30B9', 'ZH-CN': '\u7535\u5B50\u90AE\u4EF6\u5730\u5740' } },
+};
 export type Gender = 'female' | 'male' | 'other';
 export type AgeRange = 'teen' | '20s' | '30s' | '40s' | '50s' | '60+';
 
@@ -115,6 +144,9 @@ export interface SurveyV2State {
   safety_flags: SafetyFlag[];
   safety_followups: SafetyFollowUp[];
 
+  // Step 5 (Messenger contact for async notification)
+  messenger_contact: MessengerContact | null;
+
   // Mapped signals (최종 — Opus에 전달)
   q1_primary_goal: string | null;
   q1_goal_secondary: string | null;
@@ -175,6 +207,7 @@ export type SurveyAction =
   | { type: 'SET_SAFETY_FLAGS'; payload: SafetyFlag[] }
   | { type: 'SET_SAFETY_FOLLOWUPS'; payload: SafetyFollowUp[] }
   | { type: 'SET_FOLLOWUP_ANSWER'; payload: { flag: SafetyFlag; answer: string } }
+  | { type: 'SET_MESSENGER_CONTACT'; payload: MessengerContact }
   | { type: 'RESET' };
 
 // ─── WizardData 호환 매핑 (v1 → v2) ─────────────────────────
