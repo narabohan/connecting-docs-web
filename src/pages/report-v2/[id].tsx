@@ -5,10 +5,11 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { useRouter } from 'next/router';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
 import type { OpusRecommendationOutput } from '@/pages/api/survey-v2/final-recommendation';
 import type { SafetyFlag, SurveyLang } from '@/types/survey-v2';
+import type { TreatmentPlanV2 } from '@/pages/api/survey-v2/treatment-plan';
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -50,6 +51,9 @@ export default function ReportV2Page() {
   const [payload, setPayload] = useState<ReportPayload | null>(null);
   const [iframeStatus, setIframeStatus] = useState<IframeStatus>('loading');
   const [error, setError] = useState<string | null>(null);
+  const [treatmentPlan, setTreatmentPlan] = useState<TreatmentPlanV2 | null>(null);
+  const [phaseBStatus, setPhaseBStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const phaseBFired = useRef(false);
 
   // Doctor access check
   const isDoctor = router.query.role === 'doctor';
@@ -131,6 +135,142 @@ export default function ReportV2Page() {
       }, 300);
     }
   }, [iframeStatus, payload, isDoctor]);
+
+  // ─── Phase B: Async Treatment Plan fetch ─────────────────
+  useEffect(() => {
+    if (iframeStatus !== 'rendered' || !payload || phaseBFired.current) return;
+    phaseBFired.current = true;
+
+    // If treatment_plan already has phases (legacy full-response), skip Phase B
+    const existingPlan = payload.recommendation.treatment_plan;
+    if (existingPlan && existingPlan.phases && existingPlan.phases.length > 0) {
+      setTreatmentPlan(existingPlan as unknown as TreatmentPlanV2);
+      setPhaseBStatus('done');
+      return;
+    }
+
+    setPhaseBStatus('loading');
+
+    // Notify iframe that treatment plan is loading
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: 'TREATMENT_PLAN_LOADING' },
+      '*'
+    );
+
+    // Build Phase A summary for the treatment-plan API
+    const rec = payload.recommendation;
+    const surveyRaw = typeof window !== 'undefined'
+      ? sessionStorage.getItem('connectingdocs_v2_survey_state')
+      : null;
+    const surveyState = surveyRaw ? JSON.parse(surveyRaw) : {};
+
+    const requestBody = {
+      demographics: payload.survey_state.demographics,
+      budget: surveyState.budget || null,
+      stay_duration: surveyState.stay_duration || null,
+      management_frequency: surveyState.management_frequency || null,
+      event_info: surveyState.event_info || null,
+      phase_a_summary: {
+        ebd_devices: (rec.ebd_recommendations || []).map(d => ({
+          rank: d.rank,
+          device_name: d.device_name,
+          device_id: d.device_id,
+          confidence: d.confidence,
+          pain_level: d.pain_level,
+          downtime_level: d.downtime_level,
+        })),
+        injectables: (rec.injectable_recommendations || []).map(i => ({
+          rank: i.rank,
+          name: i.name,
+          injectable_id: i.injectable_id,
+          category: i.category,
+          confidence: i.confidence,
+        })),
+        signature_solutions: (rec.signature_solutions || []).map(s => ({
+          name: s.name,
+          devices: s.devices,
+          injectables: s.injectables,
+        })),
+        safety_flags: rec.safety_flags || {},
+        patient: {
+          age: rec.patient?.age || '',
+          gender: rec.patient?.gender || '',
+          country: rec.patient?.country || '',
+          aesthetic_goal: rec.patient?.aesthetic_goal || '',
+          top3_concerns: rec.patient?.top3_concerns || [],
+        },
+      },
+    };
+
+    (async () => {
+      try {
+        const res = await fetch('/api/survey-v2/treatment-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!res.ok || !res.body) {
+          throw new Error(`Treatment plan API error: ${res.status}`);
+        }
+
+        // Parse SSE stream
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            try {
+              const parsed = JSON.parse(line.slice(6));
+              if (parsed.type === 'done' && parsed.treatment_plan) {
+                setTreatmentPlan(parsed.treatment_plan);
+                setPhaseBStatus('done');
+
+                // Send treatment plan to iframe
+                iframeRef.current?.contentWindow?.postMessage(
+                  { type: 'UPDATE_TREATMENT_PLAN', payload: parsed.treatment_plan },
+                  '*'
+                );
+
+                // Update sessionStorage with treatment plan
+                const stored = sessionStorage.getItem('connectingdocs_v2_report');
+                if (stored) {
+                  const storedData = JSON.parse(stored);
+                  storedData.recommendation.treatment_plan = parsed.treatment_plan;
+                  sessionStorage.setItem('connectingdocs_v2_report', JSON.stringify(storedData));
+                }
+              } else if (parsed.type === 'error') {
+                console.error('[Phase B] Treatment plan error:', parsed.error);
+                setPhaseBStatus('error');
+                iframeRef.current?.contentWindow?.postMessage(
+                  { type: 'TREATMENT_PLAN_ERROR' },
+                  '*'
+                );
+              }
+            } catch {
+              // Skip malformed SSE lines
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[Phase B] Failed to fetch treatment plan:', err);
+        setPhaseBStatus('error');
+        iframeRef.current?.contentWindow?.postMessage(
+          { type: 'TREATMENT_PLAN_ERROR' },
+          '*'
+        );
+      }
+    })();
+  }, [iframeStatus, payload]);
 
   // ─── Derived values ────────────────────────────────────────
   const lang = payload?.survey_state.demographics.detected_language ?? 'EN';

@@ -611,6 +611,13 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
 
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('connectingdocs_v2_report', JSON.stringify(reportPayload));
+        // Save Phase 2 survey state for Phase B treatment-plan API
+        sessionStorage.setItem('connectingdocs_v2_survey_state', JSON.stringify({
+          budget: state.budget,
+          stay_duration: state.stay_duration,
+          management_frequency: state.management_frequency,
+          event_info: state.event_info,
+        }));
       }
 
       // ─── Save to Airtable (fire-and-forget) ─────────────────

@@ -882,46 +882,6 @@ Required JSON fields:
     }
   ],
 
-  "treatment_plan": {
-    "plan_type": "regular|visit|event",
-    "plan_type_label": "<descriptive plan label>",
-    "duration": "<plan duration>",
-    "budget_total": "<formatted total budget>",
-    "budget_breakdown": {
-      "foundation_pct": 30-40,
-      "foundation_label": "<foundation allocation description>",
-      "main_pct": 40-50,
-      "main_label": "<main treatment allocation description>",
-      "maintenance_pct": 10-20,
-      "maintenance_label": "<maintenance allocation description>",
-      "roi_note": "<why combination is more effective than single premium>"
-    },
-    "phases": [
-      {
-        "phase_number": 1,
-        "timing": "<Month 1 | Day 1-2 | D-90 ~ D-60>",
-        "timing_label": "<phase label>",
-        "procedures": [
-          {
-            "device_or_injectable": "<device/injectable name>",
-            "category": "ebd|injectable|homecare",
-            "reason_why": "<patient-language reason for this timing>",
-            "clinical_basis": "<1 sentence clinical evidence>",
-            "synergy_note": "<optional synergy with previous phase>",
-            "downtime": "<downtime estimate>",
-            "estimated_cost": "<cost range>"
-          }
-        ],
-        "phase_goal": "<what this phase achieves>",
-        "total_downtime": "<combined downtime estimate>",
-        "estimated_cost": "<phase total cost>",
-        "lifestyle_note": "<impact on daily life>"
-      }
-    ],
-    "plan_rationale": "<1-2 sentences why this plan structure>",
-    "seasonal_note": "<optional seasonal consideration>"
-  },
-
   "homecare": {
     "morning": ["<step1>", ...],
     "evening": ["<step1>", ...],
@@ -956,143 +916,6 @@ Required JSON fields:
   }
 }
 
-=== LAYER 4: TREATMENT PLAN SEQUENCING ===
-
-[ROLE]
-You are a treatment planning specialist who designs time-sequenced aesthetic treatment plans.
-Your goal is to create a realistic, clinically sound plan that considers the patient's lifestyle,
-budget, and specific circumstances — not just what procedures to recommend, but WHEN and in WHAT ORDER.
-
-[PLAN TYPE DETERMINATION]
-Determine plan_type based on survey data:
-
-IF patient.country == "KR":
-  IF patient.event_date exists:
-    plan_type = "event"
-    duration = calculate D-day from event_date
-  ELSE IF patient.management_frequency exists:
-    plan_type = "regular"
-    duration based on management_frequency:
-      "monthly" → "3개월 플랜"
-      "quarterly" → "6개월 플랜"
-      "once" → "1회 집중 플랜"
-  ELSE:
-    plan_type = "regular"
-    duration = "3개월 플랜" (default)
-
-ELSE (foreign patient):
-  IF patient.stay_duration exists:
-    plan_type = "visit"
-    duration = patient.stay_duration
-  ELSE:
-    plan_type = "visit"
-    duration = "7일" (default assumption)
-
-[SEQUENCING PRINCIPLES — APPLY TO ALL PLAN TYPES]
-
-PRINCIPLE 1: Foundation First (기반 → 메인 → 유지)
-- Phase 1 MUST start with structural/foundation procedures
-- RF Tightening, HIFU Lifting = foundation layer
-- Laser treatments, injectables = build on top of foundation
-- Rationale: "탄탄한 기반 위에 쌓아야 오래 갑니다"
-
-PRINCIPLE 2: Downtime Sequencing (다운타임 전략)
-- Schedule zero-downtime procedures first when patient needs to function normally
-- Place higher-downtime procedures at strategic points:
-  * Regular plans: before weekends or vacation
-  * Visit plans: at END of stay (recover at home country)
-  * Event plans: at EARLIEST phase (maximum recovery time before D-day)
-
-PRINCIPLE 3: Synergy Sequencing (시너지 순서)
-- RF/HIFU (collagen remodeling) → wait 2-4 weeks → Laser (pigment/texture)
-  * Reason: collagen foundation improves laser penetration efficiency
-- Laser → wait 1-2 weeks → Injectable (booster/volume)
-  * Reason: micro-channels improve absorption
-- Injectable (biostimulator like Juvelook/Sculptra) → 4-6 weeks → next session
-  * Reason: collagen synthesis peak at 4-6 weeks
-
-PRINCIPLE 4: Seasonal Awareness (계절 고려)
-- Laser treatments (especially pigment): avoid peak UV seasons (May-Sep in Northern hemisphere)
-- If current month is UV-heavy: prioritize RF/HIFU/Injectable → defer laser to fall
-- Patient language: "레이저 시술 후 자외선에 민감해지므로, 시기를 고려했습니다"
-
-PRINCIPLE 5: Age-Specific Priority
-- 20s-30s: Prevention focus — light maintenance, booster, occasional toning
-- 30s-40s: Early intervention — RF tightening + targeted treatments
-- 40s-50s: Active treatment — combination RF + HIFU + targeted procedures
-- 50s+: Intensive focus — HIFU lifting priority (but CAUTION: 볼패임 risk assessment)
-
-[REGULAR PLAN STRUCTURE]
-When plan_type = "regular":
-Generate phases based on duration:
-- 3개월: 3 phases (month 1, month 2, month 3)
-- 6개월: 4-5 phases (month 1, month 2-3, month 4, month 5-6)
-Phase template:
-- Phase 1 (Month 1): Foundation — structural tightening/lifting
-- Phase 2 (Month 2): Targeted — address primary concern
-- Phase 3 (Month 3): Refinement + Maintenance
-Budget allocation: Phase 1 30-40%, Phase 2 40-50%, Phase 3 10-20%
-SEASONAL MODIFIER: If current_month in [5,6,7,8] (UV-heavy), move laser to Phase 3 or later.
-
-[VISIT PLAN STRUCTURE]
-When plan_type = "visit":
-KEY: Foreign patients want MAXIMUM value from limited time + ability to enjoy trip.
-- Day 1: Consultation + zero-downtime procedure (gentle start, enjoy Seoul)
-- Middle days: Moderate treatments + sightseeing days
-- Last treatment day: Main treatment (highest downtime, recover at home)
-- Departure: Recovery + homecare + messenger follow-up
-CRITICAL: Never high-downtime on Day 1. Always include 1+ free/sightseeing day. Last procedure 24h before departure.
-
-[EVENT PLAN STRUCTURE]
-When plan_type = "event":
-KEY: Fixed deadline. Optimal results BY D-day, zero visible recovery on D-day.
-- D-90~D-60: Heavy lifting (RF, HIFU, deep treatments) — all downtime here
-- D-60~D-30: Refinement (targeted laser, injectable booster)
-- D-30~D-14: Final glow (light skinbooster, gentle toning)
-- D-14~D-0: HANDS OFF — homecare only
-D-30 or less: LIMITED options only — zero/low-downtime procedures, NO RF/HIFU/ablative.
-
-[DOWNTIME MATRIX — reference for sequencing]
-| Category | Example Devices | Downtime | Min Interval |
-|----------|----------------|----------|-------------|
-| RF Tightening | Thermage FLX, Oligio, Volnewmer | 0-1일 | 2주 |
-| HIFU Lifting | Ulthera, Shurink, Sofwave | 0-3일 | 3-4주 |
-| Laser Toning | PicoPlus, BBL HERO | 0-1일 | 1-3주 |
-| Fractional | LaseMD Ultra, HALO | 2-5일 | 3-6주 |
-| MN-RF | Genius, Potenza, Sylfirm | 1-3일 | 3-4주 |
-| Injectable | Skinbooster, Biostimulator, Filler | 0-1일 | 2-6주 |
-
-=== LAYER 5: BUDGET OPTIMIZATION ===
-
-[ROLE]
-You are a budget-conscious treatment advisor who maximizes ROI within the patient's stated budget.
-You NEVER recommend procedures that exceed the budget.
-You ALWAYS provide cost-benefit reasoning for every allocation decision.
-
-[BUDGET ALLOCATION RULES]
-Rule 1: Respect patient's stated budget STRICTLY. Never exceed. Offer alternatives if ideal exceeds budget.
-Rule 2: Apply 30/50/20 allocation (default): Foundation 30-40%, Main 40-50%, Maintenance 10-20%.
-  Adjust: Tightening-heavy → Foundation 40-50%, Scar/Texture → Main 50-60%.
-Rule 3: ROI Optimization — ALWAYS compare single premium vs combination approach. Present both with pros/cons.
-Rule 4: Price Reference Ranges:
-  Budget tier: ₩100,000~300,000/session | Mid: ₩300,000~700,000 | Premium: ₩700,000~1,500,000 | Luxury: ₩1,500,000+
-  Foreign patients: convert using ~₩1,300/USD
-Rule 5: Budget Language by Country:
-  KR: "월 OO만원 투자로" / "가성비 높은 조합"
-  US: "Getting the most value" / "Smart combination approach"
-  JP: "予算内で最も効果的な" / "コスパの良い組み合わせ"
-  CN: "预算内最优方案" / "性价比最高的组合"
-
-[BUDGET BRACKETS — SURVEY RESPONSE MAPPING]
-Korean patients: "light" = Budget (1-2 light/month), "standard" = Mid (standard combo), "premium" = Premium (full protocol), "vip" = Luxury (optimal everything)
-Foreign patients (per visit): "light" = Under $500, "standard" = $500-$1,500, "premium" = $1,500-$3,000, "vip" = $3,000+
-
-[PLAN LANGUAGE BY COUNTRY]
-KR: "고객님의 피부 고민과 생활 패턴에 맞춘 맞춤 관리 플랜입니다"
-US: "Here's your personalized treatment timeline — designed around your goals and schedule"
-JP: "お悩みとライフスタイルに合わせたオーダーメイドプランです"
-CN: "根据您的皮肤问题和生活习惯定制的护理方案"
-
 CRITICAL RULES:
 1. Recommend exactly 3 EBD devices and 3 injectables, ranked by confidence score
 2. Safety flags MUST override device selection — never recommend a contraindicated device
@@ -1101,10 +924,10 @@ CRITICAL RULES:
 5. Confidence scores must reflect realistic accuracy (typically 80-95 range)
 6. Patient-facing content must be in the patient's language, doctor tab in bilingual KO+EN
 7. Respond ONLY with valid JSON, no other text
-8. CONCISENESS IS CRITICAL — keep EBD/injectable HTML fields to 1-2 short sentences max. Keep summary_html under 40 words, why_fit_html under 60 words, moa_description_html under 50 words. EXCEPTION: mirror.empathy_paragraphs (~800 tokens) and confidence.reason_why (~350 tokens) can be 2-3 paragraphs — these are the emotional core of the report. The complete JSON MUST fit within 12000 tokens.
+8. CONCISENESS IS CRITICAL — keep EBD/injectable HTML fields to 1-2 short sentences max. Keep summary_html under 40 words, why_fit_html under 60 words, moa_description_html under 50 words. EXCEPTION: mirror.empathy_paragraphs (~800 tokens) and confidence.reason_why (~350 tokens) can be 2-3 paragraphs — these are the emotional core of the report. The complete JSON MUST fit within 8000 tokens.
 9. TREND & POPULARITY SCORES ARE MANDATORY — every device and injectable must have realistic trend (0-10) and popularity (0-10) scores based on the rules in the TREND & POPULARITY WEIGHTING section. Use them as tiebreaker when confidence is within 5 points.
 10. MIRROR + CONFIDENCE + DOCTOR INTELLIGENCE ARE MANDATORY — mirror (headline, empathy_paragraphs, transition) and confidence (reason_why, social_proof, commitment) must be generated for every patient using the COUNTRY-SPECIFIC EMOTIONAL LANGUAGE LIBRARY and REASON WHY KNOWLEDGE BASE. doctor_tab.patient_intelligence and doctor_tab.consultation_strategy must be fully populated.
-11. TREATMENT PLAN V2 IS MANDATORY — treatment_plan must follow the TreatmentPlanV2 schema with plan_type, budget_breakdown, and sequenced phases. Use LAYER 4 sequencing principles and LAYER 5 budget optimization. Each phase must include procedures with reason_why, clinical_basis, downtime, and estimated_cost.`;
+11. DO NOT generate treatment_plan in this response. Treatment plan is generated separately via a dedicated API. Include a simple treatment_plan placeholder: { "phases": [] }.`;
 
 /** Build dynamic system prompt — changes per patient */
 function buildDynamicSystemPrompt(
@@ -1249,7 +1072,7 @@ export default async function handler(req: Request) {
         // Use streaming API (async iterable) for Edge compatibility
         const response = await anthropic.messages.create({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 12288,
+          max_tokens: 8192,
           temperature: 0.3,
           stream: true,
           system: [
@@ -1266,7 +1089,7 @@ export default async function handler(req: Request) {
           messages: [
             {
               role: 'user',
-              content: `Generate the complete treatment recommendation JSON based on the patient data provided in the system prompt. Include treatment_plan with TreatmentPlanV2 format (plan_type, budget_breakdown, sequenced phases). CURRENT_MONTH: ${new Date().getMonth() + 1}. Output ONLY valid JSON.`,
+              content: `Generate the treatment recommendation JSON (3-Layer: Mirror + Confidence + Solution) based on the patient data provided in the system prompt. Do NOT generate treatment_plan — set treatment_plan to { "phases": [] }. CURRENT_MONTH: ${new Date().getMonth() + 1}. Output ONLY valid JSON.`,
             },
           ],
         });
