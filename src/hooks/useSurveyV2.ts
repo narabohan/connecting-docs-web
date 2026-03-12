@@ -23,7 +23,7 @@ import type {
   ManagementFrequency,
   EventInfo,
 } from '@/types/survey-v2';
-import type { FinalRecommendationRequest } from '@/pages/api/survey-v2/final-recommendation';
+import type { FinalRecommendationRequest, FinalRecommendationResponse } from '@/pages/api/survey-v2/final-recommendation';
 import { MEDICATION_FLAG_MAP, CONDITION_FLAG_MAP, FOLLOWUP_ITEMS } from '@/components/survey-v2/SafetyCheckpoint';
 
 // ─── Initial State ───────────────────────────────────────────
@@ -491,7 +491,7 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
     setError(null);
 
     try {
-      // Build the request payload for the background function
+      // Build the request payload
       const followupAnswers: Record<string, string> = {};
       for (const fu of state.safety_followups) {
         if (fu.answer) followupAnswers[fu.flag] = fu.answer;
@@ -519,42 +519,161 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
         q3_volume_logic: state.q3_volume_logic,
       };
 
-      // Fire background function (returns 202 immediately)
+      // Transition to analyzing step — show loading UX
+      setStep('analyzing');
+
+      // ─── Client-side SSE call to final-recommendation ──────
+      const res = await fetch('/api/survey-v2/final-recommendation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(surveyData),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => 'unknown');
+        throw new Error(`Analysis API error: ${res.status} — ${errText}`);
+      }
+
+      // Parse SSE stream
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error('No response body from analysis API');
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let result: FinalRecommendationResponse | null = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          // Process remaining buffer
+          if (buffer.trim()) {
+            const remaining = buffer.trim();
+            if (remaining.startsWith('data: ')) {
+              try {
+                const evt = JSON.parse(remaining.slice(6));
+                if (evt.type === 'done') {
+                  result = {
+                    recommendation_json: evt.recommendation_json,
+                    model: evt.model,
+                    usage: evt.usage,
+                  };
+                } else if (evt.type === 'error') {
+                  throw new Error(evt.error || 'Analysis stream error');
+                }
+              } catch (e) {
+                if (e instanceof Error && e.message.includes('Analysis')) throw e;
+              }
+            }
+          }
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const evt = JSON.parse(line.slice(6));
+            if (evt.type === 'done') {
+              result = {
+                recommendation_json: evt.recommendation_json,
+                model: evt.model,
+                usage: evt.usage,
+              };
+            } else if (evt.type === 'error') {
+              throw new Error(evt.error || 'Analysis stream error');
+            }
+          } catch (e) {
+            if (e instanceof Error && e.message.includes('stream error')) throw e;
+          }
+        }
+      }
+
+      if (!result) {
+        throw new Error('No result received from analysis. Output may have been truncated.');
+      }
+
+      // ─── Save to sessionStorage for report page ────────────
+      const reportId = `v2_${Date.now()}`;
+      const reportPayload = {
+        recommendation: result.recommendation_json,
+        model: result.model,
+        usage: result.usage,
+        survey_state: {
+          demographics: state.demographics,
+          safety_flags: state.safety_flags,
+          open_question_raw: state.open_question_raw,
+        },
+        created_at: new Date().toISOString(),
+      };
+
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('connectingdocs_v2_report', JSON.stringify(reportPayload));
+      }
+
+      // ─── Save to Airtable (fire-and-forget) ─────────────────
       const siteUrl = typeof window !== 'undefined'
         ? window.location.origin
         : 'https://connectingdocs.ai';
 
-      fetch('/.netlify/functions/run-analysis-background', {
+      fetch(`${siteUrl}/api/survey-v2/save-result`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          surveyData,
-          messengerContact: state.messenger_contact,
+          run_id: reportId,
           demographics: state.demographics,
           lang: state.demographics.detected_language || 'KO',
           safety_flags: state.safety_flags,
           open_question_raw: state.open_question_raw,
           chip_responses: state.chip_responses,
-          siteUrl,
-          // Phase 2 data
+          recommendation: result.recommendation_json,
+          model: result.model,
+          usage: result.usage,
+          messenger_contact: state.messenger_contact,
+          // Phase 2 fields
           budget: state.budget,
           stay_duration: state.stay_duration,
           management_frequency: state.management_frequency,
           event_info: state.event_info,
         }),
-        keepalive: true, // Keep request alive even if page closes
+        keepalive: true,
       }).catch((err) => {
-        console.warn('[submitMessenger] Background function call failed:', err);
+        console.warn('[submitMessenger] Airtable save failed:', err);
       });
 
-      // Immediately transition to thank-you screen
-      setStep('complete');
+      // ─── Send notification (fire-and-forget) ────────────────
+      fetch(`${siteUrl}/api/survey-v2/notify-report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          report_id: reportId,
+          patient_country: state.demographics.detected_country,
+          patient_age: state.demographics.d_age,
+          patient_gender: state.demographics.d_gender,
+          lang: state.demographics.detected_language || 'KO',
+          primary_goal: state.q1_primary_goal || '',
+          top_device: result.recommendation_json.ebd_recommendations?.[0]?.device_name || '',
+          top_injectable: result.recommendation_json.injectable_recommendations?.[0]?.name || '',
+          model: result.model,
+          cost_usd: 0,
+          messenger_contact: state.messenger_contact,
+        }),
+        keepalive: true,
+      }).catch((err) => {
+        console.warn('[submitMessenger] Notification failed:', err);
+      });
+
+      // ─── Redirect to report page ────────────────────────────
+      setIsLoading(false);
+      onComplete(reportId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit');
-    } finally {
+      console.error('[submitMessenger] Error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate report');
       setIsLoading(false);
     }
-  }, [state]);
+  }, [state, onComplete]);
 
   // ─── Return ───────────────────────────────────────────────
   return {

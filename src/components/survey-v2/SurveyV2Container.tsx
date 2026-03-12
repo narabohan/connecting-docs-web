@@ -16,6 +16,7 @@ import BudgetStep from './BudgetStep';
 import StayDurationStep from './StayDurationStep';
 import ManagementFrequencyStep from './ManagementFrequencyStep';
 import MessengerContactStep from './MessengerContactStep';
+import AnalyzingStep from './AnalyzingStep';
 import ThankYouStep from './ThankYouStep';
 
 interface SurveyV2ContainerProps {
@@ -198,6 +199,16 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
                 onSubmit={submitMessenger}
                 onChange={setMessengerContact}
                 isLoading={isLoading}
+              />
+            )}
+
+            {step === 'analyzing' && (
+              <AnalyzingStep
+                key="analyzing"
+                lang={lang}
+                isLoading={isLoading}
+                error={error}
+                onRetry={submitMessenger}
               />
             )}
 
