@@ -7108,7 +7108,7 @@ setTimeout(()=>{
         <div class="rec-head">
           <div class="rec-thumb ${thumbCls}">${thumbSvg}</div>
           <div class="rec-title-area">
-            <div class="rec-name">${r.device_name} ${evidenceBadgeHTML(evLevel)}</div>
+            <div class="rec-name">${r.device_name||r.subtitle||'EBD Device'} ${evidenceBadgeHTML(evLevel)}</div>
             <div class="rec-sub">${r.subtitle||''}</div>
           </div>
         </div>
@@ -7443,42 +7443,45 @@ setTimeout(()=>{
    */
   function injectPatientI18n(lang, p) {
     const dict = I18N[lang] || I18N['ko'];
+    const pName = p.name || '고객';
 
     // Patient profile
-    const nameStr = lang === 'ja' ? `${p.name} 様のカスタム施術レポート` :
-                    lang === 'zh-CN' ? `${p.name} 的定制治疗报告` :
-                    lang === 'en' ? `Personalized Treatment Report for ${p.name}` :
-                    `${p.name} 님의 맞춤 시술 리포트`;
+    const nameStr = lang === 'ja' ? `${pName} 様のカスタム施術レポート` :
+                    lang === 'zh-CN' ? `${pName} 的定制治疗报告` :
+                    lang === 'en' ? `Personalized Treatment Report for ${pName}` :
+                    `${pName} 님의 맞춤 시술 리포트`;
     dict.patientName = nameStr;
 
-    const metaStr = lang === 'ja' ? `${p.age}歳 · ${p.stay_duration}滞在プログラム` :
-                    lang === 'zh-CN' ? `${p.age}岁 · ${p.stay_duration}疗程` :
-                    lang === 'en' ? `Age ${p.age} · ${p.stay_duration} Program` :
-                    `${p.age}세 · ${p.stay_duration} 체류 프로그램`;
+    const pAge = p.age || '';
+    const pStay = p.stay_duration || '';
+    const metaParts = [];
+    if (pAge) metaParts.push(lang === 'ja' ? `${pAge}歳` : lang === 'zh-CN' ? `${pAge}岁` : lang === 'en' ? `Age ${pAge}` : `${pAge}세`);
+    if (pStay) metaParts.push(lang === 'ja' ? `${pStay}滞在プログラム` : lang === 'zh-CN' ? `${pStay}疗程` : lang === 'en' ? `${pStay} Program` : `${pStay} 체류 프로그램`);
+    const metaStr = metaParts.join(' · ') || '';
     dict.patientMeta = metaStr;
 
-    const whyStr = lang === 'ja' ? `なぜ${p.name}様に最適なのか` :
-                   lang === 'zh-CN' ? `为什么适合${p.name}` :
-                   lang === 'en' ? `Why This Fits ${p.name}` :
-                   `왜 ${p.name} 님에게 적합한가`;
+    const whyStr = lang === 'ja' ? `なぜ${pName}様に最適なのか` :
+                   lang === 'zh-CN' ? `为什么适合${pName}` :
+                   lang === 'en' ? `Why This Fits ${pName}` :
+                   `왜 ${pName} 님에게 적합한가`;
     dict.whyFitTitle = whyStr;
 
     // Detail values
-    dict.valPainSens = `${p.pain_sensitivity}/10`;
+    dict.valPainSens = `${p.pain_sensitivity||3}/10`;
     dict.valAesthetic = p.aesthetic_goal || '';
     dict.valPastTx = Array.isArray(p.past_treatments) ? p.past_treatments.join(', ') : (p.past_treatments || '없음');
     dict.valContra = Array.isArray(p.contraindications) ? p.contraindications.join(', ') : (p.contraindications || '없음');
 
-    // Top 3 concern chips
-    if (p.top3_concerns && p.top3_concerns.length >= 3) {
-      dict.chipTightening = '🔹 ' + p.top3_concerns[0];
-      dict.chipPigment = '🔹 ' + p.top3_concerns[1];
-      dict.chipTexture = '🔹 ' + p.top3_concerns[2];
+    // Top 3 concern chips (allow 1-3 concerns, not strictly 3)
+    if (p.top3_concerns && p.top3_concerns.length > 0) {
+      if (p.top3_concerns[0]) dict.chipTightening = '🔹 ' + p.top3_concerns[0];
+      if (p.top3_concerns[1]) dict.chipPigment = '🔹 ' + p.top3_concerns[1];
+      if (p.top3_concerns[2]) dict.chipTexture = '🔹 ' + p.top3_concerns[2];
     }
 
     // Doctor tab hero name
     const heroEl = document.querySelector('.d-hero-name');
-    if (heroEl) heroEl.textContent = p.name;
+    if (heroEl) heroEl.textContent = pName;
   }
 
   /**

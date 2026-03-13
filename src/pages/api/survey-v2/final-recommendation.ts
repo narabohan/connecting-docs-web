@@ -88,6 +88,7 @@ export interface OpusConfidenceLayer {
 }
 
 export interface OpusPatientProfile {
+  name?: string;
   age: string;
   gender: string;
   country: string;
@@ -96,6 +97,8 @@ export interface OpusPatientProfile {
   past_treatments: string[];
   fitzpatrick: string;
   pain_sensitivity: number;
+  stay_duration?: string;
+  contraindications?: string[];
 }
 
 export interface OpusDeviceRecommendation {
@@ -1348,6 +1351,22 @@ Output ONLY valid JSON.`,
               top3_concerns: [], past_treatments: [], fitzpatrick: '', pain_sensitivity: 3,
             };
           }
+          // Backfill patient fields from actual survey data (more reliable than AI echo)
+          const pat = recommendation.patient;
+          if (!pat.name) pat.name = (body.demographics as any)?.d_name || '고객';
+          if (!pat.age && body.demographics?.d_age) pat.age = body.demographics.d_age;
+          if (!pat.gender && body.demographics?.d_gender) pat.gender = body.demographics.d_gender;
+          if (!pat.country && body.demographics?.detected_country) pat.country = body.demographics.detected_country;
+          if (!pat.aesthetic_goal && body.q1_primary_goal) pat.aesthetic_goal = body.q1_primary_goal;
+          if ((!pat.top3_concerns || pat.top3_concerns.length === 0) && body.q3_concern_area) {
+            pat.top3_concerns = [body.q3_concern_area];
+          }
+          if ((!pat.past_treatments || pat.past_treatments.length === 0) && body.q7_past_experience) {
+            pat.past_treatments = [body.q7_past_experience];
+          }
+          if (!pat.pain_sensitivity && body.q6_pain_tolerance) pat.pain_sensitivity = parseInt(body.q6_pain_tolerance) || 3;
+          if (!pat.stay_duration && body.stay_duration) pat.stay_duration = `${body.stay_duration}일`;
+          console.log('[final-recommendation] Patient data backfilled from survey:', JSON.stringify(pat));
           if (!recommendation.safety_flags) recommendation.safety_flags = {};
           // mirror & confidence fallbacks are handled below (H-1 section)
           if (!recommendation.ebd_recommendations) recommendation.ebd_recommendations = [];
@@ -1386,7 +1405,9 @@ Output ONLY valid JSON.`,
             evidence: 5, synergy: 5, longevity: 5, roi: 5, trend: 5, popularity: 5,
           };
           const DEFAULT_EBD_PRACTICAL = { sessions: 'N/A', interval: 'N/A', duration: 'N/A', onset: 'N/A', maintain: 'N/A' };
-          for (const ebd of recommendation.ebd_recommendations) {
+          for (let ei = 0; ei < recommendation.ebd_recommendations.length; ei++) {
+            const ebd = recommendation.ebd_recommendations[ei];
+            if (!ebd.device_name) ebd.device_name = ebd.subtitle || `EBD Device ${ei + 1}`;
             if (!ebd.scores || Object.keys(ebd.scores).length === 0) {
               console.warn(`[final-recommendation] ⚠️ EBD "${ebd.device_name}" missing scores — applying defaults`);
               ebd.scores = { ...DEFAULT_EBD_SCORES };
@@ -1412,7 +1433,9 @@ Output ONLY valid JSON.`,
             elasticity: 5, evidence: 5, synergy: 5, longevity: 5,
           };
           const DEFAULT_INJ_PRACTICAL = { sessions: 'N/A', interval: 'N/A', onset: 'N/A', maintain: 'N/A' };
-          for (const inj of recommendation.injectable_recommendations) {
+          for (let ii = 0; ii < recommendation.injectable_recommendations.length; ii++) {
+            const inj = recommendation.injectable_recommendations[ii];
+            if (!inj.name) inj.name = (inj as any).product_name || inj.subtitle || `Injectable ${ii + 1}`;
             if (!inj.scores || Object.keys(inj.scores).length === 0) {
               console.warn(`[final-recommendation] ⚠️ Injectable "${inj.name}" missing scores — applying defaults`);
               inj.scores = { ...DEFAULT_INJ_SCORES };
