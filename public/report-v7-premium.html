@@ -1527,7 +1527,7 @@ button:focus-visible,.equip-chip:focus-visible,.sb-chip:focus-visible,.deb-chip:
   <div class="p-header">
     <div class="p-avatar">JY</div>
     <div>
-      <div class="p-name" data-i18n="patientName">김지영 님의 맞춤 시술 리포트</div>
+      <div class="p-name" data-i18n="patientName">맞춤 시술 리포트</div>
       <div class="p-meta" data-i18n="patientMeta">38세 · 2주 체류 프로그램</div>
     </div>
   </div>
@@ -1994,7 +1994,7 @@ button:focus-visible,.equip-chip:focus-visible,.sb-chip:focus-visible,.deb-chip:
 
   <!-- ═══ ZONE 1: Patient Header ═══ -->
   <div class="d-hero">
-    <div class="d-hero-name">김지영</div>
+    <div class="d-hero-name"></div>
     <div class="d-hero-meta">
       <span class="d-hero-flag">🇰🇷</span>
       <span class="d-hero-demos">38세 · 여성 · Fitzpatrick Type III · Patient ID: CD-2026-0306-01</span>
@@ -3047,20 +3047,20 @@ const I18N = {
     skipLink: '콘텐츠로 건너뛰기',
     tabPatient: 'Patient Report',
     tabDoctor: 'Pre-Consultation Briefing',
-    patientName: '김지영 님의 맞춤 시술 리포트',
-    patientMeta: '38세 · 2주 체류 프로그램',
+    patientName: '맞춤 시술 리포트',
+    patientMeta: '',
     secLabelTop3: 'Top 3 집중 시술 영역',
     chipTightening: '🔹 탄력 리프팅',
     chipPigment: '🔹 색소 균일화',
     chipTexture: '🔹 피부결 · 모공',
     lblPainSens: '통증 민감도',
-    valPainSens: '5/10 (보통)',
+    valPainSens: '',
     lblAesthetic: '미적 목표',
-    valAesthetic: '자연스러운 개선',
+    valAesthetic: '',
     lblPastTx: '과거 시술',
-    valPastTx: '보톡스 (6개월 전)',
+    valPastTx: '',
     lblContra: '금기사항',
-    valContra: '켈로이드 체질',
+    valContra: '',
     lblBudget: '예산 범위',
     /* ── Action Bar ── */
     btnPrint: '리포트 인쇄',
@@ -3070,24 +3070,24 @@ const I18N = {
     aiAnalysis: 'AI 분석',
     aiConfidence: '매칭 신뢰도',
     aiCardHint: '← 카드를 선택하면 설명이 변경됩니다',
-    /* ── EBD Card Descriptions ── */
-    ebdSofwaveSub: 'SUPERB™ 동시 병렬 초음파 빔 · 진피 1.5mm',
-    ebdSofwaveSummary: 'SUPERB™ 기술이 진피 1.5mm에 7개의 초음파 빔을 <strong class="ebd-hl">동시 병렬 조사</strong>하여 콜라겐 리모델링을 유도합니다. 켈로이드 체질에도 안전한 <strong class="ebd-hl">100% 비침습 방식</strong>입니다.',
-    ebdPicoSub: 'PicoWay® — 피코초(10⁻¹²s) 극초단 레이저',
-    ebdPicoSummary: '피코초 단위 극초단 펄스가 색소를 미세 입자로 분해합니다. <strong class="ebd-hl">열 축적 최소화</strong>로 켈로이드 체질 안전하며, <strong class="ebd-hl">Fitz.III 피부에 최적화</strong>된 3-파장 시스템입니다.',
-    ebdThermSub: 'AccuREP™ 실시간 임피던스 최적화 RF',
-    ebdThermSummary: '4세대 <strong class="ebd-hl">AccuREP™</strong> 기술이 실시간 조직 임피던스를 측정하여 RF 에너지를 자동 최적화합니다. 16cm² Total Tip으로 <strong class="ebd-hl">한 번에 넓은 면적</strong>의 진피·피하 콜라겐을 수축시킵니다.',
+    /* ── EBD Card Descriptions (filled dynamically) ── */
+    ebdSofwaveSub: '',
+    ebdSofwaveSummary: '',
+    ebdPicoSub: '',
+    ebdPicoSummary: '',
+    ebdThermSub: '',
+    ebdThermSummary: '',
     /* ── "Why fits me" ── */
     whyFitBtn: '왜 나에게 맞는가?',
-    whyFitTitle: '왜 김지영 님에게 적합한가',
+    whyFitTitle: '왜 이 환자에게 적합한가',
     lblPain: '통증',
     lblDowntime: '다운타임',
     lblSafety: '안전성',
     /* ── Injectable Section ── */
     secINJ: 'AI 추천 인젝터블',
-    injRejuranSub: 'c-PDRN 연어 유래 폴리뉴클레오타이드',
-    injJuvelookSub: 'PDLLA + HA 하이브리드 · 콜라겐 바이오스티뮬레이터',
-    injSculptraSub: 'PLLA 점진적 콜라겐 합성 유도체',
+    injRejuranSub: '',
+    injJuvelookSub: '',
+    injSculptraSub: '',
     /* ── Radar ── */
     radarTitle: '5-Axis Radar',
     radarSub: '추천 조합의 효과 분포',
@@ -3163,7 +3163,7 @@ const I18N = {
     notOwnedBadge: '미보유',
     /* ── Signature Solution Data (doctor-provided Korean fields) ── */
     /* These remain in SIGNATURE_SOLUTIONS data as they are doctor-authored content */
-    aiInjBody: '피부 <strong class="ai-hl-amber" data-term="HA">히알루론산</strong> 및 <strong>생체 자극 성분</strong>을 활용한 인젝터블은 EBD와 시너지를 극대화합니다. 김지영 님의 색소·피부결 목표에 최적화된 <strong class="ai-hl-amber">PDRN/PN 기반 리쥬란</strong>을 1순위로 추천하며, Juvelook과 Sculptra로 볼륨과 탄력을 보완합니다.',
+    aiInjBody: '',
     ebdPicoSub: '피코초(10⁻¹²s) 레이저 · 표피~진피상층',
     ebdPicoSummary: '피코초 단위 초고속 레이저가 <strong class="ebd-hl">멜라닌 색소를 미세 분쇄</strong>합니다. Fitz.III에 최적화된 저열 파장으로 <strong class="ebd-hl">PIH 위험을 최소화</strong>합니다.',
     ebdThermSub: '모노폴라 RF · 진피 전층 3~4mm',
@@ -3193,7 +3193,7 @@ const I18N = {
     secSynergyMatrix: 'EBD + 인젝터블 시너지 매트릭스',
     synergyTitle: '시너지 분석',
     txPlanTitle: '시술 계획',
-    whyFitTitle: '왜 김지영 님에게 적합한가',
+    whyFitTitle: '왜 이 환자에게 적합한가',
     moaPico: 'Picosecond · 피코초 레이저',
     gaugePain: '통증',
     gaugeDT: '다운타임',
@@ -5415,16 +5415,8 @@ const INJ_WEIGHT = 0.85;  /* INJ scores × 0.85 for radar display */
 
 /* ── Practical Treatment Info (per device/injectable) ──
    Replaces abstract 0-100 score numbers under radar */
-const EBD_PRACTICAL = [
-  {sessions:'3~5회', interval:'4주', duration:'40분', onset:'2~4주', maintain:'12~18개월'},  // SOFWAVE
-  {sessions:'5~10회', interval:'2~3주', duration:'20분', onset:'1~2주', maintain:'6~12개월'},  // PICO
-  {sessions:'1~2회', interval:'6개월', duration:'60분', onset:'2~6주', maintain:'12~24개월'},  // THERMAGE
-];
-const INJ_PRACTICAL = [
-  {sessions:'3~5회', interval:'2~3주', duration:'30분', onset:'1~2주', maintain:'6~12개월'},  // Rejuran
-  {sessions:'3~4회', interval:'3~4주', duration:'20분', onset:'2~3주', maintain:'9~12개월'},  // Juvelook
-  {sessions:'3회', interval:'4~6주', duration:'30분', onset:'4~8주', maintain:'18~24개월'},   // Sculptra
-];
+const EBD_PRACTICAL = []; // Filled dynamically by injectEBDData()
+const INJ_PRACTICAL = []; // Filled dynamically by injectINJData()
 
 /* ── Pain & Downtime: Word Labels ── */
 const PAIN_WORDS = ['','Minimal','Mild','Moderate','Significant','Intense'];
@@ -5432,230 +5424,29 @@ const DT_WORDS = ['','None','1~2일','3~5일','1~2주','2주+'];
 
 /* ── Signature Solutions (Doctor's branded protocols) ──
    Future: loaded from Airtable Protocol_Packages table */
-const SIGNATURE_SOLUTIONS = [
-  /* ── Dr. Kim Soo-Hyun (Seoul Aesthetic Clinic) ── */
-  {
-    id:'sig-ultimate-lift',
-    name:'Ultimate Lift & Glow',
-    doctor:'Dr. Kim Soo-Hyun',
-    clinic:'Seoul Aesthetic Clinic',
-    avatar:'KS', avatarColor:'#22d3ee',
-    combo:[{type:'ebd',name:'SOFWAVE'},{type:'ebd',name:'PICO'},{type:'inj',name:'Rejuran'}],
-    fitFactors:{tightening:4,brightening:5,texture:4}, pain:4, dt:2,
-    sessions:'3회 세트', totalDuration:'2주', interval:'7일 간격',
-    tags:['리프팅','광채','빠른회복'],
-    /* ── Doctor-provided detail fields (from Airtable) ── */
-    indication:'피부 탄력 저하 + 색소 침착 + 재생이 필요한 복합 고민',
-    patientSegment:'30~40대 초반, 탄력+톤 동시 개선 원하는 분',
-    differentiationPoints:'SOFWAVE 콜라겐 부스팅과 PICO 색소 타겟팅을 Rejuran 재생력으로 완성하는 삼중 시너지. 단 2주 만에 눈에 띄는 변화.',
-    protocol:[
-      {step:1, device:'SOFWAVE', area:'전체 얼굴', setting:'1.5mm SUPERB™ 300shots', note:'콜라겐 리모델링'},
-      {step:2, device:'PICO', area:'전체 얼굴 + 색소 부위', setting:'1064nm Toning 3pass', note:'멜라닌 분해'},
-      {step:3, device:'Rejuran', area:'전체 얼굴 MTS', setting:'c-PDRN 2cc', note:'조직 재생 촉진'}
-    ],
-    downtimeDetail:'시술 직후 약간의 홍조(1~2일), 일상생활 바로 가능',
-    painDetail:'마취크림 도포 후 진행, 통증 중간 수준 (VAS 4/10)',
-    priceRange:'₩₩₩',
-    priceNote:'120~180만원 (3회 세트 기준)',
-    evidenceLinks:['doi:10.1111/jocd.14902','doi:10.1016/j.jaad.2022.01.013'],
-    aftercare:'시술 후 48시간 자외선 차단 필수, 3일간 자극성 화장품 자제',
-    expectedResults:'2주 후 톤 개선 체감, 4주 후 탄력 효과 극대화',
-    strengths:['복합 시너지 전문','빠른 회복','맞춤 에너지 조절'],
-    reservationUrl:'https://booking.example.com/dr-kim',
-    mapUrl:'https://map.kakao.com/dr-kim-clinic'
-  },
-  {
-    id:'sig-deep-remodel',
-    name:'Deep Remodel Package',
-    doctor:'Dr. Kim Soo-Hyun',
-    clinic:'Seoul Aesthetic Clinic',
-    avatar:'KS', avatarColor:'#22d3ee',
-    combo:[{type:'ebd',name:'THERMAGE'},{type:'inj',name:'Sculptra'}],
-    fitFactors:{tightening:5,lifting:3,volume:5}, pain:4, dt:3,
-    sessions:'2회 세트', totalDuration:'6주', interval:'4주 간격',
-    tags:['볼륨','구조재건','장기효과'],
-    indication:'얼굴 볼륨 소실 + 피부 이완이 동시에 진행된 경우',
-    patientSegment:'40대 이상, 장기적 구조 재건 원하는 분',
-    differentiationPoints:'THERMAGE RF 전층 가열로 즉각 타이트닝 + Sculptra PLLA로 3~6개월에 걸친 자연스러운 콜라겐 볼륨 재건.',
-    protocol:[
-      {step:1, device:'THERMAGE FLX', area:'전체 얼굴+턱선', setting:'Total Tip 900shots', note:'RF 전층 가열'},
-      {step:2, device:'Sculptra', area:'관자놀이+볼+턱선', setting:'2vial, 격자 주입', note:'PLLA 콜라겐 유도'}
-    ],
-    downtimeDetail:'시술 후 붓기 3~5일, 멍 가능성 있음 (7일)',
-    painDetail:'THERMAGE 진동 마취 + Sculptra 리도카인 혼합, 통증 중상 (VAS 4/10)',
-    priceRange:'₩₩₩₩',
-    priceNote:'200~280만원 (2회 세트 기준)',
-    evidenceLinks:['doi:10.1097/DSS.0000000000003123'],
-    aftercare:'Sculptra 주입 부위 5-5-5 마사지 필수, 1주간 사우나/음주 자제',
-    expectedResults:'즉시 타이트닝 체감, 볼륨은 4~8주 후 점진적 개선, 효과 18~24개월 지속',
-    strengths:['심부 리모델링','장기 지속','자연스러운 볼륨'],
-    reservationUrl:'https://booking.example.com/dr-kim',
-    mapUrl:'https://map.kakao.com/dr-kim-clinic'
-  },
-  /* ── Dr. Lee Min-Ji (Gangnam Derma Center) ── */
-  {
-    id:'sig-glow-hydra',
-    name:'Glow Hydration Boost',
-    doctor:'Dr. Lee Min-Ji',
-    clinic:'Gangnam Derma Center',
-    avatar:'LM', avatarColor:'#fb7185',
-    combo:[{type:'ebd',name:'PICO'},{type:'inj',name:'Juvelook'}],
-    fitFactors:{brightening:5,texture:5,volume:2}, pain:2, dt:1,
-    sessions:'5~8회', totalDuration:'3개월', interval:'2주 간격',
-    tags:['수분','광채','낮은통증'],
-    indication:'피부 톤 칙칙함 + 수분 부족 + 미세 주름',
-    patientSegment:'20~30대, 통증 적고 자연스러운 광채를 원하는 분',
-    differentiationPoints:'PICO 토닝으로 깨끗한 캔버스를 만들고 Juvelook PDLLA+HA로 안쪽부터 수분광을 채우는 저자극 프로토콜.',
-    protocol:[
-      {step:1, device:'PICO', area:'전체 얼굴', setting:'532nm+1064nm Dual Toning', note:'색소 정리'},
-      {step:2, device:'Juvelook', area:'전체 얼굴', setting:'PDLLA+HA 2cc 물광주사', note:'수분+콜라겐 부스팅'}
-    ],
-    downtimeDetail:'거의 없음 — 시술 직후 메이크업 가능',
-    painDetail:'마취크림 사용, 통증 낮음 (VAS 2/10)',
-    priceRange:'₩₩',
-    priceNote:'60~100만원 (5회 기준)',
-    evidenceLinks:['doi:10.1111/dsu.2023.00124'],
-    aftercare:'시술 당일 세안 가능, 자외선 차단 권장',
-    expectedResults:'3회 후 톤 개선 체감, 5회 후 수분광 효과 극대화',
-    strengths:['저자극 전문','수분광 특화','20대 피부 관리'],
-    reservationUrl:'https://booking.example.com/dr-lee',
-    mapUrl:'https://map.kakao.com/dr-lee-clinic'
-  },
-  {
-    id:'sig-lee-antiaging',
-    name:'Anti-Aging Complete',
-    doctor:'Dr. Lee Min-Ji',
-    clinic:'Gangnam Derma Center',
-    avatar:'LM', avatarColor:'#fb7185',
-    combo:[{type:'ebd',name:'SOFWAVE'},{type:'ebd',name:'THERMAGE'},{type:'inj',name:'Sculptra'}],
-    fitFactors:{tightening:5,lifting:4,volume:4}, pain:4, dt:3,
-    sessions:'4회 세트', totalDuration:'8주', interval:'2~4주 간격',
-    tags:['안티에이징','종합','프리미엄'],
-    indication:'복합적 노화 진행 — 탄력+볼륨+처짐 동시 개선 필요',
-    patientSegment:'40~50대, 종합 안티에이징 원하는 프리미엄 고객',
-    differentiationPoints:'SOFWAVE 표층 + THERMAGE 심부를 이중 레이어로 타이트닝하고 Sculptra로 소실된 볼륨까지 한 번에 해결하는 프리미엄 종합 솔루션.',
-    protocol:[
-      {step:1, device:'SOFWAVE', area:'전체 얼굴', setting:'SUPERB 1.5mm 400shots', note:'표층 콜라겐'},
-      {step:2, device:'THERMAGE FLX', area:'전체+턱선', setting:'Total Tip 600shots', note:'심부 RF'},
-      {step:3, device:'Sculptra', area:'볼+관자놀이', setting:'1~2vial', note:'볼륨 재건'}
-    ],
-    downtimeDetail:'홍조 1~2일, 붓기 3~5일, 멍 가능 7일',
-    painDetail:'단계별 마취 진행, 통증 중상 (VAS 4~5/10)',
-    priceRange:'₩₩₩₩₩',
-    priceNote:'300~400만원 (4회 세트 기준)',
-    evidenceLinks:['doi:10.1097/DSS.0000000000003456'],
-    aftercare:'각 시술 후 48시간 자외선 차단, Sculptra 마사지 필수',
-    expectedResults:'1개월 후 탄력 개선, 3개월 후 볼륨 재건 완성, 효과 18~24개월',
-    strengths:['종합 안티에이징','이중 레이어 전문','VIP 케어'],
-    reservationUrl:'https://booking.example.com/dr-lee',
-    mapUrl:'https://map.kakao.com/dr-lee-clinic'
-  },
-  /* ── Dr. Park Ji-Won (Apgujeong Beauty Lab) ── */
-  {
-    id:'sig-park-bright',
-    name:'Crystal Bright Protocol',
-    doctor:'Dr. Park Ji-Won',
-    clinic:'Apgujeong Beauty Lab',
-    avatar:'PJ', avatarColor:'#a78bfa',
-    combo:[{type:'ebd',name:'PICO'},{type:'inj',name:'Rejuran'},{type:'inj',name:'Juvelook'}],
-    fitFactors:{brightening:5,texture:5,tightening:2}, pain:3, dt:1,
-    sessions:'6~10회', totalDuration:'2개월', interval:'1~2주 간격',
-    tags:['브라이트닝','피부결','수분광'],
-    indication:'색소 침착 + 피부결 거칠어짐 + 전체적 톤 다운',
-    patientSegment:'20~30대, 피부결과 톤을 동시에 개선하고 싶은 분',
-    differentiationPoints:'PICO로 멜라닌을 정밀 제거하고 Rejuran 재생력 + Juvelook 수분광으로 맑고 건강한 피부결을 완성하는 트리플 브라이트닝.',
-    protocol:[
-      {step:1, device:'PICO', area:'색소 부위 집중', setting:'1064nm+595nm Toning', note:'멜라닌 제거'},
-      {step:2, device:'Rejuran', area:'전체 얼굴', setting:'c-PDRN 2cc MTS', note:'세포 재생'},
-      {step:3, device:'Juvelook', area:'전체 얼굴', setting:'PDLLA+HA 물광', note:'수분+광채'}
-    ],
-    downtimeDetail:'미세 붉음 수시간, 다음날 정상 생활 가능',
-    painDetail:'마취크림 사용, 통증 중간 (VAS 3/10)',
-    priceRange:'₩₩₩',
-    priceNote:'150~220만원 (8회 기준)',
-    evidenceLinks:['doi:10.1111/jocd.15234'],
-    aftercare:'시술 후 자외선 차단 철저, 미백 세럼 병행 권장',
-    expectedResults:'4회 후 톤 밝아짐 체감, 8회 후 피부결+수분광 완성',
-    strengths:['색소 치료 전문','트리플 시너지','자연스러운 결과'],
-    reservationUrl:'https://booking.example.com/dr-park',
-    mapUrl:'https://map.kakao.com/dr-park-clinic'
-  },
-  {
-    id:'sig-park-volume',
-    name:'V-Line Sculpt',
-    doctor:'Dr. Park Ji-Won',
-    clinic:'Apgujeong Beauty Lab',
-    avatar:'PJ', avatarColor:'#a78bfa',
-    combo:[{type:'ebd',name:'THERMAGE'},{type:'inj',name:'Sculptra'},{type:'inj',name:'Juvelook'}],
-    fitFactors:{volume:5,lifting:4,tightening:4}, pain:4, dt:3,
-    sessions:'3회 세트', totalDuration:'6주', interval:'3주 간격',
-    tags:['볼륨','V-라인','리프팅'],
-    indication:'하안면 처짐 + 볼륨 소실 + V-라인 윤곽 보정',
-    patientSegment:'30~40대, 자연스러운 V-라인 리프팅 원하는 분',
-    differentiationPoints:'THERMAGE RF로 하안면 윤곽을 잡고 Sculptra 구조 볼륨 + Juvelook 미세 볼륨으로 자연스러운 V-라인을 완성.',
-    protocol:[
-      {step:1, device:'THERMAGE FLX', area:'하안면+턱선', setting:'Total Tip 450shots', note:'윤곽 타이트닝'},
-      {step:2, device:'Sculptra', area:'중안면+관자놀이', setting:'2vial', note:'구조 볼륨'},
-      {step:3, device:'Juvelook', area:'볼+이마', setting:'PDLLA+HA 1cc', note:'미세 볼륨+광채'}
-    ],
-    downtimeDetail:'붓기 3~5일, 멍 가능 5~7일',
-    painDetail:'마취크림+진동마취, 통증 중상 (VAS 4/10)',
-    priceRange:'₩₩₩₩',
-    priceNote:'200~300만원 (3회 세트 기준)',
-    evidenceLinks:['doi:10.1097/PRS.0000000000009567'],
-    aftercare:'Sculptra 5-5-5 마사지, 1주간 격한 운동/사우나 자제',
-    expectedResults:'즉시 윤곽 개선, 6주 후 볼륨 재건, V-라인 효과 12~18개월 지속',
-    strengths:['V-라인 조각 전문','3D 볼륨 설계','자연스러운 윤곽'],
-    reservationUrl:'https://booking.example.com/dr-park',
-    mapUrl:'https://map.kakao.com/dr-park-clinic'
-  },
-];
+const SIGNATURE_SOLUTIONS = []; // Filled dynamically by injectSignatureSolutions()
 
 /* EBD scores per card: [tight, lift, vol, bright, text, evid, syn, long, roi, trend, pop]
    Source: Airtable EBD_Device table */
-const EBD_SCORES = [
-  [2,2,1,1,1,4,2,4,3,5,3],   // SOFWAVE (recrrFvfO7UGUrUPT)
-  [2,1,1,5,4,5,4,4,4,4,3],   // PicoSure Pro (rec9yUBX4qLDrzbsw)
-  [5,3,1,2,3,5,4,4,3,3,5],   // THERMAGE FLX (rec4rOsELM4rQTLTj)
-];
+const EBD_SCORES = []; // Filled dynamically by injectEBDData()
 
 /* EBD Pain & Downtime (for chip indicators) */
-const EBD_PD = [
-  {pain:4, dt:1},   // SOFWAVE (High pain, Low downtime)
-  {pain:3, dt:1},   // PICO (Med pain, Low downtime)
-  {pain:4, dt:3},   // THERMAGE (High pain, Med downtime)
-];
+const EBD_PD = []; // Filled dynamically by injectEBDData()
 
 /* Injectable scores per card: [tight, lift, vol, bright, text, evid, syn, long, roi, trend, pop]
    Source: Airtable Skin_booster table */
-const INJ_SCORES = [
-  [4,1,1,3,4,5,5,3,4,3,5],   // Rejuran Healer (recVe9qMW56RldV9Z)
-  [4,1,2,3,5,5,5,4,4,5,5],   // Juvelook (recHFZfFTh9rum4vS)
-  [4,3,5,2,3,5,4,5,4,3,4],   // Sculptra (rec76JqazufNggwKn)
-];
+const INJ_SCORES = []; // Filled dynamically by injectINJData()
 
 /* Injectable Pain & Downtime (for chip indicators) */
-const INJ_PD = [
-  {pain:3, dt:1},   // Rejuran (Med pain, Low downtime)
-  {pain:2, dt:1},   // Juvelook (Low pain, Low downtime)
-  {pain:3, dt:3},   // Sculptra (Med pain, Med downtime)
-];
+const INJ_PD = []; // Filled dynamically by injectINJData()
 
 let activeEBD = 0;
 let activeINJ = 0;
 
 /* ══════════ EBD & INJECTABLE SELECTION ══════════ */
 /* ══ A-7: AI Description Panel Data ══ */
-const AI_EBD_DESC = [
-  {name:'SOFWAVE', conf:94, body:'김지영 님의 <strong>Fitzpatrick III</strong> 피부 타입과 <strong class="ai-hl-cyan">켈로이드 체질</strong>을 고려하여, AI가 비침습 에너지 기반 장비를 최우선으로 선별했습니다. SOFWAVE의 SUPERB™ 기술은 표피 손상 없이 진피 1.5mm에 정확히 에너지를 전달하므로, 켈로이드 유발 위험이 극히 낮으면서도 <strong class="ai-hl-cyan">탄력 개선 효과</strong>를 극대화할 수 있습니다. 2주 체류 일정 내 다운타임도 최소입니다.'},
-  {name:'PICO 레이저', conf:89, body:'<strong class="ai-hl-cyan">색소 균일화</strong>가 주요 니즈인 김지영 님에게, PICO 레이저의 피코초 단위 극초단 펄스는 멜라닌을 미세 입자로 분쇄하여 빠른 대사 배출을 유도합니다. 비열적(non-thermal) 메커니즘이므로 <strong>켈로이드 유발 위험 없이</strong> 색소 개선이 가능하며, SOFWAVE와의 <strong class="ai-hl-cyan">EBD 조합 시너지</strong>가 높습니다.'},
-  {name:'THERMAGE FLX', conf:82, body:'<strong>진피 전층(2~4mm)</strong>에 RF 에너지를 전달하여 즉각적 콜라겐 수축 + 장기적 리모델링을 동시에 유도합니다. AccuREP™ 기술이 <strong class="ai-hl-cyan">실시간 임피던스 측정</strong>으로 최적 에너지를 자동 조절하므로, Fitz.III에서도 안전한 시술이 가능합니다. 다만 켈로이드 체질에서는 에너지 레벨 조절이 필요합니다.'}
-];
-const AI_INJ_DESC = [
-  {name:'Rejuran', conf:91, body:'EBD 시술과의 <strong class="ai-hl-rose">시너지 극대화</strong>를 위해 AI가 선별한 인젝터블입니다. Rejuran(PN/HB)은 연어 유래 PDRN 성분이 손상된 진피 세포의 <strong>자체 재생력을 활성화</strong>하여, SOFWAVE의 콜라겐 리모델링 효과와 상보적으로 작용합니다. 켈로이드 체질에서도 안전한 성분 프로파일을 갖추고 있으며, <strong class="ai-hl-rose">피부결 · 탄력 동시 개선</strong>에 최적화된 선택입니다.'},
-  {name:'Juvelook', conf:88, body:'PDLLA(Poly-D,L-Lactic Acid) + 비가교 HA 복합 성분이 <strong class="ai-hl-rose">콜라겐 신생과 즉각적 수분 공급</strong>을 동시에 제공합니다. PICO 레이저로 색소 개선 후 Juvelook을 시술하면, 레이저가 만든 미세 채널을 통해 성분 흡수율이 높아지는 <strong>콤보 시너지</strong> 효과가 있습니다.'},
-  {name:'Sculptra', conf:79, body:'PLLA(Poly-L-Lactic Acid) 성분이 <strong class="ai-hl-rose">진피~피하지방층</strong>에서 점진적 콜라겐 합성을 유도합니다. 볼륨 회복과 리프팅 효과가 2~3개월에 걸쳐 자연스럽게 나타나며, 효과 지속 기간이 18~24개월로 깁니다. 다만 켈로이드 체질에서는 <strong>결절 형성 모니터링</strong>이 필요합니다.'}
-];
+const AI_EBD_DESC = []; // Filled dynamically by injectEBDData()
+const AI_INJ_DESC = []; // Filled dynamically by injectINJData()
 
 function updateAIDesc(type, idx){
   const data = type==='ebd' ? AI_EBD_DESC[idx] : AI_INJ_DESC[idx];
@@ -6035,16 +5826,8 @@ function toggleSurveyDetail(btn){
 /* ══════════ SKIN LAYER MARKERS ══════════ */
 const LAYER_Y = {epi:50, upd:135, lod:240, fat:340, smas:410, musc:470};
 
-const EBD_DATA = [
-  {name:'SOFWAVE', layer:'upd', color:'var(--cyan)'},
-  {name:'PICO', layer:'epi', color:'var(--cyan)'},
-  {name:'THERMAGE', layer:'lod', color:'var(--cyan)'},
-];
-const INJ_DATA = [
-  {name:'Rejuran', layer:'upd', color:'var(--rose)'},
-  {name:'Juvelook', layer:'upd', color:'var(--rose)'},
-  {name:'Sculptra', layer:'lod', color:'var(--rose)'},
-];
+const EBD_DATA = []; // Filled dynamically by injectEBDData()
+const INJ_DATA = []; // Filled dynamically by injectINJData()
 
 function updateSkinMarkers(){
   const markers = document.getElementById('skin-markers');
@@ -7399,7 +7182,7 @@ setTimeout(()=>{
         <div class="rec-head">
           <div class="rec-thumb ${thumbCls}">${thumbSvg}</div>
           <div class="rec-title-area">
-            <div class="rec-name">${r.product_name} ${evidenceBadgeHTML(evLevel)}</div>
+            <div class="rec-name">${r.name||r.product_name||'Injectable'} ${evidenceBadgeHTML(evLevel)}</div>
             <div class="rec-sub">${r.subtitle||''}</div>
           </div>
         </div>
@@ -7424,7 +7207,7 @@ setTimeout(()=>{
               ${moaHTML}
               <div class="moa-inline-summary" onclick="openMoaModal('${moaId}')" role="button" tabindex="0">
                 <span class="moa-inline-icon">🔬</span>
-                <span class="moa-inline-text"><strong style="color:var(--text-hi);font-size:11px;">${r.moa_summary_title||r.product_name}</strong><br><span style="color:var(--text-2);font-size:10px;">${r.moa_summary_short||''}</span></span>
+                <span class="moa-inline-text"><strong style="color:var(--text-hi);font-size:11px;">${r.moa_summary_title||r.name||r.product_name}</strong><br><span style="color:var(--text-2);font-size:10px;">${r.moa_summary_short||''}</span></span>
                 <span class="moa-inline-btn">View MOA →</span>
               </div>
               <div class="moa-content">${r.moa_description_html||''}</div>
@@ -7489,8 +7272,8 @@ setTimeout(()=>{
       injChips.innerHTML = injRecs.map((r, i) => {
         const inPlan = i < 2 ? ' active-in-plan' : '';
         const owned = r.clinic_owned !== false ? ' inj-owned' : ' inj-not-owned';
-        const devId = (r.product_name||'inj').toLowerCase().replace(/[^a-z0-9]/g,'');
-        return `<div class="deb-chip${owned}${inPlan}" data-deb="${devId}" data-type="inj" onclick="toggleEquipChip(this)" role="switch" aria-checked="${i<2}" tabindex="0"><span class="deb-toggle" ${i<2?'style="color:var(--rose)"':''}>${i<2?'●':'○'}</span> ${r.product_name||''}</div>`;
+        const devId = (r.name||r.product_name||'inj').toLowerCase().replace(/[^a-z0-9]/g,'');
+        return `<div class="deb-chip${owned}${inPlan}" data-deb="${devId}" data-type="inj" onclick="toggleEquipChip(this)" role="switch" aria-checked="${i<2}" tabindex="0"><span class="deb-toggle" ${i<2?'style="color:var(--rose)"':''}>${i<2?'●':'○'}</span> ${r.name||r.product_name||''}</div>`;
       }).join('');
     }
   }
@@ -7516,9 +7299,9 @@ setTimeout(()=>{
     if (injRecs) {
       injRecs.forEach((r, i) => {
         html += `
-        <div class="d-proto-card inj-card" draggable="true" data-proto-device="${(r.product_name||'').toLowerCase()}" data-proto-idx="${ebdRecs?ebdRecs.length+i:i}">
+        <div class="d-proto-card inj-card" draggable="true" data-proto-device="${(r.name||r.product_name||'').toLowerCase()}" data-proto-idx="${ebdRecs?ebdRecs.length+i:i}">
           <div class="d-proto-head">
-            <span class="d-proto-name">${r.product_name||''}</span>
+            <span class="d-proto-name">${r.name||r.product_name||''}</span>
             <span class="d-proto-type">${r.skinbooster_category||'INJ'}</span>
           </div>
           <div class="d-proto-body">${r.protocol_note||r.subtitle||''}</div>
@@ -7709,6 +7492,10 @@ setTimeout(()=>{
     EBD_PD.length = 0;
     EBD_PRACTICAL.length = 0;
     AI_EBD_DESC.length = 0;
+    EBD_DATA.length = 0;
+
+    // Skin layer mapping for depth chart
+    const LAYER_MAP = {'표피':'epi','진피상층':'upd','진피하층':'lod','피하지방':'fat','SMAS':'smas','근육':'musc'};
 
     recs.forEach(r => {
       const s = r.scores || {};
@@ -7718,7 +7505,8 @@ setTimeout(()=>{
       ]);
       EBD_PD.push({pain: r.pain_level||1, dt: r.downtime_level||1});
       EBD_PRACTICAL.push(r.practical || {sessions:'N/A', interval:'N/A', duration:'N/A', onset:'N/A', maintain:'N/A'});
-      AI_EBD_DESC.push({name: r.device_name || 'EBD Device', conf: r.confidence||70, body: r.ai_description_html||'<p>(설명 준비 중)</p>'});
+      AI_EBD_DESC.push({name: r.device_name || 'EBD Device', conf: r.confidence||70, body: r.ai_description_html||r.why_fit_html||'<p>(설명 준비 중)</p>'});
+      EBD_DATA.push({name: r.device_name||'EBD', layer: LAYER_MAP[r.skin_layer]||r.skin_layer||'upd', color:'var(--cyan)'});
     });
 
     // Update i18n for EBD card content
@@ -7743,6 +7531,9 @@ setTimeout(()=>{
     INJ_PD.length = 0;
     INJ_PRACTICAL.length = 0;
     AI_INJ_DESC.length = 0;
+    INJ_DATA.length = 0;
+
+    const LAYER_MAP = {'표피':'epi','진피상층':'upd','진피하층':'lod','피하지방':'fat','SMAS':'smas','근육':'musc'};
 
     recs.forEach(r => {
       const s = r.scores || {};
@@ -7752,7 +7543,8 @@ setTimeout(()=>{
       ]);
       INJ_PD.push({pain: r.pain_level||1, dt: r.downtime_level||1});
       INJ_PRACTICAL.push(r.practical || {sessions:'N/A', interval:'N/A', onset:'N/A', maintain:'N/A'});
-      AI_INJ_DESC.push({name: r.product_name, conf: r.confidence||0, body: r.ai_description_html||''});
+      AI_INJ_DESC.push({name: r.name||r.product_name||'Injectable', conf: r.confidence||70, body: r.why_fit_html||r.summary_html||'<p>(설명 준비 중)</p>'});
+      INJ_DATA.push({name: r.name||r.product_name||'INJ', layer: LAYER_MAP[r.skin_layer]||r.skin_layer||'upd', color:'var(--rose)'});
     });
   }
 
