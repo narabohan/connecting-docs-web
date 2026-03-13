@@ -1252,7 +1252,7 @@ export default async function handler(req: Request) {
         // Use streaming API (async iterable) for Edge compatibility
         const response = await anthropic.messages.create({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 8192,
+          max_tokens: 5120,
           temperature: 0.3,
           stream: true,
           system: [
@@ -1271,11 +1271,14 @@ export default async function handler(req: Request) {
               role: 'user',
               content: `Generate the treatment recommendation JSON (3-Layer: Mirror + Confidence + Solution) based on the patient data provided in the system prompt. Do NOT generate treatment_plan — set treatment_plan to { "phases": [] }. CURRENT_MONTH: ${new Date().getMonth() + 1}.
 
-TOKEN BUDGET RULES:
-- Limit to top 3 EBD devices, top 2 injectables, top 2 signature solutions.
-- summary_html: 1-2 sentences max. why_fit_html: 2-3 short numbered reasons. moa_description_html: 1-2 sentences.
-- Set homecare arrays to empty []. Set doctor_tab fields to brief strings.
-- mirror.empathy_paragraphs: 2 paragraphs. confidence.reason_why: 1-2 paragraphs.
+TOKEN BUDGET RULES (CRITICAL — you MUST stay under 4500 tokens):
+- Limit to top 2 EBD devices, top 2 injectables, top 1 signature solution.
+- summary_html: 1 sentence max. why_fit_html: 2 short numbered reasons only. moa_description_html: 1 sentence.
+- ai_description_html: 1-2 sentences max.
+- Set homecare to { morning:[], evening:[], weekly:[], avoid:[] }.
+- Set doctor_tab fields to minimal strings. Set consultation_strategy arrays to empty [].
+- mirror.empathy_paragraphs: 1 short paragraph. confidence.reason_why: 1 short paragraph. confidence.social_proof: 1 sentence.
+- Do NOT include lengthy HTML. Keep all HTML values under 200 characters each.
 
 MANDATORY FIELDS (never omit):
 - Every EBD device MUST have: scores (all 11 keys: tightening, lifting, volume, brightening, texture, evidence, synergy, longevity, roi, trend, popularity), practical (all 5 keys), why_fit_html, summary_html, subtitle, ai_description_html.
@@ -1318,6 +1321,11 @@ Output ONLY valid JSON.`,
         }
 
         console.log(`[final-recommendation] Stream complete. stop_reason=${stopReason}, output_tokens=${outputTokens}, text_length=${fullText.length}`);
+
+        // Send a heartbeat so client knows stream is alive during JSON parsing
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ type: 'progress', chars: fullText.length, phase: 'parsing' })}\n\n`)
+        );
 
         // Warn if output was truncated due to max_tokens
         if (stopReason === 'max_tokens') {
@@ -1465,9 +1473,21 @@ Output ONLY valid JSON.`,
           model: modelUsed,
           usage: { input_tokens: inputTokens, output_tokens: outputTokens },
         };
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ type: 'done', ...result, stop_reason: stopReason })}\n\n`)
-        );
+        try {
+          const donePayload = JSON.stringify({ type: 'done', ...result, stop_reason: stopReason });
+          console.log(`[final-recommendation] Sending done event (${donePayload.length} chars)`);
+          controller.enqueue(encoder.encode(`data: ${donePayload}\n\n`));
+        } catch (serializeErr) {
+          console.error('[final-recommendation] Failed to serialize done event:', serializeErr);
+          // Fallback: send minimal result
+          const minimal = {
+            type: 'done',
+            recommendation_json: recommendation,
+            model: modelUsed,
+            usage: { input_tokens: inputTokens, output_tokens: outputTokens },
+          };
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(minimal)}\n\n`));
+        }
         controller.close();
       } catch (error) {
         console.error('[final-recommendation] Error:', error);
