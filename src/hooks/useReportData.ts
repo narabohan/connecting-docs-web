@@ -5,6 +5,8 @@
 //  Phase 1: Airtable fallback will be activated here.
 //
 //  Converts OpusRecommendationOutput (snake_case) → ReportV7Data (camelCase).
+//  Validates through Zod schema before returning.
+//  NEXT_PUBLIC_AI_MOCK=true → returns mock data (no sessionStorage needed).
 //  Returns: { data, status, error, lang }
 //
 //  NO any/unknown types allowed.
@@ -40,6 +42,8 @@ import type {
   OpusHomecare,
   OpusDoctorTab,
 } from '@/pages/api/survey-v2/final-recommendation';
+import { validateRecommendation } from '@/validators/report-v7-validator';
+import { MOCK_REPORT_V7 } from '@/mocks/report-v7-mock';
 
 // ─── Status / Return types ───────────────────────────────────
 type LoadStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -279,6 +283,9 @@ function convertPayloadToReportV7Data(
   };
 }
 
+// ─── Mock mode check ──────────────────────────────────────────
+const IS_MOCK_MODE = process.env.NEXT_PUBLIC_AI_MOCK === 'true';
+
 // ═══════════════════════════════════════════════════════════════
 //  Hook
 // ═══════════════════════════════════════════════════════════════
@@ -293,6 +300,19 @@ export function useReportData(reportId: string | undefined): UseReportDataReturn
     if (!reportId) return;
 
     setStatus('loading');
+
+    // ─── Mock mode: return mock data immediately ──────────────
+    if (IS_MOCK_MODE) {
+      console.info('[useReportData] Mock mode active — using MOCK_REPORT_V7');
+      const { data: validated, warnings } = validateRecommendation(MOCK_REPORT_V7);
+      if (warnings.length > 0) {
+        console.warn('[useReportData] Mock validation warnings:', warnings);
+      }
+      setLang((validated.lang as SurveyLang) || 'KO');
+      setData(validated);
+      setStatus('success');
+      return;
+    }
 
     try {
       // ─── Phase 0: sessionStorage ────────────────────────────
@@ -313,7 +333,14 @@ export function useReportData(reportId: string | undefined): UseReportDataReturn
       setLang(detectedLang);
 
       const reportData = convertPayloadToReportV7Data(payload);
-      setData(reportData);
+
+      // ─── Validate through Zod ────────────────────────────────
+      const { data: validated, warnings } = validateRecommendation(reportData);
+      if (warnings.length > 0) {
+        console.warn('[useReportData] Validation warnings:', warnings);
+      }
+
+      setData(validated);
       setStatus('success');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load report data.';
