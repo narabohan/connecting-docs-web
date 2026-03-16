@@ -235,6 +235,26 @@ export const DEFAULT_DOCTOR_TAB: DoctorTab = {
   },
 };
 
+// ─── Budget Estimate ─────────────────────────────────────────
+export interface BudgetSegment {
+  label: string;
+  category: 'foundation' | 'main' | 'maintenance';
+  percentage: number;
+  amount: string;
+}
+
+export interface BudgetEstimate {
+  totalRange: string;
+  segments: BudgetSegment[];
+  roiNote: string;
+}
+
+export const DEFAULT_BUDGET_ESTIMATE: BudgetEstimate = {
+  totalRange: '',
+  segments: [],
+  roiNote: '',
+};
+
 // ─── ReportV7Data (전체 리포트 데이터) ─────────────────────────
 export interface ReportV7Data {
   lang: string;
@@ -251,6 +271,7 @@ export interface ReportV7Data {
   signatureSolutions: SignatureSolution[];
   treatmentPlan: TreatmentPlan;
   homecare: HomecareGuide;
+  budgetEstimate: BudgetEstimate;
   // Doctor tab (Phase 0: read-only view)
   doctorTab: DoctorTab;
 }
@@ -268,6 +289,7 @@ export const DEFAULT_REPORT_V7_DATA: ReportV7Data = {
   signatureSolutions: [],
   treatmentPlan: DEFAULT_TREATMENT_PLAN,
   homecare: DEFAULT_HOMECARE_GUIDE,
+  budgetEstimate: DEFAULT_BUDGET_ESTIMATE,
   doctorTab: DEFAULT_DOCTOR_TAB,
 };
 

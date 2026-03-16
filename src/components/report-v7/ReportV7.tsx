@@ -3,8 +3,8 @@
 //
 //  3-Depth layout:
 //    Depth 0 — Immediately visible (profile, mirror, cards, radar)
-//    Depth 1 — Click/expand (card details, why-fit, gauges)
-//    Depth 2 — Lazy-loaded (treatment plan, skin layer, doctor tab)
+//    Depth 1 — Click/expand (card details, why-fit, gauges, signature, homecare)
+//    Depth 2 — Lazy-loaded (treatment plan, budget, doctor tab)
 //
 //  Props ≤ 2: data (ReportV7Data), lang (SurveyLang)
 // ═══════════════════════════════════════════════════════════════
@@ -20,18 +20,16 @@ import { ConfidenceLayerView } from './ConfidenceLayer';
 import { SafetyFlags } from './SafetyFlags';
 import { EBDSection } from './EBDSection';
 import { InjectableSection } from './InjectableSection';
+import { SignatureSolutions } from './SignatureSolutions';
+import { HomecareSection } from './HomecareSection';
+import { BudgetSection } from './BudgetSection';
+import { LegalDisclaimer } from './LegalDisclaimer';
 import './report-v7.css';
 
 // ─── Depth 2: Lazy-loaded sections ───────────────────────────
 const LazyTreatmentPlan = lazy(() =>
   import('./sections/TreatmentPlanSection').catch(() => ({
     default: () => <PlaceholderSection name="Treatment Plan" />,
-  })),
-);
-
-const LazySkinLayer = lazy(() =>
-  import('./sections/SkinLayerSection').catch(() => ({
-    default: () => <PlaceholderSection name="Skin Layer Diagram" />,
   })),
 );
 
@@ -157,18 +155,40 @@ function ReportV7Inner({ data }: { data: ReportV7Data }) {
             <InjectableSection recommendations={data.injectableRecommendations} lang={lang} />
           </ReportErrorBoundary>
 
+          {/* ─ Depth 1: Signature Solutions (EBD + Injectable 조합) ─ */}
+          <ReportErrorBoundary componentName="SignatureSolutions">
+            <SignatureSolutions solutions={data.signatureSolutions} lang={lang} />
+          </ReportErrorBoundary>
+
+          {/* ─ Depth 1: Homecare Guide ─ */}
+          <ReportErrorBoundary componentName="HomecareSection">
+            <HomecareSection homecare={data.homecare} lang={lang} />
+          </ReportErrorBoundary>
+
           {/* ─ Depth 2: Treatment Plan (lazy) ─ */}
           <LazySection name="TreatmentPlan">
-            <LazyTreatmentPlan />
+            <LazyTreatmentPlan
+              plan={data.treatmentPlan}
+              status="done"
+              lang={lang}
+            />
           </LazySection>
 
-          {/* ─ Depth 2: Skin Layer Diagram (lazy) ─ */}
-          <LazySection name="SkinLayerDiagram">
-            <LazySkinLayer />
-          </LazySection>
+          {/* ─ Depth 2: Budget Estimate ─ */}
+          <ReportErrorBoundary componentName="BudgetSection">
+            <BudgetSection
+              budget={data.budgetEstimate}
+              status="done"
+              lang={lang}
+            />
+          </ReportErrorBoundary>
 
-          {/* ─ Disclaimer + CTA ─ */}
-          <div className="rv7-p-disclaimer">{t('disclaimer.text')}</div>
+          {/* ─ Legal Disclaimer (§13 Compliance) ─ */}
+          <ReportErrorBoundary componentName="LegalDisclaimer">
+            <LegalDisclaimer lang={lang} />
+          </ReportErrorBoundary>
+
+          {/* ─ CTA ─ */}
           <div className="rv7-p-cta">
             <button className="rv7-p-cta-btn">{t('action.bookConsult')}</button>
           </div>
@@ -182,7 +202,15 @@ function ReportV7Inner({ data }: { data: ReportV7Data }) {
         aria-hidden={activeTab !== 'doctor'}
       >
         <LazySection name="DoctorTab">
-          <LazyDoctorTab />
+          <LazyDoctorTab
+            doctorData={data.doctorTab}
+            patient={data.patient}
+            safetyFlags={data.safetyFlags}
+            ebdList={data.ebdRecommendations}
+            injectableList={data.injectableRecommendations}
+            status="done"
+            lang={lang}
+          />
         </LazySection>
       </div>
     </>
