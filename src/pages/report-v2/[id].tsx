@@ -1,35 +1,26 @@
 // ═══════════════════════════════════════════════════════════════
-//  ConnectingDocs Report v2 Page — Dark Premium Design (v7)
-//  Loads report-v7-premium.html in an iframe and injects Opus
-//  recommendation data via postMessage bridge.
+//  ConnectingDocs Report v2 Page — React Component Rendering
+//
+//  Phase 0: Replaced iframe + postMessage architecture with
+//  direct React component rendering via ReportV7.
+//
+//  Data flow: sessionStorage → useReportData hook → ReportV7
+//  (Phase 1: Airtable fallback will be added in useReportData)
+//
+//  Preserved: CTA bottom bar, consultation request, i18n
+//  Removed: iframe, iframeRef, iframeStatus, postMessage,
+//           opacity transitions, LANG_MAP, buildSafetyFlagsObject
+//
+//  report-v7-premium.html is NOT deleted (archived for Phase 0 reference).
 // ═══════════════════════════════════════════════════════════════
 
 import { useRouter } from 'next/router';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import Head from 'next/head';
-import type { OpusRecommendationOutput } from '@/pages/api/survey-v2/final-recommendation';
-import type { SafetyFlag, SurveyLang } from '@/types/survey-v2';
-
-// ─── Types ─────────────────────────────────────────────────────
-
-interface ReportPayload {
-  recommendation: OpusRecommendationOutput;
-  model: string;
-  usage: { input_tokens: number; output_tokens: number };
-  survey_state: {
-    demographics: {
-      detected_language: SurveyLang;
-      detected_country: string;
-      d_gender: string;
-      d_age: string;
-    };
-    safety_flags: SafetyFlag[];
-    open_question_raw: string;
-  };
-  created_at: string;
-}
-
-type IframeStatus = 'loading' | 'ready' | 'rendered' | 'error';
+import type { SurveyLang } from '@/types/survey-v2';
+import { useReportData, type StoredReportPayload } from '@/hooks/useReportData';
+import { ReportV7 } from '@/components/report-v7/ReportV7';
+import { SkeletonReport } from '@/components/report-v7/SkeletonReport';
 
 // ─── Consultation CTA i18n ─────────────────────────────────────
 const CTA_TEXT: Record<string, { title: string; desc: string; btn: string; sent: string }> = {
@@ -59,13 +50,12 @@ const CTA_TEXT: Record<string, { title: string; desc: string; btn: string; sent:
   },
 };
 
-// ─── Lang Mapping ──────────────────────────────────────────────
-// v7-premium.html uses lowercase lang codes
-const LANG_MAP: Record<SurveyLang, string> = {
-  KO: 'ko',
-  EN: 'en',
-  JP: 'ja',
-  'ZH-CN': 'zh-CN',
+// ─── Error messages i18n ──────────────────────────────────────
+const ERROR_BTN: Record<SurveyLang, string> = {
+  KO: '설문 다시 시작',
+  EN: 'Start Survey Again',
+  JP: '調査をもう一度始める',
+  'ZH-CN': '重新开始问卷',
 };
 
 // ─── Component ─────────────────────────────────────────────────
@@ -73,153 +63,78 @@ const LANG_MAP: Record<SurveyLang, string> = {
 export default function ReportV2Page() {
   const router = useRouter();
   const { id } = router.query;
+  const reportId = typeof id === 'string' ? id : undefined;
 
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [payload, setPayload] = useState<ReportPayload | null>(null);
-  const [iframeStatus, setIframeStatus] = useState<IframeStatus>('loading');
-  const [error, setError] = useState<string | null>(null);
+  const { data, status, error, lang } = useReportData(reportId);
+
   const [consultationSent, setConsultationSent] = useState(false);
   const [consultationLoading, setConsultationLoading] = useState(false);
 
-  // ─── Load report data from sessionStorage ──────────────────
-  useEffect(() => {
-    if (!id) return;
-
+  // ─── Consultation Request Handler ──────────────────────────
+  const handleConsultationRequest = useCallback(async () => {
+    if (!reportId || !data) return;
+    setConsultationLoading(true);
     try {
-      const raw =
-        typeof window !== 'undefined'
-          ? sessionStorage.getItem('connectingdocs_v2_report')
-          : null;
+      // Read raw payload for the consultation API
+      const raw = typeof window !== 'undefined'
+        ? sessionStorage.getItem('connectingdocs_v2_report')
+        : null;
 
-      if (!raw) {
-        setError('Report data not found. Please complete the survey first.');
-        return;
+      if (raw) {
+        const payload: StoredReportPayload = JSON.parse(raw);
+        const res = await fetch('/api/consultation/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            report_id: reportId,
+            patient_profile: payload.recommendation.patient,
+            demographics: payload.survey_state.demographics,
+            safety_flags: payload.survey_state.safety_flags,
+          }),
+        });
+        if (res.ok) {
+          setConsultationSent(true);
+        }
       }
-
-      const data: ReportPayload = JSON.parse(raw);
-      setPayload(data);
     } catch (err) {
-      setError('Failed to load report data.');
+      console.error('[ReportV2] Consultation request failed:', err);
+    } finally {
+      setConsultationLoading(false);
     }
-  }, [id]);
+  }, [reportId, data]);
 
-  // ─── Listen for iframe messages ────────────────────────────
-  useEffect(() => {
-    function handleMessage(event: MessageEvent) {
-      if (!event.data || typeof event.data !== 'object') return;
-
-      switch (event.data.type) {
-        case 'IFRAME_READY':
-          setIframeStatus('ready');
-          break;
-        case 'REPORT_READY':
-          if (event.data.success) {
-            setIframeStatus('rendered');
-          } else {
-            console.error('[ReportV2] Render error:', event.data.error);
-            setIframeStatus('error');
-          }
-          break;
-      }
-    }
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, []);
-
-  // ─── Send data to iframe when both ready ───────────────────
-  useEffect(() => {
-    if (iframeStatus !== 'ready' || !payload || !iframeRef.current?.contentWindow) return;
-
-    const lang = LANG_MAP[payload.survey_state.demographics.detected_language] || 'en';
-
-    // Build the data object that initReport() expects
-    const reportData = {
-      ...payload.recommendation,
-      lang,
-      safety_flags: buildSafetyFlagsObject(payload.survey_state.safety_flags),
-    };
-
-    iframeRef.current.contentWindow.postMessage(
-      { type: 'INIT_REPORT', payload: reportData },
-      '*'
-    );
-
-    // Force patient-only view (hide doctor tab)
-    setTimeout(() => {
-      iframeRef.current?.contentWindow?.postMessage(
-        { type: 'SWITCH_TAB', tab: 'patient' },
-        '*'
-      );
-    }, 300);
-  }, [iframeStatus, payload]);
-
-  // ─── Derived values ────────────────────────────────────────
-  const lang = payload?.survey_state.demographics.detected_language ?? 'EN';
-
-  // ─── Loading State ─────────────────────────────────────────
-  if (!payload && !error) {
+  // ─── Loading State (idle / loading) ─────────────────────────
+  if (status === 'idle' || status === 'loading') {
     return (
-      <div className="report-v7-loading">
+      <>
         <Head>
           <title>ConnectingDocs Report</title>
           <meta name="robots" content="noindex, nofollow" />
         </Head>
-        <div className="report-v7-loading__spinner" />
-        <p className="report-v7-loading__text">
-          {lang === 'KO'
-            ? '리포트를 불러오는 중...'
-            : lang === 'JP'
-            ? 'レポートを読み込み中...'
-            : lang === 'ZH-CN'
-            ? '正在加载报告...'
-            : 'Loading your report...'}
-        </p>
-        <style jsx>{`
-          .report-v7-loading {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: #09090b;
-            color: #a1a1aa;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-          }
-          .report-v7-loading__spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(34, 211, 238, 0.15);
-            border-top-color: #22d3ee;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 16px;
-          }
-          .report-v7-loading__text {
-            font-size: 14px;
-          }
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
+        <div style={{
+          minHeight: '100vh',
+          background: '#09090b',
+        }}>
+          <SkeletonReport lang={lang} />
+        </div>
+      </>
     );
   }
 
-  // ─── Error State ───────────────────────────────────────────
-  if (error) {
+  // ─── Error State ─────────────────────────────────────────────
+  if (status === 'error' || !data) {
     return (
       <div className="report-v7-error">
         <Head>
           <title>ConnectingDocs Report — Error</title>
           <meta name="robots" content="noindex, nofollow" />
         </Head>
-        <p className="report-v7-error__msg">{error}</p>
+        <p className="report-v7-error__msg">{error ?? 'Unknown error'}</p>
         <button
           onClick={() => router.push('/survey-v2')}
           className="report-v7-error__btn"
         >
-          {lang === 'KO' ? '설문 다시 시작' : 'Start Survey Again'}
+          {ERROR_BTN[lang] ?? ERROR_BTN.EN}
         </button>
         <style jsx>{`
           .report-v7-error {
@@ -256,122 +171,56 @@ export default function ReportV2Page() {
     );
   }
 
-  // ─── Consultation Request Handler ──────────────────────────
-  const handleConsultationRequest = async () => {
-    if (!id || !payload) return;
-    setConsultationLoading(true);
-    try {
-      const res = await fetch('/api/consultation/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          report_id: id,
-          patient_profile: payload.recommendation.patient,
-          demographics: payload.survey_state.demographics,
-          safety_flags: payload.survey_state.safety_flags,
-        }),
-      });
-      if (res.ok) {
-        setConsultationSent(true);
-      }
-    } catch (err) {
-      console.error('[ReportV2] Consultation request failed:', err);
-    } finally {
-      setConsultationLoading(false);
-    }
-  };
-
+  // ─── Derived values ──────────────────────────────────────────
   const ctaText = CTA_TEXT[lang] || CTA_TEXT['EN'];
 
-  // ─── Main Report (iframe) ──────────────────────────────────
+  // ─── Main Report (direct React rendering) ────────────────────
   return (
     <>
       <Head>
         <title>
-          ConnectingDocs Report | {payload?.recommendation.patient.aesthetic_goal}
+          ConnectingDocs Report | {data.patient.aestheticGoal || 'Premium Report'}
         </title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 
       <div className="report-v7-wrapper">
-        {/* Loading overlay while iframe initializes */}
-        {iframeStatus === 'loading' && (
-          <div className="report-v7-overlay">
-            <div className="report-v7-overlay__spinner" />
-            <p>Initializing report...</p>
-          </div>
-        )}
+        {/* Direct React component — no iframe */}
+        <div className="report-v7-content">
+          <ReportV7 data={data} lang={lang} />
+        </div>
 
-        {/* The iframe loads the full v7-premium HTML */}
-        <iframe
-          ref={iframeRef}
-          src="/report-v7-premium.html"
-          className="report-v7-iframe"
-          title="ConnectingDocs Premium Report"
-          sandbox="allow-scripts allow-same-origin"
-          style={{
-            opacity: iframeStatus === 'rendered' ? 1 : 0,
-            transition: 'opacity 0.4s ease',
-          }}
-        />
         {/* ─── Consultation CTA (floating bottom bar) ─── */}
-        {iframeStatus === 'rendered' && (
-          <div className="report-v7-cta">
-            {consultationSent ? (
-              <p className="report-v7-cta__sent">{ctaText.sent}</p>
-            ) : (
-              <>
-                <div className="report-v7-cta__text">
-                  <strong>{ctaText.title}</strong>
-                  <span>{ctaText.desc}</span>
-                </div>
-                <button
-                  className="report-v7-cta__btn"
-                  onClick={handleConsultationRequest}
-                  disabled={consultationLoading}
-                >
-                  {consultationLoading ? '...' : ctaText.btn}
-                </button>
-              </>
-            )}
-          </div>
-        )}
+        <div className="report-v7-cta">
+          {consultationSent ? (
+            <p className="report-v7-cta__sent">{ctaText.sent}</p>
+          ) : (
+            <>
+              <div className="report-v7-cta__text">
+                <strong>{ctaText.title}</strong>
+                <span>{ctaText.desc}</span>
+              </div>
+              <button
+                className="report-v7-cta__btn"
+                onClick={handleConsultationRequest}
+                disabled={consultationLoading}
+              >
+                {consultationLoading ? '...' : ctaText.btn}
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       <style jsx>{`
         .report-v7-wrapper {
-          position: fixed;
-          inset: 0;
+          min-height: 100vh;
           background: #09090b;
-          overflow: hidden;
+          padding-bottom: 80px;
         }
-        .report-v7-iframe {
+        .report-v7-content {
           width: 100%;
-          height: 100%;
-          border: none;
-          background: #09090b;
-        }
-        .report-v7-overlay {
-          position: absolute;
-          inset: 0;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          background: #09090b;
-          color: #a1a1aa;
-          font-family: 'Inter', system-ui, -apple-system, sans-serif;
-          font-size: 14px;
-          z-index: 10;
-        }
-        .report-v7-overlay__spinner {
-          width: 40px;
-          height: 40px;
-          border: 3px solid rgba(34, 211, 238, 0.15);
-          border-top-color: #22d3ee;
-          border-radius: 50%;
-          animation: spin 0.8s linear infinite;
-          margin-bottom: 16px;
+          max-width: 100%;
         }
         .report-v7-cta {
           position: fixed;
@@ -437,50 +286,7 @@ export default function ReportV2Page() {
           from { transform: translateY(100%); }
           to { transform: translateY(0); }
         }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
       `}</style>
     </>
   );
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  Safety Flags Converter
-//  Converts SafetyFlag[] array to the object format
-//  that report-v7-premium.html's injectSafetyFlags() expects.
-// ═══════════════════════════════════════════════════════════════
-
-function buildSafetyFlagsObject(flags: SafetyFlag[]): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-
-  for (const flag of flags) {
-    switch (flag) {
-      case 'SAFETY_ISOTRETINOIN':
-        result.isotretinoin = { status: 'active' };
-        break;
-      case 'SAFETY_ANTICOAGULANT':
-        result.anticoagulant = { status: 'active' };
-        break;
-      case 'SAFETY_PREGNANCY':
-        result.pregnancy = true;
-        break;
-      case 'SAFETY_KELOID':
-        result.keloid_history = true;
-        break;
-      case 'SAFETY_PHOTOSENSITIVITY':
-        result.photosensitive_drug = true;
-        break;
-      case 'SAFETY_ADVERSE_HISTORY':
-        result.adverse_history = true;
-        break;
-      default:
-        // Handle HORMONAL_MELASMA, RETINOID_PAUSE
-        if (flag === 'HORMONAL_MELASMA') result.hormonal_melasma = true;
-        if (flag === 'RETINOID_PAUSE') result.retinoid_pause = true;
-        break;
-    }
-  }
-
-  return result;
 }

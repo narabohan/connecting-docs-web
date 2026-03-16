@@ -24,7 +24,7 @@ import { SignatureSolutions } from './SignatureSolutions';
 import { HomecareSection } from './HomecareSection';
 import { BudgetSection } from './BudgetSection';
 import { LegalDisclaimer } from './LegalDisclaimer';
-import './report-v7.css';
+// report-v7.css is imported globally in _app.tsx (Next.js requirement)
 
 // ─── Depth 2: Lazy-loaded sections ───────────────────────────
 const LazyTreatmentPlan = lazy(() =>

@@ -1,4 +1,5 @@
 import "@/styles/globals.css";
+import "@/components/report-v7/report-v7.css";
 import type { AppProps } from "next/app";
 import { AuthProvider } from "@/context/AuthContext";
 
