@@ -15,7 +15,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { useRouter } from 'next/router';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import type { SurveyLang } from '@/types/survey-v2';
 import { useReportData, type StoredReportPayload } from '@/hooks/useReportData';
@@ -69,6 +69,39 @@ export default function ReportV2Page() {
 
   const [consultationSent, setConsultationSent] = useState(false);
   const [consultationLoading, setConsultationLoading] = useState(false);
+  const crmTracked = useRef(false);
+
+  // ─── CRM: Track report view (best-effort, fire once) ──────
+  useEffect(() => {
+    if (status !== 'success' || !data || !reportId || crmTracked.current) return;
+    crmTracked.current = true;
+
+    const raw = typeof window !== 'undefined'
+      ? sessionStorage.getItem('connectingdocs_v2_report')
+      : null;
+
+    if (!raw) return;
+
+    try {
+      const payload: StoredReportPayload = JSON.parse(raw);
+      const demographics = payload.survey_state?.demographics;
+      if (!demographics) return;
+
+      fetch('/api/crm/track-view', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          run_id: reportId,
+          country: demographics.detected_country,
+          lang: demographics.detected_language,
+        }),
+      }).catch((err) => {
+        console.error('[ReportV2] CRM track-view failed (non-blocking):', err);
+      });
+    } catch {
+      // Silent fail — CRM tracking must never break report viewing
+    }
+  }, [status, data, reportId]);
 
   // ─── Consultation Request Handler ──────────────────────────
   const handleConsultationRequest = useCallback(async () => {

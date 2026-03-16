@@ -18,6 +18,7 @@ import type {
 import type {
   OpusRecommendationOutput,
 } from './final-recommendation';
+import { findOrCreateUser, updateStage } from '@/services/crm-service';
 
 // ─── Airtable Config ─────────────────────────────────────────
 
@@ -224,6 +225,42 @@ export default async function handler(
     const recordId = result.id as string;
 
     console.log(`[save-result] ✅ Saved run_id=${body.run_id} → Airtable record=${recordId}`);
+
+    // ── CRM Integration (best-effort — never blocks survey save) ──
+    try {
+      const crmUser = await findOrCreateUser({
+        email: body.user_email,
+        firebase_uid: body.user_id,
+        country: body.demographics.detected_country,
+        lang: body.lang,
+      });
+
+      await updateStage(crmUser.airtable_id, 'survey_completed');
+
+      // Link SurveyV2_Results record to Users via crm_user_id field
+      try {
+        await fetch(
+          `${AIRTABLE_URL}/${recordId}`,
+          {
+            method: 'PATCH',
+            headers: {
+              Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              fields: { crm_user_id: crmUser.airtable_id },
+            }),
+          }
+        );
+      } catch (linkErr) {
+        console.error('[save-result] CRM link update failed (non-blocking):', linkErr);
+      }
+
+      console.log(`[save-result] CRM updated: user=${crmUser.airtable_id} stage=survey_completed`);
+    } catch (crmErr) {
+      // CRM failure must NOT block the survey save response
+      console.error('[save-result] CRM update failed (non-blocking):', crmErr);
+    }
 
     return res.status(200).json({
       success: true,
