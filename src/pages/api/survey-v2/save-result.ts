@@ -53,9 +53,15 @@ export interface SaveResultRequest {
   user_email?: string;
 }
 
+export interface SaveResultConfirm {
+  saved_at: string;   // ISO timestamp
+  record_id: string;  // Airtable record ID
+}
+
 export interface SaveResultResponse {
   success: boolean;
   airtable_record_id?: string;
+  confirm?: SaveResultConfirm;
   error?: string;
 }
 
@@ -265,6 +271,10 @@ export default async function handler(
     return res.status(200).json({
       success: true,
       airtable_record_id: recordId,
+      confirm: {
+        saved_at: new Date().toISOString(),
+        record_id: recordId,
+      },
     });
   } catch (err) {
     console.error('[save-result] Network error:', err);
