@@ -476,26 +476,23 @@ function renderPatientHeader(
 // ─── Main Render Pipeline ────────────────────────────────────
 
 /**
- * Full report rendering pipeline
- * 1. Load i18n dictionary
- * 2. Apply i18n translations
- * 3. Bind Opus data to DOM
- * 4. Inject safety banners
+ * Shared i18n + patient header setup used by both views.
+ * Returns the loaded dictionary and i18n result, or null on failure.
  */
-export async function renderReport(
+async function loadI18nAndHeader(
   document: Document,
   options: RenderReportOptions
-): Promise<RenderResult> {
-  const errors: string[] = [];
-  const { opusOutput, lang, safetyFlags, dictionaryPath } = options;
+): Promise<{
+  dictionary: I18nDictionary;
+  i18nResult: { textApplied: number; htmlApplied: number };
+} | null> {
+  const { opusOutput, lang, dictionaryPath } = options;
 
-  // 1. Load & apply i18n
   let dictionary: I18nDictionary;
   try {
     dictionary = await loadReportDictionary(dictionaryPath);
-  } catch (e) {
-    errors.push(`Failed to load i18n dictionary: ${e}`);
-    return { success: false, i18nApplied: { textApplied: 0, htmlApplied: 0 }, safetyBannerInjected: false, devicesBound: 0, injectablesBound: 0, errors };
+  } catch {
+    return null;
   }
 
   const placeholders: I18nPlaceholders = {
@@ -506,11 +503,31 @@ export async function renderReport(
   };
 
   const i18nResult = applyReportI18n(document, dictionary, lang, placeholders);
-
-  // 2. Patient header
   renderPatientHeader(document, opusOutput);
 
-  // 3. EBD device cards
+  return { dictionary, i18nResult };
+}
+
+/**
+ * Patient-only rendering pipeline.
+ * Renders everything the patient sees: devices, injectables,
+ * signature solutions, treatment plan, homecare, safety banner.
+ * Does NOT render the doctor tab.
+ */
+export async function renderPatientView(
+  document: Document,
+  options: RenderReportOptions
+): Promise<RenderResult> {
+  const errors: string[] = [];
+  const { opusOutput, lang, safetyFlags } = options;
+
+  const setup = await loadI18nAndHeader(document, options);
+  if (!setup) {
+    errors.push('Failed to load i18n dictionary');
+    return { success: false, i18nApplied: { textApplied: 0, htmlApplied: 0 }, safetyBannerInjected: false, devicesBound: 0, injectablesBound: 0, errors };
+  }
+
+  // EBD device cards
   let devicesBound = 0;
   for (let i = 0; i < opusOutput.ebd_recommendations.length; i++) {
     if (renderDeviceCard(document, opusOutput.ebd_recommendations[i], i, lang)) {
@@ -518,7 +535,7 @@ export async function renderReport(
     }
   }
 
-  // 4. Injectable cards
+  // Injectable cards
   let injectablesBound = 0;
   for (let i = 0; i < opusOutput.injectable_recommendations.length; i++) {
     if (renderInjectableCard(document, opusOutput.injectable_recommendations[i], i)) {
@@ -526,19 +543,19 @@ export async function renderReport(
     }
   }
 
-  // 5. Signature solutions
+  // Signature solutions
   renderSignatureSolutions(document, opusOutput);
 
-  // 6. Treatment plan
+  // Treatment plan
   renderTreatmentPlan(document, opusOutput);
 
-  // 7. Homecare
+  // Homecare
   renderHomecare(document, opusOutput);
 
-  // 8. Safety banner (patient-facing)
+  // Safety banner (patient-facing)
   let safetyBannerInjected = false;
   if (safetyFlags.length > 0) {
-    const bannerData = buildPatientSafetyBanner(safetyFlags, dictionary, lang);
+    const bannerData = buildPatientSafetyBanner(safetyFlags, setup.dictionary, lang);
     const bannerHtml = renderSafetyBannerHTML(bannerData);
     const bannerSlot = document.querySelector('[data-field="safety-banner"]');
     if (bannerSlot) {
@@ -547,12 +564,132 @@ export async function renderReport(
     }
   }
 
-  // 9. Doctor tab
+  // Hide doctor tab if present
+  const doctorTab = document.querySelector('#doctor-tab');
+  if (doctorTab) {
+    (doctorTab as HTMLElement).style.display = 'none';
+  }
+
+  return {
+    success: errors.length === 0,
+    i18nApplied: setup.i18nResult,
+    safetyBannerInjected,
+    devicesBound,
+    injectablesBound,
+    errors,
+  };
+}
+
+/**
+ * Doctor-only rendering pipeline.
+ * Renders doctor tab content: clinical summary, protocols,
+ * parameter guidance, contraindications, alternatives, safety flags.
+ * Also renders patient data for context (header, devices, injectables).
+ */
+export async function renderDoctorView(
+  document: Document,
+  options: RenderReportOptions
+): Promise<RenderResult> {
+  const errors: string[] = [];
+  const { opusOutput, lang, safetyFlags } = options;
+
+  const setup = await loadI18nAndHeader(document, options);
+  if (!setup) {
+    errors.push('Failed to load i18n dictionary');
+    return { success: false, i18nApplied: { textApplied: 0, htmlApplied: 0 }, safetyBannerInjected: false, devicesBound: 0, injectablesBound: 0, errors };
+  }
+
+  // Bind patient data for doctor context
+  let devicesBound = 0;
+  for (let i = 0; i < opusOutput.ebd_recommendations.length; i++) {
+    if (renderDeviceCard(document, opusOutput.ebd_recommendations[i], i, lang)) {
+      devicesBound++;
+    }
+  }
+
+  let injectablesBound = 0;
+  for (let i = 0; i < opusOutput.injectable_recommendations.length; i++) {
+    if (renderInjectableCard(document, opusOutput.injectable_recommendations[i], i)) {
+      injectablesBound++;
+    }
+  }
+
+  renderSignatureSolutions(document, opusOutput);
+  renderTreatmentPlan(document, opusOutput);
+
+  // Doctor tab
   renderDoctorTab(document, opusOutput, safetyFlags);
 
   return {
     success: errors.length === 0,
-    i18nApplied: { textApplied: i18nResult.textApplied, htmlApplied: i18nResult.htmlApplied },
+    i18nApplied: setup.i18nResult,
+    safetyBannerInjected: false,
+    devicesBound,
+    injectablesBound,
+    errors,
+  };
+}
+
+/**
+ * Full report rendering pipeline (legacy — renders both views).
+ * @deprecated Use renderPatientView() or renderDoctorView() instead.
+ */
+export async function renderReport(
+  document: Document,
+  options: RenderReportOptions
+): Promise<RenderResult> {
+  const errors: string[] = [];
+  const { opusOutput, lang, safetyFlags } = options;
+
+  const setup = await loadI18nAndHeader(document, options);
+  if (!setup) {
+    errors.push('Failed to load i18n dictionary');
+    return { success: false, i18nApplied: { textApplied: 0, htmlApplied: 0 }, safetyBannerInjected: false, devicesBound: 0, injectablesBound: 0, errors };
+  }
+
+  // EBD device cards
+  let devicesBound = 0;
+  for (let i = 0; i < opusOutput.ebd_recommendations.length; i++) {
+    if (renderDeviceCard(document, opusOutput.ebd_recommendations[i], i, lang)) {
+      devicesBound++;
+    }
+  }
+
+  // Injectable cards
+  let injectablesBound = 0;
+  for (let i = 0; i < opusOutput.injectable_recommendations.length; i++) {
+    if (renderInjectableCard(document, opusOutput.injectable_recommendations[i], i)) {
+      injectablesBound++;
+    }
+  }
+
+  // Signature solutions
+  renderSignatureSolutions(document, opusOutput);
+
+  // Treatment plan
+  renderTreatmentPlan(document, opusOutput);
+
+  // Homecare
+  renderHomecare(document, opusOutput);
+
+  // Safety banner (patient-facing)
+  let safetyBannerInjected = false;
+  if (safetyFlags.length > 0) {
+    const bannerData = buildPatientSafetyBanner(safetyFlags, setup.dictionary, lang);
+    const bannerHtml = renderSafetyBannerHTML(bannerData);
+    const bannerSlot = document.querySelector('[data-field="safety-banner"]');
+    if (bannerSlot) {
+      bannerSlot.innerHTML = bannerHtml;
+      safetyBannerInjected = true;
+    }
+  }
+
+  // Doctor tab
+  renderDoctorTab(document, opusOutput, safetyFlags);
+
+  return {
+    success: errors.length === 0,
+    i18nApplied: setup.i18nResult,
     safetyBannerInjected,
     devicesBound,
     injectablesBound,

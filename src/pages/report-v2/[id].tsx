@@ -9,7 +9,6 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import type { OpusRecommendationOutput } from '@/pages/api/survey-v2/final-recommendation';
 import type { SafetyFlag, SurveyLang } from '@/types/survey-v2';
-import type { TreatmentPlanV2 } from '@/pages/api/survey-v2/treatment-plan';
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -32,6 +31,34 @@ interface ReportPayload {
 
 type IframeStatus = 'loading' | 'ready' | 'rendered' | 'error';
 
+// ─── Consultation CTA i18n ─────────────────────────────────────
+const CTA_TEXT: Record<string, { title: string; desc: string; btn: string; sent: string }> = {
+  KO: {
+    title: '맞춤 시술 상담을 원하시나요?',
+    desc: 'AI 분석 결과를 바탕으로 전문 의사에게 1:1 상담을 신청하세요.',
+    btn: '상담 신청하기',
+    sent: '상담이 신청되었습니다! 의사가 확인 후 연락드립니다.',
+  },
+  EN: {
+    title: 'Want a personalized consultation?',
+    desc: 'Request a 1:1 consultation with a specialist based on your AI analysis.',
+    btn: 'Request Consultation',
+    sent: 'Consultation requested! A doctor will contact you soon.',
+  },
+  JP: {
+    title: 'カスタマイズされた相談をご希望ですか？',
+    desc: 'AI分析結果を基に専門医に1:1相談を申し込みましょう。',
+    btn: '相談を申し込む',
+    sent: '相談が申請されました！医師が確認後ご連絡します。',
+  },
+  'ZH-CN': {
+    title: '想要个性化的咨询吗？',
+    desc: '根据AI分析结果，向专业医生申请1对1咨询。',
+    btn: '申请咨询',
+    sent: '咨询已申请！医生确认后会联系您。',
+  },
+};
+
 // ─── Lang Mapping ──────────────────────────────────────────────
 // v7-premium.html uses lowercase lang codes
 const LANG_MAP: Record<SurveyLang, string> = {
@@ -51,12 +78,8 @@ export default function ReportV2Page() {
   const [payload, setPayload] = useState<ReportPayload | null>(null);
   const [iframeStatus, setIframeStatus] = useState<IframeStatus>('loading');
   const [error, setError] = useState<string | null>(null);
-  const [treatmentPlan, setTreatmentPlan] = useState<TreatmentPlanV2 | null>(null);
-  const [phaseBStatus, setPhaseBStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
-  const phaseBFired = useRef(false);
-
-  // Doctor access check
-  const isDoctor = router.query.role === 'doctor';
+  const [consultationSent, setConsultationSent] = useState(false);
+  const [consultationLoading, setConsultationLoading] = useState(false);
 
   // ─── Load report data from sessionStorage ──────────────────
   useEffect(() => {
@@ -87,12 +110,10 @@ export default function ReportV2Page() {
 
       switch (event.data.type) {
         case 'IFRAME_READY':
-          console.log('[ReportV2] iframe ready');
           setIframeStatus('ready');
           break;
         case 'REPORT_READY':
           if (event.data.success) {
-            console.log('[ReportV2] report rendered');
             setIframeStatus('rendered');
           } else {
             console.error('[ReportV2] Render error:', event.data.error);
@@ -103,209 +124,34 @@ export default function ReportV2Page() {
     }
 
     window.addEventListener('message', handleMessage);
-
-    // Timeout fallback: if iframe doesn't respond within 15s, show error
-    const timeout = setTimeout(() => {
-      setIframeStatus(prev => {
-        if (prev === 'loading') {
-          console.error('[ReportV2] Iframe timeout — still loading after 15s');
-          return 'error';
-        }
-        return prev;
-      });
-    }, 15_000);
-
-    return () => {
-      window.removeEventListener('message', handleMessage);
-      clearTimeout(timeout);
-    };
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // ─── Build report data helper ────────────────────────────
-  const buildReportData = useCallback(() => {
-    if (!payload) return null;
+  // ─── Send data to iframe when both ready ───────────────────
+  useEffect(() => {
+    if (iframeStatus !== 'ready' || !payload || !iframeRef.current?.contentWindow) return;
+
     const lang = LANG_MAP[payload.survey_state.demographics.detected_language] || 'en';
-    return {
+
+    // Build the data object that initReport() expects
+    const reportData = {
       ...payload.recommendation,
       lang,
       safety_flags: buildSafetyFlagsObject(payload.survey_state.safety_flags),
-      _open_question_raw: payload.survey_state.open_question_raw,
     };
-  }, [payload]);
 
-  // ─── Send data to iframe when both ready ───────────────────
-  const dataSentRef = useRef(false);
-
-  useEffect(() => {
-    if (iframeStatus !== 'ready' || !payload || !iframeRef.current?.contentWindow || dataSentRef.current) return;
-
-    const reportData = buildReportData();
-    if (!reportData) return;
-
-    console.log('[ReportV2] Sending INIT_REPORT to iframe');
-    dataSentRef.current = true;
     iframeRef.current.contentWindow.postMessage(
       { type: 'INIT_REPORT', payload: reportData },
       '*'
     );
 
-    // Fallback: if REPORT_READY postMessage is not received within 5s,
-    // force rendered state (initReport now uses safeRun so it won't throw)
+    // Force patient-only view (hide doctor tab)
     setTimeout(() => {
-      setIframeStatus(prev => {
-        if (prev === 'ready') {
-          console.warn('[ReportV2] REPORT_READY not received — forcing rendered via timeout fallback');
-          return 'rendered';
-        }
-        return prev;
-      });
-    }, 5_000);
-
-    // Switch to doctor tab if accessed with doctor role
-    if (isDoctor) {
-      setTimeout(() => {
-        iframeRef.current?.contentWindow?.postMessage(
-          { type: 'SWITCH_TAB', tab: 'doctor' },
-          '*'
-        );
-      }, 300);
-    }
-  }, [iframeStatus, payload, isDoctor, buildReportData]);
-
-  // ─── Phase B: Async Treatment Plan fetch ─────────────────
-  useEffect(() => {
-    if (iframeStatus !== 'rendered' || !payload || phaseBFired.current) return;
-    phaseBFired.current = true;
-
-    // If treatment_plan already has phases (legacy full-response), skip Phase B
-    const existingPlan = payload.recommendation.treatment_plan;
-    if (existingPlan && existingPlan.phases && existingPlan.phases.length > 0) {
-      setTreatmentPlan(existingPlan as unknown as TreatmentPlanV2);
-      setPhaseBStatus('done');
-      return;
-    }
-
-    setPhaseBStatus('loading');
-
-    // Notify iframe that treatment plan is loading
-    iframeRef.current?.contentWindow?.postMessage(
-      { type: 'TREATMENT_PLAN_LOADING' },
-      '*'
-    );
-
-    // Build Phase A summary for the treatment-plan API
-    const rec = payload.recommendation;
-    const surveyRaw = typeof window !== 'undefined'
-      ? sessionStorage.getItem('connectingdocs_v2_survey_state')
-      : null;
-    const surveyState = surveyRaw ? JSON.parse(surveyRaw) : {};
-
-    const requestBody = {
-      demographics: payload.survey_state.demographics,
-      budget: surveyState.budget || null,
-      stay_duration: surveyState.stay_duration || null,
-      management_frequency: surveyState.management_frequency || null,
-      event_info: surveyState.event_info || null,
-      phase_a_summary: {
-        ebd_devices: (rec.ebd_recommendations || []).map(d => ({
-          rank: d.rank,
-          device_name: d.device_name,
-          device_id: d.device_id,
-          confidence: d.confidence,
-          pain_level: d.pain_level,
-          downtime_level: d.downtime_level,
-        })),
-        injectables: (rec.injectable_recommendations || []).map(i => ({
-          rank: i.rank,
-          name: i.name,
-          injectable_id: i.injectable_id,
-          category: i.category,
-          confidence: i.confidence,
-        })),
-        signature_solutions: (rec.signature_solutions || []).map(s => ({
-          name: s.name,
-          devices: s.devices,
-          injectables: s.injectables,
-        })),
-        safety_flags: rec.safety_flags || {},
-        patient: {
-          age: rec.patient?.age || '',
-          gender: rec.patient?.gender || '',
-          country: rec.patient?.country || '',
-          aesthetic_goal: rec.patient?.aesthetic_goal || '',
-          top3_concerns: rec.patient?.top3_concerns || [],
-        },
-      },
-    };
-
-    (async () => {
-      try {
-        const res = await fetch('/api/survey-v2/treatment-plan', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody),
-        });
-
-        if (!res.ok || !res.body) {
-          throw new Error(`Treatment plan API error: ${res.status}`);
-        }
-
-        // Parse SSE stream
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            if (!line.startsWith('data: ')) continue;
-            try {
-              const parsed = JSON.parse(line.slice(6));
-              if (parsed.type === 'done' && parsed.treatment_plan) {
-                setTreatmentPlan(parsed.treatment_plan);
-                setPhaseBStatus('done');
-
-                // Send treatment plan to iframe
-                iframeRef.current?.contentWindow?.postMessage(
-                  { type: 'UPDATE_TREATMENT_PLAN', payload: parsed.treatment_plan },
-                  '*'
-                );
-
-                // Update sessionStorage with treatment plan
-                const stored = sessionStorage.getItem('connectingdocs_v2_report');
-                if (stored) {
-                  const storedData = JSON.parse(stored);
-                  storedData.recommendation.treatment_plan = parsed.treatment_plan;
-                  sessionStorage.setItem('connectingdocs_v2_report', JSON.stringify(storedData));
-                }
-              } else if (parsed.type === 'error') {
-                console.error('[Phase B] Treatment plan error:', parsed.error);
-                setPhaseBStatus('error');
-                iframeRef.current?.contentWindow?.postMessage(
-                  { type: 'TREATMENT_PLAN_ERROR' },
-                  '*'
-                );
-              }
-            } catch {
-              // Skip malformed SSE lines
-            }
-          }
-        }
-      } catch (err) {
-        console.error('[Phase B] Failed to fetch treatment plan:', err);
-        setPhaseBStatus('error');
-        iframeRef.current?.contentWindow?.postMessage(
-          { type: 'TREATMENT_PLAN_ERROR' },
-          '*'
-        );
-      }
-    })();
+      iframeRef.current?.contentWindow?.postMessage(
+        { type: 'SWITCH_TAB', tab: 'patient' },
+        '*'
+      );
+    }, 300);
   }, [iframeStatus, payload]);
 
   // ─── Derived values ────────────────────────────────────────
@@ -410,6 +256,33 @@ export default function ReportV2Page() {
     );
   }
 
+  // ─── Consultation Request Handler ──────────────────────────
+  const handleConsultationRequest = async () => {
+    if (!id || !payload) return;
+    setConsultationLoading(true);
+    try {
+      const res = await fetch('/api/consultation/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          report_id: id,
+          patient_profile: payload.recommendation.patient,
+          demographics: payload.survey_state.demographics,
+          safety_flags: payload.survey_state.safety_flags,
+        }),
+      });
+      if (res.ok) {
+        setConsultationSent(true);
+      }
+    } catch (err) {
+      console.error('[ReportV2] Consultation request failed:', err);
+    } finally {
+      setConsultationLoading(false);
+    }
+  };
+
+  const ctaText = CTA_TEXT[lang] || CTA_TEXT['EN'];
+
   // ─── Main Report (iframe) ──────────────────────────────────
   return (
     <>
@@ -429,42 +302,6 @@ export default function ReportV2Page() {
           </div>
         )}
 
-        {/* Error overlay when iframe fails to load or render */}
-        {iframeStatus === 'error' && (
-          <div className="report-v7-overlay">
-            <p style={{ color: '#f87171', fontSize: '14px', marginBottom: '12px' }}>
-              {lang === 'KO' ? '리포트 렌더링에 실패했습니다.' : 'Failed to render report.'}
-            </p>
-            <button
-              onClick={() => {
-                setIframeStatus('loading');
-                iframeRef.current?.contentWindow?.location.reload();
-                // Re-send IFRAME_READY timeout
-                setTimeout(() => {
-                  setIframeStatus(prev => prev === 'loading' ? 'error' : prev);
-                }, 15_000);
-              }}
-              style={{
-                padding: '10px 24px', background: '#22d3ee', color: '#09090b',
-                border: 'none', borderRadius: '24px', fontWeight: 600,
-                fontSize: '14px', cursor: 'pointer', marginRight: '8px',
-              }}
-            >
-              {lang === 'KO' ? '다시 시도' : 'Retry'}
-            </button>
-            <button
-              onClick={() => router.push('/survey-v2')}
-              style={{
-                padding: '10px 24px', background: 'transparent', color: '#a1a1aa',
-                border: '1px solid #3f3f46', borderRadius: '24px', fontWeight: 600,
-                fontSize: '14px', cursor: 'pointer',
-              }}
-            >
-              {lang === 'KO' ? '설문 다시 시작' : 'Start Over'}
-            </button>
-          </div>
-        )}
-
         {/* The iframe loads the full v7-premium HTML */}
         <iframe
           ref={iframeRef}
@@ -472,24 +309,33 @@ export default function ReportV2Page() {
           className="report-v7-iframe"
           title="ConnectingDocs Premium Report"
           sandbox="allow-scripts allow-same-origin"
-          onLoad={() => {
-            console.log('[ReportV2] iframe onLoad fired, iframeStatus=', iframeStatus);
-            // Fallback: if IFRAME_READY postMessage was missed, force 'ready' after iframe loads
-            setTimeout(() => {
-              setIframeStatus(prev => {
-                if (prev === 'loading') {
-                  console.warn('[ReportV2] IFRAME_READY not received — forcing ready via onLoad fallback');
-                  return 'ready';
-                }
-                return prev;
-              });
-            }, 500); // small delay to let DOMContentLoaded postMessage arrive first
-          }}
           style={{
             opacity: iframeStatus === 'rendered' ? 1 : 0,
             transition: 'opacity 0.4s ease',
           }}
         />
+        {/* ─── Consultation CTA (floating bottom bar) ─── */}
+        {iframeStatus === 'rendered' && (
+          <div className="report-v7-cta">
+            {consultationSent ? (
+              <p className="report-v7-cta__sent">{ctaText.sent}</p>
+            ) : (
+              <>
+                <div className="report-v7-cta__text">
+                  <strong>{ctaText.title}</strong>
+                  <span>{ctaText.desc}</span>
+                </div>
+                <button
+                  className="report-v7-cta__btn"
+                  onClick={handleConsultationRequest}
+                  disabled={consultationLoading}
+                >
+                  {consultationLoading ? '...' : ctaText.btn}
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <style jsx>{`
@@ -526,6 +372,70 @@ export default function ReportV2Page() {
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
           margin-bottom: 16px;
+        }
+        .report-v7-cta {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 16px 24px;
+          background: rgba(9, 9, 11, 0.95);
+          backdrop-filter: blur(12px);
+          border-top: 1px solid rgba(34, 211, 238, 0.2);
+          z-index: 50;
+          animation: slideUp 0.4s ease;
+        }
+        .report-v7-cta__text {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          font-family: 'Inter', system-ui, sans-serif;
+        }
+        .report-v7-cta__text strong {
+          color: #e4e4e7;
+          font-size: 14px;
+        }
+        .report-v7-cta__text span {
+          color: #71717a;
+          font-size: 12px;
+        }
+        .report-v7-cta__btn {
+          flex-shrink: 0;
+          padding: 10px 28px;
+          background: #22d3ee;
+          color: #09090b;
+          border: none;
+          border-radius: 24px;
+          font-weight: 700;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.2s;
+          font-family: 'Inter', system-ui, sans-serif;
+        }
+        .report-v7-cta__btn:hover {
+          background: #06b6d4;
+          transform: translateY(-1px);
+        }
+        .report-v7-cta__btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          transform: none;
+        }
+        .report-v7-cta__sent {
+          color: #22d3ee;
+          font-size: 14px;
+          font-weight: 600;
+          text-align: center;
+          width: 100%;
+          font-family: 'Inter', system-ui, sans-serif;
+        }
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
         }
         @keyframes spin {
           to { transform: rotate(360deg); }
