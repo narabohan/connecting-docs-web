@@ -1,0 +1,35 @@
+{
+  "sorted_middleware": [
+    "/api/survey-v2/final-recommendation"
+  ],
+  "middleware": {},
+  "instrumentation": null,
+  "functions": {
+    "/api/survey-v2/final-recommendation": {
+      "files": [
+        "required-server-files.js",
+        "server/edge/chunks/node_modules_next_dist_esm_build_templates_edge-wrapper_0c0cd691.js",
+        "server/edge/chunks/[root-of-the-server]__f276c402._.js",
+        "server/edge/chunks/node_modules_next_dist_esm_build_templates_pages-edge-api_0e24996b.js",
+        "server/edge/chunks/turbopack-node_modules_next_dist_esm_build_templates_edge-wrapper_496fb81b.js"
+      ],
+      "name": "pages/api/survey-v2/final-recommendation",
+      "page": "/api/survey-v2/final-recommendation",
+      "matchers": [
+        {
+          "regexp": "^/api/survey-v2/final-recommendation(?:/)?$",
+          "originalSource": "/api/survey-v2/final-recommendation"
+        }
+      ],
+      "wasm": [],
+      "assets": [],
+      "env": {
+        "__NEXT_BUILD_ID": "W60jrDRWKiLqWwnSaPBRC",
+        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "0BVpa+iRCLrE4Zxpa9Jz0UO5uezkab4NDq4xMq89ENk=",
+        "__NEXT_PREVIEW_MODE_ID": "eaab0c0368eb6842e713429dc2c3ace7",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "9666f5c45e8dd1f17fa79f7aca5154a20f169af77cd44256e0bc8351756bcbfa",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "7ad58958e92c1b97927ee4b47b833e922c4e9e8b084bb271a6afbe895070961e"
+      }
+    }
+  }
+}

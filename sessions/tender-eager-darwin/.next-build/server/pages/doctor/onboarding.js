@@ -1,0 +1,11 @@
+var R=require("../../chunks/ssr/[turbopack]_runtime.js")("server/pages/doctor/onboarding.js")
+R.c("server/chunks/ssr/_c349bf98._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__84687bd7._.js")
+R.c("server/chunks/ssr/node_modules_next_dist_esm_build_templates_pages_223855c5.js")
+R.c("server/chunks/ssr/[externals]__dd7cc552._.js")
+R.c("server/chunks/ssr/_339f24bb._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__68d47023._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__1bc499f6._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__4c5ca667._.js")
+R.m(22661)
+module.exports=R.m(22661).exports
