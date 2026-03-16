@@ -21,6 +21,9 @@ import type { SurveyLang } from '@/types/survey-v2';
 import { useReportData, type StoredReportPayload } from '@/hooks/useReportData';
 import { ReportV7 } from '@/components/report-v7/ReportV7';
 import { SkeletonReport } from '@/components/report-v7/SkeletonReport';
+import { useAuth } from '@/context/AuthContext';
+import { EmailCaptureModal } from '@/components/common/EmailCaptureModal';
+import { saveReportId, isEmailCaptured } from '@/services/local-report-store';
 
 // ─── Consultation CTA i18n ─────────────────────────────────────
 const CTA_TEXT: Record<string, { title: string; desc: string; btn: string; sent: string }> = {
@@ -67,9 +70,26 @@ export default function ReportV2Page() {
 
   const { data, status, error, lang } = useReportData(reportId);
 
+  const { user, loading: authLoading } = useAuth();
   const [consultationSent, setConsultationSent] = useState(false);
   const [consultationLoading, setConsultationLoading] = useState(false);
   const crmTracked = useRef(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+
+  // ─── Email Capture Modal: show for unauthenticated users ──
+  useEffect(() => {
+    if (status !== 'success' || !reportId || authLoading) return;
+
+    // Save report ID to localStorage (Layer 1)
+    saveReportId(reportId);
+
+    // Show modal if: not logged in AND email not already captured for this report
+    if (!user && !isEmailCaptured(reportId)) {
+      // Delay slightly so the report renders first
+      const timer = setTimeout(() => setShowEmailModal(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [status, reportId, user, authLoading]);
 
   // ─── CRM: Track report view (best-effort, fire once) ──────
   useEffect(() => {
@@ -244,6 +264,15 @@ export default function ReportV2Page() {
           )}
         </div>
       </div>
+
+      {/* ─── Email Capture Modal (unauthenticated users) ─── */}
+      {showEmailModal && reportId && (
+        <EmailCaptureModal
+          reportId={reportId}
+          lang={lang}
+          onClose={() => setShowEmailModal(false)}
+        />
+      )}
 
       <style jsx>{`
         .report-v7-wrapper {
