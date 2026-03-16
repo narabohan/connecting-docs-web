@@ -14,10 +14,15 @@ import type { SurveyLang, ReportV7Data } from '@/types/report-v7';
 import { ReportI18nProvider, useReportI18n } from './ReportI18nContext';
 import { ReportErrorBoundary } from './ReportErrorBoundary';
 import { SkeletonReport } from './SkeletonReport';
+import { ReportHeader } from './ReportHeader';
+import { MirrorLayerView } from './MirrorLayer';
+import { ConfidenceLayerView } from './ConfidenceLayer';
+import { SafetyFlags } from './SafetyFlags';
+import { EBDSection } from './EBDSection';
+import { InjectableSection } from './InjectableSection';
 import './report-v7.css';
 
-// ─── Depth 2: Lazy-loaded sections (placeholder stubs for now) ──
-// These will be replaced with actual components in later phases.
+// ─── Depth 2: Lazy-loaded sections ───────────────────────────
 const LazyTreatmentPlan = lazy(() =>
   import('./sections/TreatmentPlanSection').catch(() => ({
     default: () => <PlaceholderSection name="Treatment Plan" />,
@@ -49,7 +54,7 @@ function PlaceholderSection({ name }: { name: string }) {
       }}
     >
       <div style={{ fontSize: '20px', marginBottom: '8px', opacity: 0.5 }}>🔧</div>
-      {name} — Phase 0 준비 중
+      {name} — Phase 1에서 구현 예정
     </div>
   );
 }
@@ -86,7 +91,7 @@ interface ReportV7Props {
 
 // ─── Inner Report (consumes i18n context) ─────────────────────
 function ReportV7Inner({ data }: { data: ReportV7Data }) {
-  const { t } = useReportI18n();
+  const { t, lang } = useReportI18n();
   const [activeTab, setActiveTab] = useState<ReportTab>('patient');
 
   const handleTabSwitch = useCallback((tab: ReportTab) => {
@@ -115,7 +120,7 @@ function ReportV7Inner({ data }: { data: ReportV7Data }) {
         </button>
       </div>
 
-      {/* ── Patient Tab (Depth 0 + Depth 1 expandable + Depth 2 lazy) ── */}
+      {/* ══ Patient Tab ══ */}
       <div
         className={`rv7-tab-page${activeTab === 'patient' ? ' active' : ''}`}
         role="tabpanel"
@@ -123,124 +128,33 @@ function ReportV7Inner({ data }: { data: ReportV7Data }) {
       >
         <div className="rv7-p-container">
           {/* ─ Depth 0: Patient Profile ─ */}
-          <ReportErrorBoundary componentName="PatientProfile">
-            <section className="rv7-p-header">
-              <div className="rv7-p-avatar">
-                {(data.patient.name || '?').charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <div className="rv7-p-name">{data.patient.name || 'Patient'}</div>
-                <div className="rv7-p-meta">
-                  {data.patient.age} · {data.patient.gender} · {data.patient.country}
-                </div>
-              </div>
-            </section>
+          <ReportErrorBoundary componentName="ReportHeader">
+            <ReportHeader patient={data.patient} lang={lang} />
           </ReportErrorBoundary>
 
-          {/* ─ Depth 0: Patient Chips ─ */}
-          <ReportErrorBoundary componentName="PatientChips">
-            <div className="rv7-p-chips">
-              {data.patient.top3Concerns.map((concern) => (
-                <span key={concern} className="rv7-p-chip">
-                  <span className="rv7-pc-val">{concern}</span>
-                </span>
-              ))}
-              {data.patient.fitzpatrick && (
-                <span className="rv7-p-chip">
-                  <span className="rv7-pc-label">Fitz</span>
-                  <span className="rv7-pc-val">{data.patient.fitzpatrick}</span>
-                </span>
-              )}
-            </div>
+          {/* ─ Depth 0: Safety Flags ─ */}
+          <ReportErrorBoundary componentName="SafetyFlags">
+            <SafetyFlags flags={data.safetyFlags} lang={lang} />
           </ReportErrorBoundary>
 
-          {/* ─ Depth 0: Mirror Layer ─ */}
-          {data.mirror.headline && (
-            <ReportErrorBoundary componentName="MirrorLayer">
-              <div className="rv7-mirror-layer">
-                <div className="rv7-mirror-headline">{data.mirror.headline}</div>
-                <div className="rv7-mirror-empathy">{data.mirror.empathyParagraphs}</div>
-                <div className="rv7-mirror-transition">{data.mirror.transition}</div>
-              </div>
-            </ReportErrorBoundary>
-          )}
+          {/* ─ Depth 0: Mirror Layer (서사 1단계: 감정 공감) ─ */}
+          <ReportErrorBoundary componentName="MirrorLayer">
+            <MirrorLayerView mirror={data.mirror} lang={lang} />
+          </ReportErrorBoundary>
 
-          {/* ─ Depth 0: Confidence Layer ─ */}
-          {data.confidence.reasonWhy && (
-            <ReportErrorBoundary componentName="ConfidenceLayer">
-              <div className="rv7-confidence-layer">
-                <div className="rv7-confidence-reason">{data.confidence.reasonWhy}</div>
-                <div className="rv7-confidence-proof">{data.confidence.socialProof}</div>
-                <div className="rv7-confidence-commit">{data.confidence.commitment}</div>
-              </div>
-            </ReportErrorBoundary>
-          )}
+          {/* ─ Depth 0: Confidence Layer (서사 2단계: 임상 확신) ─ */}
+          <ReportErrorBoundary componentName="ConfidenceLayer">
+            <ConfidenceLayerView confidence={data.confidence} lang={lang} />
+          </ReportErrorBoundary>
 
-          {/* ─ Depth 0: EBD Recommendation Cards ─ */}
-          {data.ebdRecommendations.length > 0 && (
-            <ReportErrorBoundary componentName="EBDRecommendations">
-              <section className="rv7-rec-section">
-                <div className="rv7-sec-label">{t('section.ebd')}</div>
-                <div className="rv7-rec-grid">
-                  {data.ebdRecommendations.map((rec) => (
-                    <div key={rec.deviceId} className="rv7-rec-card rv7-ebd-card">
-                      <div className="rv7-rec-badge">
-                        <span className="rv7-neon-tag rv7-cyan">#{rec.rank}</span>
-                      </div>
-                      <div className="rv7-rec-head">
-                        <div className="rv7-rec-title-area">
-                          <div className="rv7-rec-name">{rec.deviceName}</div>
-                          <div className="rv7-rec-sub">{rec.subtitle}</div>
-                        </div>
-                      </div>
-                      <div
-                        className="rv7-rec-summary"
-                        dangerouslySetInnerHTML={{ __html: rec.summaryHtml }}
-                      />
-                      {/* Depth 1: Detail expand — will be wired in Phase 1 */}
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </ReportErrorBoundary>
-          )}
+          {/* ─ Depth 0+1: EBD Recommendation Cards ─ */}
+          <ReportErrorBoundary componentName="EBDSection">
+            <EBDSection recommendations={data.ebdRecommendations} lang={lang} />
+          </ReportErrorBoundary>
 
-          {/* ─ Depth 0: Injectable Recommendation Cards ─ */}
-          {data.injectableRecommendations.length > 0 && (
-            <ReportErrorBoundary componentName="InjectableRecommendations">
-              <section className="rv7-rec-section">
-                <div className="rv7-sec-label rv7-rose">{t('section.injectable')}</div>
-                <div className="rv7-rec-grid">
-                  {data.injectableRecommendations.map((rec) => (
-                    <div key={rec.injectableId} className="rv7-rec-card rv7-inj-card">
-                      <div className="rv7-rec-badge">
-                        <span className="rv7-neon-tag rv7-rose">#{rec.rank}</span>
-                      </div>
-                      <div className="rv7-rec-head">
-                        <div className="rv7-rec-title-area">
-                          <div className="rv7-rec-name">{rec.name}</div>
-                          <div className="rv7-rec-sub">{rec.subtitle}</div>
-                        </div>
-                      </div>
-                      <div
-                        className="rv7-rec-summary"
-                        dangerouslySetInnerHTML={{ __html: rec.summaryHtml }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </ReportErrorBoundary>
-          )}
-
-          {/* ─ Depth 0: Radar Chart placeholder ─ */}
-          <ReportErrorBoundary componentName="RadarChart">
-            <section className="rv7-rec-section">
-              <div className="rv7-sec-label">{t('section.radar')}</div>
-              <div className="rv7-glass rv7-radar-card">
-                <PlaceholderSection name="Radar Chart (5-axis)" />
-              </div>
-            </section>
+          {/* ─ Depth 0+1: Injectable Recommendation Cards ─ */}
+          <ReportErrorBoundary componentName="InjectableSection">
+            <InjectableSection recommendations={data.injectableRecommendations} lang={lang} />
           </ReportErrorBoundary>
 
           {/* ─ Depth 2: Treatment Plan (lazy) ─ */}
@@ -261,7 +175,7 @@ function ReportV7Inner({ data }: { data: ReportV7Data }) {
         </div>
       </div>
 
-      {/* ── Doctor Tab (Depth 2: fully lazy) ── */}
+      {/* ══ Doctor Tab (Depth 2: fully lazy) ══ */}
       <div
         className={`rv7-tab-page${activeTab === 'doctor' ? ' active' : ''}`}
         role="tabpanel"
