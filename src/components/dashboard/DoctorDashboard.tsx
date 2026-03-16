@@ -3,6 +3,10 @@ import { Loader2, Plus, Stethoscope, Users, TrendingUp, Award, Trophy, Star, Eye
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
+interface DoctorDashboardProps {
+    language?: string;
+}
+
 interface Solution {
     id: string;
     name: string;
@@ -34,7 +38,7 @@ interface ConsultationRequest {
     requested_at: string;
 }
 
-export default function DoctorDashboard() {
+export default function DoctorDashboard({ language }: DoctorDashboardProps) {
     const { user } = useAuth();
     const router = useRouter();
     const [solutions, setSolutions] = useState<Solution[]>([]);
