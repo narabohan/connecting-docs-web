@@ -8,7 +8,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
-import { withDoctorGuard } from '@/components/auth/ProtectedRoute';
+import { withRoleGuard } from '@/lib/withRoleGuard';
 import { useAuth } from '@/context/AuthContext';
 import {
   ArrowLeft,
@@ -477,4 +477,4 @@ function DoctorPatientView() {
   );
 }
 
-export default withDoctorGuard(DoctorPatientView);
+export default withRoleGuard(DoctorPatientView, ['doctor', 'admin']);

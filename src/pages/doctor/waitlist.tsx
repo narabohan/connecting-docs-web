@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
 import { Loader2, ArrowLeft, Mail, Calendar, CheckCircle } from 'lucide-react';
-import { withDoctorGuard } from '@/components/auth/ProtectedRoute';
+import { withRoleGuard } from '@/lib/withRoleGuard';
 import { Toaster, toast } from 'react-hot-toast';
 
 interface WaitlistItem {
@@ -179,4 +179,4 @@ function DoctorWaitlist() {
     );
 }
 
-export default withDoctorGuard(DoctorWaitlist);
+export default withRoleGuard(DoctorWaitlist, ['doctor', 'admin']);

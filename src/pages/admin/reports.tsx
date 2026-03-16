@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { Loader2, ArrowLeft, FileText, Calendar, Eye, Activity } from 'lucide-react';
-// import { useAuth } from '@/context/AuthContext'; // Optionally add admin guard
+import { withRoleGuard } from '@/lib/withRoleGuard';
 
 interface AdminReport {
     id: string;
@@ -15,7 +15,7 @@ interface AdminReport {
     status: string;
 }
 
-export default function AdminReports() {
+function AdminReports() {
     const router = useRouter();
     const [reports, setReports] = useState<AdminReport[]>([]);
     const [fetching, setFetching] = useState(true);
@@ -132,3 +132,5 @@ export default function AdminReports() {
         </div>
     );
 }
+
+export default withRoleGuard(AdminReports, ['admin']);

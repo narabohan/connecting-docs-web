@@ -2,7 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import SolutionForm from '../../components/doctor/SolutionForm';
 import { useAuth } from '@/context/AuthContext';
-import { withDoctorGuard } from '@/components/auth/ProtectedRoute';
+import { withRoleGuard } from '@/lib/withRoleGuard';
 import { ArrowLeft } from 'lucide-react';
 
 function DoctorOnboarding() {
@@ -82,4 +82,4 @@ function DoctorOnboarding() {
     );
 }
 
-export default withDoctorGuard(DoctorOnboarding);
+export default withRoleGuard(DoctorOnboarding, ['doctor', 'admin']);

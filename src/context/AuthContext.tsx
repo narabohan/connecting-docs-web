@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useRouter } from 'next/router';
+import type { UserRole } from '@/types/auth';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface AuthUser {
@@ -7,7 +8,7 @@ export interface AuthUser {
     email: string;
     displayName: string;
     photoURL?: string;
-    role: 'patient' | 'doctor';
+    role: UserRole;
     provider: 'google' | 'github' | 'apple' | 'email' | 'demo';
 }
 
@@ -58,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .then(data => {
                     // If Airtable has a different role (e.g., admin set them to 'doctor'), update session
                     if (data.dbRole && data.dbRole !== u.role) {
-                        const updatedUser = { ...u, role: data.dbRole as 'patient' | 'doctor' };
+                        const updatedUser = { ...u, role: data.dbRole as UserRole };
                         setUser(updatedUser);
                         localStorage.setItem('cd_user_session', JSON.stringify(updatedUser));
                     }
