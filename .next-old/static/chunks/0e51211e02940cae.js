@@ -1,0 +1,7 @@
+__turbopack_load_page_chunks__("/doctor/waitlist", [
+  "static/chunks/f5678a3e3755f04a.js",
+  "static/chunks/8c188fd357760482.js",
+  "static/chunks/39b9631c54760de2.js",
+  "static/chunks/c8044786ca8b5c40.js",
+  "static/chunks/turbopack-5e39c74bbc2aae8e.js"
+])
