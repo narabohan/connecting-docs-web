@@ -101,6 +101,31 @@
       "status_sent": "Sent"
     }
   },
+  "email": {
+    "send_success": "Email sent successfully",
+    "send_failed": "Failed to send email. Please try again later.",
+    "send_rate_limited": "Daily sending limit reached. Please try again tomorrow.",
+    "template_report_ready": "Report Ready",
+    "template_plan_ready": "New Treatment Plan Created",
+    "template_plan_approved": "Treatment Plan Approved",
+    "template_welcome": "Welcome",
+    "subject_report_ready": "Your report is ready — ConnectingDocs",
+    "subject_plan_ready": "A new treatment plan has been created — ConnectingDocs",
+    "subject_plan_approved": "Your treatment plan has been approved — ConnectingDocs",
+    "subject_welcome": "Welcome to ConnectingDocs",
+    "cta_view_report": "View Report",
+    "cta_view_plan": "View Plan",
+    "cta_review_plan": "Review Plan",
+    "cta_get_started": "Get Started",
+    "notification_plan_sent": "Plan notification email has been sent to the patient",
+    "notification_email_connected": "Email sending is connected",
+    "log_title": "Email Sending Log",
+    "log_empty": "No emails sent",
+    "log_status_queued": "Queued",
+    "log_status_sent": "Sent",
+    "log_status_failed": "Failed",
+    "log_status_rate_limited": "Rate Limited"
+  },
   "my_reports": {
     "title": "My Reports | ConnectingDocs",
     "heading": "My Reports",
