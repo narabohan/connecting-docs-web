@@ -9,7 +9,7 @@ export interface AuthUser {
     displayName: string;
     photoURL?: string;
     role: UserRole;
-    provider: 'google' | 'github' | 'apple' | 'email' | 'kakao' | 'demo';
+    provider: 'google' | 'github' | 'apple' | 'email' | 'kakao' | 'naver' | 'demo';
 }
 
 interface AuthContextType {

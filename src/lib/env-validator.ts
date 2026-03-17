@@ -56,6 +56,15 @@ const ENV_GROUPS: EnvGroup[] = [
       'KAKAO_REDIRECT_URI',
     ],
   },
+  {
+    name: 'Naver OAuth',
+    required: false, // Feature flag — Naver login disabled if not set
+    vars: [
+      'NAVER_CLIENT_ID',
+      'NAVER_CLIENT_SECRET',
+      'NAVER_REDIRECT_URI',
+    ],
+  },
 ];
 
 // ─── Validator ───────────────────────────────────────────────

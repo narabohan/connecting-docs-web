@@ -28,14 +28,15 @@ interface SocialLoginButtonsProps {
 
 interface ButtonLabels {
   kakao: string;
+  naver: string;
   google: string;
 }
 
 const LABELS: Record<string, ButtonLabels> = {
-  KO: { kakao: '카카오로 로그인', google: 'Google로 로그인' },
-  EN: { kakao: 'Sign in with Kakao', google: 'Sign in with Google' },
-  JP: { kakao: 'カカオでログイン', google: 'Googleでログイン' },
-  'ZH-CN': { kakao: '使用Kakao登录', google: '使用Google登录' },
+  KO: { kakao: '카카오로 로그인', naver: '네이버로 로그인', google: 'Google로 로그인' },
+  EN: { kakao: 'Sign in with Kakao', naver: 'Sign in with Naver', google: 'Sign in with Google' },
+  JP: { kakao: 'カカオでログイン', naver: 'Naverでログイン', google: 'Googleでログイン' },
+  'ZH-CN': { kakao: '使用Kakao登录', naver: '使用Naver登录', google: '使用Google登录' },
 };
 
 // ─── Component ───────────────────────────────────────────────
@@ -69,6 +70,25 @@ export function SocialLoginButtons({
           />
         </svg>
         <span>{labels.kakao}</span>
+      </button>
+
+      {/* ── Naver Login Button (Brand guidelines: #03C75A bg, #FFFFFF text) */}
+      <button
+        className="slb-btn slb-btn--naver"
+        onClick={() => {
+          const url = `/api/auth/naver/login?returnUrl=${encodeURIComponent(returnUrl)}`;
+          window.location.href = url;
+        }}
+        disabled={disabled}
+        type="button"
+      >
+        <svg className="slb-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M16.273 12.845L7.376 0H0v24h7.727V11.155L16.624 24H24V0h-7.727v12.845z"
+            fill="#FFFFFF"
+          />
+        </svg>
+        <span>{labels.naver}</span>
       </button>
 
       {/* ── Google Login Button */}
@@ -130,6 +150,10 @@ export function SocialLoginButtons({
         .slb-btn--kakao {
           background: #FEE500;
           color: #000000;
+        }
+        .slb-btn--naver {
+          background: #03C75A;
+          color: #FFFFFF;
         }
         .slb-btn--google {
           background: #ffffff;
