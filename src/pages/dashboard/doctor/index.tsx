@@ -9,10 +9,14 @@
 import Head from 'next/head';
 import { withRoleGuard } from '@/lib/withRoleGuard';
 import { DoctorDashboardLayout } from '@/components/dashboard/doctor/DoctorDashboardLayout';
+import { DoctorOverview } from '@/components/dashboard/doctor/DoctorOverview';
+import { useDoctorStats } from '@/hooks/useDoctorStats';
 
 // ─── Page Component ──────────────────────────────────────────
 
 function DoctorDashboardPage() {
+  const { stats, loading, error, refetch } = useDoctorStats();
+
   return (
     <>
       <Head>
@@ -21,20 +25,14 @@ function DoctorDashboardPage() {
       </Head>
 
       <DoctorDashboardLayout title="Dashboard Overview">
-        {/* Overview stats and patient queue will be added in Tasks 2-3 */}
         <div className="space-y-6">
-          {/* Placeholder: DoctorOverview (Task 2) */}
-          <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {['Today\'s Patients', 'Pending Plans', 'Approved', 'Total Patients'].map((label) => (
-              <div
-                key={label}
-                className="bg-[#12121f] border border-white/10 rounded-xl p-5 flex flex-col gap-2"
-              >
-                <span className="text-xs text-gray-500 uppercase tracking-wider">{label}</span>
-                <span className="text-2xl font-bold text-white">—</span>
-              </div>
-            ))}
-          </section>
+          {/* Overview Stats (Task 2) */}
+          <DoctorOverview
+            stats={stats}
+            loading={loading}
+            error={error}
+            onRefresh={refetch}
+          />
 
           {/* Placeholder: PatientQueue (Task 3) */}
           <section className="bg-[#12121f] border border-white/10 rounded-xl p-6">
