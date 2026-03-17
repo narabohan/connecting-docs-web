@@ -25,6 +25,7 @@ import type {
 } from '@/types/survey-v2';
 import type { FinalRecommendationRequest, FinalRecommendationResponse } from '@/pages/api/survey-v2/final-recommendation';
 import { MEDICATION_FLAG_MAP, CONDITION_FLAG_MAP, FOLLOWUP_ITEMS } from '@/components/survey-v2/SafetyCheckpoint';
+import { hasConsent } from '@/lib/consent-utils';
 
 // ─── Initial State ───────────────────────────────────────────
 const initialState: SurveyV2State = {
@@ -294,7 +295,21 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
     dispatch({ type: 'SET_DEMOGRAPHICS', payload: d });
   }, []);
 
+  // ─── Consent Check (C-7) ────────────────────────────────
+  // 설문 시작 전 essential + ai_processing 동의 필수
+  const [needsConsent, setNeedsConsent] = useState(false);
+
   const submitDemographics = useCallback(() => {
+    // Check consent before proceeding to first survey question
+    const hasEssential = hasConsent('essential');
+    const hasAiProcessing = hasConsent('ai_processing');
+
+    if (!hasEssential || !hasAiProcessing) {
+      setNeedsConsent(true);
+      return;
+    }
+
+    setNeedsConsent(false);
     setStep('open');
     setError(null);
   }, []);
@@ -783,6 +798,10 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
     stayDuration: state.stay_duration,
     managementFrequency: state.management_frequency,
     eventInfo: state.event_info,
+
+    // Consent (C-7)
+    needsConsent,
+    dismissConsent: () => setNeedsConsent(false),
 
     // Loading / Error
     isLoading,
