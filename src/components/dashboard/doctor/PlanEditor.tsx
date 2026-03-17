@@ -91,10 +91,10 @@ export function PlanEditor({ plan, onPlanUpdate }: PlanEditorProps) {
     clearUpdateState();
   }, [clearUpdateState]);
 
-  // ─── Email Send (UI-only) ─────────────────────────────────
+  // ─── Email Send (server-side via PATCH status → sent) ──────
   const handleSendEmail = useCallback(() => {
-    // Phase 3에서 실제 이메일 전송 구현
-    // 현재는 상태만 'sent'로 변경
+    // Status change to 'sent' triggers server-side email via [planId].ts
+    // The PATCH handler sends plan-approved email fire-and-forget
     setPendingStatus('sent');
     setShowNoteInput(true);
   }, []);
@@ -208,12 +208,12 @@ export function PlanEditor({ plan, onPlanUpdate }: PlanEditorProps) {
         </div>
       )}
 
-      {/* ── Email Sent UI Placeholder ── */}
+      {/* ── Email Sent Confirmation ── */}
       {emailSentUI && (
         <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
           <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
           <span className="text-sm text-cyan-400">
-            Email functionality will be available in Phase 3
+            Plan notification email has been sent to the patient
           </span>
           <button
             onClick={() => setEmailSentUI(false)}

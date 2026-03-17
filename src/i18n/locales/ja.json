@@ -101,6 +101,31 @@
       "status_sent": "送信済み"
     }
   },
+  "email": {
+    "send_success": "メールが送信されました",
+    "send_failed": "メール送信に失敗しました。しばらくしてから再試行してください。",
+    "send_rate_limited": "1日の送信上限に達しました。明日再試行してください。",
+    "template_report_ready": "レポート作成完了",
+    "template_plan_ready": "新しい治療プランが作成されました",
+    "template_plan_approved": "治療プラン承認完了",
+    "template_welcome": "ようこそ",
+    "subject_report_ready": "レポートが準備できました — ConnectingDocs",
+    "subject_plan_ready": "新しい治療プランが作成されました — ConnectingDocs",
+    "subject_plan_approved": "治療プランが承認されました — ConnectingDocs",
+    "subject_welcome": "ConnectingDocsへようこそ",
+    "cta_view_report": "レポートを見る",
+    "cta_view_plan": "プランを見る",
+    "cta_review_plan": "プランを確認する",
+    "cta_get_started": "始める",
+    "notification_plan_sent": "プラン通知メールが患者に送信されました",
+    "notification_email_connected": "メール送信が接続されました",
+    "log_title": "メール送信ログ",
+    "log_empty": "送信されたメールがありません",
+    "log_status_queued": "待機中",
+    "log_status_sent": "送信済み",
+    "log_status_failed": "失敗",
+    "log_status_rate_limited": "上限超過"
+  },
   "my_reports": {
     "title": "マイレポート | ConnectingDocs",
     "heading": "マイレポート",

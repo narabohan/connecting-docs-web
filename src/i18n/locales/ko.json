@@ -101,6 +101,31 @@
       "status_sent": "전송됨"
     }
   },
+  "email": {
+    "send_success": "이메일이 발송되었습니다",
+    "send_failed": "이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.",
+    "send_rate_limited": "일일 발송 한도에 도달했습니다. 내일 다시 시도해주세요.",
+    "template_report_ready": "리포트 생성 완료",
+    "template_plan_ready": "새 치료 플랜 생성됨",
+    "template_plan_approved": "치료 플랜 승인 완료",
+    "template_welcome": "회원가입 환영",
+    "subject_report_ready": "리포트가 준비되었습니다 — ConnectingDocs",
+    "subject_plan_ready": "새로운 치료 플랜이 생성되었습니다 — ConnectingDocs",
+    "subject_plan_approved": "치료 플랜이 승인되었습니다 — ConnectingDocs",
+    "subject_welcome": "ConnectingDocs에 오신 것을 환영합니다",
+    "cta_view_report": "리포트 보기",
+    "cta_view_plan": "플랜 보기",
+    "cta_review_plan": "플랜 검토하기",
+    "cta_get_started": "시작하기",
+    "notification_plan_sent": "플랜 알림 이메일이 환자에게 발송되었습니다",
+    "notification_email_connected": "이메일 발송이 연결되었습니다",
+    "log_title": "이메일 발송 로그",
+    "log_empty": "발송된 이메일이 없습니다",
+    "log_status_queued": "대기 중",
+    "log_status_sent": "발송됨",
+    "log_status_failed": "실패",
+    "log_status_rate_limited": "한도 초과"
+  },
   "my_reports": {
     "title": "내 리포트 | ConnectingDocs",
     "heading": "내 리포트",

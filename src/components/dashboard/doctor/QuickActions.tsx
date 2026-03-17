@@ -1,9 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
-//  QuickActions — Phase 2 (G-3)
-//  의사 대시보드 빠른 액션: 상태 변경 + 이메일 전송 (UI-only)
+//  QuickActions — Phase 2 (G-3, updated G-4)
+//  의사 대시보드 빠른 액션: 상태 변경 + 이메일 전송
 //
 //  - Status dropdown: shows current + next valid transitions
-//  - Email send button: UI-only placeholder (Phase 3 구현)
+//  - Email send button: triggers PATCH status→sent → server-side email (G-4)
 //  - Approve button: shortcut for doctor_review → approved
 //  NO any/unknown types
 // ═══════════════════════════════════════════════════════════════

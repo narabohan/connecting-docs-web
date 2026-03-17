@@ -101,6 +101,31 @@
       "status_sent": "已发送"
     }
   },
+  "email": {
+    "send_success": "邮件已发送",
+    "send_failed": "邮件发送失败，请稍后重试。",
+    "send_rate_limited": "已达到每日发送上限，请明天再试。",
+    "template_report_ready": "报告已生成",
+    "template_plan_ready": "新治疗方案已创建",
+    "template_plan_approved": "治疗方案已批准",
+    "template_welcome": "欢迎",
+    "subject_report_ready": "您的报告已准备就绪 — ConnectingDocs",
+    "subject_plan_ready": "新的治疗方案已创建 — ConnectingDocs",
+    "subject_plan_approved": "您的治疗方案已获批准 — ConnectingDocs",
+    "subject_welcome": "欢迎来到ConnectingDocs",
+    "cta_view_report": "查看报告",
+    "cta_view_plan": "查看方案",
+    "cta_review_plan": "审核方案",
+    "cta_get_started": "开始使用",
+    "notification_plan_sent": "方案通知邮件已发送给患者",
+    "notification_email_connected": "邮件发送已连接",
+    "log_title": "邮件发送日志",
+    "log_empty": "暂无已发送的邮件",
+    "log_status_queued": "队列中",
+    "log_status_sent": "已发送",
+    "log_status_failed": "失败",
+    "log_status_rate_limited": "超出限额"
+  },
   "my_reports": {
     "title": "我的报告 | ConnectingDocs",
     "heading": "我的报告",
