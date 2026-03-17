@@ -14,7 +14,11 @@
     "unauthorized_desc": "You do not have permission to access this page. Please make sure you are logged in with the correct account.",
     "login_with_kakao": "Sign in with Kakao",
     "login_with_naver": "Sign in with Naver",
-    "login_with_google": "Sign in with Google"
+    "login_with_google": "Sign in with Google",
+    "login_with_line": "Login with LINE",
+    "line_login_error": "LINE login failed. Please try again.",
+    "line_login_success": "Logged in with LINE.",
+    "line_connecting": "Connecting to LINE..."
   },
   "consent": {
     "banner_summary": "We collect your consent in accordance with data protection regulations.",
