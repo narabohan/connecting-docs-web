@@ -15,7 +15,10 @@
     "login_with_kakao": "使用Kakao登录",
     "login_with_naver": "使用Naver登录",
     "login_with_google": "使用Google登录",
-    "login_with_line": "用LINE登录"
+    "login_with_line": "用LINE登录",
+    "line_login_error": "LINE登录失败，请重试。",
+    "line_login_success": "已通过LINE登录。",
+    "line_connecting": "正在连接LINE..."
   },
   "consent": {
     "banner_summary": "我们根据数据保护法规收集您的同意。",

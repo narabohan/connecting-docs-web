@@ -15,7 +15,10 @@
     "login_with_kakao": "カカオでログイン",
     "login_with_naver": "Naverでログイン",
     "login_with_google": "Googleでログイン",
-    "login_with_line": "LINEでログイン"
+    "login_with_line": "LINEでログイン",
+    "line_login_error": "LINEログインに失敗しました。もう一度お試しください。",
+    "line_login_success": "LINEでログインしました。",
+    "line_connecting": "LINEに接続中..."
   },
   "consent": {
     "banner_summary": "個人情報保護法に基づき、同意を取得いたします。",
