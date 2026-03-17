@@ -3,6 +3,7 @@ import "@/components/report-v7/report-v7.css";
 import { useEffect } from "react";
 import type { AppProps } from "next/app";
 import { AuthProvider } from "@/context/AuthContext";
+import { AppI18nProvider } from "@/i18n";
 import { Toaster, toast } from "react-hot-toast";
 import { getQueueSize } from "@/services/retry-queue";
 import { processQueue } from "@/services/queue-processor";
@@ -40,6 +41,7 @@ export default function App({ Component, pageProps }: AppProps) {
   }, []);
 
   return (
+    <AppI18nProvider>
     <AuthProvider>
       <Component {...pageProps} />
       <Toaster
@@ -55,5 +57,6 @@ export default function App({ Component, pageProps }: AppProps) {
         }}
       />
     </AuthProvider>
+    </AppI18nProvider>
   );
 }

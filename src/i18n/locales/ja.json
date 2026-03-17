@@ -1,0 +1,63 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "retry": "再試行",
+    "back_to_home": "ホームに戻る",
+    "required": "必須",
+    "optional": "任意"
+  },
+  "auth": {
+    "login_required": "ログインが必要です",
+    "unauthorized": "アクセス権限がありません",
+    "unauthorized_title": "アクセス権限なし | ConnectingDocs",
+    "unauthorized_desc": "このページにアクセスする権限がありません。正しいアカウントでログインしているか確認してください。",
+    "login_with_kakao": "カカオでログイン",
+    "login_with_naver": "Naverでログイン",
+    "login_with_google": "Googleでログイン"
+  },
+  "consent": {
+    "banner_summary": "個人情報保護法に基づき、同意を取得いたします。",
+    "details": "詳細を見る",
+    "accept_all": "すべて同意",
+    "accept_required": "必須のみ同意",
+    "decline": "任意項目を拒否",
+    "essential_label": "必須データ収集",
+    "essential_desc": "アンケートの保存とAIレポート生成に必要です。",
+    "analytics_label": "サービス改善分析",
+    "analytics_desc": "サービス品質向上のための匿名利用データ分析に同意します。",
+    "ai_processing_label": "AI処理への同意",
+    "ai_processing_desc": "肌状態のAI分析と施術推薦のためのプロファイリングに同意します。",
+    "marketing_label": "マーケティング（任意）",
+    "marketing_desc": "プロモーションや新サービスのお知らせを受け取ります。"
+  },
+  "email_capture": {
+    "title": "レポートをメールで受け取る",
+    "description": "メールアドレスを入力していただければ、レポートリンクをお送りします。いつでも再確認できます。",
+    "placeholder": "your@email.com",
+    "send": "送信",
+    "skip": "後で",
+    "success": "保存しました！レポートリンクがメールで送信されます。",
+    "error_invalid": "有効なメールアドレスを入力してください。",
+    "error_server": "エラーが発生しました。もう一度お試しください。"
+  },
+  "save_status": {
+    "sending": "結果を保存中...",
+    "confirming": "保存を確認中...",
+    "success": "保存完了",
+    "queued": "オフラインで保存しました。後で自動送信されます。",
+    "failed": "保存に失敗しました。もう一度お試しください。",
+    "retry_button": "再試行"
+  },
+  "my_reports": {
+    "title": "マイレポート | ConnectingDocs",
+    "heading": "マイレポート",
+    "description": "以前に作成したAI分析レポートを再確認できます。",
+    "empty_title": "保存されたレポートがありません",
+    "empty_desc": "アンケートを完了すると、ここでレポートを確認できます。",
+    "empty_btn": "アンケートを始める",
+    "card_date": "作成日",
+    "view_report": "レポートを見る",
+    "email_badge": "メール連携済み"
+  }
+}

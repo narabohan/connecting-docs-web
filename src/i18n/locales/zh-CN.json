@@ -1,0 +1,63 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "error": "发生错误",
+    "retry": "重试",
+    "back_to_home": "返回首页",
+    "required": "必需",
+    "optional": "可选"
+  },
+  "auth": {
+    "login_required": "需要登录",
+    "unauthorized": "访问被拒绝",
+    "unauthorized_title": "无访问权限 | ConnectingDocs",
+    "unauthorized_desc": "您没有访问此页面的权限。请确认您使用了正确的账户登录。",
+    "login_with_kakao": "使用Kakao登录",
+    "login_with_naver": "使用Naver登录",
+    "login_with_google": "使用Google登录"
+  },
+  "consent": {
+    "banner_summary": "我们根据数据保护法规收集您的同意。",
+    "details": "查看详情",
+    "accept_all": "全部同意",
+    "accept_required": "仅必要项",
+    "decline": "拒绝可选项",
+    "essential_label": "必要数据收集",
+    "essential_desc": "保存问卷和生成AI报告所必需的数据。",
+    "analytics_label": "分析数据",
+    "analytics_desc": "同意收集匿名使用数据以改善服务质量。",
+    "ai_processing_label": "AI处理同意",
+    "ai_processing_desc": "同意对皮肤状态进行AI分析和治疗推荐。",
+    "marketing_label": "营销信息（可选）",
+    "marketing_desc": "接收促销活动、新服务公告等信息。"
+  },
+  "email_capture": {
+    "title": "通过邮箱接收报告",
+    "description": "输入您的邮箱，我们将发送报告链接。您可以随时查看。",
+    "placeholder": "your@email.com",
+    "send": "发送",
+    "skip": "以后再说",
+    "success": "已保存！报告链接将发送到您的邮箱。",
+    "error_invalid": "请输入有效的邮箱地址。",
+    "error_server": "出错了，请稍后再试。"
+  },
+  "save_status": {
+    "sending": "正在保存结果...",
+    "confirming": "确认保存中...",
+    "success": "保存成功",
+    "queued": "已离线保存，稍后将自动发送。",
+    "failed": "保存失败，请重试。",
+    "retry_button": "重试"
+  },
+  "my_reports": {
+    "title": "我的报告 | ConnectingDocs",
+    "heading": "我的报告",
+    "description": "重新查看之前生成的AI分析报告。",
+    "empty_title": "没有保存的报告",
+    "empty_desc": "完成问卷后即可在这里查看报告。",
+    "empty_btn": "开始问卷",
+    "card_date": "创建于",
+    "view_report": "查看报告",
+    "email_badge": "邮箱已关联"
+  }
+}

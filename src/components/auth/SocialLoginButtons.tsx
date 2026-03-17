@@ -1,53 +1,27 @@
 // ═══════════════════════════════════════════════════════════════
-//  SocialLoginButtons — Phase 1 (C-5)
-//  소셜 로그인 버튼 컴포넌트 (Kakao + Google)
+//  SocialLoginButtons — Phase 1 (C-5/C-6, C-9 i18n refactor)
+//  소셜 로그인 버튼 컴포넌트 (Kakao + Naver + Google)
 //  참조: MASTER_PLAN_V4.md §7 (글로벌 소셜 로그인)
-//
-//  사용법:
-//    <SocialLoginButtons
-//      onGoogleClick={signInWithGoogle}
-//      returnUrl="/dashboard"
-//      lang="KO"
-//    />
-//
-//  향후 추가 예정: Naver, Line (Phase 2)
 // ═══════════════════════════════════════════════════════════════
 
-import type { SurveyLang } from '@/types/survey-v2';
+import { useTranslation } from '@/i18n';
 
 // ─── Props ───────────────────────────────────────────────────
 
 interface SocialLoginButtonsProps {
   onGoogleClick?: () => void;
   returnUrl?: string;
-  lang?: SurveyLang;
   disabled?: boolean;
 }
-
-// ─── i18n ────────────────────────────────────────────────────
-
-interface ButtonLabels {
-  kakao: string;
-  naver: string;
-  google: string;
-}
-
-const LABELS: Record<string, ButtonLabels> = {
-  KO: { kakao: '카카오로 로그인', naver: '네이버로 로그인', google: 'Google로 로그인' },
-  EN: { kakao: 'Sign in with Kakao', naver: 'Sign in with Naver', google: 'Sign in with Google' },
-  JP: { kakao: 'カカオでログイン', naver: 'Naverでログイン', google: 'Googleでログイン' },
-  'ZH-CN': { kakao: '使用Kakao登录', naver: '使用Naver登录', google: '使用Google登录' },
-};
 
 // ─── Component ───────────────────────────────────────────────
 
 export function SocialLoginButtons({
   onGoogleClick,
   returnUrl = '/',
-  lang = 'KO',
   disabled = false,
 }: SocialLoginButtonsProps) {
-  const labels = LABELS[lang] || LABELS.EN;
+  const { t } = useTranslation();
 
   const handleKakaoClick = () => {
     const url = `/api/auth/kakao/login?returnUrl=${encodeURIComponent(returnUrl)}`;
@@ -69,7 +43,7 @@ export function SocialLoginButtons({
             fill="#000000"
           />
         </svg>
-        <span>{labels.kakao}</span>
+        <span>{t('auth.login_with_kakao')}</span>
       </button>
 
       {/* ── Naver Login Button (Brand guidelines: #03C75A bg, #FFFFFF text) */}
@@ -88,7 +62,7 @@ export function SocialLoginButtons({
             fill="#FFFFFF"
           />
         </svg>
-        <span>{labels.naver}</span>
+        <span>{t('auth.login_with_naver')}</span>
       </button>
 
       {/* ── Google Login Button */}
@@ -105,61 +79,20 @@ export function SocialLoginButtons({
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
           </svg>
-          <span>{labels.google}</span>
+          <span>{t('auth.login_with_google')}</span>
         </button>
       )}
 
       <style jsx>{`
-        .slb-container {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          width: 100%;
-        }
-        .slb-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          width: 100%;
-          padding: 12px 16px;
-          border: none;
-          border-radius: 12px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: opacity 0.2s, transform 0.1s;
-          font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        }
-        .slb-btn:hover:not(:disabled) {
-          opacity: 0.9;
-          transform: translateY(-1px);
-        }
-        .slb-btn:active:not(:disabled) {
-          transform: translateY(0);
-        }
-        .slb-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        .slb-icon {
-          width: 18px;
-          height: 18px;
-          flex-shrink: 0;
-        }
-        .slb-btn--kakao {
-          background: #FEE500;
-          color: #000000;
-        }
-        .slb-btn--naver {
-          background: #03C75A;
-          color: #FFFFFF;
-        }
-        .slb-btn--google {
-          background: #ffffff;
-          color: #333333;
-          border: 1px solid #dadce0;
-        }
+        .slb-container { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        .slb-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 12px 16px; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s, transform 0.1s; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .slb-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+        .slb-btn:active:not(:disabled) { transform: translateY(0); }
+        .slb-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .slb-icon { width: 18px; height: 18px; flex-shrink: 0; }
+        .slb-btn--kakao { background: #FEE500; color: #000000; }
+        .slb-btn--naver { background: #03C75A; color: #FFFFFF; }
+        .slb-btn--google { background: #ffffff; color: #333333; border: 1px solid #dadce0; }
       `}</style>
     </div>
   );

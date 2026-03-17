@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-//  /my-reports — Phase 1 (C-4)
+//  /my-reports — Phase 1 (C-4, C-9 i18n refactor)
 //  비인증 유저용 리포트 재접근 페이지
 //  localStorage에서 report_id 목록을 읽어 카드로 표시
 //  참조: MASTER_PLAN_V4.md §16.2 (비인증 유저 3-Layer 안전망)
@@ -10,6 +10,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { FileText, ArrowRight, ClipboardList } from 'lucide-react';
 import { getReportEntries } from '@/services/local-report-store';
+import { useTranslation } from '@/i18n';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -19,75 +20,7 @@ interface ReportCard {
   emailCaptured: boolean;
 }
 
-// ─── i18n ────────────────────────────────────────────────────
-
-interface PageMessages {
-  title: string;
-  heading: string;
-  description: string;
-  emptyTitle: string;
-  emptyDesc: string;
-  emptyBtn: string;
-  cardDate: string;
-  cardView: string;
-  emailBadge: string;
-}
-
-const MESSAGES: Record<string, PageMessages> = {
-  KO: {
-    title: '내 리포트 | ConnectingDocs',
-    heading: '내 리포트',
-    description: '이전에 생성한 AI 분석 리포트를 다시 열어볼 수 있습니다.',
-    emptyTitle: '저장된 리포트가 없습니다',
-    emptyDesc: '설문을 완료하면 여기에서 리포트를 다시 확인할 수 있어요.',
-    emptyBtn: '설문 시작하기',
-    cardDate: '생성일',
-    cardView: '리포트 보기',
-    emailBadge: '이메일 연결됨',
-  },
-  EN: {
-    title: 'My Reports | ConnectingDocs',
-    heading: 'My Reports',
-    description: 'Revisit your previously generated AI analysis reports.',
-    emptyTitle: 'No saved reports',
-    emptyDesc: 'Complete a survey to see your reports here.',
-    emptyBtn: 'Start Survey',
-    cardDate: 'Created',
-    cardView: 'View Report',
-    emailBadge: 'Email linked',
-  },
-  JP: {
-    title: 'マイレポート | ConnectingDocs',
-    heading: 'マイレポート',
-    description: '以前に作成したAI分析レポートを再確認できます。',
-    emptyTitle: '保存されたレポートがありません',
-    emptyDesc: 'アンケートを完了すると、ここでレポートを確認できます。',
-    emptyBtn: 'アンケートを始める',
-    cardDate: '作成日',
-    cardView: 'レポートを見る',
-    emailBadge: 'メール連携済み',
-  },
-  'ZH-CN': {
-    title: '我的报告 | ConnectingDocs',
-    heading: '我的报告',
-    description: '重新查看之前生成的AI分析报告。',
-    emptyTitle: '没有保存的报告',
-    emptyDesc: '完成问卷后即可在这里查看报告。',
-    emptyBtn: '开始问卷',
-    cardDate: '创建于',
-    cardView: '查看报告',
-    emailBadge: '邮箱已关联',
-  },
-};
-
-function detectLang(): string {
-  if (typeof window === 'undefined') return 'EN';
-  const navLang = navigator.language.toLowerCase();
-  if (navLang.startsWith('ko')) return 'KO';
-  if (navLang.startsWith('ja')) return 'JP';
-  if (navLang.startsWith('zh')) return 'ZH-CN';
-  return 'EN';
-}
+// ─── Date Formatter ──────────────────────────────────────────
 
 function formatDate(isoStr: string, lang: string): string {
   try {
@@ -108,10 +41,9 @@ function formatDate(isoStr: string, lang: string): string {
 
 export default function MyReportsPage() {
   const router = useRouter();
+  const { t, lang } = useTranslation();
   const [reports, setReports] = useState<ReportCard[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const lang = detectLang();
-  const messages = MESSAGES[lang] || MESSAGES.EN;
 
   useEffect(() => {
     const entries = getReportEntries();
@@ -128,26 +60,26 @@ export default function MyReportsPage() {
   return (
     <div className="min-h-screen bg-[#050505] text-white">
       <Head>
-        <title>{messages.title}</title>
+        <title>{t('my_reports.title')}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 
       <main className="max-w-2xl mx-auto py-16 px-6">
-        <h1 className="text-2xl font-bold mb-2">{messages.heading}</h1>
-        <p className="text-gray-400 mb-10 text-sm">{messages.description}</p>
+        <h1 className="text-2xl font-bold mb-2">{t('my_reports.heading')}</h1>
+        <p className="text-gray-400 mb-10 text-sm">{t('my_reports.description')}</p>
 
         {loaded && reports.length === 0 ? (
           <div className="text-center py-20 border border-dashed border-white/15 rounded-2xl bg-white/[0.02]">
             <ClipboardList className="w-12 h-12 text-gray-600 mx-auto mb-4" />
             <h3 className="text-lg font-bold text-gray-300 mb-2">
-              {messages.emptyTitle}
+              {t('my_reports.empty_title')}
             </h3>
-            <p className="text-gray-500 text-sm mb-6">{messages.emptyDesc}</p>
+            <p className="text-gray-500 text-sm mb-6">{t('my_reports.empty_desc')}</p>
             <button
               onClick={() => router.push('/survey-v2')}
               className="px-6 py-3 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-xl transition-all font-medium text-sm"
             >
-              {messages.emptyBtn}
+              {t('my_reports.empty_btn')}
             </button>
           </div>
         ) : (
@@ -166,16 +98,16 @@ export default function MyReportsPage() {
                     {report.reportId}
                   </p>
                   <p className="text-gray-500 text-xs mt-1">
-                    {messages.cardDate}: {formatDate(report.savedAt, lang)}
+                    {t('my_reports.card_date')}: {formatDate(report.savedAt, lang)}
                   </p>
                 </div>
                 {report.emailCaptured && (
                   <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex-shrink-0">
-                    {messages.emailBadge}
+                    {t('my_reports.email_badge')}
                   </span>
                 )}
                 <div className="flex items-center gap-1 text-cyan-400 text-xs font-medium flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {messages.cardView}
+                  {t('my_reports.view_report')}
                   <ArrowRight className="w-3 h-3" />
                 </div>
               </button>

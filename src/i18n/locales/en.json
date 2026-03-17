@@ -1,0 +1,63 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "back_to_home": "Go to Home",
+    "required": "Required",
+    "optional": "Optional"
+  },
+  "auth": {
+    "login_required": "Login required",
+    "unauthorized": "Access Denied",
+    "unauthorized_title": "Unauthorized | ConnectingDocs",
+    "unauthorized_desc": "You do not have permission to access this page. Please make sure you are logged in with the correct account.",
+    "login_with_kakao": "Sign in with Kakao",
+    "login_with_naver": "Sign in with Naver",
+    "login_with_google": "Sign in with Google"
+  },
+  "consent": {
+    "banner_summary": "We collect your consent in accordance with data protection regulations.",
+    "details": "Show details",
+    "accept_all": "Accept all",
+    "accept_required": "Required only",
+    "decline": "Decline optional",
+    "essential_label": "Essential Data Collection",
+    "essential_desc": "Required for saving your survey and generating your AI report.",
+    "analytics_label": "Analytics",
+    "analytics_desc": "Anonymous usage data to improve our service quality.",
+    "ai_processing_label": "AI Processing",
+    "ai_processing_desc": "AI analysis of your skin condition and treatment recommendations.",
+    "marketing_label": "Marketing (Optional)",
+    "marketing_desc": "Receive promotions, new service announcements, and updates."
+  },
+  "email_capture": {
+    "title": "Get your report via email",
+    "description": "Enter your email and we'll send you the report link. You can revisit it anytime.",
+    "placeholder": "your@email.com",
+    "send": "Send",
+    "skip": "Maybe later",
+    "success": "Saved! The report link will be sent to your email.",
+    "error_invalid": "Please enter a valid email address.",
+    "error_server": "Something went wrong. Please try again."
+  },
+  "save_status": {
+    "sending": "Saving results...",
+    "confirming": "Confirming save...",
+    "success": "Saved successfully",
+    "queued": "Saved offline. Will auto-send later.",
+    "failed": "Save failed. Please try again.",
+    "retry_button": "Retry"
+  },
+  "my_reports": {
+    "title": "My Reports | ConnectingDocs",
+    "heading": "My Reports",
+    "description": "Revisit your previously generated AI analysis reports.",
+    "empty_title": "No saved reports",
+    "empty_desc": "Complete a survey to see your reports here.",
+    "empty_btn": "Start Survey",
+    "card_date": "Created",
+    "view_report": "View Report",
+    "email_badge": "Email linked"
+  }
+}
