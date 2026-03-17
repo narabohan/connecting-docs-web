@@ -1,0 +1,347 @@
+{
+  "version": 3,
+  "pages404": true,
+  "appType": "pages",
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/api/report/[id]",
+      "regex": "^/api/report/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/report/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/doctor/patient/[id]",
+      "regex": "^/doctor/patient/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/doctor/patient/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/report/[id]",
+      "regex": "^/report/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/report/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/report-v2/[id]",
+      "regex": "^/report\\-v2/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/report\\-v2/(?<nxtPid>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/admin/reports",
+      "regex": "^/admin/reports(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/reports(?:/)?$"
+    },
+    {
+      "page": "/api/admin/reports",
+      "regex": "^/api/admin/reports(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/reports(?:/)?$"
+    },
+    {
+      "page": "/api/admin/stats",
+      "regex": "^/api/admin/stats(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/stats(?:/)?$"
+    },
+    {
+      "page": "/api/auth/login",
+      "regex": "^/api/auth/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/login(?:/)?$"
+    },
+    {
+      "page": "/api/auth/register",
+      "regex": "^/api/auth/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/register(?:/)?$"
+    },
+    {
+      "page": "/api/auth/sync",
+      "regex": "^/api/auth/sync(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/sync(?:/)?$"
+    },
+    {
+      "page": "/api/consultation/request",
+      "regex": "^/api/consultation/request(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/consultation/request(?:/)?$"
+    },
+    {
+      "page": "/api/create-checkout-session",
+      "regex": "^/api/create\\-checkout\\-session(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/create\\-checkout\\-session(?:/)?$"
+    },
+    {
+      "page": "/api/data/inventory",
+      "regex": "^/api/data/inventory(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/data/inventory(?:/)?$"
+    },
+    {
+      "page": "/api/doctor/consultations",
+      "regex": "^/api/doctor/consultations(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/doctor/consultations(?:/)?$"
+    },
+    {
+      "page": "/api/doctor/mark-contacted",
+      "regex": "^/api/doctor/mark\\-contacted(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/doctor/mark\\-contacted(?:/)?$"
+    },
+    {
+      "page": "/api/doctor/patient",
+      "regex": "^/api/doctor/patient(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/doctor/patient(?:/)?$"
+    },
+    {
+      "page": "/api/doctor/solution",
+      "regex": "^/api/doctor/solution(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/doctor/solution(?:/)?$"
+    },
+    {
+      "page": "/api/doctor/solutions",
+      "regex": "^/api/doctor/solutions(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/doctor/solutions(?:/)?$"
+    },
+    {
+      "page": "/api/doctor/stats",
+      "regex": "^/api/doctor/stats(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/doctor/stats(?:/)?$"
+    },
+    {
+      "page": "/api/doctor/waitlist",
+      "regex": "^/api/doctor/waitlist(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/doctor/waitlist(?:/)?$"
+    },
+    {
+      "page": "/api/email/send",
+      "regex": "^/api/email/send(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/email/send(?:/)?$"
+    },
+    {
+      "page": "/api/engine/analyze",
+      "regex": "^/api/engine/analyze(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/engine/analyze(?:/)?$"
+    },
+    {
+      "page": "/api/engine/explain-unrecommended",
+      "regex": "^/api/engine/explain\\-unrecommended(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/engine/explain\\-unrecommended(?:/)?$"
+    },
+    {
+      "page": "/api/engine/get-run",
+      "regex": "^/api/engine/get\\-run(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/engine/get\\-run(?:/)?$"
+    },
+    {
+      "page": "/api/engine/match",
+      "regex": "^/api/engine/match(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/engine/match(?:/)?$"
+    },
+    {
+      "page": "/api/hello",
+      "regex": "^/api/hello(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/hello(?:/)?$"
+    },
+    {
+      "page": "/api/intelligence/save-log",
+      "regex": "^/api/intelligence/save\\-log(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/intelligence/save\\-log(?:/)?$"
+    },
+    {
+      "page": "/api/patient/feedback",
+      "regex": "^/api/patient/feedback(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/patient/feedback(?:/)?$"
+    },
+    {
+      "page": "/api/recommendation/generate-report-content",
+      "regex": "^/api/recommendation/generate\\-report\\-content(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/recommendation/generate\\-report\\-content(?:/)?$"
+    },
+    {
+      "page": "/api/report/unlock",
+      "regex": "^/api/report/unlock(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/report/unlock(?:/)?$"
+    },
+    {
+      "page": "/api/reports",
+      "regex": "^/api/reports(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/reports(?:/)?$"
+    },
+    {
+      "page": "/api/survey-v2/analyze-open",
+      "regex": "^/api/survey\\-v2/analyze\\-open(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/survey\\-v2/analyze\\-open(?:/)?$"
+    },
+    {
+      "page": "/api/survey-v2/final-recommendation",
+      "regex": "^/api/survey\\-v2/final\\-recommendation(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/survey\\-v2/final\\-recommendation(?:/)?$"
+    },
+    {
+      "page": "/api/survey-v2/generate-chips",
+      "regex": "^/api/survey\\-v2/generate\\-chips(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/survey\\-v2/generate\\-chips(?:/)?$"
+    },
+    {
+      "page": "/api/survey-v2/notify-report",
+      "regex": "^/api/survey\\-v2/notify\\-report(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/survey\\-v2/notify\\-report(?:/)?$"
+    },
+    {
+      "page": "/api/survey-v2/safety-followup",
+      "regex": "^/api/survey\\-v2/safety\\-followup(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/survey\\-v2/safety\\-followup(?:/)?$"
+    },
+    {
+      "page": "/api/survey-v2/save-result",
+      "regex": "^/api/survey\\-v2/save\\-result(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/survey\\-v2/save\\-result(?:/)?$"
+    },
+    {
+      "page": "/api/survey-v2/treatment-plan",
+      "regex": "^/api/survey\\-v2/treatment\\-plan(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/survey\\-v2/treatment\\-plan(?:/)?$"
+    },
+    {
+      "page": "/dashboard",
+      "regex": "^/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard(?:/)?$"
+    },
+    {
+      "page": "/doctor/onboarding",
+      "regex": "^/doctor/onboarding(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/doctor/onboarding(?:/)?$"
+    },
+    {
+      "page": "/doctor/waitlist",
+      "regex": "^/doctor/waitlist(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/doctor/waitlist(?:/)?$"
+    },
+    {
+      "page": "/doctor-pending",
+      "regex": "^/doctor\\-pending(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/doctor\\-pending(?:/)?$"
+    },
+    {
+      "page": "/feedback",
+      "regex": "^/feedback(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/feedback(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/privacy",
+      "regex": "^/privacy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/privacy(?:/)?$"
+    },
+    {
+      "page": "/signup",
+      "regex": "^/signup(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/signup(?:/)?$"
+    },
+    {
+      "page": "/survey-v2",
+      "regex": "^/survey\\-v2(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/survey\\-v2(?:/)?$"
+    },
+    {
+      "page": "/terms",
+      "regex": "^/terms(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/terms(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}
