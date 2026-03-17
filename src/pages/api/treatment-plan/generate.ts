@@ -26,6 +26,8 @@ import {
   buildAIRequestBody,
 } from '@/services/plan-ai-pipeline';
 import type { TreatmentPlanV2 } from '@/pages/api/survey-v2/treatment-plan';
+import { sendEmailFireAndForget } from '@/services/email-service';
+import { lookupUserByUid } from '@/services/user-email-lookup';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -202,6 +204,44 @@ OUTPUT FORMAT: Valid JSON matching schema:
 RULES: 1. Use ONLY provided devices/injectables. 2. Patient language. 3. ONLY valid JSON. 4. Max 4000 tokens.`;
 }
 
+// ─── Email Trigger (fire-and-forget) ─────────────────────────
+
+/**
+ * Send 'plan-ready' notification to the assigned doctor (if any).
+ * Best-effort: never blocks, never throws, silently skips if
+ * no doctor is assigned or email cannot be resolved.
+ */
+function triggerPlanReadyEmail(
+  plan: TreatmentPlanData,
+  lang: 'KO' | 'EN' | 'JP' | 'ZH-CN',
+): void {
+  if (!plan.doctorId) {
+    // No doctor assigned yet — email will be sent when doctor picks up the plan
+    return;
+  }
+
+  // Async lookup + send in a fire-and-forget closure
+  void (async () => {
+    const doctor = await lookupUserByUid(plan.doctorId ?? '');
+    if (!doctor) return;
+
+    sendEmailFireAndForget({
+      recipient: doctor.email,
+      recipientName: doctor.name,
+      template: 'plan-ready',
+      locale: lang,
+      data: {
+        doctorName: doctor.name,
+        patientId: plan.patientId,
+        planId: plan.planId,
+        dashboardUrl: `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/doctor/plans/${plan.planId}`,
+      },
+    });
+  })().catch(() => {
+    // Absolute safety net — never propagate
+  });
+}
+
 // ─── Handler ─────────────────────────────────────────────────
 
 async function handler(
@@ -257,6 +297,7 @@ async function handler(
     // Best-effort: return plan even if Airtable save fails
     // Client can retry via retry-queue
     console.warn('[generate] Airtable save failed, returning unsaved plan');
+    triggerPlanReadyEmail(planData, request.lang);
     res.status(200).json({
       ok: true,
       plan: planData,
@@ -264,7 +305,10 @@ async function handler(
     return;
   }
 
-  // 5. Return success
+  // 5. Fire-and-forget: notify doctor that a new plan is ready
+  triggerPlanReadyEmail(savedPlan, request.lang);
+
+  // 6. Return success
   res.status(201).json({
     ok: true,
     plan: savedPlan,

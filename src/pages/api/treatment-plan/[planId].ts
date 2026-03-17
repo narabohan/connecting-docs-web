@@ -26,6 +26,8 @@ import {
   getPlanById,
   updatePlan,
 } from '@/services/treatment-plan-service';
+import { sendEmailFireAndForget } from '@/services/email-service';
+import { lookupUserByUid } from '@/services/user-email-lookup';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -116,6 +118,43 @@ async function handleGet(
   res.status(200).json({ ok: true, plan });
 }
 
+// ─── Email Trigger (fire-and-forget) ─────────────────────────
+
+/**
+ * Send 'plan-approved' notification to the patient.
+ * Best-effort: never blocks, never throws, silently skips
+ * if patient email cannot be resolved.
+ */
+function triggerPlanApprovedEmail(
+  plan: TreatmentPlanData,
+  doctorUid: string,
+): void {
+  if (!plan.patientId) return;
+
+  void (async () => {
+    const [patient, doctor] = await Promise.all([
+      lookupUserByUid(plan.patientId),
+      lookupUserByUid(doctorUid),
+    ]);
+    if (!patient) return;
+
+    sendEmailFireAndForget({
+      recipient: patient.email,
+      recipientName: patient.name,
+      template: 'plan-approved',
+      locale: 'KO', // Default; patient locale could be resolved from CRM in future
+      data: {
+        patientName: patient.name,
+        planId: plan.planId,
+        planUrl: `${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/patient/plans/${plan.planId}`,
+        doctorName: doctor?.name ?? '',
+      },
+    });
+  })().catch(() => {
+    // Absolute safety net — never propagate
+  });
+}
+
 // ─── PATCH Handler ───────────────────────────────────────────
 
 async function handlePatch(
@@ -203,6 +242,11 @@ async function handlePatch(
       code: 'UPDATE_FAILED',
     });
     return;
+  }
+
+  // Fire-and-forget: notify patient when plan is approved or sent
+  if (patchData.status === 'approved' || patchData.status === 'sent') {
+    triggerPlanApprovedEmail(updated, req.authUid);
   }
 
   res.status(200).json({ ok: true, plan: updated });
