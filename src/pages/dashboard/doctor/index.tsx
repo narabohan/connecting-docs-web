@@ -10,12 +10,13 @@ import Head from 'next/head';
 import { withRoleGuard } from '@/lib/withRoleGuard';
 import { DoctorDashboardLayout } from '@/components/dashboard/doctor/DoctorDashboardLayout';
 import { DoctorOverview } from '@/components/dashboard/doctor/DoctorOverview';
+import { PatientQueue } from '@/components/dashboard/doctor/PatientQueue';
 import { useDoctorStats } from '@/hooks/useDoctorStats';
 
 // ─── Page Component ──────────────────────────────────────────
 
 function DoctorDashboardPage() {
-  const { stats, loading, error, refetch } = useDoctorStats();
+  const { stats, plans, loading, error, refetch } = useDoctorStats();
 
   return (
     <>
@@ -34,13 +35,8 @@ function DoctorDashboardPage() {
             onRefresh={refetch}
           />
 
-          {/* Placeholder: PatientQueue (Task 3) */}
-          <section className="bg-[#12121f] border border-white/10 rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-white mb-4">Patient Queue</h2>
-            <div className="text-center py-12 text-gray-500 text-sm">
-              Patient queue will appear here.
-            </div>
-          </section>
+          {/* Patient Queue (Task 3) */}
+          <PatientQueue plans={plans} loading={loading} />
         </div>
       </DoctorDashboardLayout>
     </>
