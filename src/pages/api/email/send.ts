@@ -1,73 +1,106 @@
+// ═══════════════════════════════════════════════════════════════
+//  POST /api/email/send — Phase 2 (G-4)
+//  내부 전용 이메일 발송 API (SendGrid 기반)
+//
+//  Auth: 내부 API 키 검증 (INTERNAL_API_KEY) 또는 서버-사이드 호출
+//  - 서버-사이드 트리거에서 호출 (generate.ts, [planId].ts 등)
+//  - 외부 직접 호출 차단
+//
+//  Replaces legacy Resend-based implementation.
+//  NO any/unknown types
+// ═══════════════════════════════════════════════════════════════
+
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { Resend } from 'resend';
+import { sendEmail } from '@/services/email-service';
+import { validateSendEmailRequest, type EmailSendResult } from '@/schemas/email';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// ─── Internal API Key ────────────────────────────────────────
 
-// 발신자 이메일 (Resend에서 검증한 도메인 또는 onboarding@resend.dev 무료 테스트용)
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
+const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY ?? '';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
+// ─── Types ───────────────────────────────────────────────────
+
+interface SuccessResponse {
+  ok: true;
+  result: EmailSendResult;
+}
+
+interface ErrorResponse {
+  ok: false;
+  error: string;
+  code: 'UNAUTHORIZED' | 'VALIDATION_ERROR' | 'METHOD_NOT_ALLOWED';
+}
+
+type SendResponse = SuccessResponse | ErrorResponse;
+
+// ─── Auth Check ──────────────────────────────────────────────
+
+function isAuthorized(req: NextApiRequest): boolean {
+  // Option 1: Internal API key via x-api-key header
+  const apiKey = req.headers['x-api-key'];
+  if (typeof apiKey === 'string' && INTERNAL_API_KEY && apiKey === INTERNAL_API_KEY) {
+    return true;
+  }
+
+  // Option 2: Internal API key via x-internal-key header (server-to-server)
+  const internalKey = req.headers['x-internal-key'];
+  if (typeof internalKey === 'string' && INTERNAL_API_KEY && internalKey === INTERNAL_API_KEY) {
+    return true;
+  }
+
+  // Option 3: If no INTERNAL_API_KEY is configured, allow server-side calls
+  // (dev/test environments where internal key isn't set up yet)
+  if (!INTERNAL_API_KEY) {
+    const caller = req.headers['x-internal-caller'];
+    if (caller === 'connectingdocs-server') {
+      return true;
     }
+  }
 
-    const { to, subject, html, type, data } = req.body;
+  return false;
+}
 
-    if (!to) {
-        return res.status(400).json({ error: 'Missing recipient' });
-    }
+// ─── Handler ─────────────────────────────────────────────────
 
-    // RESEND_API_KEY가 없으면 콘솔에 로그
-    if (!process.env.RESEND_API_KEY) {
-        console.warn('[EMAIL] RESEND_API_KEY not set. Logging email instead:');
-        console.log(`To: ${to}\nSubject: ${subject}`);
-        return res.status(200).json({ success: true, id: 'no_key_mock_' + Date.now() });
-    }
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<SendResponse>,
+): Promise<void> {
+  // Only POST allowed
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    res.status(405).json({
+      ok: false,
+      error: `Method ${req.method ?? 'unknown'} not allowed`,
+      code: 'METHOD_NOT_ALLOWED',
+    });
+    return;
+  }
 
-    try {
-        const promises: Promise<any>[] = [];
+  // Auth check
+  if (!isAuthorized(req)) {
+    res.status(401).json({
+      ok: false,
+      error: 'Unauthorized: internal API key required',
+      code: 'UNAUTHORIZED',
+    });
+    return;
+  }
 
-        // 1. 사용자에게 리포트 이메일 발송
-        if (to && html) {
-            promises.push(
-                resend.emails.send({
-                    from: FROM_EMAIL,
-                    to: [to],
-                    subject: subject || '[Connecting Docs] Your Personal Skin Analysis Report',
-                    html,
-                })
-            );
-        }
+  // Validate request body
+  const validation = validateSendEmailRequest(req.body as Record<string, unknown>);
+  if (!validation.success || !validation.data) {
+    res.status(400).json({
+      ok: false,
+      error: `Validation failed: ${validation.error ?? 'unknown'}`,
+      code: 'VALIDATION_ERROR',
+    });
+    return;
+  }
 
-        // 2. 관리자 알림 이메일 (type === 'admin_notify'이거나 ADMIN_EMAIL이 설정된 경우)
-        if (ADMIN_EMAIL && data) {
-            const adminHtml = `
-                <h2>🔔 새 설문 완료 알림</h2>
-                <p><strong>사용자 이메일:</strong> ${data.userEmail || to}</p>
-                <p><strong>주요 목표:</strong> ${data.primaryGoal || '-'}</p>
-                <p><strong>피부 타입:</strong> ${data.skinType || '-'}</p>
-                <p><strong>Top 추천:</strong> ${data.topProtocol || '-'}</p>
-                ${data.reportId ? `<p><strong>리포트 링크:</strong> <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/report/${data.reportId}">/report/${data.reportId}</a></p>` : ''}
-                <hr/>
-                <p style="color:#666;font-size:12px">Connecting Docs 자동 알림</p>
-            `;
-            promises.push(
-                resend.emails.send({
-                    from: FROM_EMAIL,
-                    to: [ADMIN_EMAIL],
-                    subject: `[Connecting Docs] 새 환자 설문 완료 - ${data.userEmail || '비회원'}`,
-                    html: adminHtml,
-                })
-            );
-        }
+  // Send email (never throws)
+  const result = await sendEmail(validation.data);
 
-        const results = await Promise.all(promises);
-        console.log('[EMAIL] Sent successfully:', results.map(r => r.data?.id));
-        return res.status(200).json({ success: true, ids: results.map(r => r.data?.id) });
-
-    } catch (error: any) {
-        console.error('[EMAIL] Send failed:', error);
-        return res.status(500).json({ error: error.message || 'Failed to send email' });
-    }
+  // Always return 200 — caller checks result.success/status
+  res.status(200).json({ ok: true, result });
 }
