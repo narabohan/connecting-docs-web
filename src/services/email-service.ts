@@ -20,6 +20,7 @@ import type {
   EmailLocale,
 } from '@/schemas/email';
 import { generateEmailId } from '@/schemas/email';
+import { renderEmailTemplate } from '@/email/template-renderer';
 
 // ─── Environment Config ──────────────────────────────────────
 
@@ -241,21 +242,28 @@ function getSubject(template: EmailTemplateType, locale: EmailLocale): string {
   return SUBJECT_MAP[template]?.[locale] ?? SUBJECT_MAP[template]?.EN ?? `[ConnectingDocs] ${template}`;
 }
 
-// ─── HTML Content Placeholder (Task 2 will replace) ──────────
+// ─── HTML Content Renderer ────────────────────────────────────
 
-function getPlaceholderHtml(template: EmailTemplateType, data: Record<string, string>): string {
+function getRenderedHtml(
+  template: EmailTemplateType,
+  data: Record<string, string>,
+  locale: EmailLocale,
+): string {
+  const result = renderEmailTemplate(template, data, locale);
+  if (result.success) {
+    return result.html;
+  }
+  // Fallback: basic HTML if template rendering fails
+  console.warn(`[email-service] Template render failed for "${template}": ${result.error}`);
   const dataHtml = Object.entries(data)
     .map(([k, v]) => `<li><strong>${k}:</strong> ${v}</li>`)
     .join('');
-
   return `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
       <h2 style="color:#0F172A;">ConnectingDocs</h2>
       <p>Template: <strong>${template}</strong></p>
       <ul>${dataHtml || '<li>No data</li>'}</ul>
-      <p style="color:#666;font-size:12px;">This is a placeholder template. Production templates will be added in Task 2.</p>
-    </div>
-  `;
+    </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -319,8 +327,8 @@ export async function sendEmail(request: SendEmailRequest): Promise<EmailSendRes
     };
   }
 
-  // ── Get HTML content (placeholder until Task 2)
-  const htmlContent = getPlaceholderHtml(request.template, request.data);
+  // ── Render HTML from template
+  const htmlContent = getRenderedHtml(request.template, request.data, request.locale);
 
   // ── Send with retry
   try {
