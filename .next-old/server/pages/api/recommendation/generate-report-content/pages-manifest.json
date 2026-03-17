@@ -1,0 +1,3 @@
+{
+  "/api/recommendation/generate-report-content": "pages/api/recommendation/generate-report-content.js"
+}

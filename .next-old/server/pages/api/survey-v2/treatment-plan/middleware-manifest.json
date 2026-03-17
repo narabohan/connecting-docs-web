@@ -1,0 +1,34 @@
+{
+  "sorted_middleware": [
+    "/api/survey-v2/treatment-plan"
+  ],
+  "middleware": {},
+  "instrumentation": null,
+  "functions": {
+    "/api/survey-v2/treatment-plan": {
+      "files": [
+        "required-server-files.js",
+        "server/edge/chunks/node_modules_next_dist_esm_build_templates_7a220886._.js",
+        "server/edge/chunks/[root-of-the-server]__f276c402._.js",
+        "server/edge/chunks/turbopack-node_modules_next_dist_esm_build_templates_edge-wrapper_6c8a5c15.js"
+      ],
+      "name": "pages/api/survey-v2/treatment-plan",
+      "page": "/api/survey-v2/treatment-plan",
+      "matchers": [
+        {
+          "regexp": "^/api/survey-v2/treatment-plan(?:/)?$",
+          "originalSource": "/api/survey-v2/treatment-plan"
+        }
+      ],
+      "wasm": [],
+      "assets": [],
+      "env": {
+        "__NEXT_BUILD_ID": "_n9NdqVBxP9Gi5kSkb3dc",
+        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "MPdvdVZL64XZOcXI6WONmn8Grt/+CbIlODNZjo9lPbI=",
+        "__NEXT_PREVIEW_MODE_ID": "b737d1bb5e1e6ea6a1d782da6cf0e352",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "c2d404747ab1009b87da4bcef9a6dc78f4d76ccca73a6339d3eb1d3fef36d835",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "f4a143b5f1fe46d2be4c39f6392f2cb51c833d6629042bdca68e6badf8a2657f"
+      }
+    }
+  }
+}

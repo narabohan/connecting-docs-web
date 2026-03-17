@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
-//  SocialLoginButtons — Phase 1 (C-5/C-6, C-9 i18n refactor)
-//  소셜 로그인 버튼 컴포넌트 (Kakao + Naver + Google)
+//  SocialLoginButtons — Phase 1 (C-5/C-6, C-9 i18n refactor) + G-6 Line 추가
+//  소셜 로그인 버튼 컴포넌트 (Kakao + Naver + Line + Google)
 //  참조: MASTER_PLAN_V4.md §7 (글로벌 소셜 로그인)
 // ═══════════════════════════════════════════════════════════════
 
@@ -65,6 +65,25 @@ export function SocialLoginButtons({
         <span>{t('auth.login_with_naver')}</span>
       </button>
 
+      {/* ── Line Login Button (Brand guidelines: #06C755 bg, #FFFFFF text) — G-6 */}
+      <button
+        className="slb-btn slb-btn--line"
+        onClick={() => {
+          const url = `/api/auth/line/login?returnUrl=${encodeURIComponent(returnUrl)}`;
+          window.location.href = url;
+        }}
+        disabled={disabled}
+        type="button"
+      >
+        <svg className="slb-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M12 2C6.48 2 2 5.64 2 10.13c0 3.99 3.54 7.33 8.33 7.96.32.07.76.22.87.5.1.25.07.65.03.91l-.14.85c-.04.26-.2 1.01.88.55 1.08-.46 5.84-3.44 7.97-5.89C21.88 12.77 22 11.49 22 10.13 22 5.64 17.52 2 12 2z"
+            fill="#FFFFFF"
+          />
+        </svg>
+        <span>{t('auth.login_with_line')}</span>
+      </button>
+
       {/* ── Google Login Button */}
       {onGoogleClick && (
         <button
@@ -92,6 +111,7 @@ export function SocialLoginButtons({
         .slb-icon { width: 18px; height: 18px; flex-shrink: 0; }
         .slb-btn--kakao { background: #FEE500; color: #000000; }
         .slb-btn--naver { background: #03C75A; color: #FFFFFF; }
+        .slb-btn--line { background: #06C755; color: #FFFFFF; }
         .slb-btn--google { background: #ffffff; color: #333333; border: 1px solid #dadce0; }
       `}</style>
     </div>

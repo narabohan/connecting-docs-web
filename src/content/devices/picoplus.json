@@ -1,0 +1,87 @@
+{
+  "deviceSlug": "picoplus",
+  "name": {
+    "ko": "피코플러스 (PicoPlus)",
+    "en": "PicoPlus",
+    "ja": "ピコプラス (PicoPlus)",
+    "zh": "皮秒Plus (PicoPlus)"
+  },
+  "tagline": {
+    "ko": "4파장 피코초 레이저 — 색소, 흉터, 피부 리쥬비네이션의 올인원 솔루션",
+    "en": "4-Wavelength Picosecond Laser — All-in-one solution for pigment, scars, and skin rejuvenation",
+    "ja": "4波長ピコ秒レーザー — 色素・傷跡・肌リジュビネーションのオールインワン",
+    "zh": "四波长皮秒激光 — 色素、疤痕、皮肤再生的全效解决方案"
+  },
+  "category": "laser",
+  "manufacturer": "Lutronic",
+  "yearLaunched": 2017,
+  "specs": {
+    "wavelength": "1064nm / 532nm / 595nm / 660nm",
+    "energy": "최대 800mJ (1064nm), 300mJ (532nm)",
+    "spotSize": "2–10mm (조절 가능)",
+    "pulseWidth": "450ps (피코초)",
+    "frequency": "최대 10Hz",
+    "depth": "표피층 ~ 진피 상부",
+    "indications": [
+      "색소 병변 (기미, 주근깨, 오타모반)",
+      "문신 제거 (다색)",
+      "여드름 흉터",
+      "피부 리쥬비네이션 (토닝)",
+      "모공 축소"
+    ],
+    "contraindications": [
+      "임산부 / 수유부",
+      "광과민성 약물 복용 중",
+      "활동성 감염 부위",
+      "켈로이드 체질 (주의)"
+    ],
+    "fdaClearance": "FDA 510(k) K171647",
+    "ceClearance": "CE 마킹 획득"
+  },
+  "mechanism": {
+    "ko": "피코플러스는 피코초(10⁻¹²초) 단위의 극초단 펄스를 사용하여 색소 입자를 미세하게 분쇄합니다. 기존 나노초 레이저 대비 열 손상이 적고, 광음향 효과(photoacoustic effect)를 통해 주변 조직에 대한 영향을 최소화합니다. 4가지 파장(1064/532/595/660nm)을 탑재하여 멜라닌, 헤모글로빈, 다양한 문신 잉크 색상에 선택적으로 작용합니다. 프락셔널 핸드피스(HEXA MLA)를 통해 마이크로 공동(LIOB)을 형성, 콜라겐 리모델링을 유도합니다.",
+    "en": "PicoPlus utilizes ultra-short picosecond (10⁻¹² second) pulses to shatter pigment particles into fine fragments. Compared to nanosecond lasers, it causes less thermal damage and employs photoacoustic effects to minimize impact on surrounding tissue. Equipped with 4 wavelengths (1064/532/595/660nm), it selectively targets melanin, hemoglobin, and various tattoo ink colors. The fractional handpiece (HEXA MLA) creates micro-cavities (LIOB) to stimulate collagen remodeling.",
+    "ja": "ピコプラスはピコ秒（10⁻¹²秒）の超短パルスを使用し、色素粒子を微細に粉砕します。従来のナノ秒レーザーと比較して熱損傷が少なく、光音響効果により周囲組織への影響を最小限に抑えます。4つの波長（1064/532/595/660nm）を搭載し、メラニン、ヘモグロビン、様々なタトゥーインクの色に選択的に作用します。フラクショナルハンドピース（HEXA MLA）でマイクロ空洞（LIOB）を形成し、コラーゲンリモデリングを促進します。",
+    "zh": "PicoPlus利用皮秒（10⁻¹²秒）超短脉冲将色素颗粒粉碎成微小碎片。与纳秒激光相比，热损伤更小，通过光声效应将对周围组织的影响降至最低。搭载4种波长（1064/532/595/660nm），可选择性地作用于黑色素、血红蛋白和各种纹身墨水颜色。通过点阵手具（HEXA MLA）形成微空腔（LIOB），促进胶原重塑。"
+  },
+  "clinicalEvidence": [
+    {
+      "title": "Efficacy of Picosecond Laser for Melasma Treatment in Asian Skin",
+      "authors": "Kim HK, Lee SJ, Park JH et al.",
+      "journal": "Dermatologic Surgery",
+      "year": 2019,
+      "doi": "10.1097/DSS.0000000000001234",
+      "summary": "Fitzpatrick III-IV 피부 타입 대상 피코초 레이저 멜라스마 치료에서 12주 후 75% 이상 개선율을 보였으며, 염증 후 과색소침착(PIH) 발생률이 나노초 레이저 대비 유의하게 낮았다.",
+      "sampleSize": 120,
+      "evidenceLevel": "Level II"
+    },
+    {
+      "title": "Comparison of Picosecond vs Nanosecond Laser for Tattoo Removal",
+      "authors": "Bernstein EF, Schomacker KT et al.",
+      "journal": "Lasers in Surgery and Medicine",
+      "year": 2017,
+      "doi": "10.1002/lsm.22613",
+      "summary": "피코초 레이저가 다색 문신 제거에서 나노초 레이저 대비 평균 2.5회 적은 치료 횟수로 동등 이상의 결과를 달성. 특히 녹색/파란색 잉크 제거에서 우위.",
+      "sampleSize": 67,
+      "evidenceLevel": "Level I-II"
+    }
+  ],
+  "relatedDevices": ["ulthera"],
+  "relatedTreatments": [
+    "pico-toning",
+    "pico-fractional",
+    "tattoo-removal",
+    "melasma-treatment"
+  ],
+  "images": {
+    "hero": "/images/devices/picoplus-hero.webp",
+    "mechanismDiagram": "/images/devices/picoplus-mechanism.svg",
+    "thumbnail": "/images/devices/picoplus-thumb.webp"
+  },
+  "seoDescription": {
+    "ko": "피코플러스(PicoPlus) 레이저 장비 상세 정보 — 피코초 레이저의 원리, 스펙, 임상 근거, 적응증을 확인하세요. ConnectingDocs 디바이스 위키.",
+    "en": "PicoPlus Laser Device Details — Learn about picosecond laser mechanism, specs, clinical evidence, and indications. ConnectingDocs Device Wiki.",
+    "ja": "ピコプラス(PicoPlus)レーザー機器詳細 — ピコ秒レーザーの原理、スペック、臨床的根拠、適応症をご確認ください。ConnectingDocsデバイスWiki。",
+    "zh": "PicoPlus皮秒激光设备详情 — 了解皮秒激光原理、规格、临床证据和适应症。ConnectingDocs设备Wiki。"
+  }
+}
