@@ -14,7 +14,8 @@
     "unauthorized_desc": "이 페이지에 접근할 수 있는 권한이 없습니다. 올바른 계정으로 로그인했는지 확인해주세요.",
     "login_with_kakao": "카카오로 로그인",
     "login_with_naver": "네이버로 로그인",
-    "login_with_google": "Google로 로그인"
+    "login_with_google": "Google로 로그인",
+    "login_with_line": "LINE으로 로그인"
   },
   "consent": {
     "banner_summary": "본 서비스는 개인정보 보호법(PIPA)에 따라 동의를 수집합니다.",

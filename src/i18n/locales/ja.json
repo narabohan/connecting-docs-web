@@ -14,7 +14,8 @@
     "unauthorized_desc": "このページにアクセスする権限がありません。正しいアカウントでログインしているか確認してください。",
     "login_with_kakao": "カカオでログイン",
     "login_with_naver": "Naverでログイン",
-    "login_with_google": "Googleでログイン"
+    "login_with_google": "Googleでログイン",
+    "login_with_line": "LINEでログイン"
   },
   "consent": {
     "banner_summary": "個人情報保護法に基づき、同意を取得いたします。",
