@@ -76,6 +76,35 @@ export async function verifyIdToken(idToken: string): Promise<FirebaseTokenClaim
   }
 }
 
+// ─── Custom Token Creation (C-5: Kakao OAuth) ───────────────
+
+/**
+ * Create a Firebase Custom Token for social providers not natively
+ * supported by Firebase (e.g., Kakao, Naver, Line).
+ *
+ * @param uid - Unique ID for the user (e.g., `kakao_123456`)
+ * @param claims - Custom claims to embed (e.g., { role: 'patient' })
+ * @returns The custom token string, or null if admin SDK unavailable
+ */
+export async function createCustomToken(
+  uid: string,
+  claims?: Record<string, string>
+): Promise<string | null> {
+  const auth = getAdminAuth();
+  if (!auth) {
+    console.error('[firebaseAdmin] Cannot create custom token — admin SDK not configured');
+    return null;
+  }
+
+  try {
+    const token = await auth.createCustomToken(uid, claims);
+    return token;
+  } catch (err) {
+    console.error('[firebaseAdmin] createCustomToken failed:', err);
+    return null;
+  }
+}
+
 /**
  * Check if Firebase Admin SDK is configured and available.
  */
