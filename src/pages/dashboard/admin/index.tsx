@@ -10,10 +10,14 @@
 import Head from 'next/head';
 import { withRoleGuard } from '@/lib/withRoleGuard';
 import { AdminDashboardLayout } from '@/components/dashboard/admin/AdminDashboardLayout';
+import { SystemMetrics } from '@/components/dashboard/admin/SystemMetrics';
+import { useSystemStats } from '@/hooks/useSystemStats';
 
 // ─── Page Component ──────────────────────────────────────────
 
 function AdminDashboardPage() {
+  const { stats, loading, error, refetch } = useSystemStats();
+
   return (
     <>
       <Head>
@@ -23,12 +27,12 @@ function AdminDashboardPage() {
 
       <AdminDashboardLayout title="System Overview">
         <div className="space-y-6">
-          {/* SystemMetrics will be added in Task 2 */}
-          <div className="bg-[#12121f] border border-white/10 rounded-xl p-8 text-center">
-            <p className="text-gray-400 text-sm">
-              Admin Dashboard — System metrics coming in Task 2
-            </p>
-          </div>
+          <SystemMetrics
+            stats={stats}
+            loading={loading}
+            error={error}
+            onRefresh={refetch}
+          />
         </div>
       </AdminDashboardLayout>
     </>
