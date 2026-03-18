@@ -71,6 +71,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // ── Restore session on mount
     useEffect(() => {
         try {
+            // Immediately restore cached session for fast guard pass
+            const cached = localStorage.getItem('cd_user_session');
+            if (cached) {
+                try {
+                    const parsed = JSON.parse(cached) as AuthUser;
+                    setUser(parsed);
+                } catch { /* ignore corrupt cache */ }
+            }
+
             // Try Firebase if configured
             const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
             if (apiKey && apiKey !== 'YOUR_API_KEY') {
