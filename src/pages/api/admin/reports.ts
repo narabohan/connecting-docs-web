@@ -121,7 +121,7 @@ async function handler(
   }
 
   try {
-    const fieldsParam = ['Created_at', 'created_at', 'Status', 'Title', 'Output_JSON', 'Input_JSON']
+    const fieldsParam = ['Created_at', 'Status', 'Title', 'Output_JSON', 'Input_JSON']
       .map((f) => `fields%5B%5D=${encodeURIComponent(f)}`)
       .join('&');
     const url = `${reportsUrl()}?${fieldsParam}&sort%5B0%5D%5Bfield%5D=Created_at&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=200`;
@@ -142,7 +142,7 @@ async function handler(
 
       return {
         id: r.id,
-        date: r.fields.Created_at ?? r.fields.created_at ?? '',
+        date: r.fields.Created_at ?? '',
         status: r.fields.Status ?? 'completed',
         title: r.fields.Title ?? `Report ${r.id.slice(0, 8)}`,
         primaryGoal: input.primaryGoal ?? '',
