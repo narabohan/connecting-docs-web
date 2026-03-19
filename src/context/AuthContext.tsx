@@ -94,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
                         if (firebaseUser) {
                             setLoading(true); // Re-lock while fetchDbRole resolves
+                            setIsAuthModalOpen(false); // Close modal on login detection
                             const provider = (firebaseUser.providerData[0]?.providerId?.includes('google') ? 'google' :
                                 firebaseUser.providerData[0]?.providerId?.includes('github') ? 'github' :
                                     'email') as AuthUser['provider'];
