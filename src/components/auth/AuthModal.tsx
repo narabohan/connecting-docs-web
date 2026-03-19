@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Loader2, Mail, Eye, EyeOff, ArrowRight, User, Lock, Check } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SocialLoginButtons } from '@/components/auth/SocialLoginButtons';
 
 type Tab = 'signin' | 'signup';
 
@@ -165,6 +166,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     {loading === 'github' ? <Loader2 className="w-5 h-5 animate-spin" /> : <GithubIcon />}
                                     Continue with GitHub
                                 </button>
+                            </div>
+
+                            {/* ── Kakao / Naver / Line (Asia Social) ── */}
+                            <div className="mb-4">
+                                <SocialLoginButtons
+                                    returnUrl="/"
+                                    disabled={!!loading}
+                                />
                             </div>
 
                             {/* ── Divider ── */}
