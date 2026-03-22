@@ -169,7 +169,7 @@ export function RadarChart5Axis({ scores, painLevel, downtimeLevel, lang }: Rada
             textAnchor="middle"
             dominantBaseline="middle"
             fill="var(--text-3)"
-            fontSize={7}
+            fontSize={11}
             fontWeight={500}
           >
             {labels[AXES[i]]}

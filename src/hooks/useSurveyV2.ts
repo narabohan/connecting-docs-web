@@ -25,7 +25,7 @@ import type {
 } from '@/types/survey-v2';
 import type { FinalRecommendationRequest, FinalRecommendationResponse } from '@/pages/api/survey-v2/final-recommendation';
 import { MEDICATION_FLAG_MAP, CONDITION_FLAG_MAP, FOLLOWUP_ITEMS } from '@/components/survey-v2/SafetyCheckpoint';
-import { hasConsent, getStoredConsent, saveConsentToLocal } from '@/lib/consent-utils';
+import { hasConsent } from '@/lib/consent-utils';
 
 // ─── Initial State ───────────────────────────────────────────
 const initialState: SurveyV2State = {
@@ -305,19 +305,8 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
     const hasAiProcessing = hasConsent('ai_processing');
 
     if (!hasEssential || !hasAiProcessing) {
-      // Auto-grant essential consents for survey flow
-      // TODO: Phase 3 — connect ConsentBanner UI to survey page
-      const existing = getStoredConsent();
-      const currentConsents = existing?.consents ?? {
-        essential: false,
-        ai_processing: false,
-        analytics: false,
-        marketing: false,
-      };
-      saveConsentToLocal(
-        { ...currentConsents, essential: true, ai_processing: true },
-        state.demographics.detected_country
-      );
+      setNeedsConsent(true);
+      return;
     }
 
     setNeedsConsent(false);

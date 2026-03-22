@@ -36,11 +36,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
     const router = useRouter();
 
-    // ── Fetch role from DB via /api/auth/sync ──
-    const fetchDbRole = useCallback(async (u: AuthUser): Promise<UserRole> => {
-        if (u.provider === 'demo') return u.role;
-        try {
-            const res = await fetch('/api/auth/sync', {
+    // ── Save session (and Sync to DB)
+    const saveSession = useCallback((u: AuthUser) => {
+        setUser(u);
+        localStorage.setItem('cd_user_session', JSON.stringify(u));
+
+        // Background sync to Airtable/Admin Notification (ignores demo users)
+        if (u.provider !== 'demo') {
+            fetch('/api/auth/sync', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -51,41 +54,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     provider: u.provider,
                     role: u.role
                 })
-            });
-            const data = await res.json();
-            if (data.dbRole) return data.dbRole as UserRole;
-        } catch (e) {
-            console.error('Failed to sync user to DB:', e);
+            })
+                .then(res => res.json())
+                .then(data => {
+                    // If Airtable has a different role (e.g., admin set them to 'doctor'), update session
+                    if (data.dbRole && data.dbRole !== u.role) {
+                        const updatedUser = { ...u, role: data.dbRole as UserRole };
+                        setUser(updatedUser);
+                        localStorage.setItem('cd_user_session', JSON.stringify(updatedUser));
+                    }
+                })
+                .catch(e => console.error('Failed to sync user to DB:', e));
         }
-        // Fallback: try cached role from localStorage
-        try {
-            const cached = localStorage.getItem('cd_user_session');
-            if (cached) {
-                const parsed = JSON.parse(cached) as AuthUser;
-                if (parsed.uid === u.uid && parsed.role) return parsed.role;
-            }
-        } catch { /* ignore parse errors */ }
-        return 'patient';
-    }, []);
-
-    // ── Save session (role already resolved) ──
-    const saveSession = useCallback((u: AuthUser) => {
-        setUser(u);
-        localStorage.setItem('cd_user_session', JSON.stringify(u));
     }, []);
 
     // ── Restore session on mount
     useEffect(() => {
         try {
-            // Immediately restore cached session for fast guard pass
-            const cached = localStorage.getItem('cd_user_session');
-            if (cached) {
-                try {
-                    const parsed = JSON.parse(cached) as AuthUser;
-                    setUser(parsed);
-                } catch { /* ignore corrupt cache */ }
-            }
-
             // Try Firebase if configured
             const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
             if (apiKey && apiKey !== 'YOUR_API_KEY') {
@@ -93,13 +78,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 import('@/lib/firebase').then(({ auth, onAuthStateChanged }) => {
                     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
                         if (firebaseUser) {
-                            setLoading(true); // Re-lock while fetchDbRole resolves
-                            setIsAuthModalOpen(false); // Close modal on login detection
                             const provider = (firebaseUser.providerData[0]?.providerId?.includes('google') ? 'google' :
                                 firebaseUser.providerData[0]?.providerId?.includes('github') ? 'github' :
                                     'email') as AuthUser['provider'];
 
-                            const baseUser: AuthUser = {
+                            const u: AuthUser = {
                                 uid: firebaseUser.uid,
                                 email: firebaseUser.email || '',
                                 displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
@@ -107,16 +90,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                 role: 'patient',
                                 provider: provider,
                             };
-
-                            // Await DB role before setting user — prevents withRoleGuard race
-                            fetchDbRole(baseUser).then((resolvedRole) => {
-                                saveSession({ ...baseUser, role: resolvedRole });
-                                setLoading(false);
-                            });
+                            saveSession(u);
                         } else {
                             setUser(null);
-                            setLoading(false);
                         }
+                        setLoading(false);
                     });
                     return () => unsubscribe();
                 });
@@ -129,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {
             setLoading(false);
         }
-    }, [saveSession, fetchDbRole]);
+    }, [saveSession]);
 
     // ── Google OAuth ──────────────────────────────────────────────────────────
     const signInWithGoogle = useCallback(async () => {

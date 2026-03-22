@@ -19,8 +19,8 @@
   --border-2: rgba(255,255,255,0.14);
   --text: #e4e4e7;
   --text-hi: #f4f4f5;
-  --text-2: #d4d4d8;
-  --text-3: #a1a1aa;
+  --text-2: #a1a1aa;
+  --text-3: #71717a;
   --cyan: #22d3ee;
   --cyan-dim: rgba(34,211,238,0.12);
   --cyan-glow: 0 0 20px rgba(34,211,238,0.25), 0 0 60px rgba(34,211,238,0.08);
@@ -50,7 +50,7 @@
 .rv7-tab-btn:hover{color:var(--text-2);}
 .rv7-tab-btn.rv7-active{color:var(--cyan);border-bottom-color:var(--cyan);text-shadow:0 0 20px rgba(34,211,238,0.4);}
 .rv7-tab-page{display:none;animation:rv7-fadeUp .45s ease;}
-.rv7-tab-page.rv7-active,.rv7-tab-page.active{display:block;}
+.rv7-tab-page.rv7-active{display:block;}
 @keyframes rv7-fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── GLASS CARD ── */
@@ -1308,7 +1308,7 @@
 .rv7-rec-section,.rv7-d-section,.rv7-plan-section,.rv7-skin-3d-section{contain:layout style;}
 .rv7-rec-card,.rv7-d-proto-card,.rv7-d-survey-card,.rv7-d-alt-card,.rv7-hc-card,.rv7-plan-phase{contain:layout style paint;}
 .rv7-rec-detail,.rv7-d-qa-a{contain:content;}
-.rv7-tab-page:not(.rv7-active):not(.active){content-visibility:hidden;}
+.rv7-tab-page:not(.rv7-active){content-visibility:hidden;}
 
 /* ══════════ TOAST NOTIFICATIONS ══════════ */
 #toast-container{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
