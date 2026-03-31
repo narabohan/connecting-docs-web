@@ -266,7 +266,7 @@ function convertPayloadToReportV7Data(
   const demo = payload.survey_state.demographics;
 
   return {
-    lang: rec.lang,
+    lang: rec.lang?.toUpperCase() || demo.detected_language,
     generatedAt: rec.generated_at || payload.created_at,
     model: rec.model || payload.model,
     patient: convertPatient(rec.patient, demo),
@@ -287,6 +287,54 @@ function convertPayloadToReportV7Data(
 const IS_MOCK_MODE = process.env.NEXT_PUBLIC_AI_MOCK === 'true';
 
 // ═══════════════════════════════════════════════════════════════
+//  Airtable Fallback — fetch from /api/report-v2/[id]
+//  Returns StoredReportPayload or null
+// ═══════════════════════════════════════════════════════════════
+
+async function fetchFromAirtable(reportId: string): Promise<StoredReportPayload | null> {
+  try {
+    const res = await fetch(`/api/report-v2/${encodeURIComponent(reportId)}`);
+    if (!res.ok) {
+      console.error(`[useReportData] API ${res.status}: ${res.statusText}`);
+      return null;
+    }
+
+    const json = await res.json();
+
+    // The API returns StoredReportPayload-compatible shape
+    const payload: StoredReportPayload = {
+      recommendation: json.recommendation,
+      model: json.model,
+      usage: json.usage,
+      survey_state: {
+        demographics: {
+          detected_language: json.survey_state.demographics.detected_language as SurveyLang,
+          detected_country: json.survey_state.demographics.detected_country,
+          d_gender: json.survey_state.demographics.d_gender,
+          d_age: json.survey_state.demographics.d_age,
+        },
+        safety_flags: json.survey_state.safety_flags as SafetyFlag[],
+        open_question_raw: json.survey_state.open_question_raw,
+      },
+      created_at: json.created_at,
+    };
+
+    // Cache in sessionStorage for subsequent navigations within this tab
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      console.info('[useReportData] Airtable data cached to sessionStorage');
+    } catch {
+      // sessionStorage may be full or unavailable — non-blocking
+    }
+
+    return payload;
+  } catch (err) {
+    console.error('[useReportData] Airtable fallback fetch failed:', err);
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  Hook
 // ═══════════════════════════════════════════════════════════════
 
@@ -298,6 +346,9 @@ export function useReportData(reportId: string | undefined): UseReportDataReturn
 
   useEffect(() => {
     if (!reportId) return;
+
+    // Use flag to prevent state updates after unmount
+    let cancelled = false;
 
     setStatus('loading');
 
@@ -314,39 +365,61 @@ export function useReportData(reportId: string | undefined): UseReportDataReturn
       return;
     }
 
-    try {
-      // ─── Phase 0: sessionStorage ────────────────────────────
-      const raw = typeof window !== 'undefined'
-        ? sessionStorage.getItem(STORAGE_KEY)
-        : null;
+    // ─── Async loader (sessionStorage → Airtable fallback) ────
+    async function loadReport() {
+      try {
+        // ── Step 1: Try sessionStorage ────────────────────────
+        const raw = typeof window !== 'undefined'
+          ? sessionStorage.getItem(STORAGE_KEY)
+          : null;
 
-      if (!raw) {
-        // Phase 1 TODO: Airtable fallback
-        // const airtableData = await fetchFromAirtable(reportId);
-        setError('Report data not found. Please complete the survey first.');
+        let payload: StoredReportPayload | null = null;
+
+        if (raw) {
+          console.info('[useReportData] Loading from sessionStorage');
+          payload = JSON.parse(raw);
+        } else {
+          // ── Step 2: Airtable fallback via API ────────────────
+          console.info('[useReportData] sessionStorage empty — fetching from Airtable');
+          payload = await fetchFromAirtable(reportId!);
+        }
+
+        if (cancelled) return;
+
+        if (!payload) {
+          setError('Report not found. The link may be invalid or expired.');
+          setStatus('error');
+          return;
+        }
+
+        const detectedLang = payload.survey_state.demographics.detected_language;
+        setLang(detectedLang);
+
+        const reportData = convertPayloadToReportV7Data(payload);
+
+        // ── Validate through Zod ──────────────────────────────
+        const { data: validated, warnings } = validateRecommendation(reportData);
+        if (warnings.length > 0) {
+          console.warn('[useReportData] Validation warnings:', warnings);
+        }
+
+        if (cancelled) return;
+
+        setData(validated);
+        setStatus('success');
+      } catch (err) {
+        if (cancelled) return;
+        const message = err instanceof Error ? err.message : 'Failed to load report data.';
+        setError(message);
         setStatus('error');
-        return;
       }
-
-      const payload: StoredReportPayload = JSON.parse(raw);
-      const detectedLang = payload.survey_state.demographics.detected_language;
-      setLang(detectedLang);
-
-      const reportData = convertPayloadToReportV7Data(payload);
-
-      // ─── Validate through Zod ────────────────────────────────
-      const { data: validated, warnings } = validateRecommendation(reportData);
-      if (warnings.length > 0) {
-        console.warn('[useReportData] Validation warnings:', warnings);
-      }
-
-      setData(validated);
-      setStatus('success');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load report data.';
-      setError(message);
-      setStatus('error');
     }
+
+    loadReport();
+
+    return () => {
+      cancelled = true;
+    };
   }, [reportId]);
 
   return { data, status, error, lang };
