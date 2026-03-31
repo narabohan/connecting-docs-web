@@ -163,7 +163,7 @@
 .rv7-rec-expand-btn.open .rv7-arrow{transform:rotate(180deg);}
 
 .rv7-rec-detail{max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1);background:rgba(255,255,255,0.02);}
-.rv7-rec-detail.open{max-height:600px;}
+.rv7-rec-detail.open{max-height:1200px;}
 .rv7-rec-detail-inner{padding:14px 18px 16px;}
 
 /* "왜 나에게 맞는가" deep clinical section */
@@ -850,7 +850,7 @@
   .rv7-rec-sub{font-size:9px;}
   .rv7-rec-summary{padding:10px 14px 8px;font-size:11px;}
   .rv7-rec-expand-btn{padding:8px 14px;font-size:9px;}
-  .rv7-rec-detail.open{max-height:700px;}
+  .rv7-rec-detail.open{max-height:1400px;}
   .rv7-rec-detail-inner{padding:10px 14px 12px;}
   .rv7-rec-gauges{gap:12px;flex-wrap:wrap;}
   .rv7-rec-targets{gap:4px;}
