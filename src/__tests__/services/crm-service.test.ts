@@ -62,7 +62,7 @@ describe('crm-service', () => {
       airtableRecordResponse('rec_new_1', {
         stage: 'survey_started',
         country: 'KR',
-        language: 'KO',
+        Language: 'KO',
         first_survey_at: '2026-03-17T00:00:00.000Z',
         last_activity_at: '2026-03-17T00:00:00.000Z',
       })
