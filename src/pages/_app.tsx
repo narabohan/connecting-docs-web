@@ -1,43 +1,54 @@
 import "@/styles/globals.css";
 import "@/components/report-v7/report-v7.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import type { AppProps } from "next/app";
 import { AuthProvider } from "@/context/AuthContext";
 import { AppI18nProvider } from "@/i18n";
-import { Toaster, toast } from "react-hot-toast";
-import { getQueueSize } from "@/services/retry-queue";
-import { processQueue } from "@/services/queue-processor";
+
+// ─── Client-only Toaster (avoids React 19 hydration mismatch) ──
+const Toaster = dynamic(
+  () => import("react-hot-toast").then((mod) => mod.Toaster),
+  { ssr: false },
+);
 
 export default function App({ Component, pageProps }: AppProps) {
   // ── Process retry queue on app load (C-3: Await-Confirm)
   useEffect(() => {
-    const queueSize = getQueueSize();
-    if (queueSize === 0) return;
+    // Lazy-import to avoid loading queue modules during SSR
+    Promise.all([
+      import("@/services/retry-queue"),
+      import("@/services/queue-processor"),
+      import("react-hot-toast"),
+    ]).then(([{ getQueueSize }, { processQueue }, { toast }]) => {
+      const queueSize = getQueueSize();
+      if (queueSize === 0) return;
 
-    toast.loading(
-      `저장되지 않은 결과가 ${queueSize}건 있습니다. 다시 저장 중...`,
-      { id: 'queue-process', duration: 5000 }
-    );
+      toast.loading(
+        `저장되지 않은 결과가 ${queueSize}건 있습니다. 다시 저장 중...`,
+        { id: 'queue-process', duration: 5000 },
+      );
 
-    processQueue()
-      .then((result) => {
-        if (result.succeeded > 0) {
-          toast.success(
-            `${result.succeeded}건 저장 완료`,
-            { id: 'queue-process' }
-          );
-        }
-        if (result.permanentlyFailed > 0) {
-          toast.error(
-            `${result.permanentlyFailed}건 저장 실패. 고객센터에 문의해주세요.`,
-            { id: 'queue-failed', duration: 8000 }
-          );
-        }
-      })
-      .catch((err) => {
-        console.error('[_app] Queue processing error:', err);
-        toast.dismiss('queue-process');
-      });
+      processQueue()
+        .then((result) => {
+          if (result.succeeded > 0) {
+            toast.success(
+              `${result.succeeded}건 저장 완료`,
+              { id: 'queue-process' },
+            );
+          }
+          if (result.permanentlyFailed > 0) {
+            toast.error(
+              `${result.permanentlyFailed}건 저장 실패. 고객센터에 문의해주세요.`,
+              { id: 'queue-failed', duration: 8000 },
+            );
+          }
+        })
+        .catch((err) => {
+          console.error('[_app] Queue processing error:', err);
+          toast.dismiss('queue-process');
+        });
+    });
   }, []);
 
   return (
