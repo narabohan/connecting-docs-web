@@ -66,7 +66,9 @@ function axisPoint(axisIndex: number, value: number, total: number): { x: number
 function buildPolygon(axes: string[], scores: Record<string, number>): string {
   const total = axes.length;
   return axes.map((axis, i) => {
-    const val = Math.min(100, Math.max(0, scores[axis] ?? 0));
+    // Scores arrive on a 0-10 scale; axisPoint expects 0-100
+    const raw = scores[axis] ?? 0;
+    const val = Math.min(100, Math.max(0, raw * 10));
     const pt = axisPoint(i, val, total);
     return `${pt.x},${pt.y}`;
   }).join(' ');
@@ -184,7 +186,8 @@ export function RadarChart5Axis({
 
         {/* Data points */}
         {axes.map((axis, i) => {
-          const val = Math.min(100, Math.max(0, scores[axis] ?? 0));
+          const raw = scores[axis] ?? 0;
+          const val = Math.min(100, Math.max(0, raw * 10));
           const pt = axisPoint(i, val, total);
           return (
             <circle

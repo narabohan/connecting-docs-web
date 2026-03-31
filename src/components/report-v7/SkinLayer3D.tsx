@@ -64,10 +64,10 @@ const BEAM_COLORS: Record<string, { stroke: string; glow: string }> = {
 const DEFAULT_BEAM = { stroke: '#22d3ee', glow: 'rgba(34,211,238,0.3)' };
 
 // ─── SVG geometry ─────────────────────────────────────────────
-const SVG_W = 340;
-const SVG_H = 230;
-const LEFT_MARGIN = 110;    // space for labels (wider for larger text)
-const LAYER_W = 180;        // width of layer blocks
+const SVG_W = 370;
+const SVG_H = 240;
+const LEFT_MARGIN = 120;    // space for labels (wider for larger text)
+const LAYER_W = 190;        // width of layer blocks
 const TOP_Y = 10;
 const SKEW_X = 12;          // 3D perspective offset
 
@@ -207,11 +207,11 @@ export function SkinLayer3D({ targetLayers, deviceCategory, lang }: SkinLayer3DP
                 {/* Layer label */}
                 <text
                   x={LEFT_MARGIN - 6}
-                  y={y + h / 2 + 3}
+                  y={y + h / 2 + 4}
                   textAnchor="end"
-                  fill={layer.isTarget ? beam.stroke : 'rgba(228,228,231,0.7)'}
-                  fontSize={11}
-                  fontWeight={layer.isTarget ? 700 : 500}
+                  fill={layer.isTarget ? beam.stroke : 'rgba(228,228,231,0.85)'}
+                  fontSize={14}
+                  fontWeight={layer.isTarget ? 700 : 600}
                 >
                   {labels[layer.id] ?? layer.id}
                 </text>
@@ -219,10 +219,10 @@ export function SkinLayer3D({ targetLayers, deviceCategory, lang }: SkinLayer3DP
                 {/* Depth indicator */}
                 <text
                   x={LEFT_MARGIN + LAYER_W + SKEW_X + 8}
-                  y={y + h / 2 + 3}
+                  y={y + h / 2 + 4}
                   textAnchor="start"
-                  fill="rgba(228,228,231,0.55)"
-                  fontSize={9}
+                  fill="rgba(228,228,231,0.7)"
+                  fontSize={12}
                 >
                   {layer.depth === 0 ? '0.1mm' :
                    layer.depth === 1 ? '0.3mm' :
@@ -307,9 +307,9 @@ export function SkinLayer3D({ targetLayers, deviceCategory, lang }: SkinLayer3DP
           />
           <text
             x={LEFT_MARGIN + LAYER_W + SKEW_X + 8}
-            y={TOP_Y + 3}
-            fill="rgba(228,228,231,0.5)"
-            fontSize={9}
+            y={TOP_Y + 4}
+            fill="rgba(228,228,231,0.7)"
+            fontSize={12}
           >
             Surface
           </text>
