@@ -64,9 +64,9 @@ const BEAM_COLORS: Record<string, { stroke: string; glow: string }> = {
 const DEFAULT_BEAM = { stroke: '#22d3ee', glow: 'rgba(34,211,238,0.3)' };
 
 // ─── SVG geometry ─────────────────────────────────────────────
-const SVG_W = 320;
-const SVG_H = 220;
-const LEFT_MARGIN = 100;    // space for labels
+const SVG_W = 340;
+const SVG_H = 230;
+const LEFT_MARGIN = 110;    // space for labels (wider for larger text)
 const LAYER_W = 180;        // width of layer blocks
 const TOP_Y = 10;
 const SKEW_X = 12;          // 3D perspective offset
@@ -209,9 +209,9 @@ export function SkinLayer3D({ targetLayers, deviceCategory, lang }: SkinLayer3DP
                   x={LEFT_MARGIN - 6}
                   y={y + h / 2 + 3}
                   textAnchor="end"
-                  fill={layer.isTarget ? beam.stroke : 'rgba(255,255,255,0.45)'}
-                  fontSize={8}
-                  fontWeight={layer.isTarget ? 600 : 400}
+                  fill={layer.isTarget ? beam.stroke : 'rgba(228,228,231,0.7)'}
+                  fontSize={11}
+                  fontWeight={layer.isTarget ? 700 : 500}
                 >
                   {labels[layer.id] ?? layer.id}
                 </text>
@@ -221,8 +221,8 @@ export function SkinLayer3D({ targetLayers, deviceCategory, lang }: SkinLayer3DP
                   x={LEFT_MARGIN + LAYER_W + SKEW_X + 8}
                   y={y + h / 2 + 3}
                   textAnchor="start"
-                  fill="rgba(255,255,255,0.25)"
-                  fontSize={6}
+                  fill="rgba(228,228,231,0.55)"
+                  fontSize={9}
                 >
                   {layer.depth === 0 ? '0.1mm' :
                    layer.depth === 1 ? '0.3mm' :
@@ -301,15 +301,15 @@ export function SkinLayer3D({ targetLayers, deviceCategory, lang }: SkinLayer3DP
             y1={TOP_Y}
             x2={LEFT_MARGIN + LAYER_W + SKEW_X + 5}
             y2={TOP_Y}
-            stroke="rgba(255,255,255,0.15)"
+            stroke="rgba(255,255,255,0.25)"
             strokeWidth={1}
             strokeDasharray="4 2"
           />
           <text
             x={LEFT_MARGIN + LAYER_W + SKEW_X + 8}
             y={TOP_Y + 3}
-            fill="rgba(255,255,255,0.3)"
-            fontSize={6}
+            fill="rgba(228,228,231,0.5)"
+            fontSize={9}
           >
             Surface
           </text>

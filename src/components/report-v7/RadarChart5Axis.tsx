@@ -155,7 +155,7 @@ export function RadarChart5Axis({
             key={`ring-${i}`}
             points={points}
             fill="none"
-            stroke="rgba(255,255,255,0.06)"
+            stroke="rgba(255,255,255,0.10)"
             strokeWidth={i === RINGS - 1 ? 1 : 0.5}
           />
         ))}
@@ -207,9 +207,9 @@ export function RadarChart5Axis({
             y={pt.y}
             textAnchor="middle"
             dominantBaseline="middle"
-            fill="var(--text-3)"
-            fontSize={11}
-            fontWeight={500}
+            fill="rgba(228,228,231,0.85)"
+            fontSize={13}
+            fontWeight={600}
           >
             {labelMap[axes[i]] ?? axes[i]}
           </text>
