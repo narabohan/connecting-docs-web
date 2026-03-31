@@ -188,7 +188,7 @@ export function BudgetSection({ budget, status, lang, onRetry }: BudgetSectionPr
       {/* Labels */}
       <div className="rv7-budget-labels">
         {budget.segments.map((seg) => (
-          <div key={seg.category} style={{ fontSize: '9px', color: 'var(--text-2)' }}>
+          <div key={seg.category} style={{ fontSize: '11px', color: 'var(--text-2)' }}>
             <span style={{ fontWeight: 600 }}>
               {CATEGORY_LABELS[seg.category]?.[lang] ?? seg.label}
             </span>

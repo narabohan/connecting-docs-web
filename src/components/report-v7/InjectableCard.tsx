@@ -87,10 +87,10 @@ export function InjectableCard({ recommendation: rec, isExpanded, onToggle, lang
           {/* MOA inline */}
           {rec.moaSummaryShort && (
             <div className="rv7-moa-section">
-              <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-hi)', marginBottom: '4px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-hi)', marginBottom: '4px' }}>
                 {rec.moaSummaryTitle}
               </div>
-              <div style={{ fontSize: '10px', color: 'var(--text-2)', lineHeight: 1.7 }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-2)', lineHeight: 1.7 }}>
                 {rec.moaSummaryShort}
               </div>
             </div>

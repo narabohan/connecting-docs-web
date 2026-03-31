@@ -145,7 +145,7 @@ export default function TreatmentPlanSection({ plan, status, lang, onRetry }: Tr
         {plan.phases.map((phase) => (
           <div key={phase.phase} className="rv7-plan-phase">
             <div style={{
-              fontSize: '8px',
+              fontSize: '9px',
               fontWeight: 700,
               letterSpacing: '0.1em',
               textTransform: 'uppercase' as const,
@@ -170,7 +170,7 @@ export default function TreatmentPlanSection({ plan, status, lang, onRetry }: Tr
               {phase.period}
             </div>
             <div style={{
-              fontSize: '10px',
+              fontSize: '11px',
               color: 'var(--text-2)',
               lineHeight: 1.6,
               marginBottom: '6px',

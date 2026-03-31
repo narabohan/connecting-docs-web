@@ -293,7 +293,7 @@ export default function DoctorTabSection({
                     </div>
                   </div>
                   <span style={{
-                    fontSize: '8px',
+                    fontSize: '9px',
                     padding: '2px 8px',
                     borderRadius: '10px',
                     background: 'var(--cyan-dim)',
@@ -323,7 +323,7 @@ export default function DoctorTabSection({
                     </div>
                   </div>
                   <span style={{
-                    fontSize: '8px',
+                    fontSize: '9px',
                     padding: '2px 8px',
                     borderRadius: '10px',
                     background: 'rgba(251,113,133,0.08)',
