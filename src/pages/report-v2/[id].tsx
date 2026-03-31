@@ -17,6 +17,7 @@
 import { useRouter } from 'next/router';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Head from 'next/head';
+import type { GetServerSideProps } from 'next';
 import type { SurveyLang } from '@/types/survey-v2';
 import { useReportData, type StoredReportPayload } from '@/hooks/useReportData';
 import { ReportV7 } from '@/components/report-v7/ReportV7';
@@ -352,3 +353,12 @@ export default function ReportV2Page() {
     </>
   );
 }
+
+// ─── SSR: Ensures router.query is available on first render ────
+// Without this, Netlify pre-renders the page as static HTML and
+// router.query stays empty (router.isReady = false forever).
+// This is a no-op SSR — it just forces Next.js to treat this as
+// a server-rendered page so the dynamic [id] param is resolved.
+export const getServerSideProps: GetServerSideProps = async () => {
+  return { props: {} };
+};
