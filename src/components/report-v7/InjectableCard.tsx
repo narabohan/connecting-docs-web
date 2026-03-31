@@ -34,7 +34,7 @@ interface InjectableCardProps {
 }
 
 // ─── Component ────────────────────────────────────────────────
-export function InjectableCard({ recommendation: rec, isExpanded, onToggle }: InjectableCardProps) {
+export function InjectableCard({ recommendation: rec, isExpanded, onToggle, lang }: InjectableCardProps) {
   const { t } = useReportI18n();
   const targetLayers = rec.skinLayer ? rec.skinLayer.split(',').map((s) => s.trim()) : [];
 
@@ -100,9 +100,8 @@ export function InjectableCard({ recommendation: rec, isExpanded, onToggle }: In
           <div style={{ marginTop: '16px' }}>
             <RadarChart5Axis
               scores={rec.scores}
-              painLevel={0}
-              downtimeLevel={0}
-              lang="KO"
+              lang={lang}
+              accentColor="var(--rose)"
             />
           </div>
 
@@ -112,7 +111,7 @@ export function InjectableCard({ recommendation: rec, isExpanded, onToggle }: In
               <SkinLayer3D
                 targetLayers={targetLayers}
                 deviceCategory={rec.category}
-                lang="KO"
+                lang={lang}
               />
             </div>
           )}

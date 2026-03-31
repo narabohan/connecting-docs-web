@@ -72,8 +72,29 @@ const TOP_Y = 10;
 const SKEW_X = 12;          // 3D perspective offset
 
 // ─── Normalize layer IDs for matching ─────────────────────────
+//  AI-generated skin_layer values are often abbreviated:
+//    "deep" → deep_dermis, "upd"/"upper" → upper_dermis,
+//    "subq"/"fat" → subcutaneous_fat, etc.
+const LAYER_ALIASES: Record<string, string> = {
+  epi: 'epidermis',
+  epiderm: 'epidermis',
+  upper: 'upper_dermis',
+  upd: 'upper_dermis',
+  upper_derm: 'upper_dermis',
+  deep: 'deep_dermis',
+  dd: 'deep_dermis',
+  deep_derm: 'deep_dermis',
+  dermis: 'deep_dermis',
+  subq: 'subcutaneous_fat',
+  fat: 'subcutaneous_fat',
+  subcutaneous: 'subcutaneous_fat',
+  smas: 'smas',
+  muscle: 'muscle',
+};
+
 function normalizeLayerId(s: string): string {
-  return s.toLowerCase().replace(/[\s-]+/g, '_').replace(/[^a-z0-9_]/g, '');
+  const key = s.toLowerCase().replace(/[\s-]+/g, '_').replace(/[^a-z0-9_]/g, '');
+  return LAYER_ALIASES[key] ?? key;
 }
 
 // ─── Props ────────────────────────────────────────────────────

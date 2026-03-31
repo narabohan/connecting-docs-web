@@ -61,7 +61,7 @@ interface EBDCardProps {
 }
 
 // ─── Component ────────────────────────────────────────────────
-export function EBDCard({ recommendation: rec, isExpanded, onToggle }: EBDCardProps) {
+export function EBDCard({ recommendation: rec, isExpanded, onToggle, lang }: EBDCardProps) {
   const { t } = useReportI18n();
   const targetLayers = rec.skinLayer ? rec.skinLayer.split(',').map((s) => s.trim()) : [];
 
@@ -147,7 +147,7 @@ export function EBDCard({ recommendation: rec, isExpanded, onToggle }: EBDCardPr
               scores={rec.scores}
               painLevel={rec.painLevel}
               downtimeLevel={rec.downtimeLevel}
-              lang="KO"
+              lang={lang}
             />
           </div>
 
@@ -157,7 +157,7 @@ export function EBDCard({ recommendation: rec, isExpanded, onToggle }: EBDCardPr
               <SkinLayer3D
                 targetLayers={targetLayers}
                 deviceCategory={rec.moaCategory}
-                lang="KO"
+                lang={lang}
               />
             </div>
           )}
