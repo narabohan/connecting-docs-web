@@ -137,7 +137,7 @@ export function SignatureSolutions({ solutions, lang }: SignatureSolutionsProps)
               {/* ── Expanded detail ── */}
               <div className="rv7-sig-bar-detail">
                 <div className="rv7-sig-detail-inner">
-                  <p style={{ fontSize: '10px', color: 'var(--text-2)', lineHeight: 1.7, margin: '10px 0' }}>
+                  <p style={{ fontSize: '13px', color: 'var(--text-2)', lineHeight: 1.7, margin: '10px 0' }}>
                     {sol.description}
                   </p>
                   <div className="rv7-sig-detail-grid">
@@ -175,9 +175,9 @@ export function SignatureSolutions({ solutions, lang }: SignatureSolutionsProps)
                       <div className="rv7-sig-detail-block-title">
                         🔗 {l('synergy', lang)}
                       </div>
-                      <p style={{ fontSize: '16px', fontWeight: 700, color: 'var(--cyan)' }}>
+                      <p style={{ fontSize: '20px', fontWeight: 700, color: 'var(--cyan)' }}>
                         {sol.synergyScore}
-                        <span style={{ fontSize: '9px', color: 'var(--text-3)', marginLeft: '2px' }}>/100</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-3)', marginLeft: '2px' }}>/100</span>
                       </p>
                     </div>
                   </div>

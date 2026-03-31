@@ -254,27 +254,27 @@
 .rv7-sig-section{padding:16px 20px;margin-bottom:20px;border:1px solid rgba(251,191,36,0.15);background:rgba(251,191,36,0.02);}
 .rv7-sig-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
 .rv7-sig-header-title{display:flex;align-items:center;gap:10px;}
-.rv7-sig-crown{font-size:22px;}
-.rv7-sig-main-title{font-size:13px;font-weight:800;color:var(--text-hi);letter-spacing:0.02em;}
-.rv7-sig-sub-title{font-size:9px;color:var(--text-3);margin-top:2px;}
-.rv7-sig-header-badge{font-size:8px;font-weight:700;padding:4px 10px;border-radius:12px;background:rgba(34,211,238,0.1);color:var(--cyan);border:1px solid rgba(34,211,238,0.25);letter-spacing:0.05em;text-transform:uppercase;}
+.rv7-sig-crown{font-size:24px;}
+.rv7-sig-main-title{font-size:16px;font-weight:800;color:var(--text-hi);letter-spacing:0.02em;}
+.rv7-sig-sub-title{font-size:11px;color:var(--text-3);margin-top:2px;}
+.rv7-sig-header-badge{font-size:10px;font-weight:700;padding:4px 10px;border-radius:12px;background:rgba(34,211,238,0.1);color:var(--cyan);border:1px solid rgba(34,211,238,0.25);letter-spacing:0.05em;text-transform:uppercase;}
 /* ── Signature Bar List ── */
 .rv7-sig-bar-list{display:flex;flex-direction:column;gap:6px;}
 .rv7-sig-bar{border-radius:var(--radius-sm);border:1px solid var(--border);cursor:pointer;transition:all .3s ease;background:var(--surface);overflow:hidden;}
 .rv7-sig-bar:hover{border-color:rgba(251,191,36,0.35);background:rgba(251,191,36,0.02);}
 .rv7-sig-bar.sig-best{border-color:rgba(251,191,36,0.4);background:linear-gradient(90deg,rgba(251,191,36,0.04),transparent 60%);}
-.rv7-sig-bar-head{display:flex;align-items:center;gap:8px;padding:10px 14px;min-height:44px;}
-.rv7-sig-bar-rank{min-width:28px;height:22px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;border-radius:6px;flex-shrink:0;}
+.rv7-sig-bar-head{display:flex;align-items:center;gap:8px;padding:12px 14px;min-height:48px;}
+.rv7-sig-bar-rank{min-width:30px;height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;border-radius:6px;flex-shrink:0;}
 .rv7-sig-bar-rank.rank-1{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#0a0a0f;}
 .rv7-sig-bar-rank.rank-2{background:rgba(165,180,252,0.8);color:#0a0a0f;}
 .rv7-sig-bar-rank.rank-3{background:rgba(148,163,184,0.6);color:#0a0a0f;}
 .rv7-sig-bar-rank.rank-4{background:var(--surface-3);color:var(--text-2);}
 .rv7-sig-bar-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#0a0a0f;flex-shrink:0;}
 .rv7-sig-bar-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
-.rv7-sig-bar-name{font-size:11px;font-weight:700;color:var(--text-hi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.rv7-sig-bar-doctor{font-size:8px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.rv7-sig-bar-chips{display:flex;gap:3px;flex-wrap:nowrap;overflow:hidden;flex-shrink:0;}
-.rv7-sig-bar-chips .rv7-combo-chip{font-size:7px;padding:2px 6px;border-radius:8px;white-space:nowrap;}
+.rv7-sig-bar-name{font-size:13px;font-weight:700;color:var(--text-hi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rv7-sig-bar-doctor{font-size:10px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rv7-sig-bar-chips{display:flex;gap:4px;flex-wrap:nowrap;overflow:hidden;flex-shrink:0;}
+.rv7-sig-bar-chips .rv7-combo-chip{font-size:9px;padding:3px 8px;border-radius:8px;white-space:nowrap;}
 .rv7-sig-bar-meta-compact{display:flex;gap:6px;font-size:8px;color:var(--text-3);flex-shrink:0;align-items:center;}
 .rv7-sig-bar-meta-compact span{white-space:nowrap;}
 .rv7-sig-bar-fit{font-size:14px;font-weight:900;flex-shrink:0;min-width:38px;text-align:right;}
@@ -289,16 +289,16 @@
 .rv7-sig-detail-inner{padding:0 14px 14px;border-top:1px solid var(--border);}
 .rv7-sig-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
 .rv7-sig-detail-block{padding:10px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid var(--border);}
-.rv7-sig-detail-block-title{font-size:8px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);margin-bottom:6px;font-weight:700;display:flex;align-items:center;gap:4px;}
-.rv7-sig-detail-block p,.rv7-sig-detail-block li{font-size:9px;color:var(--text-2);line-height:1.6;margin:0;}
+.rv7-sig-detail-block-title{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);margin-bottom:6px;font-weight:700;display:flex;align-items:center;gap:4px;}
+.rv7-sig-detail-block p,.rv7-sig-detail-block li{font-size:12px;color:var(--text-2);line-height:1.6;margin:0;}
 .rv7-sig-detail-block ul{padding-left:14px;margin:0;}
 .rv7-sig-detail-block li{margin-bottom:2px;}
 .rv7-sig-detail-devices{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;}
-.rv7-sig-detail-devices .rv7-combo-chip{font-size:8px;padding:3px 8px;}
+.rv7-sig-detail-devices .rv7-combo-chip{font-size:10px;padding:3px 8px;}
 .rv7-sig-cta-row{display:flex;gap:8px;margin-top:12px;align-items:center;justify-content:flex-end;}
-.rv7-sig-cta-book{padding:8px 20px;border-radius:8px;font-size:10px;font-weight:700;border:none;cursor:pointer;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#0a0a0f;transition:all .2s;}
+.rv7-sig-cta-book{padding:8px 20px;border-radius:8px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#0a0a0f;transition:all .2s;}
 .rv7-sig-cta-book:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(251,191,36,0.3);}
-.rv7-sig-cta-detail-link{font-size:9px;color:var(--amber);cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
+.rv7-sig-cta-detail-link{font-size:11px;color:var(--amber);cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
 .rv7-sig-doctor-profile{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid var(--border);margin-top:10px;}
 .rv7-sig-doctor-avatar-lg{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#0a0a0f;flex-shrink:0;}
 .rv7-sig-doctor-info{flex:1;}

@@ -825,7 +825,7 @@ Required JSON fields:
 
   "safety_flags": { <map each flag to status/notes> },
 
-  "ebd_recommendations": [
+  "ebd_recommendations": [           // ← MUST contain EXACTLY 3 items
     {
       "rank": 1-3,
       "device_name": "<name>",
@@ -853,7 +853,7 @@ Required JSON fields:
     }
   ],
 
-  "injectable_recommendations": [
+  "injectable_recommendations": [    // ← MUST contain EXACTLY 3 items
     {
       "rank": 1-3,
       "name": "<name>",
@@ -920,7 +920,7 @@ Required JSON fields:
 }
 
 CRITICAL RULES:
-1. Recommend exactly 3 EBD devices and 3 injectables, ranked by confidence score
+1. You MUST recommend EXACTLY 3 EBD devices and EXACTLY 3 injectables, ranked by confidence score. Never return fewer than 3 for either category — this is a hard requirement
 2. Safety flags MUST override device selection — never recommend a contraindicated device
 3. All HTML content must use the specified CSS classes (ebd-hl, hl-cyan)
 4. Scores must be integers 0-10
