@@ -39,7 +39,7 @@ export function InjectableCard({ recommendation: rec, isExpanded, onToggle }: In
   const targetLayers = rec.skinLayer ? rec.skinLayer.split(',').map((s) => s.trim()) : [];
 
   return (
-    <div className={`rv7-rec-card rv7-inj-card${isExpanded ? ' active' : ''}`}>
+    <div className={`rv7-rec-card rv7-inj-card${isExpanded ? ' rv7-active' : ''}`}>
       {/* Badge */}
       <div className="rv7-rec-badge">
         <span className="rv7-neon-tag rv7-rose">#{rec.rank}</span>

@@ -101,7 +101,7 @@ function ReportV7Inner({ data }: { data: ReportV7Data }) {
       {/* ── Tab Bar ── */}
       <div className="rv7-tab-bar" role="tablist">
         <button
-          className={`rv7-tab-btn${activeTab === 'patient' ? ' active' : ''}`}
+          className={`rv7-tab-btn${activeTab === 'patient' ? ' rv7-active' : ''}`}
           role="tab"
           aria-selected={activeTab === 'patient'}
           onClick={() => handleTabSwitch('patient')}
@@ -109,7 +109,7 @@ function ReportV7Inner({ data }: { data: ReportV7Data }) {
           {t('tab.patient')}
         </button>
         <button
-          className={`rv7-tab-btn${activeTab === 'doctor' ? ' active' : ''}`}
+          className={`rv7-tab-btn${activeTab === 'doctor' ? ' rv7-active' : ''}`}
           role="tab"
           aria-selected={activeTab === 'doctor'}
           onClick={() => handleTabSwitch('doctor')}
@@ -120,7 +120,7 @@ function ReportV7Inner({ data }: { data: ReportV7Data }) {
 
       {/* ══ Patient Tab ══ */}
       <div
-        className={`rv7-tab-page${activeTab === 'patient' ? ' active' : ''}`}
+        className={`rv7-tab-page${activeTab === 'patient' ? ' rv7-active' : ''}`}
         role="tabpanel"
         aria-hidden={activeTab !== 'patient'}
       >
@@ -197,7 +197,7 @@ function ReportV7Inner({ data }: { data: ReportV7Data }) {
 
       {/* ══ Doctor Tab (Depth 2: fully lazy) ══ */}
       <div
-        className={`rv7-tab-page${activeTab === 'doctor' ? ' active' : ''}`}
+        className={`rv7-tab-page${activeTab === 'doctor' ? ' rv7-active' : ''}`}
         role="tabpanel"
         aria-hidden={activeTab !== 'doctor'}
       >

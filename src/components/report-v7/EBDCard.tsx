@@ -66,7 +66,7 @@ export function EBDCard({ recommendation: rec, isExpanded, onToggle }: EBDCardPr
   const targetLayers = rec.skinLayer ? rec.skinLayer.split(',').map((s) => s.trim()) : [];
 
   return (
-    <div className={`rv7-rec-card rv7-ebd-card${isExpanded ? ' active' : ''}`}>
+    <div className={`rv7-rec-card rv7-ebd-card${isExpanded ? ' rv7-active' : ''}`}>
       {/* Badge */}
       <div className="rv7-rec-badge">
         <span className="rv7-neon-tag rv7-cyan">#{rec.rank}</span>
