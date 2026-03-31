@@ -1451,6 +1451,60 @@ Output ONLY valid JSON.`,
             if (inj.confidence == null) inj.confidence = 70;
           }
 
+          // ─── Enforce EXACTLY 3 recommendations per category ───
+          const MIN_RECS = 3;
+          while (recommendation.ebd_recommendations.length < MIN_RECS) {
+            const idx = recommendation.ebd_recommendations.length + 1;
+            console.warn(`[final-recommendation] ⚠️ EBD count < ${MIN_RECS} — adding placeholder #${idx}`);
+            recommendation.ebd_recommendations.push({
+              rank: idx,
+              device_name: `Recommended Device ${idx}`,
+              device_id: `placeholder_ebd_${idx}`,
+              moa_category: 'energy_based',
+              moa_category_label: 'Energy-Based Device',
+              evidence_level: 3,
+              confidence: 60,
+              skin_layer: 'dermis',
+              pain_level: 3,
+              downtime_level: 2,
+              safety_level: 9,
+              badge: null,
+              badge_color: '',
+              subtitle: '(AI가 추가 추천을 생성하지 못했습니다)',
+              summary_html: '<p>추가 디바이스 추천이 필요합니다. 담당 의사와 상담해 주세요.</p>',
+              why_fit_html: '<p>—</p>',
+              moa_summary_title: 'MOA',
+              moa_summary_short: '',
+              moa_description_html: '',
+              target_tags: [],
+              practical: { sessions: 'N/A', interval: 'N/A', duration: 'N/A', onset: 'N/A', maintain: 'N/A' },
+              scores: { tightening: 5, lifting: 5, volume: 5, brightening: 5, texture: 5, evidence: 3, synergy: 5, longevity: 5, roi: 5, trend: 5, popularity: 5 },
+              ai_description_html: '',
+            } as OpusDeviceRecommendation);
+          }
+          while (recommendation.injectable_recommendations.length < MIN_RECS) {
+            const idx = recommendation.injectable_recommendations.length + 1;
+            console.warn(`[final-recommendation] ⚠️ Injectable count < ${MIN_RECS} — adding placeholder #${idx}`);
+            recommendation.injectable_recommendations.push({
+              rank: idx,
+              name: `Recommended Injectable ${idx}`,
+              injectable_id: `placeholder_inj_${idx}`,
+              category: 'skin_booster',
+              category_label: 'Skin Booster',
+              evidence_level: 3,
+              confidence: 60,
+              skin_layer: 'dermis',
+              subtitle: '(AI가 추가 추천을 생성하지 못했습니다)',
+              summary_html: '<p>추가 주사 추천이 필요합니다. 담당 의사와 상담해 주세요.</p>',
+              why_fit_html: '<p>—</p>',
+              moa_summary_title: 'MOA',
+              moa_summary_short: '',
+              moa_description_html: '',
+              practical: { sessions: 'N/A', interval: 'N/A', onset: 'N/A', maintain: 'N/A' },
+              scores: { hydration: 5, firming: 5, brightening: 5, longevity: 5, evidence: 3, trend: 5, popularity: 5 },
+            } as OpusInjectableRecommendation);
+          }
+
           console.log(`[final-recommendation] ✅ Parsed OK. EBD=${recommendation.ebd_recommendations.length}, INJ=${recommendation.injectable_recommendations.length}, SIG=${recommendation.signature_solutions.length}, stop_reason=${stopReason}, output_tokens=${outputTokens}`);
 
           if (stopReason === 'max_tokens') {
