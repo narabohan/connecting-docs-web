@@ -347,9 +347,6 @@ export function useReportData(reportId: string | undefined): UseReportDataReturn
   useEffect(() => {
     if (!reportId) return;
 
-    // Use flag to prevent state updates after unmount
-    let cancelled = false;
-
     setStatus('loading');
 
     // ─── Mock mode: return mock data immediately ──────────────
@@ -365,25 +362,45 @@ export function useReportData(reportId: string | undefined): UseReportDataReturn
       return;
     }
 
-    // ─── Async loader (sessionStorage → Airtable fallback) ────
-    async function loadReport() {
-      try {
-        // ── Step 1: Try sessionStorage ────────────────────────
-        const raw = typeof window !== 'undefined'
-          ? sessionStorage.getItem(STORAGE_KEY)
-          : null;
+    // ─── Helper: process payload → validate → set state ───────
+    function applyPayload(payload: StoredReportPayload) {
+      const detectedLang = payload.survey_state.demographics.detected_language;
+      setLang(detectedLang);
 
-        let payload: StoredReportPayload | null = null;
+      const reportData = convertPayloadToReportV7Data(payload);
 
-        if (raw) {
-          console.info('[useReportData] Loading from sessionStorage');
-          payload = JSON.parse(raw);
-        } else {
-          // ── Step 2: Airtable fallback via API ────────────────
-          console.info('[useReportData] sessionStorage empty — fetching from Airtable');
-          payload = await fetchFromAirtable(reportId!);
-        }
+      const { data: validated, warnings } = validateRecommendation(reportData);
+      if (warnings.length > 0) {
+        console.warn('[useReportData] Validation warnings:', warnings);
+      }
 
+      setData(validated);
+      setStatus('success');
+    }
+
+    // ─── Step 1: Try sessionStorage (fully synchronous) ───────
+    try {
+      const raw = typeof window !== 'undefined'
+        ? sessionStorage.getItem(STORAGE_KEY)
+        : null;
+
+      if (raw) {
+        console.info('[useReportData] Loading from sessionStorage');
+        const payload: StoredReportPayload = JSON.parse(raw);
+        applyPayload(payload);
+        return; // Done — no cleanup needed
+      }
+    } catch (err) {
+      console.error('[useReportData] sessionStorage parse failed:', err);
+      // Fall through to Airtable fetch
+    }
+
+    // ─── Step 2: Airtable fallback (async, with cancel guard) ─
+    let cancelled = false;
+    console.info('[useReportData] sessionStorage empty — fetching from Airtable');
+
+    fetchFromAirtable(reportId)
+      .then((payload) => {
         if (cancelled) return;
 
         if (!payload) {
@@ -392,30 +409,20 @@ export function useReportData(reportId: string | undefined): UseReportDataReturn
           return;
         }
 
-        const detectedLang = payload.survey_state.demographics.detected_language;
-        setLang(detectedLang);
-
-        const reportData = convertPayloadToReportV7Data(payload);
-
-        // ── Validate through Zod ──────────────────────────────
-        const { data: validated, warnings } = validateRecommendation(reportData);
-        if (warnings.length > 0) {
-          console.warn('[useReportData] Validation warnings:', warnings);
+        try {
+          applyPayload(payload);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Failed to process report data.';
+          setError(message);
+          setStatus('error');
         }
-
-        if (cancelled) return;
-
-        setData(validated);
-        setStatus('success');
-      } catch (err) {
+      })
+      .catch((err) => {
         if (cancelled) return;
         const message = err instanceof Error ? err.message : 'Failed to load report data.';
         setError(message);
         setStatus('error');
-      }
-    }
-
-    loadReport();
+      });
 
     return () => {
       cancelled = true;
