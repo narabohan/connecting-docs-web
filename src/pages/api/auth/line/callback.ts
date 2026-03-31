@@ -17,7 +17,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createCustomToken } from '@/lib/firebaseAdmin';
-import { findOrCreateUser } from '@/services/crm-service';
+import { findOrCreateUser, fetchAirtableRole } from '@/services/crm-service';
 import {
   getConfig,
   parseState,
@@ -86,9 +86,10 @@ export default async function handler(
       }
     }
 
-    // ── Step 3: Create Firebase Custom Token
+    // ── Step 3: Create Firebase Custom Token (role from Airtable if exists)
     const firebaseUid = `line_${lineUserId}`;
-    const customToken = await createCustomToken(firebaseUid, { role: 'patient' });
+    const role = await fetchAirtableRole(firebaseUid, 'patient');
+    const customToken = await createCustomToken(firebaseUid, { role });
 
     if (!customToken) {
       console.error('[line/callback] Failed to create custom token');

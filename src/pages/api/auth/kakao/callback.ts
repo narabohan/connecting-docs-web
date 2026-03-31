@@ -14,7 +14,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createCustomToken } from '@/lib/firebaseAdmin';
-import { findOrCreateUser } from '@/services/crm-service';
+import { findOrCreateUser, fetchAirtableRole } from '@/services/crm-service';
 
 // ─── Env Config ──────────────────────────────────────────────
 
@@ -129,9 +129,10 @@ export default async function handler(
     const email = kakaoUser.kakao_account?.email ?? null;
     const nickname = kakaoUser.kakao_account?.profile?.nickname ?? null;
 
-    // ── Step 3: Create Firebase Custom Token
+    // ── Step 3: Create Firebase Custom Token (role from Airtable if exists)
     const firebaseUid = `kakao_${kakaoId}`;
-    const customToken = await createCustomToken(firebaseUid, { role: 'patient' });
+    const role = await fetchAirtableRole(firebaseUid, 'patient');
+    const customToken = await createCustomToken(firebaseUid, { role });
 
     if (!customToken) {
       console.error('[kakao/callback] Failed to create custom token');

@@ -244,3 +244,29 @@ export async function updateStage(
 export function getStageOrder(): Map<UserStage, number> {
   return new Map(Object.entries(STAGE_ORDER) as [UserStage, number][]);
 }
+
+/**
+ * Fetch user role from Airtable by firebase_uid.
+ * Returns the role string if found, or the provided fallback (default 'patient').
+ * Best-effort: never throws — returns fallback on any error.
+ */
+export async function fetchAirtableRole(
+  firebaseUid: string,
+  fallback: string = 'patient'
+): Promise<string> {
+  try {
+    ensureConfig();
+    const formula = `{firebase_uid} = '${sanitizeForFormula(firebaseUid)}'`;
+    const url = `${AIRTABLE_USERS_URL}?filterByFormula=${encodeURIComponent(formula)}&maxRecords=1&fields%5B%5D=role`;
+    const res = await fetch(url, { headers: airtableHeaders() });
+    if (!res.ok) return fallback;
+    const data = await res.json() as { records: AirtableRecord[] };
+    if (data.records.length > 0) {
+      const role = data.records[0].fields.role;
+      if (role && typeof role === 'string') return role;
+    }
+    return fallback;
+  } catch {
+    return fallback;
+  }
+}

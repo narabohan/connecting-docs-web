@@ -14,7 +14,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createCustomToken } from '@/lib/firebaseAdmin';
-import { findOrCreateUser } from '@/services/crm-service';
+import { findOrCreateUser, fetchAirtableRole } from '@/services/crm-service';
 
 // ─── Env Config ──────────────────────────────────────────────
 
@@ -130,9 +130,10 @@ export default async function handler(
     const email = profile.email ?? null;
     const nickname = profile.nickname ?? profile.name ?? null;
 
-    // ── Step 3: Create Firebase Custom Token
+    // ── Step 3: Create Firebase Custom Token (role from Airtable if exists)
     const firebaseUid = `naver_${naverId}`;
-    const customToken = await createCustomToken(firebaseUid, { role: 'patient' });
+    const role = await fetchAirtableRole(firebaseUid, 'patient');
+    const customToken = await createCustomToken(firebaseUid, { role });
 
     if (!customToken) {
       console.error('[naver/callback] Failed to create custom token');
