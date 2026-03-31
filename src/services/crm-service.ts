@@ -56,7 +56,7 @@ interface AirtableUserFields {
   first_survey_at?: string;
   last_activity_at?: string;
   country?: string;
-  language?: string;
+  Language?: string;
   // legacy fields that may exist
   name?: string;
   role?: string;
@@ -74,7 +74,7 @@ function isValidStage(value: string): value is UserStage {
 function mapRecordToCRMUser(record: AirtableRecord): CRMUser {
   const f = record.fields;
   const stage = f.stage && isValidStage(f.stage) ? f.stage : 'survey_started';
-  const lang = f.language as CRMUser['lang'] ?? 'EN';
+  const lang = f.Language as CRMUser['lang'] ?? 'EN';
 
   return {
     airtable_id: record.id,
@@ -158,7 +158,7 @@ export async function findOrCreateUser(
     first_survey_at: now,
     last_activity_at: now,
     country,
-    language: lang,
+    Language: lang,
     role: 'patient',
   };
 
