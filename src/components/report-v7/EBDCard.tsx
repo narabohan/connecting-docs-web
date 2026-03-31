@@ -129,15 +129,25 @@ export function EBDCard({ recommendation: rec, isExpanded, onToggle, lang }: EBD
             />
           </div>
 
-          {/* MOA inline summary */}
-          {rec.moaSummaryShort && (
+          {/* MOA inline summary + description */}
+          {(rec.moaSummaryShort || rec.moaDescriptionHtml) && (
             <div className="rv7-moa-section">
-              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-hi)', marginBottom: '4px' }}>
-                {rec.moaSummaryTitle}
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-2)', lineHeight: 1.7 }}>
-                {rec.moaSummaryShort}
-              </div>
+              {rec.moaSummaryShort && (
+                <>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-hi)', marginBottom: '4px' }}>
+                    {rec.moaSummaryTitle || 'Mechanism of Action'}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-2)', lineHeight: 1.7 }}>
+                    {rec.moaSummaryShort}
+                  </div>
+                </>
+              )}
+              {rec.moaDescriptionHtml && (
+                <div
+                  className="rv7-moa-desc"
+                  dangerouslySetInnerHTML={{ __html: rec.moaDescriptionHtml }}
+                />
+              )}
             </div>
           )}
 
