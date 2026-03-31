@@ -118,6 +118,7 @@ export interface SurveyV2Translations {
     loading: string;
     error_generic: string;
     progress_step: string; // "{n}단계"
+    branch_step: string;   // Phase 3-B: "상세 질문"
   };
   progress: {
     demographics: string;
@@ -199,6 +200,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       loading: '분석 중...',
       error_generic: '오류가 발생했습니다. 다시 시도해 주세요.',
       progress_step: '단계',
+      branch_step: '상세 질문',
     },
     progress: {
       demographics: '기본정보',
@@ -324,6 +326,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       loading: 'Analyzing...',
       error_generic: 'Something went wrong. Please try again.',
       progress_step: 'Step',
+      branch_step: 'Detail Questions',
     },
     progress: {
       demographics: 'Profile',
@@ -449,6 +452,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       loading: '分析中...',
       error_generic: 'エラーが発生しました。もう一度お試しください。',
       progress_step: 'ステップ',
+      branch_step: '詳細質問',
     },
     progress: {
       demographics: '基本情報',
@@ -574,6 +578,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       loading: '分析中...',
       error_generic: '出现错误，请重试。',
       progress_step: '步骤',
+      branch_step: '详细问题',
     },
     progress: {
       demographics: '基本信息',

@@ -375,6 +375,19 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
     setError(null);
   }, []);
 
+  // ─── FSM Integration Points (Phase 3-B) ─────────────────
+  /** Map chip responses without navigating — used by FSM-driven flow */
+  const mapChipResponses = useCallback(() => {
+    dispatch({ type: 'MAP_CHIP_RESPONSES' });
+    setError(null);
+  }, []);
+
+  /** Navigate to a specific step — used by FSM to resume main flow */
+  const navigateTo = useCallback((nextStep: SurveyStep) => {
+    setStep(nextStep);
+    setError(null);
+  }, []);
+
   // ─── Safety Handlers ──────────────────────────────────────
   const setSafetySelection = useCallback((s: SafetySelection) => {
     dispatch({ type: 'SET_SAFETY_SELECTION', payload: s });
@@ -798,6 +811,11 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
     stayDuration: state.stay_duration,
     managementFrequency: state.management_frequency,
     eventInfo: state.event_info,
+
+    // FSM integration (Phase 3-B)
+    haikuAnalysis: state.haiku_analysis,
+    mapChipResponses,
+    navigateTo,
 
     // Consent (C-7)
     needsConsent,
