@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Loader2, Mail, Eye, EyeOff, ArrowRight, User, Lock, Check } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SocialLoginButtons } from './SocialLoginButtons';
 
 type Tab = 'signin' | 'signup';
 
@@ -166,6 +167,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     Continue with GitHub
                                 </button>
                             </div>
+
+                            {/* ── Social Login (Kakao/Naver/LINE) ── */}
+                            <SocialLoginButtons returnUrl="/" disabled={!!loading} />
 
                             {/* ── Divider ── */}
                             <div className="flex items-center gap-3 mb-4">
