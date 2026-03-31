@@ -37,35 +37,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const router = useRouter();
 
     // ── Save session (and Sync to DB)
-    const saveSession = useCallback((u: AuthUser) => {
+    // Awaits Airtable sync so the correct role is available before rendering.
+    // withRoleGuard relies on user.role — setting it prematurely causes
+    // admin/doctor users to be redirected to /unauthorized.
+    const saveSession = useCallback(async (u: AuthUser) => {
+        if (u.provider !== 'demo') {
+            try {
+                const res = await fetch('/api/auth/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        uid: u.uid,
+                        email: u.email,
+                        name: u.displayName,
+                        photoUrl: u.photoURL || undefined,
+                        provider: u.provider,
+                        role: u.role
+                    })
+                });
+                const data = await res.json();
+                // If Airtable has a different role (e.g., admin set them to 'doctor'), apply it
+                if (data.dbRole && data.dbRole !== u.role) {
+                    u = { ...u, role: data.dbRole as UserRole };
+                }
+            } catch (e) {
+                console.error('Failed to sync user to DB:', e);
+                // On failure, proceed with the original role (best-effort)
+            }
+        }
+
         setUser(u);
         localStorage.setItem('cd_user_session', JSON.stringify(u));
-
-        // Background sync to Airtable/Admin Notification (ignores demo users)
-        if (u.provider !== 'demo') {
-            fetch('/api/auth/sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    uid: u.uid,
-                    email: u.email,
-                    name: u.displayName,
-                    photoUrl: u.photoURL || undefined,
-                    provider: u.provider,
-                    role: u.role
-                })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    // If Airtable has a different role (e.g., admin set them to 'doctor'), update session
-                    if (data.dbRole && data.dbRole !== u.role) {
-                        const updatedUser = { ...u, role: data.dbRole as UserRole };
-                        setUser(updatedUser);
-                        localStorage.setItem('cd_user_session', JSON.stringify(updatedUser));
-                    }
-                })
-                .catch(e => console.error('Failed to sync user to DB:', e));
-        }
     }, []);
 
     // ── Restore session on mount
@@ -76,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (apiKey && apiKey !== 'YOUR_API_KEY') {
                 // Lazy import Firebase Auth listener
                 import('@/lib/firebase').then(({ auth, onAuthStateChanged }) => {
-                    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+                    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
                         if (firebaseUser) {
                             const provider = (firebaseUser.providerData[0]?.providerId?.includes('google') ? 'google' :
                                 firebaseUser.providerData[0]?.providerId?.includes('github') ? 'github' :
@@ -90,7 +92,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                 role: 'patient',
                                 provider: provider,
                             };
-                            saveSession(u);
+                            // Await sync so role is resolved before withRoleGuard checks
+                            await saveSession(u);
                         } else {
                             setUser(null);
                         }

@@ -86,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
         }
 
-        return res.status(200).json({ success: true, recordId, isNewUser });
+        return res.status(200).json({ success: true, recordId, isNewUser, dbRole: role || 'patient' });
     } catch (error: any) {
         console.error('Error syncing user to Airtable:', error);
         return res.status(500).json({ message: 'Internal Server Error', error: error.message });
