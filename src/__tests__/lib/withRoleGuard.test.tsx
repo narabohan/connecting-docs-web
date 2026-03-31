@@ -112,4 +112,70 @@ describe('withRoleGuard', () => {
 
     expect(mockReplace).toHaveBeenCalledWith('/unauthorized');
   });
+
+  // ── Test 16: admin role → 정상 렌더 (race condition fix 검증) ──
+  it('renders protected content when user has admin role', () => {
+    mockUser = {
+      uid: 'admin_uid',
+      email: 'admin@connectingdocs.ai',
+      displayName: 'Admin User',
+      role: 'admin',
+      provider: 'google',
+    };
+    mockLoading = false;
+
+    const GuardedPage = withRoleGuard(DummyPage, ['doctor', 'admin']);
+    const { getByTestId } = render(React.createElement(GuardedPage));
+
+    expect(mockReplace).not.toHaveBeenCalled();
+    expect(getByTestId('protected-content')).toBeTruthy();
+  });
+
+  // ── Test 17: doctor role → /dashboard/doctor 접근 가능 ──
+  it('renders protected content when user has doctor role', () => {
+    mockUser = {
+      uid: 'doctor_uid',
+      email: 'doctor@clinic.com',
+      displayName: 'Dr. Kim',
+      role: 'doctor',
+      provider: 'google',
+    };
+    mockLoading = false;
+
+    const GuardedPage = withRoleGuard(DummyPage, ['doctor', 'admin']);
+    const { getByTestId } = render(React.createElement(GuardedPage));
+
+    expect(mockReplace).not.toHaveBeenCalled();
+    expect(getByTestId('protected-content')).toBeTruthy();
+  });
+
+  // ── Test 18: admin-only 페이지에 doctor 접근 시 차단 ──
+  it('blocks doctor from admin-only page', () => {
+    mockUser = {
+      uid: 'doctor_uid',
+      email: 'doctor@clinic.com',
+      displayName: 'Dr. Kim',
+      role: 'doctor',
+      provider: 'google',
+    };
+    mockLoading = false;
+
+    const GuardedPage = withRoleGuard(DummyPage, ['admin']);
+    render(React.createElement(GuardedPage));
+
+    expect(mockReplace).toHaveBeenCalledWith('/unauthorized');
+  });
+
+  // ── Test 19: loading 상태 → 스피너, 리다이렉트 없음 ──
+  it('shows loader and does not redirect while loading', () => {
+    mockUser = null;
+    mockLoading = true;
+
+    const GuardedPage = withRoleGuard(DummyPage, ['doctor', 'admin']);
+    const { getByTestId, queryByTestId } = render(React.createElement(GuardedPage));
+
+    expect(getByTestId('loader')).toBeTruthy();
+    expect(queryByTestId('protected-content')).toBeNull();
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
 });
