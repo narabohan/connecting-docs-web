@@ -66,6 +66,50 @@ export interface SurveyV2Translations {
     phase2: string;
     phase3: string;
   };
+  // ── Branch 꼬리질문 (Phase 3-B) ──
+  branch_skin: {
+    title: string;
+    subtitle: string;
+    fitzpatrick_label: string;
+    fitz_1: string; fitz_2: string; fitz_3: string; fitz_4: string; fitz_5: string; fitz_6: string;
+    thickness_label: string;
+    thickness_thin: string; thickness_normal: string; thickness_thick: string;
+    redness_label: string;
+    redness_yes: string; redness_no: string;
+    sensitivity_label: string;
+    sensitivity_low: string; sensitivity_medium: string; sensitivity_high: string;
+  };
+  branch_history: {
+    title: string;
+    subtitle: string;
+    treatment_name: string;
+    treatment_count: string;
+    treatment_last: string;
+    treatment_satisfaction: string;
+    sat_good: string; sat_neutral: string; sat_bad: string;
+    add_more: string;
+    had_adverse: string;
+    adverse_yes: string; adverse_no: string;
+  };
+  branch_visit: {
+    title: string;
+    subtitle: string;
+    stay_days: string;
+    arrival: string;
+    departure: string;
+    area: string;
+    area_placeholder: string;
+  };
+  branch_adverse: {
+    title: string;
+    subtitle: string;
+    type_label: string;
+    type_pih: string; type_burn: string; type_swelling: string; type_scarring: string; type_other: string;
+    device_label: string;
+    recovery_label: string;
+    severity_label: string;
+    severity_mild: string; severity_moderate: string; severity_severe: string;
+  };
   common: {
     next: string;
     back: string;
@@ -168,6 +212,51 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       analyzing: '분석중',
       complete: '완료',
     },
+    branch_skin: {
+      title: '피부 타입을 좀 더 알려주세요',
+      subtitle: '정확한 레이저 파워와 냉각 프로토콜 설정에 필요합니다.',
+      fitzpatrick_label: '피부색 타입 (Fitzpatrick)',
+      fitz_1: 'I — 매우 밝은 피부, 항상 화상', fitz_2: 'II — 밝은 피부, 쉽게 화상',
+      fitz_3: 'III — 보통, 때때로 화상', fitz_4: 'IV — 올리브, 거의 안 탐',
+      fitz_5: 'V — 갈색 피부', fitz_6: 'VI — 어두운 피부',
+      thickness_label: '피부 두께 (자가 평가)',
+      thickness_thin: '얇은 편', thickness_normal: '보통', thickness_thick: '두꺼운 편',
+      redness_label: '평소 홍조가 있나요?',
+      redness_yes: '예', redness_no: '아니요',
+      sensitivity_label: '피부 민감도',
+      sensitivity_low: '낮음', sensitivity_medium: '보통', sensitivity_high: '높음',
+    },
+    branch_history: {
+      title: '과거 시술 경험을 알려주세요',
+      subtitle: '반복 시술 시너지와 적정 간격을 계산합니다.',
+      treatment_name: '시술명',
+      treatment_count: '횟수',
+      treatment_last: '마지막 시술일',
+      treatment_satisfaction: '만족도',
+      sat_good: '만족', sat_neutral: '보통', sat_bad: '불만족',
+      add_more: '+ 시술 추가',
+      had_adverse: '부작용 경험이 있으셨나요?',
+      adverse_yes: '예', adverse_no: '아니요',
+    },
+    branch_visit: {
+      title: '한국 방문 일정을 알려주세요',
+      subtitle: '체류 기간에 맞는 집중 시술 플랜을 설계합니다.',
+      stay_days: '체류 일수',
+      arrival: '도착일',
+      departure: '출발일',
+      area: '숙소/선호 지역',
+      area_placeholder: '강남, 서초, 홍대 등',
+    },
+    branch_adverse: {
+      title: '부작용 경험을 알려주세요',
+      subtitle: '안전한 대안 장비를 추천하기 위한 정보입니다.',
+      type_label: '부작용 유형 (복수 선택)',
+      type_pih: '색소침착 (PIH)', type_burn: '화상', type_swelling: '부종', type_scarring: '흉터', type_other: '기타',
+      device_label: '부작용이 발생한 시술명',
+      recovery_label: '회복에 걸린 기간 (주)',
+      severity_label: '심각도',
+      severity_mild: '경미', severity_moderate: '보통', severity_severe: '심각',
+    },
   },
 
   EN: {
@@ -247,6 +336,51 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       messenger: 'Contact',
       analyzing: 'Analysis',
       complete: 'Complete',
+    },
+    branch_skin: {
+      title: 'Tell us more about your skin type',
+      subtitle: 'Needed for precise laser power and cooling protocol settings.',
+      fitzpatrick_label: 'Skin Color Type (Fitzpatrick)',
+      fitz_1: 'I — Very fair, always burns', fitz_2: 'II — Fair, burns easily',
+      fitz_3: 'III — Medium, sometimes burns', fitz_4: 'IV — Olive, rarely burns',
+      fitz_5: 'V — Brown skin', fitz_6: 'VI — Dark skin',
+      thickness_label: 'Skin Thickness (self-assessment)',
+      thickness_thin: 'Thin', thickness_normal: 'Normal', thickness_thick: 'Thick',
+      redness_label: 'Do you have redness or rosacea?',
+      redness_yes: 'Yes', redness_no: 'No',
+      sensitivity_label: 'Skin Sensitivity',
+      sensitivity_low: 'Low', sensitivity_medium: 'Medium', sensitivity_high: 'High',
+    },
+    branch_history: {
+      title: 'Tell us about your past treatments',
+      subtitle: 'Helps calculate repeat treatment synergy and intervals.',
+      treatment_name: 'Treatment name',
+      treatment_count: 'Number of sessions',
+      treatment_last: 'Last treatment date',
+      treatment_satisfaction: 'Satisfaction',
+      sat_good: 'Satisfied', sat_neutral: 'Neutral', sat_bad: 'Unsatisfied',
+      add_more: '+ Add treatment',
+      had_adverse: 'Have you experienced any side effects?',
+      adverse_yes: 'Yes', adverse_no: 'No',
+    },
+    branch_visit: {
+      title: 'Tell us about your visit plan',
+      subtitle: 'We\'ll design a focused treatment plan for your stay.',
+      stay_days: 'Length of stay (days)',
+      arrival: 'Arrival date',
+      departure: 'Departure date',
+      area: 'Accommodation / preferred area',
+      area_placeholder: 'e.g., Gangnam, Apgujeong, Hongdae',
+    },
+    branch_adverse: {
+      title: 'Tell us about the side effects',
+      subtitle: 'This helps us recommend safer alternative devices.',
+      type_label: 'Side effect type (select all)',
+      type_pih: 'Post-inflammatory hyperpigmentation (PIH)', type_burn: 'Burns', type_swelling: 'Swelling', type_scarring: 'Scarring', type_other: 'Other',
+      device_label: 'Treatment that caused the side effect',
+      recovery_label: 'Recovery period (weeks)',
+      severity_label: 'Severity',
+      severity_mild: 'Mild', severity_moderate: 'Moderate', severity_severe: 'Severe',
     },
   },
 
@@ -328,6 +462,51 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       analyzing: '分析中',
       complete: '完了',
     },
+    branch_skin: {
+      title: 'お肌のタイプを教えてください',
+      subtitle: '正確なレーザー出力と冷却プロトコルの設定に必要です。',
+      fitzpatrick_label: '肌色タイプ (Fitzpatrick)',
+      fitz_1: 'I — 非常に色白、常に日焼け', fitz_2: 'II — 色白、日焼けしやすい',
+      fitz_3: 'III — 普通、時々日焼け', fitz_4: 'IV — オリーブ、ほとんど焼けない',
+      fitz_5: 'V — 褐色の肌', fitz_6: 'VI — 暗い肌',
+      thickness_label: '肌の厚さ（自己評価）',
+      thickness_thin: '薄い', thickness_normal: '普通', thickness_thick: '厚い',
+      redness_label: '普段、赤みはありますか？',
+      redness_yes: 'はい', redness_no: 'いいえ',
+      sensitivity_label: '肌の敏感度',
+      sensitivity_low: '低い', sensitivity_medium: '普通', sensitivity_high: '高い',
+    },
+    branch_history: {
+      title: '過去の施術経験を教えてください',
+      subtitle: '繰り返し施術のシナジーと適切な間隔を計算します。',
+      treatment_name: '施術名',
+      treatment_count: '回数',
+      treatment_last: '最後の施術日',
+      treatment_satisfaction: '満足度',
+      sat_good: '満足', sat_neutral: '普通', sat_bad: '不満',
+      add_more: '+ 施術を追加',
+      had_adverse: '副作用の経験はありますか？',
+      adverse_yes: 'はい', adverse_no: 'いいえ',
+    },
+    branch_visit: {
+      title: '韓国訪問の予定を教えてください',
+      subtitle: '滞在期間に合わせた集中施術プランを設計します。',
+      stay_days: '滞在日数',
+      arrival: '到着日',
+      departure: '出発日',
+      area: '宿泊先・希望エリア',
+      area_placeholder: '例：江南、瑞草、弘大',
+    },
+    branch_adverse: {
+      title: '副作用の経験を教えてください',
+      subtitle: 'より安全な代替機器を推薦するための情報です。',
+      type_label: '副作用の種類（複数選択可）',
+      type_pih: '色素沈着 (PIH)', type_burn: '火傷', type_swelling: '腫れ', type_scarring: '瘢痕', type_other: 'その他',
+      device_label: '副作用が発生した施術名',
+      recovery_label: '回復期間（週）',
+      severity_label: '重症度',
+      severity_mild: '軽度', severity_moderate: '中程度', severity_severe: '重度',
+    },
   },
 
   'ZH-CN': {
@@ -407,6 +586,51 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       messenger: '联系方式',
       analyzing: '分析中',
       complete: '完成',
+    },
+    branch_skin: {
+      title: '请告诉我们您的皮肤类型',
+      subtitle: '用于精确设置激光功率和冷却方案。',
+      fitzpatrick_label: '肤色类型 (Fitzpatrick)',
+      fitz_1: 'I — 极白，总是晒伤', fitz_2: 'II — 白皙，容易晒伤',
+      fitz_3: 'III — 中等，偶尔晒伤', fitz_4: 'IV — 橄榄色，很少晒伤',
+      fitz_5: 'V — 棕色皮肤', fitz_6: 'VI — 深色皮肤',
+      thickness_label: '皮肤厚度（自我评估）',
+      thickness_thin: '偏薄', thickness_normal: '正常', thickness_thick: '偏厚',
+      redness_label: '平时是否有红血丝/泛红？',
+      redness_yes: '是', redness_no: '否',
+      sensitivity_label: '皮肤敏感度',
+      sensitivity_low: '低', sensitivity_medium: '中等', sensitivity_high: '高',
+    },
+    branch_history: {
+      title: '请告诉我们您的过往治疗经历',
+      subtitle: '用于计算重复治疗的协同效应和合适间隔。',
+      treatment_name: '治疗名称',
+      treatment_count: '次数',
+      treatment_last: '最近治疗日期',
+      treatment_satisfaction: '满意度',
+      sat_good: '满意', sat_neutral: '一般', sat_bad: '不满意',
+      add_more: '+ 添加治疗',
+      had_adverse: '您是否经历过副作用？',
+      adverse_yes: '是', adverse_no: '否',
+    },
+    branch_visit: {
+      title: '请告诉我们您的访韩计划',
+      subtitle: '我们将根据停留时间设计集中治疗方案。',
+      stay_days: '停留天数',
+      arrival: '到达日期',
+      departure: '出发日期',
+      area: '住宿/偏好区域',
+      area_placeholder: '例如：江南、瑞草、弘大',
+    },
+    branch_adverse: {
+      title: '请告诉我们副作用的详情',
+      subtitle: '用于推荐更安全的替代设备。',
+      type_label: '副作用类型（可多选）',
+      type_pih: '色素沉着 (PIH)', type_burn: '烧伤', type_swelling: '肿胀', type_scarring: '疤痕', type_other: '其他',
+      device_label: '发生副作用的治疗名称',
+      recovery_label: '恢复期（周）',
+      severity_label: '严重程度',
+      severity_mild: '轻微', severity_moderate: '中等', severity_severe: '严重',
     },
   },
 };
