@@ -77,9 +77,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
             if (apiKey && apiKey !== 'YOUR_API_KEY') {
                 // Lazy import Firebase Auth listener
-                import('@/lib/firebase').then(({ auth, onAuthStateChanged }) => {
+                import('@/lib/firebase').then(async ({ auth, onAuthStateChanged, getRedirectResult }) => {
+                    // ── Handle redirect result (Google/GitHub signInWithRedirect) ──
+                    try {
+                        await getRedirectResult(auth);
+                    } catch (err) {
+                        console.error('[AuthContext] Redirect result error:', err);
+                    }
+
                     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
                         if (firebaseUser) {
+                            // ── 모달 닫기 (수정 3 방어 로직) — Header와 같은 state 공유 ──
+                            setIsAuthModalOpen(false);
+
                             const provider = (firebaseUser.providerData[0]?.providerId?.includes('google') ? 'google' :
                                 firebaseUser.providerData[0]?.providerId?.includes('github') ? 'github' :
                                     'email') as AuthUser['provider'];
@@ -94,6 +104,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             };
                             // Await sync so role is resolved before withRoleGuard checks
                             await saveSession(u);
+
+                            // Execute pending action if any (e.g. redirect to report)
+                            if (pendingAction) {
+                                pendingAction();
+                                setPendingAction(null);
+                            }
                         } else {
                             setUser(null);
                         }
@@ -112,32 +128,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [saveSession]);
 
-    // ── Google OAuth ──────────────────────────────────────────────────────────
+    // ── Google OAuth (signInWithRedirect — COOP-safe) ──────────────────────
     const signInWithGoogle = useCallback(async () => {
-        try {
-            const { auth, googleProvider, signInWithPopup } = await import('@/lib/firebase');
-            await signInWithPopup(auth, googleProvider);
-            // We rely on onAuthStateChanged to catch the login and sync!
-            setIsAuthModalOpen(false);
-            pendingAction?.();
-            setPendingAction(null);
-        } catch (err: any) {
-            if (err.code !== 'auth/popup-closed-by-user') throw err;
-        }
-    }, [pendingAction]);
+        const { auth, googleProvider, signInWithRedirect } = await import('@/lib/firebase');
+        // Redirect 방식이므로 페이지가 이동됨 → 돌아온 후 onAuthStateChanged가 처리
+        await signInWithRedirect(auth, googleProvider);
+    }, []);
 
-    // ── GitHub OAuth ──────────────────────────────────────────────────────────
+    // ── GitHub OAuth (signInWithRedirect — COOP-safe) ────────────────────
     const signInWithGithub = useCallback(async () => {
-        try {
-            const { auth, githubProvider, signInWithPopup } = await import('@/lib/firebase');
-            await signInWithPopup(auth, githubProvider);
-            setIsAuthModalOpen(false);
-            pendingAction?.();
-            setPendingAction(null);
-        } catch (err: any) {
-            if (err.code !== 'auth/popup-closed-by-user') throw err;
-        }
-    }, [pendingAction]);
+        const { auth, githubProvider, signInWithRedirect } = await import('@/lib/firebase');
+        await signInWithRedirect(auth, githubProvider);
+    }, []);
 
     // ── Email Sign In ─────────────────────────────────────────────────────────
     const signInWithEmail = useCallback(async (email: string, password: string) => {

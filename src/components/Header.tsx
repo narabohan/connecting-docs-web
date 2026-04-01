@@ -20,11 +20,10 @@ interface HeaderProps {
 export default function Header({ currentLang, onLangChange }: HeaderProps) {
     const [isLangOpen, setIsLangOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
-    const { user, signOut, loading } = useAuth();
+    const { user, signOut, loading, isAuthModalOpen, openAuthModal, closeAuthModal } = useAuth();
 
     // Close user menu on outside click
     useEffect(() => {
@@ -163,13 +162,13 @@ export default function Header({ currentLang, onLangChange }: HeaderProps) {
                                 /* Not Logged In: Login + Get Report buttons */
                                 <>
                                     <button
-                                        onClick={() => setIsAuthModalOpen(true)}
+                                        onClick={() => openAuthModal()}
                                         className="text-sm font-medium text-gray-400 hover:text-white transition-colors hidden sm:block"
                                     >
                                         {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.login || 'Log In'}
                                     </button>
                                     <button
-                                        onClick={() => setIsAuthModalOpen(true)}
+                                        onClick={() => openAuthModal()}
                                         className="px-5 py-2 text-sm font-bold text-black bg-white rounded-full hover:bg-gray-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)]"
                                     >
                                         {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.getReport || 'Get Report'}
@@ -209,7 +208,7 @@ export default function Header({ currentLang, onLangChange }: HeaderProps) {
                         <div className="border-t border-white/10 mt-2 pt-3">
                             {!user && (
                                 <button
-                                    onClick={() => { setIsAuthModalOpen(true); setIsMobileMenuOpen(false); }}
+                                    onClick={() => { openAuthModal(); setIsMobileMenuOpen(false); }}
                                     className="w-full px-4 py-3 text-sm font-bold text-black bg-white rounded-xl hover:bg-gray-200 transition-colors"
                                 >
                                     {REPORT_TRANSLATIONS[currentLang]?.header?.nav?.getReport || 'Get Report'}
@@ -221,7 +220,7 @@ export default function Header({ currentLang, onLangChange }: HeaderProps) {
             )}
 
             {/* Auth Modal */}
-            <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+            <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
         </>
     );
 }

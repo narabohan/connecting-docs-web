@@ -1,3 +1,12 @@
+/**
+ * SocialLoginButtons — Kakao, Naver, Line 소셜 로그인 버튼
+ *
+ * ⚠️ 이 컴포넌트는 AuthModal.tsx에서 import해서 사용해야 함.
+ * Phase 1 C-5(Kakao), C-6(Naver), Phase 2 G-6(Line)에서 구현.
+ *
+ * 사용처: src/components/auth/AuthModal.tsx
+ * 의존성: /api/auth/kakao/login, /api/auth/naver/login, /api/auth/line/login
+ */
 // ═══════════════════════════════════════════════════════════════
 //  SocialLoginButtons — Phase 1 (C-5/C-6, C-9 i18n refactor) + G-6 Line 추가
 //  소셜 로그인 버튼 컴포넌트 (Kakao + Naver + Line + Google)
