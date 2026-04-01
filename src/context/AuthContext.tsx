@@ -83,17 +83,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             // ── 모달 닫기 — Header와 같은 전역 state 공유 ──
                             setIsAuthModalOpen(false);
 
-                            const provider = (firebaseUser.providerData[0]?.providerId?.includes('google') ? 'google' :
-                                firebaseUser.providerData[0]?.providerId?.includes('github') ? 'github' :
-                                    'email') as AuthUser['provider'];
+                            // Detect provider — Firebase popup users have providerData,
+                            // but custom-token users (Kakao/Naver/Line) don't.
+                            // For those, read from localStorage set by /auth/callback.
+                            let provider: AuthUser['provider'] = 'email';
+                            const pid = firebaseUser.providerData[0]?.providerId;
+                            if (pid?.includes('google')) {
+                                provider = 'google';
+                            } else if (pid?.includes('github')) {
+                                provider = 'github';
+                            } else {
+                                // Custom token users — check localStorage hint
+                                const oauthProvider = localStorage.getItem('cd_oauth_provider');
+                                if (oauthProvider === 'kakao' || oauthProvider === 'naver') {
+                                    provider = oauthProvider;
+                                    localStorage.removeItem('cd_oauth_provider');
+                                }
+                            }
+
+                            // displayName: Firebase popup sets it automatically.
+                            // Custom token: /auth/callback calls updateProfile, but
+                            // onAuthStateChanged may fire before updateProfile completes.
+                            // Fall back to localStorage hint from /auth/callback.
+                            let displayName = firebaseUser.displayName || '';
+                            if (!displayName) {
+                                const oauthName = localStorage.getItem('cd_oauth_name');
+                                if (oauthName) {
+                                    displayName = oauthName;
+                                    localStorage.removeItem('cd_oauth_name');
+                                }
+                            }
+                            if (!displayName) {
+                                displayName = firebaseUser.email?.split('@')[0] || 'User';
+                            }
 
                             const u: AuthUser = {
                                 uid: firebaseUser.uid,
                                 email: firebaseUser.email || '',
-                                displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+                                displayName,
                                 photoURL: firebaseUser.photoURL || undefined,
                                 role: 'patient',
-                                provider: provider,
+                                provider,
                             };
                             // Await sync so role is resolved before withRoleGuard checks
                             await saveSession(u);

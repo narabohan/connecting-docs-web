@@ -76,7 +76,7 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     if (!router.isReady) return;
 
-    const { token, returnUrl } = router.query;
+    const { token, returnUrl, name, provider } = router.query;
 
     if (typeof token !== 'string') {
       setCallbackStatus('error');
@@ -85,11 +85,27 @@ export default function AuthCallbackPage() {
     }
 
     const targetUrl = typeof returnUrl === 'string' ? returnUrl : '/';
+    const oauthName = typeof name === 'string' ? name : undefined;
+    const oauthProvider = typeof provider === 'string' ? provider : undefined;
+
+    // Store OAuth metadata so AuthContext can pick it up
+    if (oauthProvider) {
+      localStorage.setItem('cd_oauth_provider', oauthProvider);
+    }
+    if (oauthName) {
+      localStorage.setItem('cd_oauth_name', oauthName);
+    }
 
     // Dynamic import to avoid SSR issues with Firebase
     import('@/lib/firebase')
-      .then(({ auth, signInWithCustomToken }) => {
-        return signInWithCustomToken(auth, token);
+      .then(({ auth, signInWithCustomToken, updateProfile }) => {
+        return signInWithCustomToken(auth, token).then((cred) => {
+          // Set displayName from OAuth provider profile if available
+          if (oauthName && cred.user) {
+            return updateProfile(cred.user, { displayName: oauthName }).then(() => cred);
+          }
+          return cred;
+        });
       })
       .then(() => {
         // onAuthStateChanged in AuthContext will pick up the user
