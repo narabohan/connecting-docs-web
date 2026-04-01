@@ -77,11 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
             if (apiKey && apiKey !== 'YOUR_API_KEY') {
                 // Lazy import Firebase Auth listener
-                import('@/lib/firebase').then(async ({ auth, onAuthStateChanged, getRedirectResult }) => {
-                    // ── 1) onAuthStateChanged를 먼저 등록해야 redirect 결과를 감지함 ──
+                import('@/lib/firebase').then(({ auth, onAuthStateChanged }) => {
                     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
                         if (firebaseUser) {
-                            // ── 모달 닫기 (수정 3 방어 로직) — Header와 같은 state 공유 ──
+                            // ── 모달 닫기 — Header와 같은 전역 state 공유 ──
                             setIsAuthModalOpen(false);
 
                             const provider = (firebaseUser.providerData[0]?.providerId?.includes('google') ? 'google' :
@@ -109,15 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         }
                         setLoading(false);
                     });
-
-                    // ── 2) getRedirectResult는 리스너 등록 후 호출 ──
-                    // signInWithRedirect 복귀 시 auth state change가 리스너에 의해 감지됨
-                    try {
-                        await getRedirectResult(auth);
-                    } catch (err) {
-                        console.error('[AuthContext] Redirect result error:', err);
-                    }
-
                     return () => unsubscribe();
                 });
             } else {
@@ -131,17 +121,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [saveSession]);
 
-    // ── Google OAuth (signInWithRedirect — COOP-safe) ──────────────────────
+    // ── Google OAuth (signInWithPopup + COOP error resilience) ─────────────
     const signInWithGoogle = useCallback(async () => {
-        const { auth, googleProvider, signInWithRedirect } = await import('@/lib/firebase');
-        // Redirect 방식이므로 페이지가 이동됨 → 돌아온 후 onAuthStateChanged가 처리
-        await signInWithRedirect(auth, googleProvider);
+        try {
+            const { auth, googleProvider, signInWithPopup } = await import('@/lib/firebase');
+            await signInWithPopup(auth, googleProvider);
+            // onAuthStateChanged will detect the login and close the modal
+        } catch (err: unknown) {
+            const firebaseErr = err as { code?: string };
+            if (firebaseErr.code === 'auth/popup-closed-by-user') {
+                // 사용자가 직접 닫은 경우 — 정상, 아무것도 안 함
+            } else {
+                console.error('Google sign-in error:', err);
+                // COOP 에러 등 — 모달은 onAuthStateChanged에서 닫힘
+            }
+        }
     }, []);
 
-    // ── GitHub OAuth (signInWithRedirect — COOP-safe) ────────────────────
+    // ── GitHub OAuth (signInWithPopup + COOP error resilience) ───────────
     const signInWithGithub = useCallback(async () => {
-        const { auth, githubProvider, signInWithRedirect } = await import('@/lib/firebase');
-        await signInWithRedirect(auth, githubProvider);
+        try {
+            const { auth, githubProvider, signInWithPopup } = await import('@/lib/firebase');
+            await signInWithPopup(auth, githubProvider);
+        } catch (err: unknown) {
+            const firebaseErr = err as { code?: string };
+            if (firebaseErr.code === 'auth/popup-closed-by-user') {
+                // 사용자가 직접 닫은 경우 — 정상, 아무것도 안 함
+            } else {
+                console.error('GitHub sign-in error:', err);
+                // COOP 에러 등 — 모달은 onAuthStateChanged에서 닫힘
+            }
+        }
     }, []);
 
     // ── Email Sign In ─────────────────────────────────────────────────────────
