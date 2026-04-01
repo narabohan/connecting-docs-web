@@ -92,6 +92,19 @@ const TRANSLATIONS: TranslationDict = {
     JP: '相談を予約する',
     'ZH-CN': '预约咨询',
   },
+  // Fallback card
+  'fallback.additionalTitle': {
+    KO: '추가 추천',
+    EN: 'Additional Recommendation',
+    JP: '追加おすすめ',
+    'ZH-CN': '额外推荐',
+  },
+  'fallback.additionalDesc': {
+    KO: '진료 시 담당 의사가 최적의 추가 시술을 추천해 드립니다.',
+    EN: 'Your doctor will recommend the best additional treatment during consultation.',
+    JP: '診察時に担当医が最適な追加施術をご提案いたします。',
+    'ZH-CN': '就诊时医生会为您推荐最佳的额外治疗方案。',
+  },
   // Labels
   'label.pain': {
     KO: '통증',

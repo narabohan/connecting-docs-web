@@ -27,13 +27,32 @@ import type { FinalRecommendationRequest, FinalRecommendationResponse } from '@/
 import { MEDICATION_FLAG_MAP, CONDITION_FLAG_MAP, FOLLOWUP_ITEMS } from '@/components/survey-v2/SafetyCheckpoint';
 import { hasConsent, saveConsentToLocal } from '@/lib/consent-utils';
 
+// ─── Browser language detection for initial state ────────────
+function detectInitialLang(): SurveyLang {
+  if (typeof window === 'undefined') return 'KO';
+  const nav = navigator.language.toLowerCase();
+  if (nav.startsWith('ko')) return 'KO';
+  if (nav.startsWith('ja')) return 'JP';
+  if (nav.startsWith('zh')) return 'ZH-CN';
+  return 'EN';
+}
+
+function detectInitialCountry(): string {
+  if (typeof window === 'undefined') return 'KR';
+  const nav = navigator.language.toLowerCase();
+  if (nav.startsWith('ko')) return 'KR';
+  if (nav.startsWith('ja')) return 'JP';
+  if (nav.startsWith('zh')) return 'CN';
+  return 'US';
+}
+
 // ─── Initial State ───────────────────────────────────────────
 const initialState: SurveyV2State = {
   demographics: {
     d_gender: 'female',
     d_age: '30s',
-    detected_country: 'KR',
-    detected_language: 'KO',
+    detected_country: detectInitialCountry(),
+    detected_language: detectInitialLang(),
   },
   open_question_raw: '',
   haiku_analysis: null,

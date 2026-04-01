@@ -47,6 +47,9 @@ export function EBDSection({ recommendations, lang }: EBDSectionProps) {
 
   if (recommendations.length === 0) return null;
 
+  // How many fallback placeholder cards to show (target: 3 cards)
+  const fallbackCount = Math.max(0, 3 - recommendations.length);
+
   return (
     <section className="rv7-rec-section">
       <div className="rv7-sec-label">{t('section.ebd')}</div>
@@ -63,6 +66,31 @@ export function EBDSection({ recommendations, lang }: EBDSectionProps) {
               lang={lang}
             />
           </ReportErrorBoundary>
+        ))}
+        {Array.from({ length: fallbackCount }).map((_, i) => (
+          <div
+            key={`fallback-${i}`}
+            className="rv7-rec-card rv7-ebd-card rv7-fallback-card"
+          >
+            <div className="rv7-rec-badge">
+              <span className="rv7-neon-tag rv7-cyan" style={{ opacity: 0.4 }}>
+                #{recommendations.length + i + 1}
+              </span>
+            </div>
+            <div className="rv7-rec-head">
+              <div className="rv7-rec-title-area">
+                <div className="rv7-rec-name" style={{ opacity: 0.5 }}>
+                  {t('fallback.additionalTitle')}
+                </div>
+              </div>
+            </div>
+            <div
+              className="rv7-rec-summary"
+              style={{ opacity: 0.6, fontStyle: 'italic', padding: '12px 18px' }}
+            >
+              {t('fallback.additionalDesc')}
+            </div>
+          </div>
         ))}
       </div>
     </section>

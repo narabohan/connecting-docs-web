@@ -156,7 +156,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
     step2: {
       title: '피부에서 가장 신경 쓰이는\n순간이 있으신가요?',
       subtitle: '거울을 볼 때, 사진을 찍을 때, 사람들을 만날 때 —\n어떤 순간에 가장 고민이 되시나요?',
-      placeholder: '피부에서 가장 신경 쓰이는 순간을 자유롭게 적어주세요...',
+      placeholder: '피부에 대해 가장 고민되는 점을 자유롭게 적어주세요...',
       hint: '예: "사진 찍을 때 팔자주름이 보여서 자신감이 없어요"',
       min_chars: '5자 이상 입력해 주세요',
     },
@@ -282,7 +282,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
     step2: {
       title: 'When do you notice your skin\nconcerns the most?',
       subtitle: 'For example, looking in the mirror, taking photos,\nmeeting people — when does it bother you most?',
-      placeholder: 'Describe the moments when your skin concerns bother you...',
+      placeholder: 'Tell us about your main skin concerns in your own words...',
       hint: 'e.g. "I avoid photos because of my smile lines"',
       min_chars: 'Please enter at least 5 characters',
     },
@@ -408,7 +408,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
     step2: {
       title: 'お肌で一番気になる\n瞬間はありますか？',
       subtitle: '鏡を見る時、写真を撮る時、人に会う時 —\nどんな瞬間に一番気になりますか？',
-      placeholder: 'お肌が一番気になる瞬間を自由にお書きください...',
+      placeholder: 'お肌のお悩みを自由にお書きください...',
       hint: '例：「写真を撮る時にほうれい線が気になって」',
       min_chars: '5文字以上入力してください',
     },
@@ -534,7 +534,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
     step2: {
       title: '皮肤最让您在意的\n时刻是什么？',
       subtitle: '比如照镜子的时候、拍照的时候、见人的时候 —\n什么时刻最让您困扰？',
-      placeholder: '请描述皮肤最让您在意的时刻...',
+      placeholder: '请自由描述您最关心的皮肤问题...',
       hint: '例如："拍照的时候法令纹很明显，没有自信"',
       min_chars: '请至少输入5个字',
     },

@@ -226,14 +226,14 @@
 .rv7-radar-legend{display:flex;justify-content:center;gap:16px;margin-top:10px;font-size:9px;font-weight:500;color:var(--text-3);}
 .rv7-radar-legend span{display:flex;align-items:center;gap:4px;}
 .rv7-radar-legend .rv7-dot{width:8px;height:8px;border-radius:50%;}
-.rv7-radar-scores{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:12px;overflow:hidden;}
+.rv7-radar-scores{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin-top:12px;overflow:hidden;padding:0 2px;}
 .rv7-rs-item{text-align:center;padding:6px 0;overflow:hidden;min-width:0;}
 .rv7-rs-num{font-size:11px;font-weight:700;color:var(--cyan);transition:all .6s cubic-bezier(.4,0,.2,1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
-.rv7-rs-label{font-size:8px;color:var(--text-3);font-weight:500;letter-spacing:0.02em;margin-top:2px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rv7-rs-label{font-size:7px;color:var(--text-3);font-weight:600;letter-spacing:0;margin-top:2px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 /* Pain & Downtime: 5-point scale with 5-color system */
-.rv7-radar-pd-indicators{display:flex;justify-content:center;gap:16px;margin-top:12px;}
-.rv7-pd-indicator{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:var(--surface);border:1px solid var(--border);font-size:10px;}
+.rv7-radar-pd-indicators{display:flex;justify-content:center;gap:10px;margin-top:12px;flex-wrap:wrap;max-width:100%;overflow:hidden;}
+.rv7-pd-indicator{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;background:var(--surface);border:1px solid var(--border);font-size:10px;max-width:100%;}
 .rv7-pd-dot{width:8px;height:8px;border-radius:50%;transition:background .4s ease;}
 .rv7-pd-label{color:var(--text-3);font-weight:500;}
 .rv7-pd-score{font-weight:700;font-size:13px;min-width:12px;text-align:center;transition:color .4s ease;}
@@ -245,6 +245,9 @@
 .rv7-card-badge.badge-trend{background:rgba(251,146,60,0.12);color:#fb923c;border:1px solid rgba(251,146,60,0.25);}
 .rv7-card-badge.badge-popular{background:rgba(168,85,247,0.12);color:#a855f7;border:1px solid rgba(168,85,247,0.25);}
 .rv7-card-badge.badge-evidence{background:rgba(34,211,238,0.10);color:var(--cyan);border:1px solid rgba(34,211,238,0.2);}
+
+/* Fallback card — dimmed placeholder for missing recommendations */
+.rv7-fallback-card{opacity:0.55;border-style:dashed !important;pointer-events:none;}
 
 /* Reason Chips (recommendation reasons derived from meta scores) */
 .rv7-reason-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
