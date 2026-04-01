@@ -16,6 +16,12 @@
     "login_with_naver": "Sign in with Naver",
     "login_with_google": "Sign in with Google",
     "login_with_line": "Login with LINE",
+    "login_with_github": "Sign in with GitHub",
+    "sign_in": "Sign In",
+    "create_account": "Create Account",
+    "sign_in_desc": "Sign in to access your personalized report",
+    "sign_up_desc": "Create your account to start your skin journey",
+    "or_email": "or continue with email",
     "line_login_error": "LINE login failed. Please try again.",
     "line_login_success": "Logged in with LINE.",
     "line_connecting": "Connecting to LINE..."

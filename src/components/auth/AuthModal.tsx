@@ -3,6 +3,7 @@ import { X, Loader2, Mail, Eye, EyeOff, ArrowRight, User, Lock, Check } from 'lu
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SocialLoginButtons } from './SocialLoginButtons';
+import { useTranslation } from '@/i18n';
 
 type Tab = 'signin' | 'signup';
 
@@ -28,6 +29,7 @@ const GithubIcon = () => (
 );
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
+    const { t } = useTranslation();
     const [tab, setTab] = useState<Tab>('signin');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -126,23 +128,23 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                 </span>
                                 <p className="text-slate-500 text-sm mt-1">
                                     {tab === 'signin'
-                                        ? 'Sign in to access your personalized report'
-                                        : 'Create your account to start your skin journey'}
+                                        ? t('auth.sign_in_desc')
+                                        : t('auth.sign_up_desc')}
                                 </p>
                             </div>
 
                             {/* Tab Switcher */}
                             <div className="flex bg-white/5 rounded-xl p-1 mb-6">
-                                {(['signin', 'signup'] as Tab[]).map((t) => (
+                                {(['signin', 'signup'] as Tab[]).map((tabKey) => (
                                     <button
-                                        key={t}
-                                        onClick={() => setTab(t)}
-                                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${tab === t
+                                        key={tabKey}
+                                        onClick={() => setTab(tabKey)}
+                                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${tab === tabKey
                                             ? 'bg-white text-black shadow'
                                             : 'text-slate-400 hover:text-white'
                                             }`}
                                     >
-                                        {t === 'signin' ? 'Sign In' : 'Create Account'}
+                                        {tabKey === 'signin' ? t('auth.sign_in') : t('auth.create_account')}
                                     </button>
                                 ))}
                             </div>
@@ -155,7 +157,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-white/10 bg-white hover:bg-gray-50 text-gray-800 font-medium text-sm transition-all hover:shadow-lg disabled:opacity-50"
                                 >
                                     {loading === 'google' ? <Loader2 className="w-5 h-5 animate-spin text-gray-600" /> : <GoogleIcon />}
-                                    Continue with Google
+                                    {t('auth.login_with_google')}
                                 </button>
 
                                 <button
@@ -164,7 +166,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                     className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-white/10 bg-[#161B22] hover:bg-[#21262D] text-white font-medium text-sm transition-all hover:shadow-lg disabled:opacity-50"
                                 >
                                     {loading === 'github' ? <Loader2 className="w-5 h-5 animate-spin" /> : <GithubIcon />}
-                                    Continue with GitHub
+                                    {t('auth.login_with_github')}
                                 </button>
                             </div>
 
@@ -174,7 +176,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                             {/* ── Divider ── */}
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="flex-1 h-px bg-white/10" />
-                                <span className="text-xs text-slate-600 font-mono">or continue with email</span>
+                                <span className="text-xs text-slate-600 font-mono">{t('auth.or_email')}</span>
                                 <div className="flex-1 h-px bg-white/10" />
                             </div>
 
