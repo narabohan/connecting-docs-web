@@ -226,10 +226,10 @@
 .rv7-radar-legend{display:flex;justify-content:center;gap:16px;margin-top:10px;font-size:9px;font-weight:500;color:var(--text-3);}
 .rv7-radar-legend span{display:flex;align-items:center;gap:4px;}
 .rv7-radar-legend .rv7-dot{width:8px;height:8px;border-radius:50%;}
-.rv7-radar-scores{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:12px;}
-.rv7-rs-item{text-align:center;padding:6px 0;}
-.rv7-rs-num{font-size:11px;font-weight:700;color:var(--cyan);transition:all .6s cubic-bezier(.4,0,.2,1);white-space:nowrap;overflow:visible;line-height:1.3;}
-.rv7-rs-label{font-size:9px;color:var(--text-3);font-weight:500;letter-spacing:0.05em;margin-top:2px;text-transform:uppercase;}
+.rv7-radar-scores{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:12px;overflow:hidden;}
+.rv7-rs-item{text-align:center;padding:6px 0;overflow:hidden;min-width:0;}
+.rv7-rs-num{font-size:11px;font-weight:700;color:var(--cyan);transition:all .6s cubic-bezier(.4,0,.2,1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
+.rv7-rs-label{font-size:8px;color:var(--text-3);font-weight:500;letter-spacing:0.02em;margin-top:2px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 /* Pain & Downtime: 5-point scale with 5-color system */
 .rv7-radar-pd-indicators{display:flex;justify-content:center;gap:16px;margin-top:12px;}

@@ -132,7 +132,7 @@ export function RadarChart5Axis({
   const axisLines = useMemo(() => axes.map((_, i) => axisPoint(i, 100, total)), [axes, total]);
 
   // Label positions (slightly beyond the outer ring)
-  const labelPositions = useMemo(() => axes.map((_, i) => axisPoint(i, 120, total)), [axes, total]);
+  const labelPositions = useMemo(() => axes.map((_, i) => axisPoint(i, 118, total)), [axes, total]);
 
   // Data polygon
   const polygon = useMemo(() => buildPolygon(axes, scores), [axes, scores]);
@@ -150,7 +150,7 @@ export function RadarChart5Axis({
   return (
     <div className="rv7-radar-card rv7-glass">
       {/* SVG Radar */}
-      <svg viewBox="0 0 200 200" style={{ width: '100%', maxWidth: '240px', margin: '0 auto', display: 'block' }}>
+      <svg viewBox="-30 -20 260 240" style={{ width: '100%', maxWidth: '260px', margin: '0 auto', display: 'block', overflow: 'visible' }}>
         {/* Grid rings */}
         {rings.map((points, i) => (
           <polygon
@@ -211,7 +211,7 @@ export function RadarChart5Axis({
             textAnchor="middle"
             dominantBaseline="middle"
             fill="rgba(228,228,231,0.85)"
-            fontSize={13}
+            fontSize={10}
             fontWeight={600}
           >
             {labelMap[axes[i]] ?? axes[i]}
