@@ -64,11 +64,18 @@ export default function OpenQuestionStep({
   const countryOverride = country ? COUNTRY_QUESTION_OVERRIDES[country] : undefined;
   const t = useMemo(() => {
     const base = SURVEY_V2_I18N[lang].step2;
-    if (countryOverride) {
+    // country override는 해당 country의 주 언어와 현재 lang이 일치할 때만 적용
+    // KR→KO, JP→JP, CN→ZH-CN, TW→ZH-CN 등
+    const countryLangMap: Record<string, string> = {
+      KR: 'KO', JP: 'JP', CN: 'ZH-CN', TW: 'ZH-CN', US: 'EN', GB: 'EN', AU: 'EN',
+    };
+    const shouldApplyOverride = countryOverride &&
+      country && countryLangMap[country] === lang;
+    if (shouldApplyOverride) {
       return { ...base, ...countryOverride };
     }
     return base;
-  }, [lang, countryOverride]);
+  }, [lang, countryOverride, country]);
   const tc = SURVEY_V2_I18N[lang].common;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
