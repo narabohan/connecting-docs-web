@@ -78,13 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (apiKey && apiKey !== 'YOUR_API_KEY') {
                 // Lazy import Firebase Auth listener
                 import('@/lib/firebase').then(async ({ auth, onAuthStateChanged, getRedirectResult }) => {
-                    // ── Handle redirect result (Google/GitHub signInWithRedirect) ──
-                    try {
-                        await getRedirectResult(auth);
-                    } catch (err) {
-                        console.error('[AuthContext] Redirect result error:', err);
-                    }
-
+                    // ── 1) onAuthStateChanged를 먼저 등록해야 redirect 결과를 감지함 ──
                     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
                         if (firebaseUser) {
                             // ── 모달 닫기 (수정 3 방어 로직) — Header와 같은 state 공유 ──
@@ -115,6 +109,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         }
                         setLoading(false);
                     });
+
+                    // ── 2) getRedirectResult는 리스너 등록 후 호출 ──
+                    // signInWithRedirect 복귀 시 auth state change가 리스너에 의해 감지됨
+                    try {
+                        await getRedirectResult(auth);
+                    } catch (err) {
+                        console.error('[AuthContext] Redirect result error:', err);
+                    }
+
                     return () => unsubscribe();
                 });
             } else {
