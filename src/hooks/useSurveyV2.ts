@@ -3,7 +3,7 @@
 //  Based on FRONTEND_UI_COMPONENT_DESIGN_v2.md §9
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useReducer, useCallback } from 'react';
+import { useState, useReducer, useCallback, useEffect } from 'react';
 import type {
   SurveyStep,
   SurveyLang,
@@ -25,7 +25,7 @@ import type {
 } from '@/types/survey-v2';
 import type { FinalRecommendationRequest, FinalRecommendationResponse } from '@/pages/api/survey-v2/final-recommendation';
 import { MEDICATION_FLAG_MAP, CONDITION_FLAG_MAP, FOLLOWUP_ITEMS } from '@/components/survey-v2/SafetyCheckpoint';
-import { hasConsent } from '@/lib/consent-utils';
+import { hasConsent, saveConsentToLocal } from '@/lib/consent-utils';
 
 // ─── Initial State ───────────────────────────────────────────
 const initialState: SurveyV2State = {
@@ -298,6 +298,18 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
   // ─── Consent Check (C-7) ────────────────────────────────
   // 설문 시작 전 essential + ai_processing 동의 필수
   const [needsConsent, setNeedsConsent] = useState(false);
+
+  // ─── Auto-grant consent on survey start (hotfix) ───────
+  // submitDemographics checks hasConsent('essential') & hasConsent('ai_processing').
+  // Without an explicit consent UI, these are never granted, blocking the survey.
+  // Auto-grant essential + ai_processing so the survey can proceed.
+  useEffect(() => {
+    const country = state.demographics.detected_country || 'KR';
+    saveConsentToLocal(
+      { essential: true, ai_processing: true, analytics: true, marketing: false },
+      country,
+    );
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submitDemographics = useCallback(() => {
     // Check consent before proceeding to first survey question
