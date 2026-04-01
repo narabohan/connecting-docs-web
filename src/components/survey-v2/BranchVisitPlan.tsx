@@ -46,13 +46,13 @@ export default function BranchVisitPlan({ lang, initialData, onComplete, onBack 
       className="space-y-6"
     >
       <div className="text-center mb-6">
-        <h2 className="text-xl font-bold text-white">{t.title}</h2>
-        <p className="text-sm text-gray-400 mt-2">{t.subtitle}</p>
+        <h2 className="text-xl font-bold text-gray-900">{t.title}</h2>
+        <p className="text-sm text-gray-500 mt-2">{t.subtitle}</p>
       </div>
 
       {/* Stay Days */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">{t.stay_days}</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">{t.stay_days}</label>
         <div className="flex items-center gap-4">
           <input
             type="range"
@@ -62,7 +62,7 @@ export default function BranchVisitPlan({ lang, initialData, onComplete, onBack 
             onChange={(e) => setStayDays(parseInt(e.target.value))}
             className="flex-1 accent-cyan-500"
           />
-          <span className="text-lg font-bold text-cyan-400 min-w-[3rem] text-center">
+          <span className="text-lg font-bold text-blue-600 min-w-[3rem] text-center">
             {stayDays}
           </span>
         </div>
@@ -71,34 +71,34 @@ export default function BranchVisitPlan({ lang, initialData, onComplete, onBack 
       {/* Dates */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1">{t.arrival}</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">{t.arrival}</label>
           <input
             type="date"
             value={arrival}
             onChange={(e) => setArrival(e.target.value)}
-            className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/40"
+            className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1">{t.departure}</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">{t.departure}</label>
           <input
             type="date"
             value={departure}
             onChange={(e) => setDeparture(e.target.value)}
-            className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/40"
+            className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
           />
         </div>
       </div>
 
       {/* Area */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">{t.area}</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">{t.area}</label>
         <input
           type="text"
           value={area}
           onChange={(e) => setArea(e.target.value)}
           placeholder={t.area_placeholder}
-          className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/40"
+          className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-400"
         />
       </div>
 
@@ -106,7 +106,7 @@ export default function BranchVisitPlan({ lang, initialData, onComplete, onBack 
       <div className="flex gap-3 pt-4">
         <button
           onClick={onBack}
-          className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-400 font-medium hover:bg-white/10 transition-all"
+          className="flex-1 py-3 rounded-xl bg-gray-100 border border-gray-200 text-gray-700 font-medium hover:bg-gray-200 transition-all"
         >
           {tc.back}
         </button>
@@ -115,8 +115,8 @@ export default function BranchVisitPlan({ lang, initialData, onComplete, onBack 
           disabled={!isComplete}
           className={`flex-1 py-3 rounded-xl font-medium transition-all ${
             isComplete
-              ? 'bg-gradient-to-r from-cyan-500 to-cyan-400 text-black hover:opacity-90'
-              : 'bg-white/5 text-gray-600 cursor-not-allowed'
+              ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
         >
           {tc.next}

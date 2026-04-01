@@ -59,13 +59,13 @@ export default function BranchSkinProfile({ lang, initialData, onComplete, onBac
       className="space-y-6"
     >
       <div className="text-center mb-6">
-        <h2 className="text-xl font-bold text-white">{t.title}</h2>
-        <p className="text-sm text-gray-400 mt-2">{t.subtitle}</p>
+        <h2 className="text-xl font-bold text-gray-900">{t.title}</h2>
+        <p className="text-sm text-gray-500 mt-2">{t.subtitle}</p>
       </div>
 
       {/* Fitzpatrick Type */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-3">{t.fitzpatrick_label}</label>
+        <label className="block text-sm font-medium text-gray-700 mb-3">{t.fitzpatrick_label}</label>
         <div className="grid grid-cols-1 gap-2">
           {FITZ_OPTIONS.map((opt) => (
             <button
@@ -73,8 +73,8 @@ export default function BranchSkinProfile({ lang, initialData, onComplete, onBac
               onClick={() => setFitzpatrick(opt.value)}
               className={`px-4 py-3 rounded-xl text-left text-sm font-medium transition-all ${
                 fitzpatrick === opt.value
-                  ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-400 border'
-                  : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
+                  ? 'bg-blue-50 border-blue-500 text-blue-600 border'
+                  : 'bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {t[opt.key]}
@@ -85,7 +85,7 @@ export default function BranchSkinProfile({ lang, initialData, onComplete, onBac
 
       {/* Skin Thickness */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-3">{t.thickness_label}</label>
+        <label className="block text-sm font-medium text-gray-700 mb-3">{t.thickness_label}</label>
         <div className="grid grid-cols-3 gap-2">
           {(['thin', 'normal', 'thick'] as const).map((val) => (
             <button
@@ -93,8 +93,8 @@ export default function BranchSkinProfile({ lang, initialData, onComplete, onBac
               onClick={() => setThickness(val)}
               className={`px-4 py-3 rounded-xl text-center text-sm font-medium transition-all ${
                 thickness === val
-                  ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-400 border'
-                  : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
+                  ? 'bg-blue-50 border-blue-500 text-blue-600 border'
+                  : 'bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {t[`thickness_${val}`]}
@@ -105,7 +105,7 @@ export default function BranchSkinProfile({ lang, initialData, onComplete, onBac
 
       {/* Redness */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-3">{t.redness_label}</label>
+        <label className="block text-sm font-medium text-gray-700 mb-3">{t.redness_label}</label>
         <div className="grid grid-cols-2 gap-2">
           {[true, false].map((val) => (
             <button
@@ -113,8 +113,8 @@ export default function BranchSkinProfile({ lang, initialData, onComplete, onBac
               onClick={() => setHasRedness(val)}
               className={`px-4 py-3 rounded-xl text-center text-sm font-medium transition-all ${
                 hasRedness === val
-                  ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-400 border'
-                  : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
+                  ? 'bg-blue-50 border-blue-500 text-blue-600 border'
+                  : 'bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {val ? t.redness_yes : t.redness_no}
@@ -125,7 +125,7 @@ export default function BranchSkinProfile({ lang, initialData, onComplete, onBac
 
       {/* Sensitivity */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-3">{t.sensitivity_label}</label>
+        <label className="block text-sm font-medium text-gray-700 mb-3">{t.sensitivity_label}</label>
         <div className="grid grid-cols-3 gap-2">
           {(['low', 'medium', 'high'] as const).map((val) => (
             <button
@@ -133,8 +133,8 @@ export default function BranchSkinProfile({ lang, initialData, onComplete, onBac
               onClick={() => setSensitivity(val)}
               className={`px-4 py-3 rounded-xl text-center text-sm font-medium transition-all ${
                 sensitivity === val
-                  ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-400 border'
-                  : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
+                  ? 'bg-blue-50 border-blue-500 text-blue-600 border'
+                  : 'bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {t[`sensitivity_${val}`]}
@@ -147,7 +147,7 @@ export default function BranchSkinProfile({ lang, initialData, onComplete, onBac
       <div className="flex gap-3 pt-4">
         <button
           onClick={onBack}
-          className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-400 font-medium hover:bg-white/10 transition-all"
+          className="flex-1 py-3 rounded-xl bg-gray-100 border border-gray-200 text-gray-700 font-medium hover:bg-gray-200 transition-all"
         >
           {tc.back}
         </button>
@@ -156,8 +156,8 @@ export default function BranchSkinProfile({ lang, initialData, onComplete, onBac
           disabled={!isComplete}
           className={`flex-1 py-3 rounded-xl font-medium transition-all ${
             isComplete
-              ? 'bg-gradient-to-r from-cyan-500 to-cyan-400 text-black hover:opacity-90'
-              : 'bg-white/5 text-gray-600 cursor-not-allowed'
+              ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
         >
           {tc.next}

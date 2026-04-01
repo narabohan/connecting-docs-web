@@ -75,13 +75,13 @@ export default function BranchPastHistory({ lang, initialData, onComplete, onBac
       className="space-y-6"
     >
       <div className="text-center mb-6">
-        <h2 className="text-xl font-bold text-white">{t.title}</h2>
-        <p className="text-sm text-gray-400 mt-2">{t.subtitle}</p>
+        <h2 className="text-xl font-bold text-gray-900">{t.title}</h2>
+        <p className="text-sm text-gray-500 mt-2">{t.subtitle}</p>
       </div>
 
       {/* Treatment Entries */}
       {treatments.map((tr, idx) => (
-        <div key={idx} className="relative bg-white/5 rounded-xl border border-white/10 p-4 space-y-3">
+        <div key={idx} className="relative bg-gray-50 rounded-xl border border-gray-200 p-4 space-y-3">
           {treatments.length > 1 && (
             <button
               onClick={() => removeTreatment(idx)}
@@ -93,45 +93,45 @@ export default function BranchPastHistory({ lang, initialData, onComplete, onBac
 
           {/* Treatment Name */}
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">{t.treatment_name}</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">{t.treatment_name}</label>
             <input
               type="text"
               value={tr.name}
               onChange={(e) => updateTreatment(idx, 'name', e.target.value)}
               placeholder="e.g., Ulthera, Thermage, Botox"
-              className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/40"
+              className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-400"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             {/* Count */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">{t.treatment_count}</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">{t.treatment_count}</label>
               <input
                 type="number"
                 min={1}
                 max={50}
                 value={tr.count}
                 onChange={(e) => updateTreatment(idx, 'count', parseInt(e.target.value) || 1)}
-                className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/40"
+                className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
               />
             </div>
 
             {/* Last Date */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">{t.treatment_last}</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">{t.treatment_last}</label>
               <input
                 type="month"
                 value={tr.last_date}
                 onChange={(e) => updateTreatment(idx, 'last_date', e.target.value)}
-                className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/40"
+                className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
               />
             </div>
           </div>
 
           {/* Satisfaction */}
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">{t.treatment_satisfaction}</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">{t.treatment_satisfaction}</label>
             <div className="grid grid-cols-3 gap-2">
               {(['good', 'neutral', 'bad'] as const).map((val) => (
                 <button
@@ -139,10 +139,10 @@ export default function BranchPastHistory({ lang, initialData, onComplete, onBac
                   onClick={() => updateTreatment(idx, 'satisfaction', val)}
                   className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                     tr.satisfaction === val
-                      ? val === 'good' ? 'bg-green-500/15 border-green-500/40 text-green-400 border'
-                      : val === 'bad' ? 'bg-red-500/15 border-red-500/40 text-red-400 border'
-                      : 'bg-cyan-500/15 border-cyan-500/40 text-cyan-400 border'
-                      : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10'
+                      ? val === 'good' ? 'bg-green-50 border-green-500 text-green-700 border'
+                      : val === 'bad' ? 'bg-red-50 border-red-500 text-red-700 border'
+                      : 'bg-blue-50 border-blue-500 text-blue-600 border'
+                      : 'bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   {t[`sat_${val}`]}
@@ -157,7 +157,7 @@ export default function BranchPastHistory({ lang, initialData, onComplete, onBac
       {treatments.length < 5 && (
         <button
           onClick={addTreatment}
-          className="w-full py-2 rounded-xl bg-white/5 border border-dashed border-white/15 text-gray-400 text-sm font-medium hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+          className="w-full py-2 rounded-xl bg-gray-50 border border-dashed border-gray-300 text-gray-500 text-sm font-medium hover:bg-gray-100 transition-all flex items-center justify-center gap-2"
         >
           <Plus size={14} />
           {t.add_more}
@@ -166,7 +166,7 @@ export default function BranchPastHistory({ lang, initialData, onComplete, onBac
 
       {/* Adverse Experience */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-3">{t.had_adverse}</label>
+        <label className="block text-sm font-medium text-gray-700 mb-3">{t.had_adverse}</label>
         <div className="grid grid-cols-2 gap-2">
           {[true, false].map((val) => (
             <button
@@ -174,8 +174,8 @@ export default function BranchPastHistory({ lang, initialData, onComplete, onBac
               onClick={() => setHadAdverse(val)}
               className={`px-4 py-3 rounded-xl text-center text-sm font-medium transition-all ${
                 hadAdverse === val
-                  ? val ? 'bg-amber-500/15 border-amber-500/40 text-amber-400 border'
-                        : 'bg-cyan-500/15 border-cyan-500/40 text-cyan-400 border'
+                  ? val ? 'bg-amber-50 border-amber-500 text-amber-700 border'
+                        : 'bg-blue-50 border-blue-500 text-blue-600 border'
                   : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
               }`}
             >
@@ -189,7 +189,7 @@ export default function BranchPastHistory({ lang, initialData, onComplete, onBac
       <div className="flex gap-3 pt-4">
         <button
           onClick={onBack}
-          className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-400 font-medium hover:bg-white/10 transition-all"
+          className="flex-1 py-3 rounded-xl bg-gray-100 border border-gray-200 text-gray-700 font-medium hover:bg-gray-200 transition-all"
         >
           {tc.back}
         </button>
@@ -198,8 +198,8 @@ export default function BranchPastHistory({ lang, initialData, onComplete, onBac
           disabled={!isComplete}
           className={`flex-1 py-3 rounded-xl font-medium transition-all ${
             isComplete
-              ? 'bg-gradient-to-r from-cyan-500 to-cyan-400 text-black hover:opacity-90'
-              : 'bg-white/5 text-gray-600 cursor-not-allowed'
+              ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
         >
           {tc.next}
