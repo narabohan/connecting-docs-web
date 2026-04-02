@@ -26,6 +26,7 @@ export type SurveyNode =
   | 'BRANCH_PAST_HISTORY'
   | 'BRANCH_VISIT_PLAN'
   | 'BRANCH_ADVERSE'
+  | 'PREFERENCES'
   | 'SAFETY_CHECKPOINT'
   | 'ANALYZING'
   | 'COMPLETE';
@@ -63,11 +64,23 @@ export interface AdverseBranch {
   severity: 'mild' | 'moderate' | 'severe';
 }
 
+// ─── PREFERENCES 노드 (CLINICAL_SPEC §8) ──────────────────────
+
+export type PatientSegment = 'VIP' | 'PREMIUM' | 'BUDGET';
+
+export interface PreferencesBranch {
+  pain_tolerance: 1 | 2 | 3 | 4 | 5;
+  downtime_preference: '0' | '1-3' | '3-7' | '7+';
+  budget_segment: 'budget' | 'mid' | 'premium';
+  patient_segment?: PatientSegment;  // auto-derived on PREFERENCES → SAFETY transition
+}
+
 export interface BranchResponses {
   skin_profile: SkinProfileBranch | null;
   past_history: PastHistoryBranch | null;
   visit_plan: VisitPlanBranch | null;
   adverse: AdverseBranch | null;
+  preferences: PreferencesBranch | null;
 }
 
 // ─── Signal Map (전이 조건 판단용) ──────────────────────────
@@ -93,25 +106,34 @@ const TRANSITIONS: SurveyTransition[] = [
   { from: 'DEMOGRAPHIC', to: 'OPEN_TEXT', priority: 99, condition: () => true },
   { from: 'OPEN_TEXT', to: 'SMART_CHIPS', priority: 99, condition: () => true },
 
-  // ── SMART_CHIPS 이후 분기 (조건 구체적일수록 우선)
+  // ══ SMART_CHIPS 이후 분기 ══════════════════════════════════
+  // CLINICAL_SPEC §3: "처음이에요(first_time)"도 BRANCH_SKIN_PROFILE 통과 필수
+  // → 모든 사용자가 Fitzpatrick 질문을 받도록 fallback을 BRANCH_SKIN_PROFILE로 변경
+
+  // 조건부 분기: skin signal 또는 haiku hint에 의한 높은 우선순위 분기
   {
     from: 'SMART_CHIPS', to: 'BRANCH_SKIN_PROFILE', priority: 10,
     condition: (s) =>
       s.chip_responses.skin_profile === 'thin' ||
       s.chip_responses.skin_profile === 'sensitive' ||
+      s.chip_responses.skin_profile === 'dry_sensitive' ||
       s.haiku_analysis?.concern_area_hint?.includes('wrinkle') === true ||
       s.haiku_analysis?.concern_area_hint?.includes('tightening') === true,
   },
+  // 과거 시술 경험 → PAST_HISTORY (SKIN_PROFILE 건너뛰기 조건부)
   {
     from: 'SMART_CHIPS', to: 'BRANCH_PAST_HISTORY', priority: 20,
     condition: (s) =>
       s.chip_responses.past_experience === 'yes_multiple' ||
-      s.chip_responses.past_experience === 'yes_recent',
+      s.chip_responses.past_experience === 'yes_recent' ||
+      s.chip_responses.past_experience === 'yes_satisfied' ||
+      s.chip_responses.past_experience === 'yes_unsatisfied',
   },
-  // fallback: SMART_CHIPS → SAFETY
-  { from: 'SMART_CHIPS', to: 'SAFETY_CHECKPOINT', priority: 99, condition: () => true },
+  // ★ CLINICAL_SPEC V2 교정: fallback → BRANCH_SKIN_PROFILE (not SAFETY)
+  // 모든 사용자(first_time 포함)가 Fitzpatrick 질문을 받음
+  { from: 'SMART_CHIPS', to: 'BRANCH_SKIN_PROFILE', priority: 99, condition: () => true },
 
-  // ── BRANCH_SKIN_PROFILE 이후 분기
+  // ══ BRANCH_SKIN_PROFILE 이후 분기 ═══════════════════════════
   {
     from: 'BRANCH_SKIN_PROFILE', to: 'BRANCH_PAST_HISTORY', priority: 10,
     condition: (s) =>
@@ -123,9 +145,10 @@ const TRANSITIONS: SurveyTransition[] = [
     from: 'BRANCH_SKIN_PROFILE', to: 'BRANCH_VISIT_PLAN', priority: 20,
     condition: (s) => s.demographics.detected_country !== 'KR',
   },
-  { from: 'BRANCH_SKIN_PROFILE', to: 'SAFETY_CHECKPOINT', priority: 99, condition: () => true },
+  // fallback: → PREFERENCES (not SAFETY)
+  { from: 'BRANCH_SKIN_PROFILE', to: 'PREFERENCES', priority: 99, condition: () => true },
 
-  // ── BRANCH_PAST_HISTORY 이후 분기
+  // ══ BRANCH_PAST_HISTORY 이후 분기 ═══════════════════════════
   {
     from: 'BRANCH_PAST_HISTORY', to: 'BRANCH_ADVERSE', priority: 10,
     condition: (s) => s.branch_responses.past_history?.had_adverse === true,
@@ -134,17 +157,23 @@ const TRANSITIONS: SurveyTransition[] = [
     from: 'BRANCH_PAST_HISTORY', to: 'BRANCH_VISIT_PLAN', priority: 20,
     condition: (s) => s.demographics.detected_country !== 'KR',
   },
-  { from: 'BRANCH_PAST_HISTORY', to: 'SAFETY_CHECKPOINT', priority: 99, condition: () => true },
+  // fallback: → PREFERENCES (not SAFETY)
+  { from: 'BRANCH_PAST_HISTORY', to: 'PREFERENCES', priority: 99, condition: () => true },
 
-  // ── BRANCH_ADVERSE → VISIT_PLAN or SAFETY
+  // ══ BRANCH_ADVERSE → VISIT_PLAN or PREFERENCES ═════════════
   {
     from: 'BRANCH_ADVERSE', to: 'BRANCH_VISIT_PLAN', priority: 10,
     condition: (s) => s.demographics.detected_country !== 'KR',
   },
-  { from: 'BRANCH_ADVERSE', to: 'SAFETY_CHECKPOINT', priority: 99, condition: () => true },
+  // fallback: → PREFERENCES (not SAFETY)
+  { from: 'BRANCH_ADVERSE', to: 'PREFERENCES', priority: 99, condition: () => true },
 
-  // ── BRANCH_VISIT_PLAN → SAFETY (always)
-  { from: 'BRANCH_VISIT_PLAN', to: 'SAFETY_CHECKPOINT', priority: 99, condition: () => true },
+  // ══ BRANCH_VISIT_PLAN → PREFERENCES (not SAFETY) ═══════════
+  { from: 'BRANCH_VISIT_PLAN', to: 'PREFERENCES', priority: 99, condition: () => true },
+
+  // ══ PREFERENCES → SAFETY_CHECKPOINT ═════════════════════════
+  // CLINICAL_SPEC §8: PREFERENCES가 수렴점, SAFETY 전에 통과
+  { from: 'PREFERENCES', to: 'SAFETY_CHECKPOINT', priority: 99, condition: () => true },
 
   // ── SAFETY → ANALYZING (always)
   { from: 'SAFETY_CHECKPOINT', to: 'ANALYZING', priority: 99, condition: () => true },
@@ -163,6 +192,7 @@ const NODE_TO_STEP: Record<SurveyNode, string> = {
   BRANCH_PAST_HISTORY: 'branch_past_history',
   BRANCH_VISIT_PLAN: 'branch_visit_plan',
   BRANCH_ADVERSE: 'branch_adverse',
+  PREFERENCES: 'preferences',
   SAFETY_CHECKPOINT: 'safety',
   ANALYZING: 'analyzing',
   COMPLETE: 'complete',
@@ -184,7 +214,7 @@ const MAIN_NODES: SurveyNode[] = [
   'DEMOGRAPHIC', 'OPEN_TEXT', 'SMART_CHIPS', 'SAFETY_CHECKPOINT', 'ANALYZING',
 ];
 const BRANCH_NODES: SurveyNode[] = [
-  'BRANCH_SKIN_PROFILE', 'BRANCH_PAST_HISTORY', 'BRANCH_VISIT_PLAN', 'BRANCH_ADVERSE',
+  'BRANCH_SKIN_PROFILE', 'BRANCH_PAST_HISTORY', 'BRANCH_VISIT_PLAN', 'BRANCH_ADVERSE', 'PREFERENCES',
 ];
 
 function calculateProgress(currentNode: SurveyNode, visitedNodes: SurveyNode[]): number {
@@ -206,6 +236,41 @@ function calculateProgress(currentNode: SurveyNode, visitedNodes: SurveyNode[]):
   }
 
   return 50; // fallback
+}
+
+// ─── Patient Segment Derivation (CLINICAL_SPEC §8) ─────────
+// Called when PREFERENCES → SAFETY_CHECKPOINT transition occurs
+
+export function derivePatientSegment(
+  preferences: PreferencesBranch,
+  visitPlan?: VisitPlanBranch | null,
+): PatientSegment {
+  const { budget_segment, pain_tolerance, downtime_preference } = preferences;
+
+  // Downtime as numeric days for comparison
+  const downtimeDays = downtime_preference === '7+' ? 7
+    : downtime_preference === '3-7' ? 5
+    : downtime_preference === '1-3' ? 2
+    : 0;
+
+  // VIP: premium + pain OK + downtime OK
+  if (budget_segment === 'premium' && pain_tolerance >= 3 && downtimeDays >= 5) {
+    return 'VIP';
+  }
+
+  // VIP: premium + yearly visit (1회에 확실한 결과)
+  // Note: revisit_cycle not yet in VisitPlanBranch, but stay_days > 0 indicates travel patient
+  if (budget_segment === 'premium' && visitPlan && visitPlan.stay_days > 0) {
+    return 'VIP';
+  }
+
+  // Budget: 가성비 선택
+  if (budget_segment === 'budget') {
+    return 'BUDGET';
+  }
+
+  // Premium: 나머지
+  return 'PREMIUM';
 }
 
 // ─── Hook ───────────────────────────────────────────────────
@@ -247,6 +312,7 @@ export function useSurveyStateMachine(
     past_history: null,
     visit_plan: null,
     adverse: null,
+    preferences: null,
   });
 
   const advance = useCallback(
@@ -300,6 +366,7 @@ export function useSurveyStateMachine(
       past_history: null,
       visit_plan: null,
       adverse: null,
+      preferences: null,
     });
   }, [initialNode]);
 

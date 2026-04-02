@@ -38,6 +38,7 @@ const BRANCH_NODE_SET = new Set<SurveyNode>([
   'BRANCH_PAST_HISTORY',
   'BRANCH_VISIT_PLAN',
   'BRANCH_ADVERSE',
+  'PREFERENCES',
 ]);
 
 export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps) {

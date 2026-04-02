@@ -27,6 +27,7 @@ function makeSignals(overrides: Partial<SurveySignals> = {}): SurveySignals {
       past_history: null,
       visit_plan: null,
       adverse: null,
+      preferences: null,
     },
     ...overrides,
   };
@@ -80,9 +81,9 @@ describe('Survey State Machine — getNextNode', () => {
     expect(getNextNode('SMART_CHIPS', signals)).toBe('BRANCH_PAST_HISTORY');
   });
 
-  it('SMART_CHIPS → SAFETY_CHECKPOINT as fallback', () => {
+  it('SMART_CHIPS → BRANCH_SKIN_PROFILE as fallback (universal Fitzpatrick)', () => {
     const signals = makeSignals({ chip_responses: { past_experience: 'none', skin_profile: 'normal' } });
-    expect(getNextNode('SMART_CHIPS', signals)).toBe('SAFETY_CHECKPOINT');
+    expect(getNextNode('SMART_CHIPS', signals)).toBe('BRANCH_SKIN_PROFILE');
   });
 
   // ── BRANCH_SKIN_PROFILE 분기 ──
@@ -99,9 +100,9 @@ describe('Survey State Machine — getNextNode', () => {
     expect(getNextNode('BRANCH_SKIN_PROFILE', signals)).toBe('BRANCH_VISIT_PLAN');
   });
 
-  it('BRANCH_SKIN_PROFILE → SAFETY_CHECKPOINT as fallback (KR, no past)', () => {
+  it('BRANCH_SKIN_PROFILE → PREFERENCES as fallback (KR, no past)', () => {
     const signals = makeSignals({ chip_responses: { past_experience: 'none' } });
-    expect(getNextNode('BRANCH_SKIN_PROFILE', signals)).toBe('SAFETY_CHECKPOINT');
+    expect(getNextNode('BRANCH_SKIN_PROFILE', signals)).toBe('PREFERENCES');
   });
 
   // ── BRANCH_PAST_HISTORY 분기 ──
@@ -112,6 +113,7 @@ describe('Survey State Machine — getNextNode', () => {
         past_history: { treatments: [], had_adverse: true },
         visit_plan: null,
         adverse: null,
+        preferences: null,
       },
     });
     expect(getNextNode('BRANCH_PAST_HISTORY', signals)).toBe('BRANCH_ADVERSE');
@@ -125,21 +127,23 @@ describe('Survey State Machine — getNextNode', () => {
         past_history: { treatments: [], had_adverse: false },
         visit_plan: null,
         adverse: null,
+        preferences: null,
       },
     });
     expect(getNextNode('BRANCH_PAST_HISTORY', signals)).toBe('BRANCH_VISIT_PLAN');
   });
 
-  it('BRANCH_PAST_HISTORY → SAFETY_CHECKPOINT as fallback', () => {
+  it('BRANCH_PAST_HISTORY → PREFERENCES as fallback', () => {
     const signals = makeSignals({
       branch_responses: {
         skin_profile: null,
         past_history: { treatments: [], had_adverse: false },
         visit_plan: null,
         adverse: null,
+        preferences: null,
       },
     });
-    expect(getNextNode('BRANCH_PAST_HISTORY', signals)).toBe('SAFETY_CHECKPOINT');
+    expect(getNextNode('BRANCH_PAST_HISTORY', signals)).toBe('PREFERENCES');
   });
 
   // ── BRANCH_ADVERSE 분기 ──
@@ -150,13 +154,17 @@ describe('Survey State Machine — getNextNode', () => {
     expect(getNextNode('BRANCH_ADVERSE', signals)).toBe('BRANCH_VISIT_PLAN');
   });
 
-  it('BRANCH_ADVERSE → SAFETY_CHECKPOINT for KR patient', () => {
-    expect(getNextNode('BRANCH_ADVERSE', makeSignals())).toBe('SAFETY_CHECKPOINT');
+  it('BRANCH_ADVERSE → PREFERENCES for KR patient', () => {
+    expect(getNextNode('BRANCH_ADVERSE', makeSignals())).toBe('PREFERENCES');
   });
 
   // ── Terminal nodes ──
-  it('BRANCH_VISIT_PLAN → SAFETY_CHECKPOINT (always)', () => {
-    expect(getNextNode('BRANCH_VISIT_PLAN', makeSignals())).toBe('SAFETY_CHECKPOINT');
+  it('BRANCH_VISIT_PLAN → PREFERENCES (always)', () => {
+    expect(getNextNode('BRANCH_VISIT_PLAN', makeSignals())).toBe('PREFERENCES');
+  });
+
+  it('PREFERENCES → SAFETY_CHECKPOINT (always)', () => {
+    expect(getNextNode('PREFERENCES', makeSignals())).toBe('SAFETY_CHECKPOINT');
   });
 
   it('SAFETY_CHECKPOINT → ANALYZING (always)', () => {
@@ -207,13 +215,14 @@ describe('Survey State Machine — Full Path Scenarios', () => {
         past_history: { treatments: [], had_adverse: false },
         visit_plan: null,
         adverse: null,
+        preferences: null,
       },
     });
 
     const path: SurveyNode[] = ['DEMOGRAPHIC'];
     let current: SurveyNode = 'DEMOGRAPHIC';
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 12; i++) {
       current = getNextNode(current, signals);
       path.push(current);
       if (current === 'COMPLETE') break;
@@ -225,6 +234,7 @@ describe('Survey State Machine — Full Path Scenarios', () => {
       'SMART_CHIPS',
       'BRANCH_SKIN_PROFILE',
       'BRANCH_PAST_HISTORY',
+      'PREFERENCES',
       'SAFETY_CHECKPOINT',
       'ANALYZING',
       'COMPLETE',
@@ -240,13 +250,14 @@ describe('Survey State Machine — Full Path Scenarios', () => {
         past_history: { treatments: [], had_adverse: true },
         visit_plan: null,
         adverse: null,
+        preferences: null,
       },
     });
 
     const path: SurveyNode[] = ['DEMOGRAPHIC'];
     let current: SurveyNode = 'DEMOGRAPHIC';
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 12; i++) {
       current = getNextNode(current, signals);
       path.push(current);
       if (current === 'COMPLETE') break;
@@ -260,13 +271,14 @@ describe('Survey State Machine — Full Path Scenarios', () => {
       'BRANCH_PAST_HISTORY',
       'BRANCH_ADVERSE',
       'BRANCH_VISIT_PLAN',
+      'PREFERENCES',
       'SAFETY_CHECKPOINT',
       'ANALYZING',
       'COMPLETE',
     ]);
   });
 
-  it('Simple KR patient with no triggers: shortest path', () => {
+  it('Simple KR patient with no triggers: includes BRANCH_SKIN_PROFILE + PREFERENCES', () => {
     const signals = makeSignals({
       chip_responses: { skin_profile: 'normal', past_experience: 'none' },
     });
@@ -274,16 +286,19 @@ describe('Survey State Machine — Full Path Scenarios', () => {
     const path: SurveyNode[] = ['DEMOGRAPHIC'];
     let current: SurveyNode = 'DEMOGRAPHIC';
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 12; i++) {
       current = getNextNode(current, signals);
       path.push(current);
       if (current === 'COMPLETE') break;
     }
 
+    // CLINICAL_SPEC V2: even "first_time" users go through BRANCH_SKIN_PROFILE + PREFERENCES
     expect(path).toEqual([
       'DEMOGRAPHIC',
       'OPEN_TEXT',
       'SMART_CHIPS',
+      'BRANCH_SKIN_PROFILE',
+      'PREFERENCES',
       'SAFETY_CHECKPOINT',
       'ANALYZING',
       'COMPLETE',
