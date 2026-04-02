@@ -58,6 +58,8 @@ export interface HaikuAnalysis {
   expectation_tag: 'REALISTIC' | 'AMBITIOUS' | 'CAUTION';
   communication_style: 'LOGICAL' | 'EMOTIONAL' | 'ANXIOUS';
   lifestyle_context: string | null;  // e.g. "사진 찍을 때 팔자주름이 보여서"
+  // ─── Phase 3-B: Analysis confidence ───────────────────────
+  confidence_score?: number;  // 0.0~1.0 — low confidence → more Smart Chips shown
 }
 
 // ─── Smart Chip ─────────────────────────────────────────────
