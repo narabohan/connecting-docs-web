@@ -110,6 +110,16 @@ export interface SurveyV2Translations {
     severity_label: string;
     severity_mild: string; severity_moderate: string; severity_severe: string;
   };
+  branch_preferences: {
+    title: string;
+    subtitle: string;
+    pain_label: string;
+    pain_1: string; pain_2: string; pain_3: string; pain_4: string; pain_5: string;
+    downtime_label: string;
+    downtime_0: string; downtime_1_3: string; downtime_3_7: string; downtime_7plus: string;
+    budget_label: string;
+    budget_value: string; budget_mid: string; budget_premium: string;
+  };
   common: {
     next: string;
     back: string;
@@ -259,6 +269,16 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       severity_label: '심각도',
       severity_mild: '경미', severity_moderate: '보통', severity_severe: '심각',
     },
+    branch_preferences: {
+      title: '시술 선호도',
+      subtitle: '맞춤 추천을 위해 선호도를 알려주세요',
+      pain_label: '시술 시 통증에 대해 어떻게 생각하시나요?',
+      pain_1: '통증에 매우 민감', pain_2: '가벼운 통증까지 OK', pain_3: '마취크림 바르고 참을 수 있어요', pain_4: '마취 주사도 괜찮아요', pain_5: '수면마취도 고려',
+      downtime_label: '시술 후 회복 기간(다운타임)은 어느 정도까지 허용되시나요?',
+      downtime_0: '0일 (당일 일상 복귀)', downtime_1_3: '1~3일', downtime_3_7: '3~7일', downtime_7plus: '7일 이상 OK',
+      budget_label: '어떤 방식의 피부 관리를 선호하시나요?',
+      budget_value: '가성비 중시', budget_mid: '적정 가격 밸런스', budget_premium: '프리미엄/럭셔리',
+    },
   },
 
   EN: {
@@ -384,6 +404,16 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       recovery_label: 'Recovery period (weeks)',
       severity_label: 'Severity',
       severity_mild: 'Mild', severity_moderate: 'Moderate', severity_severe: 'Severe',
+    },
+    branch_preferences: {
+      title: 'Treatment Preferences',
+      subtitle: 'Help us tailor our recommendations to your needs',
+      pain_label: 'How do you feel about pain during treatments?',
+      pain_1: 'Very sensitive to pain', pain_2: 'Mild pain OK', pain_3: 'Moderate with numbing cream', pain_4: 'Local anesthesia OK', pain_5: 'IV sedation OK',
+      downtime_label: 'How much downtime can you accept after treatment?',
+      downtime_0: 'Same day recovery', downtime_1_3: '1-3 days', downtime_3_7: '3-7 days', downtime_7plus: '7+ days OK',
+      budget_label: 'What is your preferred approach to skin care?',
+      budget_value: 'Best value', budget_mid: 'Mid-range balance', budget_premium: 'Premium experience',
     },
   },
 
@@ -511,6 +541,16 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       severity_label: '重症度',
       severity_mild: '軽度', severity_moderate: '中程度', severity_severe: '重度',
     },
+    branch_preferences: {
+      title: '施術の好み',
+      subtitle: 'あなたに合った提案のために教えてください',
+      pain_label: '施術中の痛みについてどうお考えですか？',
+      pain_1: '痛みに非常に敏感', pain_2: '軽い痛みならOK', pain_3: '麻酔クリームで我慢できる', pain_4: '局所麻酔もOK', pain_5: '静脈麻酔も検討',
+      downtime_label: '施術後のダウンタイムはどのくらい許容できますか？',
+      downtime_0: '当日回復（0日）', downtime_1_3: '1〜3日', downtime_3_7: '3〜7日', downtime_7plus: '7日以上OK',
+      budget_label: 'どのようなスキンケアを好みますか？',
+      budget_value: 'コスパ重視', budget_mid: 'バランス型', budget_premium: 'プレミアム体験',
+    },
   },
 
   'ZH-CN': {
@@ -636,6 +676,16 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       recovery_label: '恢复期（周）',
       severity_label: '严重程度',
       severity_mild: '轻微', severity_moderate: '中等', severity_severe: '严重',
+    },
+    branch_preferences: {
+      title: '治疗偏好',
+      subtitle: '帮助我们为您量身定制推荐方案',
+      pain_label: '您对治疗过程中的疼痛怎么看？',
+      pain_1: '对疼痛非常敏感', pain_2: '轻微疼痛可以', pain_3: '涂麻醉膏能忍受', pain_4: '局部麻醉也可以', pain_5: '静脉麻醉也考虑',
+      downtime_label: '治疗后您能接受多长的恢复期？',
+      downtime_0: '当天恢复（0天）', downtime_1_3: '1-3天', downtime_3_7: '3-7天', downtime_7plus: '7天以上OK',
+      budget_label: '您偏好什么样的护肤方式？',
+      budget_value: '高性价比', budget_mid: '中等平衡', budget_premium: '高端体验',
     },
   },
 };

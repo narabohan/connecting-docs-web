@@ -28,6 +28,7 @@ import BranchSkinProfile from './BranchSkinProfile';
 import BranchPastHistory from './BranchPastHistory';
 import BranchVisitPlan from './BranchVisitPlan';
 import BranchAdverse from './BranchAdverse';
+import BranchPreferences from './BranchPreferences';
 
 interface SurveyV2ContainerProps {
   onComplete: (runId: string) => void;
@@ -247,6 +248,16 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
                 lang={lang}
                 initialData={fsm.branchResponses.adverse}
                 onComplete={(data) => handleBranchComplete('adverse', data)}
+                onBack={handleBranchBack}
+              />
+            )}
+
+            {fsmBranchActive && fsm.currentNode === 'PREFERENCES' && (
+              <BranchPreferences
+                key="preferences"
+                lang={lang}
+                initialData={fsm.branchResponses.preferences}
+                onComplete={(data) => handleBranchComplete('preferences', data)}
                 onBack={handleBranchBack}
               />
             )}
