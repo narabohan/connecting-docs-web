@@ -506,6 +506,72 @@ Your task: Given a patient's complete profile and clinical context, generate a c
 - PROTO_03 + PROTO_06 simultaneous → Vascular first (4 weeks) → then Pigmentation
 - Safety flags → ALWAYS override protocol preferences
 
+═══ CLINICAL_SPEC §10 — DEVICE MAPPING RULES ═══
+Use these concern_area→device mappings when generating recommendations:
+
+[LIFTING/TIGHTENING]
+- Jawline lifting (jawline_lifting): HIFU(Ulthera/Shrink) + Monopolar RF(Thermage/Volnewmer/Oligio)
+  VIP→Ulthera, PREMIUM→Shrink, BUDGET→Oligio
+  Pain 1~2 → Sofwave/Volnewmer only (exclude Ulthera/Thermage)
+- Skin tightening (skin_tightening): Monopolar RF + MN-RF(Genius/Potenza/Sylfirm X)
+  VIP→Thermage FLX, BUDGET→Volnewmer
+- Volume restoration (volume_restoration): Injectables(Juvelook Vol/Sculptra). EXCLUDE HIFU (볼패임 risk).
+  Exception: Sofwave is safe (parallel ultrasound, no fat destruction)
+
+[PIGMENT/TONE]
+- Melasma (melasma): Q-switched 1064nm(Hollywood Spectra) + Sylfirm X(PW mode)
+  PIH history → Sylfirm X PW, Potenza low-energy, VirtueRF. EXCLUDE all Pico/Qsw high-fluence.
+- Dark spots/Lentigines (dark_spots): Reepot VSLS(1회 완치) or strong Pico
+  VIP→Reepot, BUDGET→strong Pico
+  Stay 1~3 days → Reepot on last day (듀오덤 exit), patient post-care guide required
+- Freckles (freckles): Pico 1064/755nm + BBL HERO
+  Fitzpatrick IV+ → Pico 1064nm ONLY (no BBL/IPL — PIH risk)
+- Mole removal (mole_removal): CO2 laser
+- Dull skin (dull_skin): NCTF(샤넬주사) + LaseMD Ultra
+
+[TEXTURE/PORES]
+- Large pores (large_pores): Quadessy, LaseMD Ultra, SecretRF, Potenza
+  VIP→Genius, PREMIUM→Potenza, BUDGET→SecretRF
+- Acne scars (acne_scars): Genius + Potenza + Juvelook pumping tip
+  VIP + pain OK → Genius 1st (impedance feedback, premium)
+  BUDGET or pain low → Potenza 1st (affordable, less pain, drug delivery tip)
+- Dryness/Redness (dryness_redness): DermaV + Rejuran Healer(PN) + Exosome(ASCE+)
+
+[FITZPATRICK RESTRICTIONS]
+- Type I-II: Use lowest energy settings. Cooling protocol mandatory. BBL/IPL caution.
+- Type IV-V-VI: IPL/BBL CONTRAINDICATED. Pico→1064nm only. PIH risk very high. PW-mode MN-RF preferred.
+
+[PATIENT SEGMENT PRIORITY]
+When patient_segment is provided, prioritize devices accordingly:
+- VIP/Luxury: Ulthera, Thermage FLX, Genius, Reepot, PicoSure Pro, Profhilo, NCTF
+- Premium/Mid: Volnewmer, Shrink Universe, Potenza, PicoPlus, Sylfirm X, Juvelook, Rejuran
+- Budget: Oligio, Sofwave, BBL HERO, LaseMD Ultra, Quadessy, general toning
+
+[STAY DURATION RULES]
+When stay_duration is provided for medical tourists:
+- Downtime-based device filtering applies
+- "Last day strategy" (마지막날 전략): High-downtime but effective treatments CAN be recommended
+  on the patient's last day with condition: "출국 후 본국 사후관리 가이드 필수 제공"
+  Examples: Reepot(듀오덤 14일) last day OK, Genius(딱지 3~5일) last day OK
+
+[MEDICAL TOURIST BEHAVIOR PATTERNS]
+Recognize these 4 patterns from PREFERENCES + VISIT_PLAN responses:
+A. "Last day treatment" — Low downtime tolerance + 3~7 day stay + results-focused
+   → Zero-downtime during stay, strong treatment on last day
+B. "Zero downtime compromise" — 0 days downtime + 1~3 day stay
+   → Zero-downtime premium package only (Sofwave + Volnewmer + SkinVive + LED)
+C. "Pack everything in one day" — 1~3 day stay + pain OK + premium
+   → Maximum safe combo within daily limits (EBD ≤3 + Injectable ≤2)
+D. "Day 1 blitz" — 4~7 day stay + premium + pain OK
+   → Day 1 intensive + Day 3~5 recovery check
+
+[DAILY MAX SAFETY CAP]
+- Maximum per day: 3 EBD devices + 2 injectables
+- 3D layering: SMAS(HIFU) + deep dermis(RF) + epidermis(Pico/LaseMD) = OK
+- Same-layer double hit FORBIDDEN: Ulthera + Shrink same day = NO
+- Genius(invasive MN-RF) + Ulthera + Thermage same day = NO (thermal overload)
+- "불가" → "주의 — 의사 판단 필요" (soften "impossible" to "caution — doctor decision needed")
+
 ═══ TREND & POPULARITY WEIGHTING (Issue #5) ═══
 When scoring each device and injectable, apply these trend/popularity rules:
 
@@ -1190,6 +1256,13 @@ Budget: ${req.budget ? `${req.budget.range} (${req.budget.type})` : 'Not specifi
 ${req.stay_duration ? `Stay Duration: ${req.stay_duration} days` : ''}
 ${req.management_frequency ? `Management Frequency: ${req.management_frequency}` : ''}
 ${req.event_info ? `Event: ${req.event_info.type} on ${req.event_info.date}` : ''}
+
+═══ CLINICAL_SPEC §8: PATIENT SEGMENT ═══
+(Use DEVICE MAPPING RULES above to prioritize devices for this segment)
+Patient Segment: ${(req as unknown as Record<string, unknown>).patient_segment ?? 'Not determined'}
+Preferences Pain Tolerance: ${(req as unknown as Record<string, unknown>).preferences_pain ?? 'Not specified'}
+Preferences Downtime: ${(req as unknown as Record<string, unknown>).preferences_downtime ?? 'Not specified'}
+Preferences Budget: ${(req as unknown as Record<string, unknown>).preferences_budget ?? 'Not specified'}
 Current Month: ${new Date().getMonth() + 1}
 
 ═══ SAFETY FLAGS ═══
