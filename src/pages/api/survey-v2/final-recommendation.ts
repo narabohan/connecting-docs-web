@@ -512,10 +512,23 @@ Your task: Given a patient's complete profile and clinical context, generate a c
 - PROTO_03 + PROTO_06 simultaneous → Vascular first (4 weeks) → then Pigmentation
 - Safety flags → ALWAYS override protocol preferences
 
-═══ CLINICAL_SPEC §10 — DEVICE MAPPING & SAFETY RULES ═══
-(Generated from src/lib/clinical-rules.ts — structured clinical data)
+═══ CLINICAL_SPEC §10 — CATEGORY-FIRST RECOMMENDATION LOGIC ═══
+추천 구조 (3개 프로토콜):
+- 프로토콜 1 (Best Premium): 환자 매칭도 최고 + 프리미엄 장비. 해당 concern의 1순위 카테고리에서 선택.
+- 프로토콜 2 (Trending): 현재 트렌드 장비. 1~2순위 카테고리에서 선택.
+- 프로토콜 3 (Smart Value): 가성비 + 최근 장비. 2~3순위 카테고리에서 선택.
 
-${buildClinicalRulesPromptBlock()}
+각 프로토콜은:
+1. EBD 카테고리를 먼저 선택 (CONCERN_TO_CATEGORY_MAP 참조 — 아래 DYNAMIC SECTION에 환자별 매핑 포함)
+2. 해당 카테고리 내에서 환자 조건(budget, pain_tolerance, downtime, fitzpatrick)으로 장비 필터링
+3. 복합 조합(EBD + 인젝터블) 포함
+
+환자 조건에 따른 카테고리 내 장비 선택 기준:
+- budget=premium → 해당 카테고리의 프리미엄 장비 (예: HIFU면 Ultherapy)
+- budget=budget → 해당 카테고리의 가성비 장비 (예: HIFU면 Shrink Universe)
+- pain_tolerance=minimal → 통증 낮은 장비 우선
+- downtime_tolerance=none/short → 다운타임 짧은 장비 우선
+- fitzpatrick IV+ → IPL/BBL 주의 플래그
 
 NOTE: "불가" → "주의 — 의사 판단 필요" (soften "impossible" to "caution — doctor decision needed")
 
@@ -1192,6 +1205,9 @@ Haiku Intelligence Signals:
   emotion_tone: ${req.haiku_analysis?.emotion_tone || 'unknown'}
 
 Open Response (original): "${req.open_question_raw}"
+
+═══ CATEGORY-BASED CLINICAL MAPPING (Patient-specific) ═══
+${buildClinicalRulesPromptBlock(req.q3_concern_area || req.q1_primary_goal || null)}
 
 Prior Applied: [${req.prior_applied.join(', ')}]
 Prior Values: ${JSON.stringify(req.prior_values)}
