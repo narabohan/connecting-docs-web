@@ -134,13 +134,25 @@ const InjectableRecommendationSchema = z.object({
   scores: z.record(z.string(), z.number()).default({}),
 });
 
+const SolutionStepSchema = z.object({
+  order: z.number().default(0),
+  type: z.enum(['ebd', 'injectable']).default('ebd'),
+  deviceOrProduct: z.string().default(''),
+  category: z.string().default(''),
+  action: z.string().default(''),
+  intervalAfter: z.string().nullable().default(null),
+});
+
 const SignatureSolutionSchema = z.object({
   name: z.string().default(''),
   description: z.string().default(''),
   devices: z.array(z.string()).default([]),
   injectables: z.array(z.string()).default([]),
   totalSessions: z.string().default(''),
+  totalDuration: z.string().default(''),
   synergyScore: z.number().default(0),
+  synergyExplanation: z.string().default(''),
+  steps: z.array(SolutionStepSchema).default([]),
 });
 
 const TreatmentPhaseSchema = z.object({

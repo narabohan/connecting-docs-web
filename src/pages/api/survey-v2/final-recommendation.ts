@@ -132,6 +132,29 @@ export interface OpusDeviceRecommendation {
   };
   scores: Record<string, number>;
   ai_description_html: string;
+  // ─── Category-first fields (Phase 3-C Task 2) ────────────
+  slot?: 'premium' | 'trending' | 'value';
+  category_id?: string;
+  category_name_ko?: string;
+  category_name_en?: string;
+  category_reason?: string;
+  match_score?: number;
+  downtime_display?: string;
+  price_tier?: 1 | 2 | 3 | 4 | 5;
+  alternative_devices?: {
+    name: string;
+    one_liner: string;
+    match_score: number;
+    downtime_display: string;
+    pain_level: 1 | 2 | 3 | 4 | 5;
+    price_tier: 1 | 2 | 3 | 4 | 5;
+  }[];
+  doctor_note?: {
+    suggested_parameters: string;
+    fitzpatrick_adjustment: string;
+    safety_flags: string[];
+    min_interval_days: number;
+  };
 }
 
 export interface OpusInjectableRecommendation {
@@ -158,13 +181,25 @@ export interface OpusInjectableRecommendation {
   scores: Record<string, number>;
 }
 
+export interface OpusSolutionStep {
+  order: number;
+  type: 'ebd' | 'injectable';
+  device_or_product: string;
+  category: string;
+  action: string;             // "피하층 Fibrous Septa 재건"
+  interval_after?: string;    // "2주 간격", null for last step
+}
+
 export interface OpusSignatureSolution {
   name: string;
   description: string;
   devices: string[];
   injectables: string[];
   total_sessions: string;
+  total_duration?: string;
   synergy_score: number;
+  synergy_explanation?: string;
+  steps?: OpusSolutionStep[];
 }
 
 export interface OpusTreatmentPlan {
@@ -796,6 +831,23 @@ NEVER use fear tactics. NEVER pressure. NEVER guarantee outcomes.
 - This layer = ebd_recommendations + injectable_recommendations + signature_solutions.
 - Use patient-friendly language in summary_html (e.g. "깊은 층부터 탄력을 회복하는 방법").
 
+═══ SIGNATURE SOLUTIONS — MUST GENERATE EXACTLY 3 ═══
+Generate EXACTLY 3 Signature Solutions, ranked by synergy_score (highest first).
+
+Synergy score calculation:
+- Layer separation bonus: +20 if EBDs target different skin layers
+- Temporal synergy bonus: +15 if treatments enhance each other sequentially
+- Safety bonus: +10 if combination has no contraindication overlap
+- Clinical evidence bonus: +15 if matches CONCERN_TO_CATEGORY_MAP recommendedCombo
+- Injectable pairing bonus: +10 if injectable directly enhances EBD effect
+
+Each solution MUST include:
+- synergy_score: 0-100
+- name: descriptive protocol name
+- steps: ordered array of treatment steps with intervals between each
+- total_sessions, total_duration
+- synergy_explanation: why this combination works (1-2 sentences)
+
 ═══ DOCTOR INTELLIGENCE (Issue 0-5) ═══
 The doctor_tab MUST include patient_intelligence with 3 elements:
 
@@ -875,7 +927,17 @@ Required JSON fields:
       "target_tags": ["<tag1>", "<tag2>", ...],
       "practical": { "sessions": "", "interval": "", "duration": "", "onset": "", "maintain": "" },
       "scores": { "tightening": 0-10, "lifting": 0-10, "volume": 0-10, "brightening": 0-10, "texture": 0-10, "evidence": 0-10, "synergy": 0-10, "longevity": 0-10, "roi": 0-10, "trend": 0-10, "popularity": 0-10 },
-      "ai_description_html": "<1-2 sentence AI-generated description>"
+      "ai_description_html": "<1-2 sentence AI-generated description>",
+      "slot": "premium|trending|value",
+      "category_id": "<HIFU|SAR|MN_RF|etc from CONCERN_TO_CATEGORY_MAP>",
+      "category_name_ko": "<카테고리 한국어명>",
+      "category_name_en": "<Category English name>",
+      "category_reason": "<왜 이 카테고리가 환자에게 맞는지 1줄>",
+      "match_score": 0-100,
+      "downtime_display": "<환자 친화 표현: '3~7일', '없음', '2주(듀오덤)'>",
+      "price_tier": 1-5,
+      "alternative_devices": [{"name":"<alt device>","one_liner":"<1줄>","match_score":0-100,"downtime_display":"<>","pain_level":1-5,"price_tier":1-5}],
+      "doctor_note": {"suggested_parameters":"<출력/깊이/패스>","fitzpatrick_adjustment":"<Type IV 조정>","safety_flags":["<flag>"],"min_interval_days":28}
     }
   ],
 
@@ -902,12 +964,18 @@ Required JSON fields:
 
   "signature_solutions": [
     {
-      "name": "<creative solution name>",
+      "name": "<creative protocol name>",
       "description": "<1-2 sentence description>",
       "devices": ["<device_id>", ...],
       "injectables": ["<injectable_id>", ...],
       "total_sessions": "<range>",
-      "synergy_score": 0-100
+      "total_duration": "<e.g. 4-6 months>",
+      "synergy_score": 0-100,
+      "synergy_explanation": "<why this combination works — 1-2 sentences>",
+      "steps": [
+        { "order": 1, "type": "ebd", "device_or_product": "<name>", "category": "<category_id>", "action": "<what it does to the skin>", "interval_after": "<e.g. 2 weeks>" },
+        { "order": 2, "type": "injectable", "device_or_product": "<name>", "category": "<category>", "action": "<what it does>", "interval_after": null }
+      ]
     }
   ],
 

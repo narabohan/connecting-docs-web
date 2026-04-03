@@ -164,13 +164,25 @@ export interface InjectableRecommendation {
 }
 
 // ─── Signature Solution ───────────────────────────────────────
+export interface SolutionStep {
+  order: number;
+  type: 'ebd' | 'injectable';
+  deviceOrProduct: string;
+  category: string;
+  action: string;
+  intervalAfter: string | null;
+}
+
 export interface SignatureSolution {
   name: string;
   description: string;
   devices: string[];
   injectables: string[];
   totalSessions: string;
+  totalDuration: string;
   synergyScore: number;
+  synergyExplanation: string;
+  steps: SolutionStep[];
 }
 
 // ─── Treatment Plan ───────────────────────────────────────────

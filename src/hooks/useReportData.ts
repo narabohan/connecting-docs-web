@@ -232,7 +232,17 @@ function convertSignatureSolutions(items: OpusSignatureSolution[]): SignatureSol
     devices: s.devices,
     injectables: s.injectables,
     totalSessions: s.total_sessions,
+    totalDuration: s.total_duration ?? '',
     synergyScore: s.synergy_score,
+    synergyExplanation: s.synergy_explanation ?? '',
+    steps: (s.steps ?? []).map((step) => ({
+      order: step.order,
+      type: step.type,
+      deviceOrProduct: step.device_or_product,
+      category: step.category,
+      action: step.action,
+      intervalAfter: step.interval_after ?? null,
+    })),
   }));
 }
 
