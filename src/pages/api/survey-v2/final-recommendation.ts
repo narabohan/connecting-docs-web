@@ -956,7 +956,22 @@ CRITICAL RULES:
 8. CONCISENESS IS CRITICAL — keep EBD/injectable HTML fields to 1-2 short sentences max. Keep summary_html under 40 words, why_fit_html under 60 words, moa_description_html under 50 words. EXCEPTION: mirror.empathy_paragraphs (~800 tokens) and confidence.reason_why (~350 tokens) can be 2-3 paragraphs — these are the emotional core of the report. The complete JSON MUST fit within 8000 tokens.
 9. TREND & POPULARITY SCORES ARE MANDATORY — every device and injectable must have realistic trend (0-10) and popularity (0-10) scores based on the rules in the TREND & POPULARITY WEIGHTING section. Use them as tiebreaker when confidence is within 5 points.
 10. MIRROR + CONFIDENCE + DOCTOR INTELLIGENCE ARE MANDATORY — mirror (headline, empathy_paragraphs, transition) and confidence (reason_why, social_proof, commitment) must be generated for every patient using the COUNTRY-SPECIFIC EMOTIONAL LANGUAGE LIBRARY and REASON WHY KNOWLEDGE BASE. doctor_tab.patient_intelligence and doctor_tab.consultation_strategy must be fully populated.
-11. DO NOT generate treatment_plan in this response. Treatment plan is generated separately via a dedicated API. Include a simple treatment_plan placeholder: { "phases": [] }.`;
+11. DO NOT generate treatment_plan in this response. Treatment plan is generated separately via a dedicated API. Include a simple treatment_plan placeholder: { "phases": [] }.
+12. ★★★ CATEGORY-FIRST DEVICE SELECTION IS MANDATORY ★★★
+    You MUST follow the CATEGORY-BASED CLINICAL MAPPING in the dynamic section below.
+    a) First, identify the patient's classified_concern (provided in PATIENT DATA or inferred from responses).
+    b) Look up that concern in the CATEGORY-BASED CLINICAL MAPPING block.
+    c) EBD rank #1 MUST come from the priority1 category listed for that concern.
+    d) EBD rank #2 MUST come from the priority1 or priority2 category.
+    e) EBD rank #3 MUST come from the priority2 or priority3 category.
+    f) NEVER recommend devices from categories NOT mapped to the patient's concern.
+    g) If classified_concern is null, infer it from open_question_raw + chip_responses:
+       Choose ONE of: jawline_lifting, skin_tightening, volume_restoration, melasma, dark_spots,
+       freckles, dull_skin, large_pores, acne_scars, dryness, redness, mole_removal,
+       post_weight_loss_laxity, lower_face_heavy_fat, body_contouring_laxity
+    h) Example: concern="post_weight_loss_laxity" → priority1=SAR → EBD#1 MUST be NeoSculpt
+       concern="jawline_lifting" → priority1=HIFU → EBD#1 MUST be Ultherapy/Ultraformer/Shrink
+    i) Include the resolved concern in ebd_recommendations[0].moa_category as the category_id.`;
 
 // ─── Robust JSON Parse with multiple repair strategies ─────────
 type ParseResult =
@@ -1182,7 +1197,8 @@ Language: ${req.demographics.detected_language}
 Output Language: ${outputLang}
 Primary Goal: ${req.q1_primary_goal || 'Not specified'}
 Secondary Goal: ${req.q1_goal_secondary || 'None'}
-Concern Area: ${req.q3_concern_area || 'General face'}
+Classified Concern (for CATEGORY-BASED MAPPING): ${req.q3_concern_area || 'NOT SET — you MUST infer from open_question_raw + chip_responses. Choose ONE of: jawline_lifting, skin_tightening, volume_restoration, melasma, dark_spots, freckles, dull_skin, large_pores, acne_scars, dryness, redness, mole_removal, post_weight_loss_laxity, lower_face_heavy_fat, body_contouring_laxity'}
+Concern Area (zone): ${req.chip_responses?.['concern_area'] || 'General face'}
 Skin Profile: ${req.q4_skin_profile || 'Not specified'}
 Style Preference: ${req.q5_style || 'Not specified'}
 Pain Tolerance: ${req.q6_pain_tolerance || 'Not specified'}
