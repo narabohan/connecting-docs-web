@@ -1,7 +1,7 @@
 # E2E 설문 플로우 코드 검증 리포트
 
-**Date**: 2026-04-03
-**Scope**: Phase 3-C 완료 후 전체 설문 파이프라인 코드 레벨 검증
+**Date**: 2026-04-03 (Updated after REMAINING_FIXES_8HR)
+**Scope**: Phase 3-C 완료 후 전체 설문 파이프라인 코드 레벨 검증 + 8-task hotfix 완료
 
 ---
 
@@ -107,7 +107,7 @@ q3_volume_logic = merged['volume_logic']
 
 ### 3-3. FSM 시그널 → final-recommendation.ts
 
-**submitMessenger()에서 전달하는 데이터**:
+**submitMessenger()에서 전달하는 데이터** (Updated):
 ```ts
 const surveyData: FinalRecommendationRequest = {
   demographics, haiku_analysis, chip_responses,
@@ -118,10 +118,14 @@ const surveyData: FinalRecommendationRequest = {
   q4_skin_profile, q5_style, q6_pain_tolerance,
   q6_downtime_tolerance, q7_past_experience,
   q2_risk_flags, q2_pigment_pattern, q3_volume_logic,
+  // Phase 2 fields (added in 8-task fix)
+  budget, stay_duration, management_frequency, event_info,
+  // Phase 3-B branch responses (added in 8-task fix)
+  branch_responses,  // includes visit_plan, past_history, skin_profile, adverse
 };
 ```
 
-✅ 모든 FSM 시그널이 final-recommendation request에 포함됨.
+✅ 모든 FSM 시그널 + Phase 2 필드 + Phase 3-B branch 데이터가 final-recommendation request에 포함됨.
 
 ### 3-4. ⚠️ CRITICAL: CONCERN_TO_CATEGORY_MAP이 프롬프트에 포함되는지
 
@@ -148,11 +152,10 @@ grep -r "buildClinicalRulesPromptBlock" src/
 
 ## 4. 발견된 이슈 요약
 
-### 🔴 CRITICAL — buildClinicalRulesPromptBlock 미연결
+### ✅ RESOLVED — buildClinicalRulesPromptBlock 연결 완료
 
 **파일**: `src/pages/api/survey-v2/final-recommendation.ts`
-**설명**: `clinical-rules.ts`의 `buildClinicalRulesPromptBlock(primaryConcern)` 함수가 `buildDynamicSystemPrompt()`에서 호출되지 않음. Phase 3-C에서 설계한 카테고리 기반 추천 시스템이 실제 AI 프롬프트에 누락.
-**수정 방안**: `buildDynamicSystemPrompt()` 내부에서 `buildClinicalRulesPromptBlock(req.q3_concern_area || req.q1_primary_goal)` 호출 후 동적 프롬프트에 삽입.
+**수정**: `buildDynamicSystemPrompt()`에서 `buildClinicalRulesPromptBlock(req.q3_concern_area || req.q1_primary_goal)` 호출. 카테고리 기반 매핑 + DEVICE_SPECS가 AI 프롬프트에 주입됨.
 
 ### 🟡 MEDIUM — q3_concern_area 값 불일치
 
@@ -290,3 +293,97 @@ TIGHTENING, LIFTING, BRIGHTENING, VOLUME, TEXTURE/ACNE/SCAR, REDNESS
 **Option B — concern_area 칩을 15개 concern으로 확장** (대안):
 1. concern_area 칩 옵션을 15개 concern으로 변경 (UX 복잡도 증가)
 2. 나머지는 Option A의 3번과 동일
+
+---
+
+## 7. REMAINING_FIXES_8HR 완료 요약 (2026-04-03)
+
+### Task 1/8 ✅ — Injectable 추천 강화
+- Injectable Product Catalog (20+ real products across 5 categories) 추가
+- category_id, match_score, synergy_with_ebd 등 category-first 필드 강제
+- "DO NOT return generic names" 규칙 추가
+
+### Task 2/8 ✅ — DEVICE_SPECS 데이터 주입
+- `clinical-rules.ts`에 22개 장비 사양(pain/price/downtime) 추가
+- `buildClinicalRulesPromptBlock()`이 자동으로 DEVICE SPECIFICATIONS 블록 생성
+- "DO NOT estimate or guess" 규칙으로 AI 자체 판단 방지
+
+### Task 3/8 ✅ — 체류 기간 중복 질문 완전 제거
+- `SurveyV2Container.tsx`에 `useEffect` 가드 추가
+- `visit_plan.stay_days` 존재 시 `stay_duration` 스텝 자동 스킵
+- Budget `onSubmit` 오버라이드와 이중 안전장치
+
+### Task 4/8 ✅ — EBD/Injectable 엄격 분리
+- 프롬프트 레벨: STRICT SEPARATION 규칙 (이전 세션에서 추가)
+- 클라이언트 레벨: `useReportData.ts`에 INJECTABLE_KEYWORDS/EBD_KEYWORDS 필터
+- `convertEBD()`: injectable 키워드 감지 시 자동 필터링
+- `convertInjectable()`: EBD 장비명 감지 시 자동 필터링
+
+### Task 5/8 ✅ — visit_plan 데이터 AI 전달
+- `SurveyV2State`에 `branch_responses` 필드 추가
+- `FinalRecommendationRequest`에 `branch_responses` 필드 추가
+- FSM branch 완료 시 `setBranchResponses()`로 useSurveyV2에 동기화
+- AI 프롬프트에 visit_plan/past_history/skin_profile/adverse 데이터 주입
+- `budget`, `stay_duration`, `management_frequency`, `event_info` API 전달 추가
+- treatment_plan 생성 규칙 강화: stay data 있으면 day-by-day 필수, 없으면 phase-based
+
+### Task 6/8 ✅ — i18n 최종 감사
+- report-v7 전체 컴포넌트 한국어 전수 조사 완료
+- 하드코딩 한국어 없음 — 모두 `Record<SurveyLang, string>` 내 KO 키로 처리
+- lang prop 전체 컴포넌트 정상 전달 확인
+- Currency conversion (CURRENCY_CONFIG) 정상 작동 확인
+
+### Task 7/8 ✅ — SignatureSolutions graceful fallback
+- 0개: "Signature solutions are being prepared" 메시지 표시 (4개 언어)
+- 1-2개: 정상 렌더링 + "Additional protocols during consultation" 노트 (4개 언어)
+- 3개: 정상 렌더링
+
+### Task 8/8 ✅ — 빌드 검증
+- `rm -rf .next` → `npx tsc --noEmit` → 0 errors
+- `npm run build` → 성공 (all pages compiled)
+- 7 commits pushed to main
+
+---
+
+## 8. 남은 이슈
+
+### 🟡 MEDIUM — concern_area 칩 ↔ CONCERN_TO_CATEGORY_MAP 불일치
+- concern_area 칩은 zone 기반 (4개), CONCERN_TO_CATEGORY_MAP은 concern 기반 (15개)
+- 현재는 Haiku의 `classified_concern`으로 우회 가능하지만, 정확도 향상을 위해 Option A 구현 권장
+
+### 🟡 MEDIUM — concern_area_hint 미활용
+- Haiku 분석의 hint 필드가 칩 생성에 활용되지 않음
+
+### 🟢 INFO — E2E 실사용 테스트 필요
+- 실제 브라우저에서 4개 시나리오 테스트 필요 (아래 체크리스트 참조)
+
+---
+
+## 9. 다음 세션 E2E 테스트 체크리스트
+
+### 시나리오 A: 한국 내국인 (KR, 30대, 여성)
+- [ ] 설문 완료 → 리포트 페이지 진입
+- [ ] EBD 카드 3개: 카테고리-대표장비-대안장비 3-tier 표시
+- [ ] Injectable 카드 3개: 실제 제품명 (not "Recommended Injectable 1")
+- [ ] SignatureSolutions 3개 표시
+- [ ] Budget Section: ₩만 단위 표시
+- [ ] Treatment Plan: phase-based (내국인이므로 stay_duration 없음)
+- [ ] 전체 텍스트 한국어
+
+### 시나리오 B: 일본 의료관광 (JP, 40대, 여성)
+- [ ] BranchVisitPlan 통과 → arrival/departure 입력
+- [ ] stay_duration 스텝 자동 스킵 확인
+- [ ] Treatment Plan: day-by-day 스케줄 생성 확인
+- [ ] 전체 텍스트 일본어
+- [ ] Budget: ¥ 단위
+
+### 시나리오 C: 중국 환자 (ZH-CN, 20대, 여성, 미백)
+- [ ] 전체 텍스트 중국어 간체
+- [ ] Pico/IPL 카테고리 우선 추천 확인
+- [ ] Injectable에 미백 관련 제품 추천
+
+### 시나리오 D: 영어 환자 (EN, 50대, 남성, 리프팅)
+- [ ] 전체 텍스트 영어
+- [ ] HIFU/RF 카테고리 우선 추천 확인
+- [ ] Budget: $ 단위
+- [ ] Pain level, downtime display가 DEVICE_SPECS 값과 일치하는지 확인
