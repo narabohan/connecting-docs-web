@@ -38,6 +38,7 @@ export interface SkinProfileBranch {
   skin_thickness: 'thin' | 'normal' | 'thick' | null;
   has_redness: boolean;
   sensitivity_level: 'low' | 'medium' | 'high' | null;
+  recently_tanned?: boolean;  // RECENT_TANNING signal → conservative laser settings
 }
 
 export interface PastHistoryBranch {
@@ -48,6 +49,7 @@ export interface PastHistoryBranch {
     satisfaction: 'good' | 'neutral' | 'bad';
   }>;
   had_adverse: boolean;
+  pih_history?: 'yes' | 'no' | 'unsure';  // PIH 경험 여부
 }
 
 export type RevisitCycle = 'first_time' | 'yearly' | 'biannual' | 'quarterly';

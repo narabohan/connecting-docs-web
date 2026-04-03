@@ -35,6 +35,7 @@ export default function BranchPastHistory({ lang, initialData, onComplete, onBac
     initialData?.treatments?.length ? initialData.treatments : [{ ...EMPTY_TREATMENT }]
   );
   const [hadAdverse, setHadAdverse] = useState(initialData?.had_adverse ?? false);
+  const [pihHistory, setPihHistory] = useState<'yes' | 'no' | 'unsure' | undefined>(initialData?.pih_history);
 
   const updateTreatment = (index: number, field: keyof TreatmentEntry, value: string | number) => {
     setTreatments((prev) =>
@@ -64,6 +65,7 @@ export default function BranchPastHistory({ lang, initialData, onComplete, onBac
         satisfaction: tr.satisfaction,
       })),
       had_adverse: hadAdverse,
+      pih_history: pihHistory,
     });
   };
 
@@ -180,6 +182,28 @@ export default function BranchPastHistory({ lang, initialData, onComplete, onBac
               }`}
             >
               {val ? t.adverse_yes : t.adverse_no}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* PIH History */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">{t.pih_label}</label>
+        <div className="grid grid-cols-3 gap-2">
+          {(['yes', 'no', 'unsure'] as const).map((val) => (
+            <button
+              key={val}
+              onClick={() => setPihHistory(val)}
+              className={`px-4 py-3 rounded-xl text-center text-sm font-medium transition-all ${
+                pihHistory === val
+                  ? val === 'yes' ? 'bg-amber-50 border-amber-500 text-amber-700 border'
+                  : val === 'unsure' ? 'bg-gray-200 border-gray-400 text-gray-700 border'
+                  : 'bg-blue-50 border-blue-500 text-blue-600 border'
+                  : 'bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {t[`pih_${val}`]}
             </button>
           ))}
         </div>

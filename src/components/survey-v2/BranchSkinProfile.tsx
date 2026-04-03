@@ -38,6 +38,7 @@ export default function BranchSkinProfile({ lang, initialData, onComplete, onBac
   const [thickness, setThickness] = useState<ThicknessType>(initialData?.skin_thickness ?? null);
   const [hasRedness, setHasRedness] = useState(initialData?.has_redness ?? false);
   const [sensitivity, setSensitivity] = useState<SensitivityType>(initialData?.sensitivity_level ?? null);
+  const [recentlyTanned, setRecentlyTanned] = useState(initialData?.recently_tanned ?? false);
 
   const isComplete = fitzpatrick !== null && thickness !== null && sensitivity !== null;
 
@@ -48,6 +49,7 @@ export default function BranchSkinProfile({ lang, initialData, onComplete, onBac
       skin_thickness: thickness,
       has_redness: hasRedness,
       sensitivity_level: sensitivity,
+      recently_tanned: recentlyTanned,
     });
   };
 
@@ -138,6 +140,27 @@ export default function BranchSkinProfile({ lang, initialData, onComplete, onBac
               }`}
             >
               {t[`sensitivity_${val}`]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent Tanning */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">{t.tanning_label}</label>
+        <div className="grid grid-cols-2 gap-2">
+          {[true, false].map((val) => (
+            <button
+              key={String(val)}
+              onClick={() => setRecentlyTanned(val)}
+              className={`px-4 py-3 rounded-xl text-center text-sm font-medium transition-all ${
+                recentlyTanned === val
+                  ? val ? 'bg-amber-50 border-amber-500 text-amber-700 border'
+                        : 'bg-blue-50 border-blue-500 text-blue-600 border'
+                  : 'bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {val ? t.tanning_yes : t.tanning_no}
             </button>
           ))}
         </div>

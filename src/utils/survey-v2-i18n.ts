@@ -85,6 +85,8 @@ export interface SurveyV2Translations {
     redness_yes: string; redness_no: string;
     sensitivity_label: string;
     sensitivity_low: string; sensitivity_medium: string; sensitivity_high: string;
+    tanning_label: string;
+    tanning_yes: string; tanning_no: string;
   };
   branch_history: {
     title: string;
@@ -97,6 +99,8 @@ export interface SurveyV2Translations {
     add_more: string;
     had_adverse: string;
     adverse_yes: string; adverse_no: string;
+    pih_label: string;
+    pih_yes: string; pih_no: string; pih_unsure: string;
   };
   branch_visit: {
     title: string;
@@ -257,6 +261,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       redness_yes: '예', redness_no: '아니요',
       sensitivity_label: '피부 민감도',
       sensitivity_low: '낮음', sensitivity_medium: '보통', sensitivity_high: '높음',
+      tanning_label: '최근 2주 이내 태닝 또는 강한 자외선 노출이 있었나요?',
+      tanning_yes: '예', tanning_no: '아니요',
     },
     branch_history: {
       title: '과거 시술 경험을 알려주세요',
@@ -269,6 +275,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       add_more: '+ 시술 추가',
       had_adverse: '부작용 경험이 있으셨나요?',
       adverse_yes: '예', adverse_no: '아니요',
+      pih_label: '시술 후 색소침착(PIH) 경험이 있으셨나요?',
+      pih_yes: '예', pih_no: '아니요', pih_unsure: '잘 모르겠어요',
     },
     branch_visit: {
       title: '한국 방문 일정을 알려주세요',
@@ -406,6 +414,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       redness_yes: 'Yes', redness_no: 'No',
       sensitivity_label: 'Skin Sensitivity',
       sensitivity_low: 'Low', sensitivity_medium: 'Medium', sensitivity_high: 'High',
+      tanning_label: 'Have you tanned or had strong sun exposure in the past 2 weeks?',
+      tanning_yes: 'Yes', tanning_no: 'No',
     },
     branch_history: {
       title: 'Tell us about your past treatments',
@@ -418,6 +428,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       add_more: '+ Add treatment',
       had_adverse: 'Have you experienced any side effects?',
       adverse_yes: 'Yes', adverse_no: 'No',
+      pih_label: 'Have you experienced post-inflammatory hyperpigmentation (PIH) after treatments?',
+      pih_yes: 'Yes', pih_no: 'No', pih_unsure: 'Not sure',
     },
     branch_visit: {
       title: 'Tell us about your visit plan',
@@ -555,6 +567,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       redness_yes: 'はい', redness_no: 'いいえ',
       sensitivity_label: '肌の敏感度',
       sensitivity_low: '低い', sensitivity_medium: '普通', sensitivity_high: '高い',
+      tanning_label: '過去2週間以内に日焼けや強い紫外線に当たりましたか？',
+      tanning_yes: 'はい', tanning_no: 'いいえ',
     },
     branch_history: {
       title: '過去の施術経験を教えてください',
@@ -567,6 +581,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       add_more: '+ 施術を追加',
       had_adverse: '副作用の経験はありますか？',
       adverse_yes: 'はい', adverse_no: 'いいえ',
+      pih_label: '施術後に色素沈着（PIH）を経験したことはありますか？',
+      pih_yes: 'はい', pih_no: 'いいえ', pih_unsure: 'わからない',
     },
     branch_visit: {
       title: '韓国訪問の予定を教えてください',
@@ -704,6 +720,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       redness_yes: '是', redness_no: '否',
       sensitivity_label: '皮肤敏感度',
       sensitivity_low: '低', sensitivity_medium: '中等', sensitivity_high: '高',
+      tanning_label: '最近2周内是否晒黑或受到强烈紫外线照射？',
+      tanning_yes: '是', tanning_no: '否',
     },
     branch_history: {
       title: '请告诉我们您的过往治疗经历',
@@ -716,6 +734,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       add_more: '+ 添加治疗',
       had_adverse: '您是否经历过副作用？',
       adverse_yes: '是', adverse_no: '否',
+      pih_label: '治疗后是否出现过色素沉着（PIH）？',
+      pih_yes: '是', pih_no: '否', pih_unsure: '不确定',
     },
     branch_visit: {
       title: '请告诉我们您的访韩计划',
