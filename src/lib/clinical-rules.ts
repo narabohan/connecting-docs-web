@@ -174,6 +174,38 @@ export const PRICE_MAP: Record<string, PriceEntry> = {
   exosome: { krMin: 200000, krMax: 500000, unit: 'vial' },
 };
 
+// ─── Device Specifications (pain/price/downtime from Airtable) ──
+
+export const DEVICE_SPECS: Record<string, {
+  pain_level: number;       // 1-5
+  price_tier: number;       // 1-5 ($~$$$$$)
+  downtime_display: string;
+  match_boost: string[];    // concerns this device excels at
+}> = {
+  ultherapy:        { pain_level: 4, price_tier: 5, downtime_display: '3-7 days swelling', match_boost: ['jawline_lifting'] },
+  thermage_flx:     { pain_level: 4, price_tier: 5, downtime_display: 'None to 1 day', match_boost: ['skin_tightening'] },
+  genius:           { pain_level: 5, price_tier: 5, downtime_display: '5-7 days', match_boost: ['acne_scars'] },
+  potenza:          { pain_level: 3, price_tier: 3, downtime_display: '3-5 days', match_boost: ['acne_scars', 'large_pores'] },
+  sylfirm_x:        { pain_level: 3, price_tier: 3, downtime_display: '1-3 days', match_boost: ['melasma', 'redness'] },
+  secret_rf:        { pain_level: 3, price_tier: 3, downtime_display: '2-4 days', match_boost: ['large_pores'] },
+  morpheus8:        { pain_level: 4, price_tier: 4, downtime_display: '3-5 days', match_boost: ['acne_scars', 'skin_tightening'] },
+  neosculpt:        { pain_level: 1, price_tier: 5, downtime_display: 'None', match_boost: ['post_weight_loss_laxity', 'lower_face_heavy_fat'] },
+  alltite:          { pain_level: 1, price_tier: 4, downtime_display: 'None', match_boost: ['skin_tightening', 'jawline_lifting'] },
+  reepot:           { pain_level: 2, price_tier: 4, downtime_display: '14 days (duoderm required)', match_boost: ['dark_spots'] },
+  ultraformer_mpt:  { pain_level: 3, price_tier: 3, downtime_display: 'None to mild swelling', match_boost: ['jawline_lifting'] },
+  shrink_universe:  { pain_level: 2, price_tier: 2, downtime_display: 'None', match_boost: ['jawline_lifting'] },
+  volnewmer:        { pain_level: 2, price_tier: 4, downtime_display: 'None', match_boost: ['skin_tightening'] },
+  oligio:           { pain_level: 2, price_tier: 2, downtime_display: 'None', match_boost: ['skin_tightening'] },
+  picosure_pro:     { pain_level: 2, price_tier: 4, downtime_display: '1-3 days', match_boost: ['melasma', 'dark_spots'] },
+  picoplus:         { pain_level: 2, price_tier: 3, downtime_display: '1-3 days', match_boost: ['melasma', 'freckles'] },
+  bbl_hero:         { pain_level: 2, price_tier: 3, downtime_display: '3-5 days crusting', match_boost: ['freckles', 'dark_spots'] },
+  lasemd_ultra:     { pain_level: 1, price_tier: 2, downtime_display: '1-2 days', match_boost: ['dull_skin', 'dryness'] },
+  co2_fractional:   { pain_level: 4, price_tier: 2, downtime_display: '7-14 days', match_boost: ['acne_scars', 'mole_removal'] },
+  derma_v:          { pain_level: 2, price_tier: 4, downtime_display: '1-3 days', match_boost: ['redness'] },
+  quadessy:         { pain_level: 3, price_tier: 3, downtime_display: '2-3 days', match_boost: ['large_pores'] },
+  emface:           { pain_level: 1, price_tier: 4, downtime_display: 'None', match_boost: ['volume_restoration'] },
+};
+
 // ─── Build prompt block for AI recommendation engine ─────────
 
 export function buildClinicalRulesPromptBlock(primaryConcern: string | null): string {
@@ -211,5 +243,23 @@ Primary Concern: ${primaryConcern}
 - budget=budget → 해당 카테고리의 가성비 장비
 - pain_tolerance 낮음 → 통증 낮은 장비 우선
 - downtime 짧음 → 다운타임 짧은 장비 우선
-- fitzpatrick IV+ → IPL/BBL 주의 플래그`;
+- fitzpatrick IV+ → IPL/BBL 주의 플래그
+
+${buildDeviceSpecsBlock()}`;
+}
+
+/** Build a prompt-injectable block listing all device specs */
+function buildDeviceSpecsBlock(): string {
+  const PRICE_LABELS: Record<number, string> = { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$', 5: '$$$$$' };
+  const lines = Object.entries(DEVICE_SPECS).map(([key, spec]) => {
+    const name = key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    return `- ${name} (${key}): pain=${spec.pain_level}/5, price=${PRICE_LABELS[spec.price_tier] || spec.price_tier}, downtime=${spec.downtime_display}`;
+  });
+  return `═══ DEVICE SPECIFICATIONS (USE THESE EXACT VALUES — DO NOT OVERRIDE) ═══
+${lines.join('\n')}
+
+When generating pain_level, price_tier, downtime_display for each recommendation,
+you MUST use the values from DEVICE SPECIFICATIONS above.
+DO NOT estimate or guess these values.
+If the device is not listed above, use your best clinical judgment but flag it as "estimated".`;
 }
