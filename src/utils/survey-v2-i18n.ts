@@ -106,6 +106,8 @@ export interface SurveyV2Translations {
     title: string;
     subtitle: string;
     stay_days: string;
+    stay_computed: string; // "Your stay: {n} days"
+    date_error: string;   // "Departure must be after arrival"
     arrival: string;
     departure: string;
     area: string;
@@ -284,6 +286,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       title: '한국 방문 일정을 알려주세요',
       subtitle: '체류 기간에 맞는 집중 시술 플랜을 설계합니다.',
       stay_days: '체류 일수',
+      stay_computed: '체류 기간: {n}일',
+      date_error: '출발일은 도착일 이후여야 합니다',
       arrival: '도착일',
       departure: '출발일',
       area: '숙소/선호 지역',
@@ -439,6 +443,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       title: 'Tell us about your visit plan',
       subtitle: 'We\'ll design a focused treatment plan for your stay.',
       stay_days: 'Length of stay (days)',
+      stay_computed: 'Your stay: {n} days',
+      date_error: 'Departure date must be after arrival date',
       arrival: 'Arrival date',
       departure: 'Departure date',
       area: 'Accommodation / preferred area',
@@ -594,6 +600,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       title: '韓国訪問の予定を教えてください',
       subtitle: '滞在期間に合わせた集中施術プランを設計します。',
       stay_days: '滞在日数',
+      stay_computed: '滞在期間：{n}日',
+      date_error: '出発日は到着日より後でなければなりません',
       arrival: '到着日',
       departure: '出発日',
       area: '宿泊先・希望エリア',
@@ -749,6 +757,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       title: '请告诉我们您的访韩计划',
       subtitle: '我们将根据停留时间设计集中治疗方案。',
       stay_days: '停留天数',
+      stay_computed: '停留时间：{n}天',
+      date_error: '出发日期必须晚于到达日期',
       arrival: '到达日期',
       departure: '出发日期',
       area: '住宿/偏好区域',

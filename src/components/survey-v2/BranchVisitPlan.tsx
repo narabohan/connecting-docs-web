@@ -4,26 +4,19 @@
 //  참조: MASTER_PLAN_V4.md §3.5 BRANCH_VISIT_PLAN
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import type { SurveyLang } from '@/types/survey-v2';
 import type { VisitPlanBranch, RevisitCycle } from '@/hooks/useSurveyStateMachine';
 import { SURVEY_V2_I18N } from '@/utils/survey-v2-i18n';
 
-// ─── Helpers: date ↔ slider auto-calculation ──────────────────
-function addDays(dateStr: string, days: number): string {
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return '';
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
+// ─── Helper: compute day diff ────────────────────────────────
 function diffDays(a: string, b: string): number | null {
   const da = new Date(a);
   const db = new Date(b);
   if (isNaN(da.getTime()) || isNaN(db.getTime())) return null;
   const diff = Math.round((db.getTime() - da.getTime()) / 86_400_000);
-  return diff > 0 ? diff : null;
+  return diff;
 }
 
 interface BranchVisitPlanProps {
@@ -37,26 +30,29 @@ export default function BranchVisitPlan({ lang, initialData, onComplete, onBack 
   const t = SURVEY_V2_I18N[lang].branch_visit;
   const tc = SURVEY_V2_I18N[lang].common;
 
-  const [stayDays, setStayDays] = useState(initialData?.stay_days ?? 5);
   const [arrival, setArrival] = useState(initialData?.arrival_date ?? '');
   const [departure, setDeparture] = useState(initialData?.departure_date ?? '');
   const [area, setArea] = useState(initialData?.accommodation_area ?? '');
   const [revisitCycle, setRevisitCycle] = useState<RevisitCycle | undefined>(initialData?.revisit_cycle);
 
-  // ── Auto-calc: arrival + departure → stayDays ──────────────
+  // ── Auto-calc stay days from dates ─────────────────────────
+  const computedDays = useMemo(() => diffDays(arrival, departure), [arrival, departure]);
+  const [stayDays, setStayDays] = useState(initialData?.stay_days ?? 0);
+
   useEffect(() => {
+    if (computedDays !== null && computedDays > 0) {
+      setStayDays(computedDays);
+    }
+  }, [computedDays]);
+
+  // ── Validation ─────────────────────────────────────────────
+  const dateError = useMemo(() => {
+    if (!arrival || !departure) return false;
     const d = diffDays(arrival, departure);
-    if (d !== null && d !== stayDays) setStayDays(d);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return d !== null && d <= 0;
   }, [arrival, departure]);
 
-  // ── Slider change → update departure if arrival is set ─────
-  const handleSliderChange = useCallback((val: number) => {
-    setStayDays(val);
-    if (arrival) setDeparture(addDays(arrival, val));
-  }, [arrival]);
-
-  const isComplete = stayDays > 0;
+  const isComplete = !dateError && arrival !== '' && departure !== '' && stayDays > 0;
 
   const handleSubmit = () => {
     if (!isComplete) return;
@@ -81,24 +77,6 @@ export default function BranchVisitPlan({ lang, initialData, onComplete, onBack 
         <p className="text-sm text-gray-500 mt-2">{t.subtitle}</p>
       </div>
 
-      {/* Stay Days */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">{t.stay_days}</label>
-        <div className="flex items-center gap-4">
-          <input
-            type="range"
-            min={1}
-            max={30}
-            value={stayDays}
-            onChange={(e) => handleSliderChange(parseInt(e.target.value))}
-            className="flex-1 accent-cyan-500"
-          />
-          <span className="text-lg font-bold text-blue-600 min-w-[3rem] text-center">
-            {stayDays}
-          </span>
-        </div>
-      </div>
-
       {/* Dates */}
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -116,10 +94,28 @@ export default function BranchVisitPlan({ lang, initialData, onComplete, onBack 
             type="date"
             value={departure}
             onChange={(e) => setDeparture(e.target.value)}
-            className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
+            className={`w-full bg-white border rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none ${
+              dateError
+                ? 'border-red-400 focus:border-red-500'
+                : 'border-gray-200 focus:border-blue-400'
+            }`}
           />
         </div>
       </div>
+
+      {/* Date error */}
+      {dateError && (
+        <p className="text-xs text-red-500 -mt-4">{t.date_error}</p>
+      )}
+
+      {/* Computed stay display */}
+      {stayDays > 0 && !dateError && (
+        <div className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-50 rounded-lg">
+          <span className="text-sm font-semibold text-blue-700">
+            {t.stay_computed.replace('{n}', String(stayDays))}
+          </span>
+        </div>
+      )}
 
       {/* Area */}
       <div>
