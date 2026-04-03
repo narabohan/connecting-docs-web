@@ -232,13 +232,14 @@ function AlternativeDeviceRow({ device, lang }: { device: EBDAlternativeDevice; 
 
 // ─── Practical info grid ──────────────────────────────────────
 
-function PracticalGrid({ rec }: { rec: EBDRecommendation }) {
+function PracticalGrid({ rec, lang }: { rec: EBDRecommendation; lang: SurveyLang }) {
+  const { t } = useReportI18n();
   const items = [
-    { label: 'Sessions', value: rec.practical.sessions },
-    { label: 'Interval', value: rec.practical.interval },
-    { label: 'Duration', value: rec.practical.duration },
-    { label: 'Onset', value: rec.practical.onset },
-    { label: 'Maintain', value: rec.practical.maintain },
+    { label: t('practical.sessions'), value: rec.practical.sessions },
+    { label: t('practical.interval'), value: rec.practical.interval },
+    { label: t('practical.duration'), value: rec.practical.duration },
+    { label: t('practical.onset'), value: rec.practical.onset },
+    { label: t('practical.maintain'), value: rec.practical.maintain },
   ].filter((item) => item.value);
 
   if (items.length === 0) return null;
@@ -448,7 +449,7 @@ export function EBDCard({ recommendation: rec, isExpanded, onToggle, lang }: EBD
               {rec.moaSummaryShort && (
                 <>
                   <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-hi)', marginBottom: '4px' }}>
-                    {rec.moaSummaryTitle || 'Mechanism of Action'}
+                    {rec.moaSummaryTitle || t('label.moa')}
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-2)', lineHeight: 1.7 }}>
                     {rec.moaSummaryShort}
@@ -486,7 +487,7 @@ export function EBDCard({ recommendation: rec, isExpanded, onToggle, lang }: EBD
           )}
 
           {/* Practical info */}
-          <PracticalGrid rec={rec} />
+          <PracticalGrid rec={rec} lang={lang} />
         </div>
       </div>
     </div>

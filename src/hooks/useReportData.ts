@@ -228,7 +228,7 @@ function convertInjectable(items: OpusInjectableRecommendation[]): InjectableRec
     categoryNameEn: inj.category_name_en ?? inj.category ?? '',
     categoryReason: inj.category_reason ?? '',
     matchScore: inj.match_score ?? Math.round(inj.confidence * 100),
-    downtimeDisplay: inj.downtime_display ?? '없음',
+    downtimeDisplay: inj.downtime_display ?? '',
     painLevel: (inj.pain_level ?? 2) as 1 | 2 | 3 | 4 | 5,
     priceTier: (inj.price_tier ?? 2) as 1 | 2 | 3 | 4 | 5,
     alternativeProducts: (inj.alternative_products ?? []).map((alt) => ({
@@ -299,10 +299,57 @@ function convertHomecare(hc: OpusHomecare): HomecareGuide {
   };
 }
 
+// ─── Currency formatting by country ─────────────────────────
+const CURRENCY_CONFIG: Record<string, { symbol: string; rate: number; unit: string; unitDiv: number }> = {
+  KR: { symbol: '₩', rate: 1, unit: '만', unitDiv: 10000 },
+  JP: { symbol: '¥', rate: 0.11, unit: '', unitDiv: 1 },
+  TW: { symbol: 'NT$', rate: 0.024, unit: '', unitDiv: 1 },
+};
+const DEFAULT_CURRENCY = { symbol: '$', rate: 0.00075, unit: '', unitDiv: 1 };
+
+function getCurrency(country: string) {
+  return CURRENCY_CONFIG[country] || DEFAULT_CURRENCY;
+}
+
+function formatPrice(krw: number, country: string): string {
+  const c = getCurrency(country);
+  const converted = Math.round(krw * c.rate / (c.unitDiv || 1));
+  if (c.unit) return `${c.symbol}${converted.toLocaleString()}${c.unit}`;
+  return `${c.symbol}${converted.toLocaleString()}`;
+}
+
+function formatRange(krwMin: number, krwMax: number, country: string): string {
+  return `${formatPrice(krwMin, country)}~${formatPrice(krwMax, country)}`;
+}
+
+// ─── Tier guide descriptions (i18n) ─────────────────────────
+const TIER_DESC: Record<string, Record<SurveyLang, string>> = {
+  premium: {
+    KO: '최신 프리미엄 장비 + 정품 주사제',
+    EN: 'Latest premium devices + authentic injectables',
+    JP: '最新プレミアム機器 + 正規注入剤',
+    'ZH-CN': '最新高端设备 + 正品注射剂',
+  },
+  standard: {
+    KO: '검증된 장비 + 표준 프로토콜',
+    EN: 'Proven devices + standard protocols',
+    JP: '実績のある機器 + 標準プロトコル',
+    'ZH-CN': '经过验证的设备 + 标准方案',
+  },
+  value: {
+    KO: '핵심 시술만 선별',
+    EN: 'Essential treatments only',
+    JP: '必須施術のみ厳選',
+    'ZH-CN': '仅精选核心项目',
+  },
+};
+
 // ─── Auto-generate budget from PRICE_MAP + recommendations ──
 function generateBudget(
   ebdRecs: EBDRecommendation[],
   injRecs: InjectableRecommendation[],
+  lang: SurveyLang,
+  country: string,
 ): BudgetEstimate {
   const lineItems: BudgetEstimate['lineItems'] = [];
 
@@ -317,8 +364,8 @@ function generateBudget(
         treatment: rec.deviceName,
         category: rec.categoryNameEn || 'EBD',
         sessions,
-        unitPrice: `₩${(price.krMin / 10000).toFixed(0)}~${(price.krMax / 10000).toFixed(0)}만`,
-        subtotal: `₩${((avg * sessions) / 10000).toFixed(0)}만`,
+        unitPrice: formatRange(price.krMin, price.krMax, country),
+        subtotal: formatPrice(avg * sessions, country),
       });
     }
   }
@@ -334,26 +381,34 @@ function generateBudget(
         treatment: rec.name,
         category: rec.categoryNameEn || 'Injectable',
         sessions,
-        unitPrice: `₩${(price.krMin / 10000).toFixed(0)}~${(price.krMax / 10000).toFixed(0)}만`,
-        subtotal: `₩${((avg * sessions) / 10000).toFixed(0)}만`,
+        unitPrice: formatRange(price.krMin, price.krMax, country),
+        subtotal: formatPrice(avg * sessions, country),
       });
     }
   }
 
-  // Total range
-  const minTotal = lineItems.reduce((sum, li) => {
-    const match = li.subtotal.match(/₩(\d+)/);
-    return sum + (match ? parseInt(match[1]) : 0);
+  // Total range (sum subtotals in KRW, then convert)
+  const totalKRW = lineItems.reduce((sum, _li, idx) => {
+    // Re-compute from raw data
+    const allRecs = [...ebdRecs, ...injRecs];
+    const r = allRecs[idx];
+    if (!r) return sum;
+    const name = 'deviceName' in r ? (r as EBDRecommendation).deviceName : (r as InjectableRecommendation).name;
+    const key2 = name.toLowerCase().replace(/[\s()-]+/g, '_');
+    const p = PRICE_MAP[key2] || PRICE_MAP[Object.keys(PRICE_MAP).find((k) => key2.includes(k)) ?? ''];
+    const sess = parseInt(r.practical.sessions) || 1;
+    if (p) return sum + Math.round((p.krMin + p.krMax) / 2) * sess;
+    return sum;
   }, 0);
 
   const tierGuides: BudgetEstimate['tierGuides'] = [
-    { tier: 'premium', description: '최신 프리미엄 장비 + 정품 주사제', range: `₩${Math.round(minTotal * 1.3)}만~` },
-    { tier: 'standard', description: '검증된 장비 + 표준 프로토콜', range: `₩${Math.round(minTotal * 0.8)}만~₩${minTotal}만` },
-    { tier: 'value', description: '핵심 시술만 선별', range: `~₩${Math.round(minTotal * 0.6)}만` },
+    { tier: 'premium', description: TIER_DESC.premium[lang] ?? TIER_DESC.premium.EN, range: `${formatPrice(Math.round(totalKRW * 1.3), country)}~` },
+    { tier: 'standard', description: TIER_DESC.standard[lang] ?? TIER_DESC.standard.EN, range: `${formatPrice(Math.round(totalKRW * 0.8), country)}~${formatPrice(totalKRW, country)}` },
+    { tier: 'value', description: TIER_DESC.value[lang] ?? TIER_DESC.value.EN, range: `~${formatPrice(Math.round(totalKRW * 0.6), country)}` },
   ];
 
   return {
-    totalRange: lineItems.length > 0 ? `₩${Math.round(minTotal * 0.7)}만 ~ ₩${Math.round(minTotal * 1.3)}만` : '',
+    totalRange: lineItems.length > 0 ? `${formatPrice(Math.round(totalKRW * 0.7), country)} ~ ${formatPrice(Math.round(totalKRW * 1.3), country)}` : '',
     segments: [],
     lineItems,
     tierGuides,
@@ -412,6 +467,8 @@ function convertPayloadToReportV7Data(
     budgetEstimate: generateBudget(
       convertEBD(rec.ebd_recommendations),
       convertInjectable(rec.injectable_recommendations),
+      (rec.lang?.toUpperCase() || demo.detected_language) as SurveyLang,
+      demo.detected_country || 'KR',
     ),
     doctorTab: convertDoctorTab(rec.doctor_tab),
   };

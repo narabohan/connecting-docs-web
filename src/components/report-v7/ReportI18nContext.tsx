@@ -155,6 +155,28 @@ const TRANSLATIONS: TranslationDict = {
     JP: 'レポートを準備しています',
     'ZH-CN': '正在准备您的报告',
   },
+  // Practical info labels
+  'practical.sessions': {
+    KO: '시술 횟수', EN: 'Sessions', JP: '施術回数', 'ZH-CN': '疗程次数',
+  },
+  'practical.interval': {
+    KO: '간격', EN: 'Interval', JP: '間隔', 'ZH-CN': '间隔',
+  },
+  'practical.duration': {
+    KO: '소요 시간', EN: 'Duration', JP: '所要時間', 'ZH-CN': '时长',
+  },
+  'practical.onset': {
+    KO: '효과 시작', EN: 'Onset', JP: '効果発現', 'ZH-CN': '起效时间',
+  },
+  'practical.maintain': {
+    KO: '유지 기간', EN: 'Maintain', JP: '持続期間', 'ZH-CN': '维持时间',
+  },
+  'label.moa': {
+    KO: '작용 기전', EN: 'Mechanism of Action', JP: '作用機序', 'ZH-CN': '作用机制',
+  },
+  'label.none': {
+    KO: '없음', EN: 'None', JP: 'なし', 'ZH-CN': '无',
+  },
   // Disclaimer
   'disclaimer.text': {
     KO: '본 리포트는 AI 분석 결과이며, 최종 판단은 담당 의료진과 상담 후 결정하시기 바랍니다.',

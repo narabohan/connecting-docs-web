@@ -49,7 +49,7 @@ function DefaultErrorFallback({ componentName }: { componentName: string }) {
           lineHeight: 1.5,
         }}
       >
-        이 섹션을 표시할 수 없습니다.
+        Unable to display this section.
       </div>
     </div>
   );
