@@ -10,6 +10,9 @@ import type { SurveyLang } from '@/types/survey-v2';
 import type { VisitPlanBranch, RevisitCycle } from '@/hooks/useSurveyStateMachine';
 import { SURVEY_V2_I18N } from '@/utils/survey-v2-i18n';
 
+// ─── Lang → HTML lang attr ──────────────────────────────────
+const LANG_ATTR: Record<string, string> = { KO: 'ko', EN: 'en', JP: 'ja', 'ZH-CN': 'zh-CN' };
+
 // ─── Helper: compute day diff ────────────────────────────────
 function diffDays(a: string, b: string): number | null {
   const da = new Date(a);
@@ -83,6 +86,7 @@ export default function BranchVisitPlan({ lang, initialData, onComplete, onBack 
           <label className="block text-xs font-medium text-gray-600 mb-1">{t.arrival}</label>
           <input
             type="date"
+            lang={LANG_ATTR[lang] || 'en'}
             value={arrival}
             onChange={(e) => setArrival(e.target.value)}
             className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
@@ -92,6 +96,7 @@ export default function BranchVisitPlan({ lang, initialData, onComplete, onBack 
           <label className="block text-xs font-medium text-gray-600 mb-1">{t.departure}</label>
           <input
             type="date"
+            lang={LANG_ATTR[lang] || 'en'}
             value={departure}
             onChange={(e) => setDeparture(e.target.value)}
             className={`w-full bg-white border rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none ${

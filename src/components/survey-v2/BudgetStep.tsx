@@ -138,6 +138,7 @@ const BUDGET_ICONS: Record<BudgetRange, string> = {
 };
 
 const EVENT_TYPES: EventType[] = ['wedding', 'interview', 'photoshoot', 'reunion', 'other'];
+const LANG_ATTR: Record<string, string> = { KO: 'ko', EN: 'en', JP: 'ja', 'ZH-CN': 'zh-CN' };
 
 // ─── Props ────────────────────────────────────────────────────
 
@@ -321,6 +322,7 @@ export default function BudgetStep({
                 </label>
                 <input
                   type="date"
+                  lang={LANG_ATTR[lang] || 'en'}
                   value={eventDate}
                   onChange={(e) => handleEventDateChange(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
