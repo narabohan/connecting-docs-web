@@ -178,6 +178,29 @@ function convertEBD(items: OpusDeviceRecommendation[]): EBDRecommendation[] {
     practical: convertPractical(d.practical),
     scores: d.scores,
     aiDescriptionHtml: d.ai_description_html,
+    // ─── Category-first fields ──────────────────────────────
+    slot: d.slot ?? null,
+    categoryId: d.category_id ?? d.moa_category,
+    categoryNameKo: d.category_name_ko ?? d.moa_category_label,
+    categoryNameEn: d.category_name_en ?? d.moa_category,
+    categoryReason: d.category_reason ?? '',
+    matchScore: d.match_score ?? d.confidence,
+    downtimeDisplay: d.downtime_display ?? '',
+    priceTier: d.price_tier ?? 3,
+    alternativeDevices: (d.alternative_devices ?? []).map((alt) => ({
+      name: alt.name,
+      oneLiner: alt.one_liner,
+      matchScore: alt.match_score,
+      downtimeDisplay: alt.downtime_display,
+      painLevel: alt.pain_level,
+      priceTier: alt.price_tier,
+    })),
+    doctorNote: d.doctor_note ? {
+      suggestedParameters: d.doctor_note.suggested_parameters,
+      fitzpatrickAdjustment: d.doctor_note.fitzpatrick_adjustment,
+      safetyFlags: d.doctor_note.safety_flags,
+      minIntervalDays: d.doctor_note.min_interval_days,
+    } : null,
   }));
 }
 

@@ -90,6 +90,22 @@ export const DEFAULT_PRACTICAL_INFO: PracticalInfo = {
 };
 
 // ─── EBD (Device) Recommendation ──────────────────────────────
+export interface EBDAlternativeDevice {
+  name: string;
+  oneLiner: string;
+  matchScore: number;
+  downtimeDisplay: string;
+  painLevel: 1 | 2 | 3 | 4 | 5;
+  priceTier: 1 | 2 | 3 | 4 | 5;
+}
+
+export interface EBDDoctorNote {
+  suggestedParameters: string;
+  fitzpatrickAdjustment: string;
+  safetyFlags: string[];
+  minIntervalDays: number;
+}
+
 export interface EBDRecommendation {
   rank: number;
   deviceName: string;
@@ -114,6 +130,17 @@ export interface EBDRecommendation {
   practical: PracticalInfo;
   scores: Record<string, number>;
   aiDescriptionHtml: string;
+  // ─── Category-first fields (Phase 3-C Task 2) ────────────
+  slot: 'premium' | 'trending' | 'value' | null;
+  categoryId: string;
+  categoryNameKo: string;
+  categoryNameEn: string;
+  categoryReason: string;
+  matchScore: number;
+  downtimeDisplay: string;
+  priceTier: 1 | 2 | 3 | 4 | 5;
+  alternativeDevices: EBDAlternativeDevice[];
+  doctorNote: EBDDoctorNote | null;
 }
 
 // ─── Injectable Recommendation ────────────────────────────────

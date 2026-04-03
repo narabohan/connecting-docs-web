@@ -62,6 +62,22 @@ const ConfidenceLayerSchema = z.object({
   commitment: z.string().default(''),
 }).default({ reasonWhy: '', socialProof: '', commitment: '' });
 
+const AlternativeDeviceSchema = z.object({
+  name: z.string().default(''),
+  oneLiner: z.string().default(''),
+  matchScore: z.number().default(0),
+  downtimeDisplay: z.string().default(''),
+  painLevel: z.number().min(1).max(5).default(3),
+  priceTier: z.number().min(1).max(5).default(3),
+});
+
+const DoctorNoteSchema = z.object({
+  suggestedParameters: z.string().default(''),
+  fitzpatrickAdjustment: z.string().default(''),
+  safetyFlags: z.array(z.string()).default([]),
+  minIntervalDays: z.number().default(0),
+});
+
 const EBDRecommendationSchema = z.object({
   rank: z.number().default(0),
   deviceName: z.string().default(''),
@@ -86,6 +102,17 @@ const EBDRecommendationSchema = z.object({
   practical: PracticalInfoSchema,
   scores: z.record(z.string(), z.number()).default({}),
   aiDescriptionHtml: z.string().default(''),
+  // Category-first fields (Phase 3-C Task 2)
+  slot: z.enum(['premium', 'trending', 'value']).nullable().default(null),
+  categoryId: z.string().default(''),
+  categoryNameKo: z.string().default(''),
+  categoryNameEn: z.string().default(''),
+  categoryReason: z.string().default(''),
+  matchScore: z.number().default(0),
+  downtimeDisplay: z.string().default(''),
+  priceTier: z.number().min(1).max(5).default(3),
+  alternativeDevices: z.array(AlternativeDeviceSchema).default([]),
+  doctorNote: DoctorNoteSchema.nullable().default(null),
 });
 
 const InjectableRecommendationSchema = z.object({
