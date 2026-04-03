@@ -44,6 +44,7 @@ import type {
 } from '@/pages/api/survey-v2/final-recommendation';
 import { validateRecommendation } from '@/validators/report-v7-validator';
 import { MOCK_REPORT_V7 } from '@/mocks/report-v7-mock';
+import { PRICE_MAP } from '@/lib/clinical-rules';
 
 // ─── Status / Return types ───────────────────────────────────
 type LoadStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -298,6 +299,68 @@ function convertHomecare(hc: OpusHomecare): HomecareGuide {
   };
 }
 
+// ─── Auto-generate budget from PRICE_MAP + recommendations ──
+function generateBudget(
+  ebdRecs: EBDRecommendation[],
+  injRecs: InjectableRecommendation[],
+): BudgetEstimate {
+  const lineItems: BudgetEstimate['lineItems'] = [];
+
+  // EBD devices
+  for (const rec of ebdRecs) {
+    const key = rec.deviceName.toLowerCase().replace(/[\s-]+/g, '_');
+    const price = PRICE_MAP[key] || PRICE_MAP[Object.keys(PRICE_MAP).find((k) => key.includes(k)) ?? ''];
+    const sessions = parseInt(rec.practical.sessions) || 1;
+    if (price) {
+      const avg = Math.round((price.krMin + price.krMax) / 2);
+      lineItems.push({
+        treatment: rec.deviceName,
+        category: rec.categoryNameEn || 'EBD',
+        sessions,
+        unitPrice: `₩${(price.krMin / 10000).toFixed(0)}~${(price.krMax / 10000).toFixed(0)}만`,
+        subtotal: `₩${((avg * sessions) / 10000).toFixed(0)}만`,
+      });
+    }
+  }
+
+  // Injectables
+  for (const rec of injRecs) {
+    const key = rec.name.toLowerCase().replace(/[\s()-]+/g, '_');
+    const price = PRICE_MAP[key] || PRICE_MAP[Object.keys(PRICE_MAP).find((k) => key.includes(k)) ?? ''];
+    const sessions = parseInt(rec.practical.sessions) || 1;
+    if (price) {
+      const avg = Math.round((price.krMin + price.krMax) / 2);
+      lineItems.push({
+        treatment: rec.name,
+        category: rec.categoryNameEn || 'Injectable',
+        sessions,
+        unitPrice: `₩${(price.krMin / 10000).toFixed(0)}~${(price.krMax / 10000).toFixed(0)}만`,
+        subtotal: `₩${((avg * sessions) / 10000).toFixed(0)}만`,
+      });
+    }
+  }
+
+  // Total range
+  const minTotal = lineItems.reduce((sum, li) => {
+    const match = li.subtotal.match(/₩(\d+)/);
+    return sum + (match ? parseInt(match[1]) : 0);
+  }, 0);
+
+  const tierGuides: BudgetEstimate['tierGuides'] = [
+    { tier: 'premium', description: '최신 프리미엄 장비 + 정품 주사제', range: `₩${Math.round(minTotal * 1.3)}만~` },
+    { tier: 'standard', description: '검증된 장비 + 표준 프로토콜', range: `₩${Math.round(minTotal * 0.8)}만~₩${minTotal}만` },
+    { tier: 'value', description: '핵심 시술만 선별', range: `~₩${Math.round(minTotal * 0.6)}만` },
+  ];
+
+  return {
+    totalRange: lineItems.length > 0 ? `₩${Math.round(minTotal * 0.7)}만 ~ ₩${Math.round(minTotal * 1.3)}만` : '',
+    segments: [],
+    lineItems,
+    tierGuides,
+    roiNote: '',
+  };
+}
+
 function convertDoctorTab(dt: OpusDoctorTab): DoctorTab {
   return {
     clinicalSummary: dt.clinical_summary,
@@ -346,7 +409,10 @@ function convertPayloadToReportV7Data(
     signatureSolutions: convertSignatureSolutions(rec.signature_solutions),
     treatmentPlan: convertTreatmentPlan(rec.treatment_plan),
     homecare: convertHomecare(rec.homecare),
-    budgetEstimate: { totalRange: '', segments: [], lineItems: [], tierGuides: [], roiNote: '' }, // Phase 1: budget generation
+    budgetEstimate: generateBudget(
+      convertEBD(rec.ebd_recommendations),
+      convertInjectable(rec.injectable_recommendations),
+    ),
     doctorTab: convertDoctorTab(rec.doctor_tab),
   };
 }
