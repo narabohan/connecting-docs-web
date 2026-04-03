@@ -154,8 +154,23 @@ function convertPractical(p: { sessions: string; interval: string; duration?: st
   };
 }
 
+// ─── Injectable keywords for client-side EBD/injectable separation ──
+const INJECTABLE_KEYWORDS = [
+  'sculptra', 'rejuran', 'juvelook', 'botox', 'dysport', 'xeomin',
+  'restylane', 'juvederm', 'belotero', 'filler', 'toxin', 'booster',
+  'profhilo', 'nctf', 'ellanse', 'exosome', 'asce', 'pdrn',
+  'skinvive', 'volite', 'chanel', 'filorga',
+];
+
+function isInjectable(name: string): boolean {
+  const lower = (name || '').toLowerCase();
+  return INJECTABLE_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
 function convertEBD(items: OpusDeviceRecommendation[]): EBDRecommendation[] {
-  return items.map((d) => ({
+  // Filter out any injectables that AI mistakenly placed in ebd_recommendations
+  const filtered = items.filter((d) => !isInjectable(d.device_name));
+  return filtered.map((d) => ({
     rank: d.rank,
     deviceName: d.device_name,
     deviceId: d.device_id,
@@ -206,7 +221,14 @@ function convertEBD(items: OpusDeviceRecommendation[]): EBDRecommendation[] {
 }
 
 function convertInjectable(items: OpusInjectableRecommendation[]): InjectableRecommendation[] {
-  return items.map((inj) => ({
+  // Filter out any EBD devices that AI mistakenly placed in injectable_recommendations
+  const filtered = items.filter((inj) => {
+    const name = (inj.name || '').toLowerCase();
+    // If it looks like a known EBD device, exclude it
+    const EBD_KEYWORDS = ['ulthera', 'thermage', 'genius', 'potenza', 'sylfirm', 'morpheus', 'picosure', 'picoplus', 'bbl', 'lasemd', 'emface', 'co2', 'fractional'];
+    return !EBD_KEYWORDS.some((kw) => name.includes(kw));
+  });
+  return filtered.map((inj) => ({
     rank: inj.rank,
     name: inj.name,
     injectableId: inj.injectable_id,
