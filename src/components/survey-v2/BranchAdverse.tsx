@@ -25,6 +25,7 @@ const ADVERSE_TYPES: { value: AdverseType; key: keyof typeof SURVEY_V2_I18N.KO.b
   { value: 'burn', key: 'type_burn' },
   { value: 'swelling', key: 'type_swelling' },
   { value: 'scarring', key: 'type_scarring' },
+  { value: 'allergy', key: 'type_allergy' },
   { value: 'other', key: 'type_other' },
 ];
 
@@ -36,6 +37,7 @@ export default function BranchAdverse({ lang, initialData, onComplete, onBack }:
   const [device, setDevice] = useState(initialData?.adverse_device ?? '');
   const [recoveryWeeks, setRecoveryWeeks] = useState(initialData?.recovery_weeks ?? 2);
   const [severity, setSeverity] = useState<Severity>(initialData?.severity ?? 'moderate');
+  const [allergyDetail, setAllergyDetail] = useState(initialData?.allergy_detail ?? '');
 
   const toggleType = (val: AdverseType) => {
     setTypes((prev) =>
@@ -52,6 +54,7 @@ export default function BranchAdverse({ lang, initialData, onComplete, onBack }:
       adverse_device: device.trim(),
       recovery_weeks: recoveryWeeks,
       severity,
+      allergy_detail: types.includes('allergy') ? allergyDetail.trim() : undefined,
     });
   };
 
@@ -86,6 +89,20 @@ export default function BranchAdverse({ lang, initialData, onComplete, onBack }:
           ))}
         </div>
       </div>
+
+      {/* Allergy Detail (conditional follow-up) */}
+      {types.includes('allergy') && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{t.allergy_detail_label}</label>
+          <input
+            type="text"
+            value={allergyDetail}
+            onChange={(e) => setAllergyDetail(e.target.value)}
+            placeholder={t.allergy_detail_placeholder}
+            className="w-full bg-white border border-amber-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-500"
+          />
+        </div>
+      )}
 
       {/* Device */}
       <div>

@@ -116,7 +116,9 @@ export interface SurveyV2Translations {
     title: string;
     subtitle: string;
     type_label: string;
-    type_pih: string; type_burn: string; type_swelling: string; type_scarring: string; type_other: string;
+    type_pih: string; type_burn: string; type_swelling: string; type_scarring: string; type_allergy: string; type_other: string;
+    allergy_detail_label: string;
+    allergy_detail_placeholder: string;
     device_label: string;
     recovery_label: string;
     severity_label: string;
@@ -286,7 +288,9 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       title: '부작용 경험을 알려주세요',
       subtitle: '안전한 대안 장비를 추천하기 위한 정보입니다.',
       type_label: '부작용 유형 (복수 선택)',
-      type_pih: '색소침착 (PIH)', type_burn: '화상', type_swelling: '부종', type_scarring: '흉터', type_other: '기타',
+      type_pih: '색소침착 (PIH)', type_burn: '화상', type_swelling: '부종', type_scarring: '흉터', type_allergy: '알레르기 반응', type_other: '기타',
+      allergy_detail_label: '어떤 성분/약물에 알레르기가 있으셨나요?',
+      allergy_detail_placeholder: '예: 리도카인, 히알루론산, 라텍스 등',
       device_label: '부작용이 발생한 시술명',
       recovery_label: '회복에 걸린 기간 (주)',
       severity_label: '심각도',
@@ -433,7 +437,9 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       title: 'Tell us about the side effects',
       subtitle: 'This helps us recommend safer alternative devices.',
       type_label: 'Side effect type (select all)',
-      type_pih: 'Post-inflammatory hyperpigmentation (PIH)', type_burn: 'Burns', type_swelling: 'Swelling', type_scarring: 'Scarring', type_other: 'Other',
+      type_pih: 'Post-inflammatory hyperpigmentation (PIH)', type_burn: 'Burns', type_swelling: 'Swelling', type_scarring: 'Scarring', type_allergy: 'Allergic reaction', type_other: 'Other',
+      allergy_detail_label: 'What substance/medication caused the allergic reaction?',
+      allergy_detail_placeholder: 'e.g., Lidocaine, Hyaluronic acid, Latex',
       device_label: 'Treatment that caused the side effect',
       recovery_label: 'Recovery period (weeks)',
       severity_label: 'Severity',
@@ -580,7 +586,9 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       title: '副作用の経験を教えてください',
       subtitle: 'より安全な代替機器を推薦するための情報です。',
       type_label: '副作用の種類（複数選択可）',
-      type_pih: '色素沈着 (PIH)', type_burn: '火傷', type_swelling: '腫れ', type_scarring: '瘢痕', type_other: 'その他',
+      type_pih: '色素沈着 (PIH)', type_burn: '火傷', type_swelling: '腫れ', type_scarring: '瘢痕', type_allergy: 'アレルギー反応', type_other: 'その他',
+      allergy_detail_label: 'どの成分・薬物にアレルギーがありましたか？',
+      allergy_detail_placeholder: '例：リドカイン、ヒアルロン酸、ラテックス',
       device_label: '副作用が発生した施術名',
       recovery_label: '回復期間（週）',
       severity_label: '重症度',
@@ -727,7 +735,9 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       title: '请告诉我们副作用的详情',
       subtitle: '用于推荐更安全的替代设备。',
       type_label: '副作用类型（可多选）',
-      type_pih: '色素沉着 (PIH)', type_burn: '烧伤', type_swelling: '肿胀', type_scarring: '疤痕', type_other: '其他',
+      type_pih: '色素沉着 (PIH)', type_burn: '烧伤', type_swelling: '肿胀', type_scarring: '疤痕', type_allergy: '过敏反应', type_other: '其他',
+      allergy_detail_label: '对什么成分/药物有过敏反应？',
+      allergy_detail_placeholder: '例如：利多卡因、透明质酸、乳胶',
       device_label: '发生副作用的治疗名称',
       recovery_label: '恢复期（周）',
       severity_label: '严重程度',

@@ -61,10 +61,11 @@ export interface VisitPlanBranch {
 }
 
 export interface AdverseBranch {
-  adverse_type: ('pih' | 'burn' | 'swelling' | 'scarring' | 'other')[];
+  adverse_type: ('pih' | 'burn' | 'swelling' | 'scarring' | 'allergy' | 'other')[];
   adverse_device: string;    // 부작용 발생 시술명
   recovery_weeks: number;
   severity: 'mild' | 'moderate' | 'severe';
+  allergy_detail?: string;   // 알레르기 선택 시 상세 입력
 }
 
 // ─── PREFERENCES 노드 (CLINICAL_SPEC §8) ──────────────────────
