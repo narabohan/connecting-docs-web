@@ -345,7 +345,8 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
               />
             )}
 
-            {!fsmBranchActive && step === 'messenger' && (
+            {/* [SKIPPED] MessengerContactStep — 현재 비활성화, 메신저 알림 기능 구현 시 재활성화 */}
+            {!fsmBranchActive && step === 'messenger' && false && (
               <MessengerContactStep
                 key="messenger"
                 lang={lang}

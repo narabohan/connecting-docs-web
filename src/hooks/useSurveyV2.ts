@@ -818,6 +818,14 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
     }
   }, [state, onComplete]);
 
+  // ─── [SKIPPED] MessengerContactStep — 현재 비활성화, 메신저 알림 기능 구현 시 재활성화
+  // messenger step 도달 시 자동으로 submitMessenger 호출하여 스킵
+  useEffect(() => {
+    if (step === 'messenger') {
+      submitMessenger();
+    }
+  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ─── Return ───────────────────────────────────────────────
   return {
     // Current step + dynamic steps
