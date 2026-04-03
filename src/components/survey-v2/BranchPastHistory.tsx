@@ -27,6 +27,16 @@ interface TreatmentEntry {
 
 const EMPTY_TREATMENT: TreatmentEntry = { name: '', count: 1, last_date: '', satisfaction: 'neutral' };
 const LANG_ATTR: Record<string, string> = { KO: 'ko', EN: 'en', JP: 'ja', 'ZH-CN': 'zh-CN' };
+const LOCALE_MAP: Record<string, string> = { KO: 'ko-KR', EN: 'en-US', JP: 'ja-JP', 'ZH-CN': 'zh-CN' };
+
+function formatMonthLocalized(monthStr: string, lang: string): string {
+  if (!monthStr) return '';
+  const d = new Date(monthStr + '-01T00:00:00');
+  if (isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat(LOCALE_MAP[lang] || 'en-US', {
+    year: 'numeric', month: 'long',
+  }).format(d);
+}
 
 export default function BranchPastHistory({ lang, initialData, onComplete, onBack }: BranchPastHistoryProps) {
   const t = SURVEY_V2_I18N[lang].branch_history;
@@ -130,6 +140,9 @@ export default function BranchPastHistory({ lang, initialData, onComplete, onBac
                 onChange={(e) => updateTreatment(idx, 'last_date', e.target.value)}
                 className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
               />
+              {tr.last_date && (
+                <div className="text-xs text-blue-500 mt-1">{formatMonthLocalized(tr.last_date, lang)}</div>
+              )}
             </div>
           </div>
 

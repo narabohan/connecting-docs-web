@@ -33,13 +33,13 @@ export default function App({ Component, pageProps }: AppProps) {
         .then((result) => {
           if (result.succeeded > 0) {
             toast.success(
-              `${result.succeeded}건 저장 완료`,
+              `${result.succeeded} report(s) saved`,
               { id: 'queue-process' },
             );
           }
           if (result.permanentlyFailed > 0) {
             toast.error(
-              `${result.permanentlyFailed}건 저장 실패. 고객센터에 문의해주세요.`,
+              `${result.permanentlyFailed} save(s) failed. Please contact support.`,
               { id: 'queue-failed', duration: 8000 },
             );
           }

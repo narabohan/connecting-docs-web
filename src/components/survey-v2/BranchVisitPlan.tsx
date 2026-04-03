@@ -12,6 +12,16 @@ import { SURVEY_V2_I18N } from '@/utils/survey-v2-i18n';
 
 // ─── Lang → HTML lang attr ──────────────────────────────────
 const LANG_ATTR: Record<string, string> = { KO: 'ko', EN: 'en', JP: 'ja', 'ZH-CN': 'zh-CN' };
+const LOCALE_MAP: Record<string, string> = { KO: 'ko-KR', EN: 'en-US', JP: 'ja-JP', 'ZH-CN': 'zh-CN' };
+
+function formatDateLocalized(dateStr: string, lang: string): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  if (isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat(LOCALE_MAP[lang] || 'en-US', {
+    year: 'numeric', month: 'long', day: 'numeric',
+  }).format(d);
+}
 
 // ─── Helper: compute day diff ────────────────────────────────
 function diffDays(a: string, b: string): number | null {
@@ -91,6 +101,9 @@ export default function BranchVisitPlan({ lang, initialData, onComplete, onBack 
             onChange={(e) => setArrival(e.target.value)}
             className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-400"
           />
+          {arrival && (
+            <div className="text-xs text-blue-500 mt-1">{formatDateLocalized(arrival, lang)}</div>
+          )}
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">{t.departure}</label>
@@ -105,6 +118,11 @@ export default function BranchVisitPlan({ lang, initialData, onComplete, onBack 
                 : 'border-gray-200 focus:border-blue-400'
             }`}
           />
+          {departure && (
+            <div className={`text-xs mt-1 ${dateError ? 'text-red-400' : 'text-blue-500'}`}>
+              {formatDateLocalized(departure, lang)}
+            </div>
+          )}
         </div>
       </div>
 

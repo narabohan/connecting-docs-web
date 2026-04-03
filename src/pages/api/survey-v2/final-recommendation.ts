@@ -1551,7 +1551,8 @@ Output ONLY valid JSON.`,
           }
           // Backfill patient fields from actual survey data (more reliable than AI echo)
           const pat = recommendation.patient;
-          if (!pat.name) pat.name = (body.demographics as any)?.d_name || '고객';
+          const PATIENT_FALLBACK: Record<string, string> = { ko: '고객', en: 'Patient', ja: '患者様', 'zh-cn': '患者' };
+          if (!pat.name) pat.name = (body.demographics as any)?.d_name || PATIENT_FALLBACK[(recommendation.lang || 'ko').toLowerCase()] || 'Patient';
           if (!pat.age && body.demographics?.d_age) pat.age = body.demographics.d_age;
           if (!pat.gender && body.demographics?.d_gender) pat.gender = body.demographics.d_gender;
           if (!pat.country && body.demographics?.detected_country) pat.country = body.demographics.detected_country;
