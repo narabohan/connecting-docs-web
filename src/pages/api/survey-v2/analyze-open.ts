@@ -56,6 +56,9 @@ Return matched chip values in concern_area_hint (comma-separated).
 | large_pores         | 모공, 피지, 블랙헤드                      | pores, sebum, blackheads, oily           | 毛穴, 皮脂, 黒ずみ, テカリ               | 毛孔, 皮脂, 黑头, 出油                  |
 | acne_scars          | 흉터, 여드름자국, 여드름 흉터, 패인 자국  | acne scars, scarring, pitted, ice pick   | ニキビ跡, クレーター, 瘢痕               | 痘坑, 痘印, 疤痕, 凹洞                  |
 | dryness_redness     | 홍조, 건조, 민감, 붉은기, 장미증          | redness, dryness, rosacea, flushing      | 赤み, 乾燥, 酒さ, 敏感                   | 红血丝, 干燥, 玫瑰痤疮, 泛红            |
+| post_weight_loss_laxity | 오젬픽, 다이어트 후, 살 빠진 후, 처짐    | ozempic, weight loss, sagging after diet | ダイエット後, たるみ                      | 减肥后, 松弛                             |
+| lower_face_heavy_fat    | 이중턱, 볼살, 하안부 지방                 | double chin, heavy lower face, jowl      | 二重顎, 下顔面の脂肪                      | 双下巴, 下面部脂肪                       |
+| body_contouring_laxity  | 팔뚝, 뱃살, 바디 처짐, 러브핸들           | arm fat, belly, body sagging, love handles | 二の腕, お腹の脂肪, ボディたるみ          | 拜拜肉, 肚腩, 身体松弛                   |
 `;
 
 // ─── Haiku System Prompt (HYBRID_SURVEY_LOGIC_v2 §3-1) ──────

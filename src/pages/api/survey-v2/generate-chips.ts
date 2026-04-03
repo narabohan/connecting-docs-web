@@ -43,6 +43,14 @@ const CONCERN_HINT_TO_CHIPS: Record<string, ChipType[]> = {
   'dryness': ['texture_concern'],
   'redness': ['texture_concern'],
   'texture': ['texture_concern'],
+  // SAR-specific keywords (Phase 3-C)
+  'post_weight_loss_laxity': ['concern_area', 'laxity_severity'],
+  'lower_face_heavy_fat': ['concern_area', 'tightening_zone'],
+  'body_contouring_laxity': ['concern_area'],
+  'ozempic': ['concern_area', 'laxity_severity'],
+  'weight_loss': ['concern_area', 'laxity_severity'],
+  'double_chin': ['concern_area', 'tightening_zone'],
+  'body_fat': ['concern_area'],
 };
 
 // ─── CLINICAL_SPEC §3: Demographic-based chip priority ────────
@@ -175,6 +183,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (q1_primary_goal === 'Acne/scarring') {
       addConditionalChip('scar_type');
       addConditionalChip('texture_concern');
+    }
+
+    // SAR-specific: when lifting/contouring goal includes SAR concerns (Phase 3-C)
+    if (['Contouring/lifting', 'Volume/elasticity'].includes(q1_primary_goal)) {
+      addConditionalChip('laxity_severity');
     }
 
     // 2c. CLINICAL_SPEC §3 — Demographic-based chip priority

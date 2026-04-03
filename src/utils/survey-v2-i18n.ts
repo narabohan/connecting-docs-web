@@ -797,6 +797,10 @@ export const CHIP_TEMPLATES: Record<string, ChipTemplate> = {
       { label: { KO: '눈밑/중안부', EN: 'Under-eye/Mid-face', JP: '目の下/中顔面', 'ZH-CN': '眼下/中面部' }, value: 'undereye_midface' },
       { label: { KO: '이마/상안부', EN: 'Forehead/Upper face', JP: '額/上顔面', 'ZH-CN': '额头/上面部' }, value: 'forehead_upper' },
       { label: { KO: '전체적으로', EN: 'Overall face', JP: '顔全体', 'ZH-CN': '整体' }, value: 'overall' },
+      // SAR-specific concerns (Phase 3-C)
+      { label: { KO: '다이어트/체중 감량 후 피부 처짐', EN: 'Skin laxity after weight loss', JP: 'ダイエット後の皮膚たるみ', 'ZH-CN': '减肥后皮肤松弛' }, value: 'post_weight_loss_laxity' },
+      { label: { KO: '이중턱/하안부 지방 축적', EN: 'Double chin / heavy lower face', JP: '二重顎/下顔面の脂肪蓄積', 'ZH-CN': '双下巴/下面部脂肪堆积' }, value: 'lower_face_heavy_fat' },
+      { label: { KO: '바디 국소 지방 + 탄력 저하', EN: 'Body fat + skin laxity', JP: 'ボディ局所脂肪+弾力低下', 'ZH-CN': '局部体脂+皮肤松弛' }, value: 'body_contouring_laxity' },
     ],
     priority: 1,
   },
