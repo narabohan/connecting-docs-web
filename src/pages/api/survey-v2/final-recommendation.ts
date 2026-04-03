@@ -973,7 +973,7 @@ Required JSON fields:
       "match_score": 0-100,
       "downtime_display": "<환자 친화 표현: '3~7일', '없음', '2주(듀오덤)'>",
       "price_tier": 1-5,
-      "alternative_devices": [{"name":"<alt device>","one_liner":"<1줄>","match_score":0-100,"downtime_display":"<>","pain_level":1-5,"price_tier":1-5}],
+      "alternative_devices": [{"name":"<alt device 1>","one_liner":"<1줄 차별점>","match_score":0-100,"downtime_display":"<>","pain_level":1-5,"price_tier":1-5},{"name":"<alt device 2>","one_liner":"<1줄>","match_score":0-100,"downtime_display":"<>","pain_level":1-5,"price_tier":1-5}],
       "doctor_note": {"suggested_parameters":"<출력/깊이/패스>","fitzpatrick_adjustment":"<Type IV 조정>","safety_flags":["<flag>"],"min_interval_days":28}
     }
   ],
@@ -995,7 +995,15 @@ Required JSON fields:
       "moa_summary_short": "<Arrow-notation mechanism>",
       "moa_description_html": "<detailed MOA>",
       "practical": { "sessions": "", "interval": "", "onset": "", "maintain": "" },
-      "scores": { "hydration": 0-10, "repair": 0-10, "collagen": 0-10, "brightening": 0-10, "elasticity": 0-10, "evidence": 0-10, "synergy": 0-10, "longevity": 0-10 }
+      "scores": { "hydration": 0-10, "repair": 0-10, "collagen": 0-10, "brightening": 0-10, "elasticity": 0-10, "evidence": 0-10, "synergy": 0-10, "longevity": 0-10 },
+      "category_name_ko": "<카테고리 한국어명>",
+      "category_name_en": "<Category English name>",
+      "category_reason": "<왜 이 카테고리가 환자에게 맞는지 1줄>",
+      "match_score": 0-100,
+      "downtime_display": "<환자 친화 표현>",
+      "pain_level": 1-5,
+      "price_tier": 1-5,
+      "alternative_products": [{"name":"<alt product 1>","one_liner":"<1줄 차별점>","match_score":0-100,"downtime_display":"<>","pain_level":1-5,"price_tier":1-5}]
     }
   ],
 
@@ -1076,7 +1084,14 @@ CRITICAL RULES:
        post_weight_loss_laxity, lower_face_heavy_fat, body_contouring_laxity
     h) Example: concern="post_weight_loss_laxity" → priority1=SAR → EBD#1 MUST be NeoSculpt
        concern="jawline_lifting" → priority1=HIFU → EBD#1 MUST be Ultherapy/Ultraformer/Shrink
-    i) Include the resolved concern in ebd_recommendations[0].moa_category as the category_id.`;
+    i) Include the resolved concern in ebd_recommendations[0].moa_category as the category_id.
+13. ★★ ALTERNATIVE DEVICES/PRODUCTS ARE MANDATORY ★★
+    Each EBD recommendation MUST include "alternative_devices" with 2-3 other devices from the SAME category.
+    Each injectable recommendation MUST include "alternative_products" with 1-2 other products from the SAME category.
+    For each alternative, provide: name, one_liner (1 sentence differentiator), match_score (0-100), downtime_display, pain_level (1-5), price_tier (1-5).
+    Example: If EBD#1 is Ultherapy (HIFU category) → alternative_devices: [Ultraformer MPT, Shrink, Sofwave].
+    Example: If injectable#1 is Rejuran Healer (PN category) → alternative_products: [Rejuran S, LNDG].
+    NEVER return an empty alternative_devices or alternative_products array. If a category only has 1 device, list at least 1 off-label or next-generation alternative.`;
 
 // ─── Robust JSON Parse with multiple repair strategies ─────────
 type ParseResult =
