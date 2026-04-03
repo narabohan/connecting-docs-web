@@ -6,7 +6,6 @@
 //  Props ≤ 4: recommendation, isExpanded, onToggle, lang
 // ═══════════════════════════════════════════════════════════════
 
-import { useState } from 'react';
 import type { SurveyLang, EBDRecommendation, EBDAlternativeDevice } from '@/types/report-v7';
 import { useReportI18n } from './ReportI18nContext';
 import { RadarChart5Axis } from './RadarChart5Axis';
@@ -200,17 +199,46 @@ function FourIndicatorGrid({ matchScore, downtimeDisplay, painLevel, priceTier, 
   );
 }
 
-// ─── Alternative Device Row ──────────────────────────────────
+// ─── Tier labels i18n ────────────────────────────────────────
 
-function AlternativeDeviceRow({ device, lang }: { device: EBDAlternativeDevice; lang: SurveyLang }) {
+const TIER_LABELS: Record<SurveyLang, { premium: string; standard: string; value: string }> = {
+  KO: { premium: 'Premium Pick', standard: 'Standard', value: 'Value' },
+  EN: { premium: 'Premium Pick', standard: 'Standard', value: 'Value' },
+  JP: { premium: 'Premium Pick', standard: 'Standard', value: 'Value' },
+  'ZH-CN': { premium: 'Premium Pick', standard: 'Standard', value: 'Value' },
+};
+
+const TIER_STYLES: Record<string, { color: string; bg: string; icon: string }> = {
+  premium: { color: '#FFD700', bg: 'rgba(255,215,0,0.10)', icon: '\u2605' },
+  standard: { color: '#00E5FF', bg: 'rgba(0,229,255,0.08)', icon: '\u2606' },
+  value: { color: '#69F0AE', bg: 'rgba(105,240,174,0.08)', icon: '\u2606' },
+};
+
+function TierBadge({ tier, lang }: { tier: 'premium' | 'standard' | 'value'; lang: SurveyLang }) {
+  const labels = TIER_LABELS[lang] || TIER_LABELS.EN;
+  const style = TIER_STYLES[tier];
   return (
-    <div
-      style={{
-        padding: '10px 14px',
-        borderBottom: '1px solid rgba(255,255,255,0.04)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: '3px',
+      fontSize: '9px', fontWeight: 700, letterSpacing: '0.5px',
+      textTransform: 'uppercase', color: style.color,
+      background: style.bg, padding: '2px 8px', borderRadius: '10px',
+      border: `1px solid ${style.color}33`,
+    }}>
+      {style.icon} {labels[tier]}
+    </span>
+  );
+}
+
+// ─── Alternative Device Row (with tier label) ───────────────
+
+function AlternativeDeviceRow({ device, tier, lang, showTier }: {
+  device: EBDAlternativeDevice; tier: 'standard' | 'value'; lang: SurveyLang; showTier: boolean;
+}) {
+  return (
+    <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+        {showTier && <TierBadge tier={tier} lang={lang} />}
         <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-hi, #e2e8f0)' }}>
           {device.name}
         </span>
@@ -267,24 +295,13 @@ interface EBDCardProps {
   lang: SurveyLang;
 }
 
-// ─── i18n labels ──────────────────────────────────────────────
-
-const ALT_LABELS: Record<SurveyLang, { show: string; hide: string }> = {
-  KO: { show: '다른 옵션 보기', hide: '접기' },
-  EN: { show: 'Other options', hide: 'Collapse' },
-  JP: { show: '他のオプション', hide: '閉じる' },
-  'ZH-CN': { show: '其他选项', hide: '收起' },
-};
-
 // ─── Component ────────────────────────────────────────────────
 
 export function EBDCard({ recommendation: rec, isExpanded, onToggle, lang }: EBDCardProps) {
   const { t } = useReportI18n();
-  const [altExpanded, setAltExpanded] = useState(false);
   const targetLayers = rec.skinLayer ? rec.skinLayer.split(',').map((s) => s.trim()) : [];
   const hasAlternatives = rec.alternativeDevices.length > 0;
   const categoryName = lang === 'KO' ? rec.categoryNameKo : rec.categoryNameEn;
-  const altLabels = ALT_LABELS[lang] || ALT_LABELS.EN;
 
   return (
     <div className={`rv7-rec-card rv7-ebd-card${isExpanded ? ' rv7-active' : ''}`}>
@@ -326,11 +343,11 @@ export function EBDCard({ recommendation: rec, isExpanded, onToggle, lang }: EBD
         )}
       </div>
 
-      {/* ═══ Layer 2: Representative Device ═══ */}
+      {/* ═══ Layer 2: Representative Device (Premium Pick) ═══ */}
       <div className="rv7-rec-head">
         <div className="rv7-rec-title-area" style={{ overflow: 'hidden' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '10px', color: '#00E5FF', opacity: 0.7, flexShrink: 0 }}>&#9733;</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            {hasAlternatives && <TierBadge tier="premium" lang={lang} />}
             <div className="rv7-rec-name" style={{ wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0 }}>{rec.deviceName}</div>
           </div>
           <div className="rv7-rec-sub">{rec.subtitle}</div>
@@ -373,51 +390,27 @@ export function EBDCard({ recommendation: rec, isExpanded, onToggle, lang }: EBD
         </div>
       )}
 
-      {/* ═══ Collapsible: Alternative Devices ═══ */}
+      {/* ═══ 3-Tier: Alternative Devices (always visible, max 2) ═══ */}
       {hasAlternatives && (
         <div style={{ padding: '0 18px 8px' }}>
-          <button
-            onClick={() => setAltExpanded(!altExpanded)}
+          <div
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '11px',
-              fontWeight: 600,
-              color: 'var(--text-2, #94a3b8)',
-              padding: '4px 0',
+              background: 'rgba(255,255,255,0.02)',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.05)',
+              overflow: 'hidden',
             }}
           >
-            <span style={{
-              transform: altExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-              transition: 'transform 0.2s',
-              display: 'inline-block',
-            }}>
-              &#9656;
-            </span>
-            {altExpanded ? altLabels.hide : altLabels.show}
-            <span style={{ opacity: 0.5, marginLeft: '4px' }}>
-              ({rec.alternativeDevices.length})
-            </span>
-          </button>
-          {altExpanded && (
-            <div
-              style={{
-                background: 'rgba(255,255,255,0.02)',
-                borderRadius: '8px',
-                border: '1px solid rgba(255,255,255,0.05)',
-                marginTop: '6px',
-                overflow: 'hidden',
-              }}
-            >
-              {rec.alternativeDevices.slice(0, 3).map((alt) => (
-                <AlternativeDeviceRow key={alt.name} device={alt} lang={lang} />
-              ))}
-            </div>
-          )}
+            {rec.alternativeDevices.slice(0, 2).map((alt, idx) => (
+              <AlternativeDeviceRow
+                key={alt.name}
+                device={alt}
+                tier={idx === 0 ? 'standard' : 'value'}
+                lang={lang}
+                showTier
+              />
+            ))}
+          </div>
         </div>
       )}
 
