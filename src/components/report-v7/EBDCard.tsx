@@ -10,6 +10,18 @@ import type { SurveyLang, EBDRecommendation, EBDAlternativeDevice } from '@/type
 import { useReportI18n } from './ReportI18nContext';
 import { RadarChart5Axis } from './RadarChart5Axis';
 import { SkinLayer3D } from './SkinLayer3D';
+import { getDevicePriceRange, DEVICE_SPECS } from '@/lib/clinical-rules';
+
+/** Convert device display name to DEVICE_SPECS key (e.g., "Sylfirm X" → "sylfirm_x") */
+function nameToDeviceId(name: string): string | null {
+  const normalized = name.toLowerCase().replace(/[\s-]+/g, '_').replace(/[^a-z0-9_]/g, '');
+  if (DEVICE_SPECS[normalized]) return normalized;
+  // Try partial match
+  for (const key of Object.keys(DEVICE_SPECS)) {
+    if (normalized.includes(key) || key.includes(normalized)) return key;
+  }
+  return null;
+}
 
 // ─── Protocol Slot Badge ─────────────────────────────────────
 
@@ -123,14 +135,21 @@ function PainDots({ level }: { level: number }) {
 
 // ─── Price Tier ──────────────────────────────────────────────
 
-function PriceTierDisplay({ tier }: { tier: number }) {
+function PriceTierDisplay({ tier, priceRange }: { tier: number; priceRange?: string | null }) {
   const clamped = Math.max(1, Math.min(5, tier));
   const symbols = '$'.repeat(clamped);
   const faded = '$'.repeat(5 - clamped);
   return (
-    <span style={{ fontSize: '12px', fontWeight: 600 }}>
-      <span style={{ color: '#FFD740' }}>{symbols}</span>
-      <span style={{ color: 'rgba(255,255,255,0.15)' }}>{faded}</span>
+    <span style={{ fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+      <span>
+        <span style={{ color: '#FFD740' }}>{symbols}</span>
+        <span style={{ color: 'rgba(255,255,255,0.15)' }}>{faded}</span>
+      </span>
+      {priceRange && (
+        <span style={{ fontSize: '10px', fontWeight: 500, color: 'var(--text-2, #94a3b8)' }}>
+          ({priceRange})
+        </span>
+      )}
     </span>
   );
 }
@@ -144,6 +163,7 @@ interface FourIndicatorProps {
   priceTier: number;
   lang: SurveyLang;
   compact?: boolean;
+  priceRange?: string | null;
 }
 
 const INDICATOR_LABELS: Record<SurveyLang, { match: string; downtime: string; pain: string; price: string }> = {
@@ -153,7 +173,7 @@ const INDICATOR_LABELS: Record<SurveyLang, { match: string; downtime: string; pa
   'ZH-CN': { match: '匹配度', downtime: '恢复期', pain: '疼痛', price: '价格' },
 };
 
-function FourIndicatorGrid({ matchScore, downtimeDisplay, painLevel, priceTier, lang, compact }: FourIndicatorProps) {
+function FourIndicatorGrid({ matchScore, downtimeDisplay, painLevel, priceTier, lang, compact, priceRange }: FourIndicatorProps) {
   const labels = INDICATOR_LABELS[lang] || INDICATOR_LABELS.EN;
   const rowStyle: React.CSSProperties = {
     display: 'flex',
@@ -193,7 +213,7 @@ function FourIndicatorGrid({ matchScore, downtimeDisplay, painLevel, priceTier, 
       </div>
       <div style={{ ...rowStyle, borderBottom: 'none' }}>
         <span style={labelStyle}>{labels.price}</span>
-        <PriceTierDisplay tier={priceTier} />
+        <PriceTierDisplay tier={priceTier} priceRange={priceRange} />
       </div>
     </div>
   );
@@ -232,9 +252,11 @@ function TierBadge({ tier, lang }: { tier: 'premium' | 'standard' | 'value'; lan
 
 // ─── Alternative Device Row (with tier label) ───────────────
 
-function AlternativeDeviceRow({ device, tier, lang, showTier }: {
-  device: EBDAlternativeDevice; tier: 'standard' | 'value'; lang: SurveyLang; showTier: boolean;
+function AlternativeDeviceRow({ device, tier, lang, showTier, country }: {
+  device: EBDAlternativeDevice; tier: 'standard' | 'value'; lang: SurveyLang; showTier: boolean; country: string;
 }) {
+  const altDeviceId = nameToDeviceId(device.name);
+  const altPriceRange = altDeviceId ? getDevicePriceRange(altDeviceId, country) : null;
   return (
     <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
@@ -252,6 +274,7 @@ function AlternativeDeviceRow({ device, tier, lang, showTier }: {
         painLevel={device.painLevel}
         priceTier={device.priceTier}
         lang={lang}
+        priceRange={altPriceRange}
         compact
       />
     </div>
@@ -297,11 +320,16 @@ interface EBDCardProps {
 
 // ─── Component ────────────────────────────────────────────────
 
+// Map SurveyLang → country code for price range lookup
+const LANG_TO_COUNTRY: Record<SurveyLang, string> = { KO: 'KR', EN: 'US', JP: 'JP', 'ZH-CN': 'CN' };
+
 export function EBDCard({ recommendation: rec, isExpanded, onToggle, lang }: EBDCardProps) {
   const { t } = useReportI18n();
   const targetLayers = rec.skinLayer ? rec.skinLayer.split(',').map((s) => s.trim()) : [];
   const hasAlternatives = rec.alternativeDevices.length > 0;
   const categoryName = lang === 'KO' ? rec.categoryNameKo : rec.categoryNameEn;
+  const country = LANG_TO_COUNTRY[lang] || 'KR';
+  const priceRange = getDevicePriceRange(rec.deviceId, country);
 
   return (
     <div className={`rv7-rec-card rv7-ebd-card${isExpanded ? ' rv7-active' : ''}`}>
@@ -372,6 +400,7 @@ export function EBDCard({ recommendation: rec, isExpanded, onToggle, lang }: EBD
           painLevel={rec.painLevel}
           priceTier={rec.priceTier}
           lang={lang}
+          priceRange={priceRange}
         />
       </div>
 
@@ -408,6 +437,7 @@ export function EBDCard({ recommendation: rec, isExpanded, onToggle, lang }: EBD
                 tier={idx === 0 ? 'standard' : 'value'}
                 lang={lang}
                 showTier
+                country={country}
               />
             ))}
           </div>

@@ -181,29 +181,30 @@ export const DEVICE_SPECS: Record<string, {
   price_tier: number;       // 1-5 ($~$$$$$)
   downtime_display: string;
   match_boost: string[];    // concerns this device excels at
+  price_range_display: Record<string, string>;  // country → localized price range
 }> = {
-  ultherapy:        { pain_level: 4, price_tier: 5, downtime_display: '3-7 days swelling', match_boost: ['jawline_lifting'] },
-  thermage_flx:     { pain_level: 4, price_tier: 5, downtime_display: 'None to 1 day', match_boost: ['skin_tightening'] },
-  genius:           { pain_level: 5, price_tier: 5, downtime_display: '5-7 days', match_boost: ['acne_scars'] },
-  potenza:          { pain_level: 3, price_tier: 3, downtime_display: '3-5 days', match_boost: ['acne_scars', 'large_pores'] },
-  sylfirm_x:        { pain_level: 3, price_tier: 3, downtime_display: '1-3 days', match_boost: ['melasma', 'redness'] },
-  secret_rf:        { pain_level: 3, price_tier: 3, downtime_display: '2-4 days', match_boost: ['large_pores'] },
-  morpheus8:        { pain_level: 4, price_tier: 4, downtime_display: '3-5 days', match_boost: ['acne_scars', 'skin_tightening'] },
-  neosculpt:        { pain_level: 1, price_tier: 5, downtime_display: 'None', match_boost: ['post_weight_loss_laxity', 'lower_face_heavy_fat'] },
-  alltite:          { pain_level: 1, price_tier: 4, downtime_display: 'None', match_boost: ['skin_tightening', 'jawline_lifting'] },
-  reepot:           { pain_level: 2, price_tier: 4, downtime_display: '14 days (duoderm required)', match_boost: ['dark_spots'] },
-  ultraformer_mpt:  { pain_level: 3, price_tier: 3, downtime_display: 'None to mild swelling', match_boost: ['jawline_lifting'] },
-  shrink_universe:  { pain_level: 2, price_tier: 2, downtime_display: 'None', match_boost: ['jawline_lifting'] },
-  volnewmer:        { pain_level: 2, price_tier: 4, downtime_display: 'None', match_boost: ['skin_tightening'] },
-  oligio:           { pain_level: 2, price_tier: 2, downtime_display: 'None', match_boost: ['skin_tightening'] },
-  picosure_pro:     { pain_level: 2, price_tier: 4, downtime_display: '1-3 days', match_boost: ['melasma', 'dark_spots'] },
-  picoplus:         { pain_level: 2, price_tier: 3, downtime_display: '1-3 days', match_boost: ['melasma', 'freckles'] },
-  bbl_hero:         { pain_level: 2, price_tier: 3, downtime_display: '3-5 days crusting', match_boost: ['freckles', 'dark_spots'] },
-  lasemd_ultra:     { pain_level: 1, price_tier: 2, downtime_display: '1-2 days', match_boost: ['dull_skin', 'dryness'] },
-  co2_fractional:   { pain_level: 4, price_tier: 2, downtime_display: '7-14 days', match_boost: ['acne_scars', 'mole_removal'] },
-  derma_v:          { pain_level: 2, price_tier: 4, downtime_display: '1-3 days', match_boost: ['redness'] },
-  quadessy:         { pain_level: 3, price_tier: 3, downtime_display: '2-3 days', match_boost: ['large_pores'] },
-  emface:           { pain_level: 1, price_tier: 4, downtime_display: 'None', match_boost: ['volume_restoration'] },
+  ultherapy:        { pain_level: 4, price_tier: 5, downtime_display: '3-7 days swelling', match_boost: ['jawline_lifting'], price_range_display: { KR: '₩150~300만', US: '$1,100~2,200', JP: '¥16~33万', ZH: '¥8,000~16,500' } },
+  thermage_flx:     { pain_level: 4, price_tier: 5, downtime_display: 'None to 1 day', match_boost: ['skin_tightening'], price_range_display: { KR: '₩80~200만', US: '$600~1,500', JP: '¥9~22万', ZH: '¥4,400~11,000' } },
+  genius:           { pain_level: 5, price_tier: 5, downtime_display: '5-7 days', match_boost: ['acne_scars'], price_range_display: { KR: '₩50~120만', US: '$370~890', JP: '¥5.5~13万', ZH: '¥2,750~6,600' } },
+  potenza:          { pain_level: 3, price_tier: 3, downtime_display: '3-5 days', match_boost: ['acne_scars', 'large_pores'], price_range_display: { KR: '₩30~80만', US: '$220~600', JP: '¥3.3~8.8万', ZH: '¥1,650~4,400' } },
+  sylfirm_x:        { pain_level: 3, price_tier: 3, downtime_display: '1-3 days', match_boost: ['melasma', 'redness'], price_range_display: { KR: '₩20~60만', US: '$150~440', JP: '¥2.2~6.6万', ZH: '¥1,100~3,300' } },
+  secret_rf:        { pain_level: 3, price_tier: 3, downtime_display: '2-4 days', match_boost: ['large_pores'], price_range_display: { KR: '₩20~50만', US: '$150~370', JP: '¥2.2~5.5万', ZH: '¥1,100~2,750' } },
+  morpheus8:        { pain_level: 4, price_tier: 4, downtime_display: '3-5 days', match_boost: ['acne_scars', 'skin_tightening'], price_range_display: { KR: '₩40~100만', US: '$300~740', JP: '¥4.4~11万', ZH: '¥2,200~5,500' } },
+  neosculpt:        { pain_level: 1, price_tier: 5, downtime_display: 'None', match_boost: ['post_weight_loss_laxity', 'lower_face_heavy_fat'], price_range_display: { KR: '₩50~100만', US: '$370~740', JP: '¥5.5~11万', ZH: '¥2,750~5,500' } },
+  alltite:          { pain_level: 1, price_tier: 4, downtime_display: 'None', match_boost: ['skin_tightening', 'jawline_lifting'], price_range_display: { KR: '₩30~70만', US: '$220~520', JP: '¥3.3~7.7万', ZH: '¥1,650~3,850' } },
+  reepot:           { pain_level: 2, price_tier: 4, downtime_display: '14 days (duoderm required)', match_boost: ['dark_spots'], price_range_display: { KR: '₩30~80만', US: '$220~600', JP: '¥3.3~8.8万', ZH: '¥1,650~4,400' } },
+  ultraformer_mpt:  { pain_level: 3, price_tier: 3, downtime_display: 'None to mild swelling', match_boost: ['jawline_lifting'], price_range_display: { KR: '₩30~80만', US: '$220~600', JP: '¥3.3~8.8万', ZH: '¥1,650~4,400' } },
+  shrink_universe:  { pain_level: 2, price_tier: 2, downtime_display: 'None', match_boost: ['jawline_lifting'], price_range_display: { KR: '₩20~50만', US: '$150~370', JP: '¥2.2~5.5万', ZH: '¥1,100~2,750' } },
+  volnewmer:        { pain_level: 2, price_tier: 4, downtime_display: 'None', match_boost: ['skin_tightening'], price_range_display: { KR: '₩50~100만', US: '$370~740', JP: '¥5.5~11万', ZH: '¥2,750~5,500' } },
+  oligio:           { pain_level: 2, price_tier: 2, downtime_display: 'None', match_boost: ['skin_tightening'], price_range_display: { KR: '₩20~50만', US: '$150~370', JP: '¥2.2~5.5万', ZH: '¥1,100~2,750' } },
+  picosure_pro:     { pain_level: 2, price_tier: 4, downtime_display: '1-3 days', match_boost: ['melasma', 'dark_spots'], price_range_display: { KR: '₩30~80만', US: '$220~600', JP: '¥3.3~8.8万', ZH: '¥1,650~4,400' } },
+  picoplus:         { pain_level: 2, price_tier: 3, downtime_display: '1-3 days', match_boost: ['melasma', 'freckles'], price_range_display: { KR: '₩15~40만', US: '$110~300', JP: '¥1.6~4.4万', ZH: '¥825~2,200' } },
+  bbl_hero:         { pain_level: 2, price_tier: 3, downtime_display: '3-5 days crusting', match_boost: ['freckles', 'dark_spots'], price_range_display: { KR: '₩20~50만', US: '$150~370', JP: '¥2.2~5.5万', ZH: '¥1,100~2,750' } },
+  lasemd_ultra:     { pain_level: 1, price_tier: 2, downtime_display: '1-2 days', match_boost: ['dull_skin', 'dryness'], price_range_display: { KR: '₩15~30만', US: '$110~220', JP: '¥1.6~3.3万', ZH: '¥825~1,650' } },
+  co2_fractional:   { pain_level: 4, price_tier: 2, downtime_display: '7-14 days', match_boost: ['acne_scars', 'mole_removal'], price_range_display: { KR: '₩10~30만', US: '$75~220', JP: '¥1.1~3.3万', ZH: '¥550~1,650' } },
+  derma_v:          { pain_level: 2, price_tier: 4, downtime_display: '1-3 days', match_boost: ['redness'], price_range_display: { KR: '₩30~60만', US: '$220~440', JP: '¥3.3~6.6万', ZH: '¥1,650~3,300' } },
+  quadessy:         { pain_level: 3, price_tier: 3, downtime_display: '2-3 days', match_boost: ['large_pores'], price_range_display: { KR: '₩30~60만', US: '$220~440', JP: '¥3.3~6.6万', ZH: '¥1,650~3,300' } },
+  emface:           { pain_level: 1, price_tier: 4, downtime_display: 'None', match_boost: ['volume_restoration'], price_range_display: { KR: '₩50~100만', US: '$370~740', JP: '¥5.5~11万', ZH: '¥2,750~5,500' } },
 };
 
 // ─── Build prompt block for AI recommendation engine ─────────
@@ -253,13 +254,26 @@ function buildDeviceSpecsBlock(): string {
   const PRICE_LABELS: Record<number, string> = { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$', 5: '$$$$$' };
   const lines = Object.entries(DEVICE_SPECS).map(([key, spec]) => {
     const name = key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-    return `- ${name} (${key}): pain=${spec.pain_level}/5, price=${PRICE_LABELS[spec.price_tier] || spec.price_tier}, downtime=${spec.downtime_display}`;
+    const priceRanges = Object.entries(spec.price_range_display).map(([c, r]) => `${c}:${r}`).join(', ');
+    return `- ${name} (${key}): pain=${spec.pain_level}/5, price=${PRICE_LABELS[spec.price_tier] || spec.price_tier}, downtime=${spec.downtime_display}, ranges=[${priceRanges}]`;
   });
   return `═══ DEVICE SPECIFICATIONS (USE THESE EXACT VALUES — DO NOT OVERRIDE) ═══
 ${lines.join('\n')}
 
-When generating pain_level, price_tier, downtime_display for each recommendation,
-you MUST use the values from DEVICE SPECIFICATIONS above.
-DO NOT estimate or guess these values.
-If the device is not listed above, use your best clinical judgment but flag it as "estimated".`;
+You MUST use values from DEVICE SPECIFICATIONS above for pain_level, price_tier, downtime_display.
+DO NOT estimate or guess. If device not listed, use best judgment and flag "estimated".`;
+}
+
+/** Get price range for a device by country code */
+export function getDevicePriceRange(deviceId: string, country: string): string | null {
+  const spec = DEVICE_SPECS[deviceId];
+  if (!spec) return null;
+  // Map country codes to price range keys
+  const countryMap: Record<string, string> = {
+    KR: 'KR', JP: 'JP', CN: 'ZH', TW: 'ZH',
+    US: 'US', CA: 'US', AU: 'US', GB: 'US', SG: 'US',
+    TH: 'US', VN: 'US', MY: 'US', ID: 'US', PH: 'US',
+  };
+  const key = countryMap[country] || 'KR';
+  return spec.price_range_display[key] || spec.price_range_display['KR'] || null;
 }
