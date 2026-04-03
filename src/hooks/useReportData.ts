@@ -222,6 +222,22 @@ function convertInjectable(items: OpusInjectableRecommendation[]): InjectableRec
     moaDescriptionHtml: inj.moa_description_html,
     practical: convertPractical(inj.practical),
     scores: inj.scores,
+    // ─── Category-first fields (Phase 3-C Task 7) ────────────
+    categoryNameKo: inj.category_name_ko ?? inj.category_label ?? '',
+    categoryNameEn: inj.category_name_en ?? inj.category ?? '',
+    categoryReason: inj.category_reason ?? '',
+    matchScore: inj.match_score ?? Math.round(inj.confidence * 100),
+    downtimeDisplay: inj.downtime_display ?? '없음',
+    painLevel: (inj.pain_level ?? 2) as 1 | 2 | 3 | 4 | 5,
+    priceTier: (inj.price_tier ?? 2) as 1 | 2 | 3 | 4 | 5,
+    alternativeProducts: (inj.alternative_products ?? []).map((alt) => ({
+      name: alt.name,
+      oneLiner: alt.one_liner,
+      matchScore: alt.match_score,
+      downtimeDisplay: alt.downtime_display,
+      painLevel: alt.pain_level,
+      priceTier: alt.price_tier,
+    })),
   }));
 }
 

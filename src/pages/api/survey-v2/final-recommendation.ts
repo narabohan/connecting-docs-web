@@ -157,6 +157,15 @@ export interface OpusDeviceRecommendation {
   };
 }
 
+export interface OpusInjectableAlternative {
+  name: string;
+  one_liner: string;
+  match_score: number;
+  downtime_display: string;
+  pain_level: 1 | 2 | 3 | 4 | 5;
+  price_tier: 1 | 2 | 3 | 4 | 5;
+}
+
 export interface OpusInjectableRecommendation {
   rank: number;
   name: string;
@@ -179,6 +188,15 @@ export interface OpusInjectableRecommendation {
     maintain: string;
   };
   scores: Record<string, number>;
+  // ─── Category-first fields (Phase 3-C Task 7) — optional from AI ──
+  category_name_ko?: string;
+  category_name_en?: string;
+  category_reason?: string;
+  match_score?: number;
+  downtime_display?: string;
+  pain_level?: 1 | 2 | 3 | 4 | 5;
+  price_tier?: 1 | 2 | 3 | 4 | 5;
+  alternative_products?: OpusInjectableAlternative[];
 }
 
 export interface OpusSolutionStep {

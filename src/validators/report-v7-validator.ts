@@ -115,6 +115,15 @@ const EBDRecommendationSchema = z.object({
   doctorNote: DoctorNoteSchema.nullable().default(null),
 });
 
+const InjectableAlternativeSchema = z.object({
+  name: z.string().default(''),
+  oneLiner: z.string().default(''),
+  matchScore: z.number().default(0),
+  downtimeDisplay: z.string().default('없음'),
+  painLevel: z.number().min(1).max(5).default(2) as z.ZodType<1 | 2 | 3 | 4 | 5>,
+  priceTier: z.number().min(1).max(5).default(2) as z.ZodType<1 | 2 | 3 | 4 | 5>,
+});
+
 const InjectableRecommendationSchema = z.object({
   rank: z.number().default(0),
   name: z.string().default(''),
@@ -132,6 +141,15 @@ const InjectableRecommendationSchema = z.object({
   moaDescriptionHtml: z.string().default(''),
   practical: PracticalInfoSchema,
   scores: z.record(z.string(), z.number()).default({}),
+  // ─── Category-first fields (Phase 3-C Task 7) ────────────
+  categoryNameKo: z.string().default(''),
+  categoryNameEn: z.string().default(''),
+  categoryReason: z.string().default(''),
+  matchScore: z.number().default(0),
+  downtimeDisplay: z.string().default('없음'),
+  painLevel: z.number().min(1).max(5).default(2) as z.ZodType<1 | 2 | 3 | 4 | 5>,
+  priceTier: z.number().min(1).max(5).default(2) as z.ZodType<1 | 2 | 3 | 4 | 5>,
+  alternativeProducts: z.array(InjectableAlternativeSchema).default([]),
 });
 
 const SolutionStepSchema = z.object({

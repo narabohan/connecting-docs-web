@@ -144,6 +144,15 @@ export interface EBDRecommendation {
 }
 
 // ─── Injectable Recommendation ────────────────────────────────
+export interface InjectableAlternative {
+  name: string;
+  oneLiner: string;
+  matchScore: number;
+  downtimeDisplay: string;
+  painLevel: 1 | 2 | 3 | 4 | 5;
+  priceTier: 1 | 2 | 3 | 4 | 5;
+}
+
 export interface InjectableRecommendation {
   rank: number;
   name: string;
@@ -161,6 +170,15 @@ export interface InjectableRecommendation {
   moaDescriptionHtml: string;
   practical: PracticalInfo;
   scores: Record<string, number>;
+  // ─── Category-first fields (Phase 3-C Task 7) ────────────
+  categoryNameKo: string;
+  categoryNameEn: string;
+  categoryReason: string;
+  matchScore: number;
+  downtimeDisplay: string;
+  painLevel: 1 | 2 | 3 | 4 | 5;
+  priceTier: 1 | 2 | 3 | 4 | 5;
+  alternativeProducts: InjectableAlternative[];
 }
 
 // ─── Signature Solution ───────────────────────────────────────
