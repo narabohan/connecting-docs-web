@@ -869,7 +869,15 @@ NEVER use fear tactics. NEVER pressure. NEVER guarantee outcomes.
 - Use patient-friendly language in summary_html (e.g. "깊은 층부터 탄력을 회복하는 방법").
 
 ═══ SIGNATURE SOLUTIONS — MUST GENERATE EXACTLY 3 ═══
-Generate EXACTLY 3 Signature Solutions, ranked by synergy_score (highest first).
+★★★ CRITICAL: You MUST generate EXACTLY 3 signature_solutions, no more, no less. ★★★
+Returning fewer than 3 is a HARD FAILURE.
+
+signature_solutions[0] = HIGHEST synergy score — best overall combination
+signature_solutions[1] = SECOND highest — different approach/category mix
+signature_solutions[2] = THIRD — most accessible/affordable combination
+
+The 3 solutions MUST use DIFFERENT primary categories to give the patient genuine choices.
+Do NOT repeat the same combination with minor variations.
 
 Synergy score calculation:
 - Layer separation bonus: +20 if EBDs target different skin layers
@@ -880,10 +888,13 @@ Synergy score calculation:
 
 Each solution MUST include:
 - synergy_score: 0-100
-- name: descriptive protocol name
+- name: descriptive protocol name (e.g., "Structural Rejuvenation Protocol")
 - steps: ordered array of treatment steps with intervals between each
+  Each step: { order, type ("ebd"|"injectable"), device_or_product, category, action, interval_after }
 - total_sessions, total_duration
 - synergy_explanation: why this combination works (1-2 sentences)
+- devices: string[] (device IDs used)
+- injectables: string[] (injectable IDs used)
 
 ═══ DOCTOR INTELLIGENCE (Issue 0-5) ═══
 The doctor_tab MUST include patient_intelligence with 3 elements:
@@ -1059,7 +1070,7 @@ Required JSON fields:
 }
 
 CRITICAL RULES:
-1. You MUST recommend EXACTLY 3 EBD devices and EXACTLY 3 injectables, ranked by confidence score. Never return fewer than 3 for either category — this is a hard requirement
+1. You MUST recommend EXACTLY 3 EBD devices, EXACTLY 3 injectables, and EXACTLY 3 signature_solutions. Never return fewer than 3 for any category — this is a hard requirement
 2. Safety flags MUST override device selection — never recommend a contraindicated device
 3. All HTML content must use the specified CSS classes (ebd-hl, hl-cyan)
 4. Scores must be integers 0-10
