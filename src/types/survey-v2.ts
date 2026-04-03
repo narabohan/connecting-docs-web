@@ -110,7 +110,12 @@ export type SafetyFlag =
   | 'RETINOID_PAUSE'
   | 'SAFETY_PREGNANCY'
   | 'SAFETY_KELOID'
-  | 'SAFETY_ADVERSE_HISTORY';
+  | 'SAFETY_ADVERSE_HISTORY'
+  // ─── Phase 3-B P1: 5 new safety conditions ───────────────
+  | 'SAFETY_DIABETES'
+  | 'SAFETY_METALLIC_IMPLANT'
+  | 'SAFETY_IMMUNOSUPPRESSANT'
+  | 'SAFETY_HERPES_SIMPLEX';
 
 export interface SafetyFollowUp {
   flag: SafetyFlag;

@@ -13,6 +13,8 @@ const MEDICATION_FLAG_MAP: Record<string, SafetyFlag | null> = {
   antibiotic: 'SAFETY_PHOTOSENSITIVITY',
   hormonal: null,  // HORMONAL flag는 멜라즈마 교차 시에만
   retinoid_topical: 'RETINOID_PAUSE',
+  immunosuppressant: 'SAFETY_IMMUNOSUPPRESSANT',
+  photosensitivity: 'SAFETY_PHOTOSENSITIVITY',
 };
 
 const CONDITION_FLAG_MAP: Record<string, SafetyFlag | null> = {
@@ -20,10 +22,13 @@ const CONDITION_FLAG_MAP: Record<string, SafetyFlag | null> = {
   pregnancy: 'SAFETY_PREGNANCY',
   keloid: 'SAFETY_KELOID',
   adverse_history: 'SAFETY_ADVERSE_HISTORY',
+  diabetes: 'SAFETY_DIABETES',
+  metallic_implant: 'SAFETY_METALLIC_IMPLANT',
+  herpes_simplex: 'SAFETY_HERPES_SIMPLEX',
 };
 
 // Items that show red border
-const DANGER_ITEMS = new Set(['isotretinoin', 'anticoagulant', 'pregnancy']);
+const DANGER_ITEMS = new Set(['isotretinoin', 'anticoagulant', 'pregnancy', 'metallic_implant']);
 
 // Items that need follow-up questions
 const FOLLOWUP_ITEMS = new Set(['isotretinoin', 'anticoagulant', 'adverse_history']);
@@ -92,6 +97,8 @@ export default function SafetyCheckpoint({
     { id: 'antibiotic', key: 'med_antibiotic' },
     { id: 'hormonal', key: 'med_hormonal' },
     { id: 'retinoid_topical', key: 'med_retinoid' },
+    { id: 'immunosuppressant', key: 'med_immunosuppressant' },
+    { id: 'photosensitivity', key: 'med_photosensitivity' },
   ];
 
   const CONDITION_OPTIONS: { id: string; key: keyof typeof t }[] = [
@@ -99,6 +106,9 @@ export default function SafetyCheckpoint({
     { id: 'pregnancy', key: 'cond_pregnancy' },
     { id: 'keloid', key: 'cond_keloid' },
     { id: 'adverse_history', key: 'cond_adverse' },
+    { id: 'diabetes', key: 'cond_diabetes' },
+    { id: 'metallic_implant', key: 'cond_metallic_implant' },
+    { id: 'herpes_simplex', key: 'cond_herpes_simplex' },
   ];
 
   // Find isotretinoin followup if active

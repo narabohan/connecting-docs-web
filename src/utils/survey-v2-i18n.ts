@@ -48,10 +48,17 @@ export interface SurveyV2Translations {
     med_antibiotic: string;
     med_hormonal: string;
     med_retinoid: string;
+    // New medication options (Phase 3-B P1)
+    med_immunosuppressant: string;
+    med_photosensitivity: string;
     // Condition options
     cond_pregnancy: string;
     cond_keloid: string;
     cond_adverse: string;
+    // New condition options (Phase 3-B P1)
+    cond_diabetes: string;
+    cond_metallic_implant: string;
+    cond_herpes_simplex: string;
     // Follow-up
     followup_title: string;
     isotretinoin_q: string;
@@ -186,9 +193,14 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       med_antibiotic: '항생제',
       med_hormonal: '호르몬제 (피임약, HRT)',
       med_retinoid: '레티놀/레티노이드 (바르는)',
+      med_immunosuppressant: '면역억제제 복용 중',
+      med_photosensitivity: '빛에 민감해지는 약물/질환',
       cond_pregnancy: '임신 중 또는 수유 중',
       cond_keloid: '켈로이드 체질',
       cond_adverse: '최근 피부 시술 후 부작용',
+      cond_diabetes: '당뇨 진단 또는 혈당 조절 중',
+      cond_metallic_implant: '체내 금속 이식물 또는 심박동기',
+      cond_herpes_simplex: '입술 주변 반복 수포(헤르페스) 이력',
       followup_title: '⚠️ 확인이 필요합니다',
       isotretinoin_q: '현재 복용 중인가요, 중단하셨나요?',
       isotretinoin_active: '현재 복용 중',
@@ -322,9 +334,14 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       med_antibiotic: 'Antibiotics',
       med_hormonal: 'Hormonal (Birth control, HRT)',
       med_retinoid: 'Topical retinol/retinoid',
+      med_immunosuppressant: 'Immunosuppressive medication',
+      med_photosensitivity: 'Photosensitizing medication or condition',
       cond_pregnancy: 'Pregnant or breastfeeding',
       cond_keloid: 'Keloid-prone skin',
       cond_adverse: 'Recent adverse reaction to treatment',
+      cond_diabetes: 'Diabetes or blood sugar management',
+      cond_metallic_implant: 'Metallic implant or pacemaker',
+      cond_herpes_simplex: 'Recurring cold sores (herpes simplex)',
       followup_title: '⚠️ Additional info needed',
       isotretinoin_q: 'Are you currently taking it, or have you stopped?',
       isotretinoin_active: 'Currently taking',
@@ -458,9 +475,14 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       med_antibiotic: '抗生物質',
       med_hormonal: 'ホルモン剤（ピル、HRT）',
       med_retinoid: 'レチノール/レチノイド（外用）',
+      med_immunosuppressant: '免疫抑制剤を服用中',
+      med_photosensitivity: '光過敏症の薬/疾患',
       cond_pregnancy: '妊娠中または授乳中',
       cond_keloid: 'ケロイド体質',
       cond_adverse: '最近の施術後の副反応',
+      cond_diabetes: '糖尿病の診断または血糖管理中',
+      cond_metallic_implant: '体内金属インプラントまたはペースメーカー',
+      cond_herpes_simplex: '口唇ヘルペスの再発歴',
       followup_title: '⚠️ 確認が必要です',
       isotretinoin_q: '現在服用中ですか、中止されましたか？',
       isotretinoin_active: '現在服用中',
@@ -594,9 +616,14 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       med_antibiotic: '抗生素',
       med_hormonal: '激素类（避孕药、HRT）',
       med_retinoid: '外用维A酸/视黄醇',
+      med_immunosuppressant: '正在服用免疫抑制剂',
+      med_photosensitivity: '光敏性药物或疾病',
       cond_pregnancy: '怀孕中或哺乳中',
       cond_keloid: '疤痕体质',
       cond_adverse: '近期治疗后有不良反应',
+      cond_diabetes: '糖尿病或血糖管理中',
+      cond_metallic_implant: '体内金属植入物或心脏起搏器',
+      cond_herpes_simplex: '反复发作的唇疱疹（单纯疱疹）',
       followup_title: '⚠️ 需要确认',
       isotretinoin_q: '您目前在服用还是已停药？',
       isotretinoin_active: '目前在服用',

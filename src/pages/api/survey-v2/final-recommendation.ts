@@ -441,6 +441,11 @@ const SAFETY_DEVICE_FILTERS: Record<SafetyFlag, string> = {
   SAFETY_PHOTOSENSITIVITY: 'LaseMD: stop 3-5 days prior. IPL/BBL: contraindicated. 1064nm only.',
   HORMONAL_MELASMA: 'Conservative approach for melasma. Avoid aggressive energy. Consider oral TXA 250mg BID. PW MN-RF preferred over CW.',
   RETINOID_PAUSE: 'WiQo: discontinue retinoid. MN-RF: stop 2 weeks prior. 48h post-procedure ban on retinoid.',
+  // ─── Phase 3-B P1: 5 new safety conditions ───────────────
+  SAFETY_DIABETES: 'Wound healing delay. Conservative energy settings for ablative/MN-RF. Infection risk elevated. Close post-care monitoring.',
+  SAFETY_METALLIC_IMPLANT: 'Monopolar RF (Thermage, Volnewmer, Oligio) ABSOLUTELY CONTRAINDICATED. Emface contraindicated. HIFU/laser/LED safe.',
+  SAFETY_IMMUNOSUPPRESSANT: 'Normal regeneration impaired. Infection risk high. Most invasive + energy procedures restricted. Doctor consultation mandatory.',
+  SAFETY_HERPES_SIMPLEX: 'Thermal energy can reactivate HSV. Antiviral prophylaxis (Valacyclovir) mandatory before laser/RF. Active lesion = absolute contraindication.',
 };
 
 // ─── Protocol Selection Logic ────────────────────────────────

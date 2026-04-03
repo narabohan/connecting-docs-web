@@ -286,6 +286,30 @@ function getFallbackFollowup(flag: SafetyFlag, lang: SurveyLang): SafetyFollowUp
       JP: { question: '', options: [] },
       'ZH-CN': { question: '', options: [] },
     },
+    SAFETY_DIABETES: {
+      KO: { question: '', options: [] },
+      EN: { question: '', options: [] },
+      JP: { question: '', options: [] },
+      'ZH-CN': { question: '', options: [] },
+    },
+    SAFETY_METALLIC_IMPLANT: {
+      KO: { question: '', options: [] },
+      EN: { question: '', options: [] },
+      JP: { question: '', options: [] },
+      'ZH-CN': { question: '', options: [] },
+    },
+    SAFETY_IMMUNOSUPPRESSANT: {
+      KO: { question: '', options: [] },
+      EN: { question: '', options: [] },
+      JP: { question: '', options: [] },
+      'ZH-CN': { question: '', options: [] },
+    },
+    SAFETY_HERPES_SIMPLEX: {
+      KO: { question: '', options: [] },
+      EN: { question: '', options: [] },
+      JP: { question: '', options: [] },
+      'ZH-CN': { question: '', options: [] },
+    },
   };
 
   const fallback = FALLBACKS[flag]?.[lang];

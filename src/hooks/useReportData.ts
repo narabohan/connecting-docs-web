@@ -90,6 +90,10 @@ const SAFETY_FLAG_META: Record<SafetyFlag, { severity: 'info' | 'warning' | 'cri
   SAFETY_ADVERSE_HISTORY: { severity: 'warning', message: 'Previous adverse treatment reaction' },
   HORMONAL_MELASMA: { severity: 'info', message: 'Hormonal melasma noted' },
   RETINOID_PAUSE: { severity: 'info', message: 'Recent retinoid use — pause required' },
+  SAFETY_DIABETES: { severity: 'warning', message: 'Diabetes — delayed wound healing risk' },
+  SAFETY_METALLIC_IMPLANT: { severity: 'critical', message: 'Metallic implant/pacemaker — RF contraindicated' },
+  SAFETY_IMMUNOSUPPRESSANT: { severity: 'critical', message: 'Immunosuppressive therapy — infection risk elevated' },
+  SAFETY_HERPES_SIMPLEX: { severity: 'warning', message: 'HSV history — antiviral prophylaxis recommended' },
 };
 
 function convertSafetyFlags(flags: SafetyFlag[]): ReportSafetyFlag[] {

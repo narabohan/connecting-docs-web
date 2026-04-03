@@ -180,6 +180,8 @@ export const SAFETY_RULES = {
     'immunosuppressant',
     'photosensitive_drug',
     'retinol',
+    'hormonal',
+    'antibiotic',
   ] as const,
 
   condition_flags: [
@@ -189,7 +191,8 @@ export const SAFETY_RULES = {
     'herpes_simplex',
     'autoimmune',
     'diabetes',
-    'metal_implant',
+    'metallic_implant',
+    'adverse_history',
   ] as const,
 
   /** §11 — 1일 최대 시술 안전 한계 (Max Cap) */

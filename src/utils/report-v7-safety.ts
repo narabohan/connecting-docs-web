@@ -35,6 +35,10 @@ const FLAG_LEVEL_MAP: Record<SafetyFlag, 'danger' | 'warning' | 'info'> = {
   SAFETY_PHOTOSENSITIVITY: 'warning',
   HORMONAL_MELASMA: 'info',
   RETINOID_PAUSE: 'info',
+  SAFETY_DIABETES: 'warning',
+  SAFETY_METALLIC_IMPLANT: 'danger',
+  SAFETY_IMMUNOSUPPRESSANT: 'danger',
+  SAFETY_HERPES_SIMPLEX: 'warning',
 };
 
 const FLAG_ICON_MAP: Record<string, string> = {
@@ -77,6 +81,22 @@ const CLINICAL_NOTES: Record<SafetyFlag, { ko: string; en: string }> = {
   RETINOID_PAUSE: {
     ko: '레티노이드 사용 중 → WiQo: 중단 필요, MN-RF: 2주 전 중단, 시술 후 48h 금지.',
     en: 'Active retinoid → WiQo: discontinue, MN-RF: stop 2 weeks prior, 48h post-procedure ban.',
+  },
+  SAFETY_DIABETES: {
+    ko: '당뇨 → 상처 치유 지연 가능. 에너지 세팅 보수적 권장. 감염 위험 주의.',
+    en: 'Diabetes → Delayed wound healing. Conservative energy settings recommended. Infection risk elevated.',
+  },
+  SAFETY_METALLIC_IMPLANT: {
+    ko: '체내 금속/심박동기 → 단극성 RF(써마지, 볼뉴머, 올리지오) 및 Emface 절대 금기. HIFU/레이저/LED 안전.',
+    en: 'Metallic implant/pacemaker → Monopolar RF (Thermage, Volnewmer, Oligio) & Emface absolutely contraindicated. HIFU/laser/LED safe.',
+  },
+  SAFETY_IMMUNOSUPPRESSANT: {
+    ko: '면역억제제 복용 → 정상 재생 반응 불가. 감염 위험 높음. 대부분 침습 + 에너지 시술 제약.',
+    en: 'Immunosuppressive therapy → Normal regeneration impaired. High infection risk. Most invasive + energy procedures restricted.',
+  },
+  SAFETY_HERPES_SIMPLEX: {
+    ko: '단순포진 재발 이력 → 열 에너지가 바이러스 재활성화 유발 가능. 시술 전 항바이러스제 예방 투여 필수.',
+    en: 'HSV history → Thermal energy may reactivate virus. Antiviral prophylaxis (Valacyclovir) mandatory before laser/RF.',
   },
 };
 
