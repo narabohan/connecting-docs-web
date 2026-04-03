@@ -5,7 +5,7 @@
 //  Phase 3-B: FSM-driven branching (skin profile → past history → visit plan → adverse)
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useSurveyV2 } from '@/hooks/useSurveyV2';
 import { useSurveyStateMachine } from '@/hooks/useSurveyStateMachine';
@@ -92,6 +92,14 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
   // between chips and safety.
   const fsm = useSurveyStateMachine('SMART_CHIPS');
   const [fsmBranchActive, setFsmBranchActive] = useState(false);
+
+  // ─── Auto-skip stay_duration when visit_plan already captured stay days ──
+  useEffect(() => {
+    if (step === 'stay_duration' && fsm.branchResponses.visit_plan?.stay_days) {
+      setStayDuration(fsm.branchResponses.visit_plan.stay_days);
+      navigateTo('messenger');
+    }
+  }, [step, fsm.branchResponses.visit_plan, setStayDuration, navigateTo]);
 
   const t = SURVEY_V2_I18N[lang];
 
