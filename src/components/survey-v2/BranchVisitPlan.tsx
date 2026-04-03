@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { SurveyLang } from '@/types/survey-v2';
-import type { VisitPlanBranch } from '@/hooks/useSurveyStateMachine';
+import type { VisitPlanBranch, RevisitCycle } from '@/hooks/useSurveyStateMachine';
 import { SURVEY_V2_I18N } from '@/utils/survey-v2-i18n';
 
 interface BranchVisitPlanProps {
@@ -25,6 +25,7 @@ export default function BranchVisitPlan({ lang, initialData, onComplete, onBack 
   const [arrival, setArrival] = useState(initialData?.arrival_date ?? '');
   const [departure, setDeparture] = useState(initialData?.departure_date ?? '');
   const [area, setArea] = useState(initialData?.accommodation_area ?? '');
+  const [revisitCycle, setRevisitCycle] = useState<RevisitCycle | undefined>(initialData?.revisit_cycle);
 
   const isComplete = stayDays > 0;
 
@@ -35,6 +36,7 @@ export default function BranchVisitPlan({ lang, initialData, onComplete, onBack 
       arrival_date: arrival,
       departure_date: departure,
       accommodation_area: area.trim(),
+      revisit_cycle: revisitCycle,
     });
   };
 
@@ -100,6 +102,31 @@ export default function BranchVisitPlan({ lang, initialData, onComplete, onBack 
           placeholder={t.area_placeholder}
           className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-400"
         />
+      </div>
+
+      {/* Revisit Cycle (Q6-2) */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">{t.revisit_label}</label>
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            { value: 'first_time' as RevisitCycle, key: 'revisit_first_time' as const },
+            { value: 'yearly' as RevisitCycle, key: 'revisit_yearly' as const },
+            { value: 'biannual' as RevisitCycle, key: 'revisit_biannual' as const },
+            { value: 'quarterly' as RevisitCycle, key: 'revisit_quarterly' as const },
+          ]).map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setRevisitCycle(opt.value)}
+              className={`px-4 py-3 rounded-xl text-center text-sm font-medium transition-all ${
+                revisitCycle === opt.value
+                  ? 'bg-blue-50 border-blue-500 text-blue-600 border'
+                  : 'bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {t[opt.key]}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Navigation */}

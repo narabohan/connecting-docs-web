@@ -50,11 +50,14 @@ export interface PastHistoryBranch {
   had_adverse: boolean;
 }
 
+export type RevisitCycle = 'first_time' | 'yearly' | 'biannual' | 'quarterly';
+
 export interface VisitPlanBranch {
   stay_days: number;
   arrival_date: string;      // YYYY-MM-DD or ''
   departure_date: string;    // YYYY-MM-DD or ''
   accommodation_area: string;
+  revisit_cycle?: RevisitCycle;
 }
 
 export interface AdverseBranch {
@@ -258,10 +261,17 @@ export function derivePatientSegment(
     return 'VIP';
   }
 
-  // VIP: premium + yearly visit (1회에 확실한 결과)
-  // Note: revisit_cycle not yet in VisitPlanBranch, but stay_days > 0 indicates travel patient
+  // VIP: premium + yearly or less frequent visit (1회에 확실한 결과)
   if (budget_segment === 'premium' && visitPlan && visitPlan.stay_days > 0) {
-    return 'VIP';
+    const cycle = visitPlan.revisit_cycle;
+    if (!cycle || cycle === 'first_time' || cycle === 'yearly') {
+      return 'VIP';
+    }
+  }
+
+  // PREMIUM: frequent revisitors (biannual/quarterly) even with premium budget
+  if (budget_segment === 'premium' && visitPlan?.revisit_cycle === 'quarterly') {
+    return 'PREMIUM';
   }
 
   // Budget: 가성비 선택

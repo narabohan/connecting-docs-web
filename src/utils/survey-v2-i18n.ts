@@ -106,6 +106,11 @@ export interface SurveyV2Translations {
     departure: string;
     area: string;
     area_placeholder: string;
+    revisit_label: string;
+    revisit_first_time: string;
+    revisit_yearly: string;
+    revisit_biannual: string;
+    revisit_quarterly: string;
   };
   branch_adverse: {
     title: string;
@@ -271,6 +276,11 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       departure: '출발일',
       area: '숙소/선호 지역',
       area_placeholder: '강남, 서초, 홍대 등',
+      revisit_label: '한국 방문 주기는 어떻게 되시나요?',
+      revisit_first_time: '처음 방문',
+      revisit_yearly: '매년 1회',
+      revisit_biannual: '6개월마다',
+      revisit_quarterly: '3개월마다',
     },
     branch_adverse: {
       title: '부작용 경험을 알려주세요',
@@ -413,6 +423,11 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       departure: 'Departure date',
       area: 'Accommodation / preferred area',
       area_placeholder: 'e.g., Gangnam, Apgujeong, Hongdae',
+      revisit_label: 'How often do you visit Korea?',
+      revisit_first_time: 'First time',
+      revisit_yearly: 'Once a year',
+      revisit_biannual: 'Every 6 months',
+      revisit_quarterly: 'Every 3 months',
     },
     branch_adverse: {
       title: 'Tell us about the side effects',
@@ -555,6 +570,11 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       departure: '出発日',
       area: '宿泊先・希望エリア',
       area_placeholder: '例：江南、瑞草、弘大',
+      revisit_label: '韓国への訪問頻度を教えてください',
+      revisit_first_time: '初めて',
+      revisit_yearly: '年1回',
+      revisit_biannual: '6ヶ月ごと',
+      revisit_quarterly: '3ヶ月ごと',
     },
     branch_adverse: {
       title: '副作用の経験を教えてください',
@@ -697,6 +717,11 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       departure: '出发日期',
       area: '住宿/偏好区域',
       area_placeholder: '例如：江南、瑞草、弘大',
+      revisit_label: '您多久来一次韩国？',
+      revisit_first_time: '第一次',
+      revisit_yearly: '每年一次',
+      revisit_biannual: '每6个月',
+      revisit_quarterly: '每3个月',
     },
     branch_adverse: {
       title: '请告诉我们副作用的详情',
