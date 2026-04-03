@@ -200,11 +200,27 @@ const BudgetSegmentSchema = z.object({
   amount: z.string().default(''),
 });
 
+const BudgetLineItemSchema = z.object({
+  treatment: z.string().default(''),
+  category: z.string().default(''),
+  sessions: z.number().default(1),
+  unitPrice: z.string().default(''),
+  subtotal: z.string().default(''),
+});
+
+const BudgetTierGuideSchema = z.object({
+  tier: z.enum(['premium', 'standard', 'value']).default('standard'),
+  range: z.string().default(''),
+  description: z.string().default(''),
+});
+
 const BudgetEstimateSchema = z.object({
   totalRange: z.string().default(''),
   segments: z.array(BudgetSegmentSchema).default([]),
+  lineItems: z.array(BudgetLineItemSchema).default([]),
+  tierGuides: z.array(BudgetTierGuideSchema).default([]),
   roiNote: z.string().default(''),
-}).default({ totalRange: '', segments: [], roiNote: '' });
+}).default({ totalRange: '', segments: [], lineItems: [], tierGuides: [], roiNote: '' });
 
 const BudgetTimelineSchema = z.object({
   budgetTier: z.enum(['Economy', 'Standard', 'Premium']).default('Standard'),

@@ -330,7 +330,7 @@ function convertPayloadToReportV7Data(
     signatureSolutions: convertSignatureSolutions(rec.signature_solutions),
     treatmentPlan: convertTreatmentPlan(rec.treatment_plan),
     homecare: convertHomecare(rec.homecare),
-    budgetEstimate: { totalRange: '', segments: [], roiNote: '' }, // Phase 1: budget generation
+    budgetEstimate: { totalRange: '', segments: [], lineItems: [], tierGuides: [], roiNote: '' }, // Phase 1: budget generation
     doctorTab: convertDoctorTab(rec.doctor_tab),
   };
 }

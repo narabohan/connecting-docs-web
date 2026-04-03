@@ -133,6 +133,47 @@ export const CONCERN_TO_CATEGORY_MAP: Record<string, {
   },
 };
 
+// ─── Price Map (KRW) — Phase 3-C Task 5 ────────────────────
+
+export interface PriceEntry {
+  krMin: number;
+  krMax: number;
+  unit: string;
+}
+
+export const PRICE_MAP: Record<string, PriceEntry> = {
+  // HIFU
+  ultherapy: { krMin: 1500000, krMax: 3000000, unit: 'session' },
+  ultraformer_mpt: { krMin: 300000, krMax: 800000, unit: 'session' },
+  shrink_universe: { krMin: 200000, krMax: 500000, unit: 'session' },
+  sofwave: { krMin: 800000, krMax: 1500000, unit: 'session' },
+  // MN_RF
+  genius: { krMin: 500000, krMax: 1200000, unit: 'session' },
+  potenza: { krMin: 300000, krMax: 800000, unit: 'session' },
+  sylfirm_x: { krMin: 200000, krMax: 600000, unit: 'session' },
+  secret_rf: { krMin: 200000, krMax: 500000, unit: 'session' },
+  // SAR
+  neosculpt: { krMin: 500000, krMax: 1000000, unit: 'session' },
+  // VSLS
+  reepot: { krMin: 300000, krMax: 800000, unit: 'session' },
+  // VDH
+  alltite: { krMin: 300000, krMax: 700000, unit: 'session' },
+  // Thulium
+  lasemd_ultra: { krMin: 150000, krMax: 400000, unit: 'session' },
+  // PICO
+  picosure: { krMin: 200000, krMax: 500000, unit: 'session' },
+  picoplus: { krMin: 150000, krMax: 400000, unit: 'session' },
+  // HIFES
+  emface: { krMin: 400000, krMax: 800000, unit: 'session' },
+  // Injectable
+  sculptra: { krMin: 300000, krMax: 600000, unit: 'vial' },
+  rejuran: { krMin: 150000, krMax: 300000, unit: 'syringe' },
+  juvelook: { krMin: 200000, krMax: 400000, unit: 'syringe' },
+  botox: { krMin: 100000, krMax: 300000, unit: 'unit_100' },
+  filler_ha: { krMin: 300000, krMax: 800000, unit: 'syringe' },
+  exosome: { krMin: 200000, krMax: 500000, unit: 'vial' },
+};
+
 // ─── Build prompt block for AI recommendation engine ─────────
 
 export function buildClinicalRulesPromptBlock(primaryConcern: string | null): string {

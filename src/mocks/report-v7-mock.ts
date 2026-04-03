@@ -456,9 +456,22 @@ export const MOCK_REPORT_V7: ReportV7Data = {
   budgetEstimate: {
     totalRange: '₩2,500,000 ~ ₩4,200,000',
     segments: [
-      { label: 'Sylfirm X + LaseMD', category: 'foundation', percentage: 35, amount: '₩875,000~₩1,470,000' },
-      { label: 'Sofwave + Injectable', category: 'main', percentage: 50, amount: '₩1,250,000~₩2,100,000' },
-      { label: '유지 시술', category: 'maintenance', percentage: 15, amount: '₩375,000~₩630,000' },
+      { label: 'Sylfirm X + LaseMD', category: 'foundation' as const, percentage: 35, amount: '₩875,000~₩1,470,000' },
+      { label: 'Sofwave + Injectable', category: 'main' as const, percentage: 50, amount: '₩1,250,000~₩2,100,000' },
+      { label: '유지 시술', category: 'maintenance' as const, percentage: 15, amount: '₩375,000~₩630,000' },
+    ],
+    lineItems: [
+      { treatment: 'Sofwave', category: 'HIFU', sessions: 1, unitPrice: '₩800K~₩1.5M', subtotal: '₩800K~₩1.5M' },
+      { treatment: 'Sylfirm X', category: 'MN_RF', sessions: 3, unitPrice: '₩200K~₩600K', subtotal: '₩600K~₩1.8M' },
+      { treatment: 'LaseMD Ultra', category: 'THULIUM', sessions: 1, unitPrice: '₩150K~₩400K', subtotal: '₩150K~₩400K' },
+      { treatment: 'Rejuran Healer', category: 'PN', sessions: 1, unitPrice: '₩150K~₩300K', subtotal: '₩150K~₩300K' },
+      { treatment: 'Juvelook', category: 'PDLLA', sessions: 1, unitPrice: '₩200K~₩400K', subtotal: '₩200K~₩400K' },
+      { treatment: 'Botox (교근)', category: 'BTX', sessions: 1, unitPrice: '₩100K~₩300K', subtotal: '₩100K~₩300K' },
+    ],
+    tierGuides: [
+      { tier: 'premium' as const, range: '₩4M~₩5.2M', description: '최고 효과: Ultherapy + Genius + Sculptra' },
+      { tier: 'standard' as const, range: '₩2.5M~₩3.5M', description: '균형: Sofwave + Sylfirm X + Rejuran' },
+      { tier: 'value' as const, range: '₩1.5M~₩2.5M', description: '가성비: Shrink + Secret RF + LaseMD' },
     ],
     roiNote: '3개월 집중 치료 후 연간 유지 비용은 초기 비용의 약 20-30% 수준입니다.',
   },

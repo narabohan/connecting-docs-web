@@ -306,15 +306,33 @@ export interface BudgetSegment {
   amount: string;
 }
 
+export interface BudgetLineItem {
+  treatment: string;
+  category: string;
+  sessions: number;
+  unitPrice: string;
+  subtotal: string;
+}
+
+export interface BudgetTierGuide {
+  tier: 'premium' | 'standard' | 'value';
+  range: string;
+  description: string;
+}
+
 export interface BudgetEstimate {
   totalRange: string;
   segments: BudgetSegment[];
+  lineItems: BudgetLineItem[];
+  tierGuides: BudgetTierGuide[];
   roiNote: string;
 }
 
 export const DEFAULT_BUDGET_ESTIMATE: BudgetEstimate = {
   totalRange: '',
   segments: [],
+  lineItems: [],
+  tierGuides: [],
   roiNote: '',
 };
 
