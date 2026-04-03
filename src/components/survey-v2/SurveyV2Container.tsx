@@ -85,6 +85,7 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
     haikuAnalysis,
     mapChipResponses,
     navigateTo,
+    setBranchResponses,
   } = useSurveyV2({ onComplete });
 
   // ─── FSM Hook (Phase 3-B) ──────────────────────────────────
@@ -144,13 +145,19 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
       const nextNode = fsm.advance(signals);
 
       if (!BRANCH_NODE_SET.has(nextNode)) {
-        // All branches done — resume main flow at safety
+        // All branches done — sync branch data to useSurveyV2 for API call
+        const allBranch = { ...fsm.branchResponses, [branchKey]: data };
+        setBranchResponses(allBranch as Record<string, unknown>);
+        // Also sync stay_days from visit_plan to stay_duration
+        const vp = allBranch.visit_plan;
+        if (vp?.stay_days) setStayDuration(vp.stay_days);
+        // Resume main flow at safety
         setFsmBranchActive(false);
         navigateTo('safety');
       }
       // Otherwise stays in branch mode; component re-renders with new fsm.currentNode
     },
-    [fsm, buildSignals, navigateTo]
+    [fsm, buildSignals, navigateTo, setBranchResponses, setStayDuration]
   );
 
   // ─── Branch Back Handler ─────────────────────────────────────

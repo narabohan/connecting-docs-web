@@ -47,6 +47,8 @@ export interface FinalRecommendationRequest {
   stay_duration?: number | null;
   management_frequency?: ManagementFrequency | null;
   event_info?: EventInfo | null;
+  // Phase 3-B branch responses (visit_plan, past_history, skin_profile, adverse)
+  branch_responses?: Record<string, unknown> | null;
 }
 
 export interface FinalRecommendationResponse {
@@ -1114,11 +1116,15 @@ CRITICAL RULES:
 8. CONCISENESS IS CRITICAL — keep EBD/injectable HTML fields to 1-2 short sentences max. Keep summary_html under 40 words, why_fit_html under 60 words, moa_description_html under 50 words. EXCEPTION: mirror.empathy_paragraphs (~800 tokens) and confidence.reason_why (~350 tokens) can be 2-3 paragraphs — these are the emotional core of the report. The complete JSON MUST fit within 16000 tokens.
 9. TREND & POPULARITY SCORES ARE MANDATORY — every device and injectable must have realistic trend (0-10) and popularity (0-10) scores based on the rules in the TREND & POPULARITY WEIGHTING section. Use them as tiebreaker when confidence is within 5 points.
 10. MIRROR + CONFIDENCE + DOCTOR INTELLIGENCE ARE MANDATORY — mirror (headline, empathy_paragraphs, transition) and confidence (reason_why, social_proof, commitment) must be generated for every patient using the COUNTRY-SPECIFIC EMOTIONAL LANGUAGE LIBRARY and REASON WHY KNOWLEDGE BASE. doctor_tab.patient_intelligence and doctor_tab.consultation_strategy must be fully populated.
-11. GENERATE treatment_plan with a day-by-day schedule if the patient has stay_duration data.
-    Include: title, total_visits, total_duration, schedule (array of day objects), precautions.
-    Each schedule day: { day: "Day 1", treatments: [{ type, device_or_product, category, duration_minutes, note }], post_care }.
-    Rules: high-downtime treatments on LAST day, max 3 energy devices + 2 injectables per day, consultation on Day 1.
-    If no stay_duration data, return treatment_plan: { "phases": [], "schedule": [], "precautions": [] }.
+11. GENERATE treatment_plan — THIS IS MANDATORY.
+    IF stay_duration OR visit_plan data is provided (arrival_date, departure_date, stay_days):
+      Generate a COMPLETE day-by-day schedule. DO NOT return empty arrays.
+      Include: title, total_visits, total_duration, schedule (array of day objects), precautions.
+      Each schedule day: { day: "Day 1", treatments: [{ type, device_or_product, category, duration_minutes, note }], post_care }.
+      Rules: high-downtime treatments on LAST day, max 3 energy devices + 2 injectables per day, consultation on Day 1.
+    IF NO stay data:
+      Generate a phase-based treatment plan with general timeline recommendations.
+      Return treatment_plan: { phases: [{phase, duration, treatments}], schedule: [], precautions: [] }.
 12. ★★★ CATEGORY-FIRST DEVICE SELECTION IS MANDATORY ★★★
     You MUST follow the CATEGORY-BASED CLINICAL MAPPING in the dynamic section below.
     a) First, identify the patient's classified_concern (provided in PATIENT DATA or inferred from responses).
@@ -1414,6 +1420,13 @@ Budget: ${req.budget ? `${req.budget.range} (${req.budget.type})` : 'Not specifi
 ${req.stay_duration ? `Stay Duration: ${req.stay_duration} days` : ''}
 ${req.management_frequency ? `Management Frequency: ${req.management_frequency}` : ''}
 ${req.event_info ? `Event: ${req.event_info.type} on ${req.event_info.date}` : ''}
+${req.branch_responses ? `
+═══ PHASE 3-B: BRANCH DATA ═══
+${(req.branch_responses as Record<string, unknown>).visit_plan ? `Visit Plan: ${JSON.stringify((req.branch_responses as Record<string, unknown>).visit_plan)}` : ''}
+${(req.branch_responses as Record<string, unknown>).past_history ? `Past Treatment History: ${JSON.stringify((req.branch_responses as Record<string, unknown>).past_history)}` : ''}
+${(req.branch_responses as Record<string, unknown>).skin_profile ? `Skin Profile: ${JSON.stringify((req.branch_responses as Record<string, unknown>).skin_profile)}` : ''}
+${(req.branch_responses as Record<string, unknown>).adverse ? `Adverse History: ${JSON.stringify((req.branch_responses as Record<string, unknown>).adverse)}` : ''}
+` : ''}
 
 ═══ CLINICAL_SPEC §8: PATIENT SEGMENT ═══
 (Use DEVICE MAPPING RULES above to prioritize devices for this segment)

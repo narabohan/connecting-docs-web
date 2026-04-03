@@ -248,6 +248,9 @@ export interface SurveyV2State {
   event_info: EventInfo | null;
   location_preference: LocationPreference | null;
 
+  // Phase 3-B branch responses (skin_profile, past_history, visit_plan, adverse)
+  branch_responses: Record<string, unknown> | null;
+
   // Step 6 (Messenger contact for async notification)
   messenger_contact: MessengerContact | null;
 
@@ -317,6 +320,7 @@ export type SurveyAction =
   | { type: 'SET_EVENT_INFO'; payload: EventInfo | null }
   | { type: 'SET_LOCATION_PREFERENCE'; payload: LocationPreference | null }
   | { type: 'SET_MESSENGER_CONTACT'; payload: MessengerContact }
+  | { type: 'SET_BRANCH_RESPONSES'; payload: Record<string, unknown> }
   | { type: 'RESET' };
 
 // ─── WizardData 호환 매핑 (v1 → v2) ─────────────────────────

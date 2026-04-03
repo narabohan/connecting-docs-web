@@ -70,6 +70,7 @@ const initialState: SurveyV2State = {
   management_frequency: null,
   event_info: null,
   location_preference: null,
+  branch_responses: null,
   messenger_contact: null,
   q1_primary_goal: null,
   q1_goal_secondary: null,
@@ -170,6 +171,9 @@ function surveyReducer(state: SurveyV2State, action: SurveyAction): SurveyV2Stat
 
     case 'SET_LOCATION_PREFERENCE':
       return { ...state, location_preference: action.payload };
+
+    case 'SET_BRANCH_RESPONSES':
+      return { ...state, branch_responses: action.payload };
 
     case 'SET_MESSENGER_CONTACT':
       return { ...state, messenger_contact: action.payload };
@@ -541,6 +545,11 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
     setError(null);
   }, []);
 
+  // ─── Branch Responses (from FSM) ────────────────────────
+  const setBranchResponses = useCallback((responses: Record<string, unknown>) => {
+    dispatch({ type: 'SET_BRANCH_RESPONSES', payload: responses });
+  }, []);
+
   // ─── Messenger Contact ──────────────────────────────────
   const setMessengerContact = useCallback((contact: MessengerContact) => {
     dispatch({ type: 'SET_MESSENGER_CONTACT', payload: contact });
@@ -577,6 +586,13 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
         q2_risk_flags: state.q2_risk_flags,
         q2_pigment_pattern: state.q2_pigment_pattern,
         q3_volume_logic: state.q3_volume_logic,
+        // Phase 2 fields — budget, stay duration, management frequency
+        budget: state.budget,
+        stay_duration: state.stay_duration,
+        management_frequency: state.management_frequency,
+        event_info: state.event_info,
+        // Phase 3-B branch responses (visit_plan, past_history, etc.)
+        branch_responses: state.branch_responses,
       };
 
       // Transition to analyzing step — show loading UX
@@ -888,5 +904,7 @@ export function useSurveyV2({ onComplete }: UseSurveyV2Props) {
     setMessengerContact,
     submitMessenger,
     goBack,
+    // Phase 3-B branch responses
+    setBranchResponses,
   };
 }

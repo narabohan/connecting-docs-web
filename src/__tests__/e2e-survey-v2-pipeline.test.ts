@@ -89,6 +89,7 @@ const SCENARIO_A_STATE: SurveyV2State = {
   management_frequency: null,
   event_info: null,
   location_preference: null,
+  branch_responses: null,
   messenger_contact: null,
 };
 
@@ -143,6 +144,7 @@ const SCENARIO_B_STATE: SurveyV2State = {
   management_frequency: null,
   event_info: null,
   location_preference: null,
+  branch_responses: null,
   messenger_contact: null,
 };
 
@@ -199,6 +201,7 @@ const SCENARIO_C_STATE: SurveyV2State = {
   management_frequency: null,
   event_info: null,
   location_preference: null,
+  branch_responses: null,
   messenger_contact: null,
 };
 
