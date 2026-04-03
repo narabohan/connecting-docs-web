@@ -52,7 +52,7 @@ export interface PastHistoryBranch {
   pih_history?: 'yes' | 'no' | 'unsure';  // PIH 경험 여부
 }
 
-export type RevisitCycle = 'first_time' | 'yearly' | 'biannual' | 'quarterly';
+export type RevisitCycle = 'first_time' | 'yearly' | 'biannual' | 'quarterly' | 'monthly' | 'occasional';
 
 export interface VisitPlanBranch {
   stay_days: number;

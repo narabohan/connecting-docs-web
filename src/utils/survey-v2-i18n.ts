@@ -115,6 +115,8 @@ export interface SurveyV2Translations {
     revisit_yearly: string;
     revisit_biannual: string;
     revisit_quarterly: string;
+    revisit_monthly: string;
+    revisit_occasional: string;
   };
   branch_adverse: {
     title: string;
@@ -291,6 +293,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       revisit_yearly: '매년 1회',
       revisit_biannual: '6개월마다',
       revisit_quarterly: '3개월마다',
+      revisit_monthly: '매월',
+      revisit_occasional: '비정기',
     },
     branch_adverse: {
       title: '부작용 경험을 알려주세요',
@@ -444,6 +448,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       revisit_yearly: 'Once a year',
       revisit_biannual: 'Every 6 months',
       revisit_quarterly: 'Every 3 months',
+      revisit_monthly: 'Every month',
+      revisit_occasional: 'Occasional / Not regular',
     },
     branch_adverse: {
       title: 'Tell us about the side effects',
@@ -597,6 +603,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       revisit_yearly: '年1回',
       revisit_biannual: '6ヶ月ごと',
       revisit_quarterly: '3ヶ月ごと',
+      revisit_monthly: '毎月',
+      revisit_occasional: '不定期',
     },
     branch_adverse: {
       title: '副作用の経験を教えてください',
@@ -750,6 +758,8 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       revisit_yearly: '每年一次',
       revisit_biannual: '每6个月',
       revisit_quarterly: '每3个月',
+      revisit_monthly: '每月',
+      revisit_occasional: '不定期',
     },
     branch_adverse: {
       title: '请告诉我们副作用的详情',
