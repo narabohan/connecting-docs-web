@@ -629,6 +629,38 @@ Select injectables based on:
 - Biostimulator (Sculptra, Lanluma): collagen stimulation, good for volume loss
 - Exosome (ASCE+): regeneration, good for all skin types
 
+═══ INJECTABLE PRODUCT CATALOG (USE REAL NAMES ONLY) ═══
+★★★ CRITICAL: injectable_recommendations MUST use REAL product names from this catalog. ★★★
+DO NOT return generic names like "Recommended Injectable 1". DO NOT return empty arrays.
+
+SKIN_BOOSTER category:
+  - Rejuran Healer (PN/PDRN, tissue repair, pain=2, price=3, downtime=1-2 days)
+  - Rejuran HB (PN+HA hybrid, hydration+repair, pain=2, price=3, downtime=1-2 days)
+  - Juvelook Skin (PDLLA+HA, collagen boost, pain=2, price=3, downtime=1-2 days)
+  - NCTF 135HA (multi-vitamin cocktail, revitalization, pain=2, price=2, downtime=1 day)
+  - Profhilo (stabilized HA, bio-remodeling, pain=2, price=4, downtime=none)
+
+BIOSTIMULATOR category:
+  - Sculptra (PLLA, deep collagen stimulation, pain=3, price=5, downtime=2-3 days swelling)
+  - Ellanse (PCL+CMC, instant fill + collagen, pain=3, price=5, downtime=1-2 days)
+  - Juvelook Volume (PDLLA, volume + collagen, pain=2, price=4, downtime=1-2 days)
+  - Lanluma (PLLA for body, pain=2, price=4, downtime=2-3 days)
+
+TOXIN category:
+  - Botox (onabotulinumtoxinA, gold standard, pain=1, price=3, downtime=none)
+  - Dysport (abobotulinumtoxinA, faster onset, pain=1, price=3, downtime=none)
+  - Xeomin (incobotulinumtoxinA, pure toxin, pain=1, price=3, downtime=none)
+  - Nabota (prabotulinumtoxinA, Korean premium, pain=1, price=2, downtime=none)
+
+FILLER category:
+  - Restylane (NASHA HA, natural results, pain=2, price=4, downtime=1-3 days)
+  - Juvederm (Vycross HA, smooth texture, pain=2, price=4, downtime=1-3 days)
+  - Belotero (CPM HA, superficial lines, pain=2, price=3, downtime=1-2 days)
+
+EXOSOME category:
+  - ASCE+ (exosome complex, regeneration, pain=1, price=5, downtime=none)
+  - ExoSCRT (exosome serum, anti-aging, pain=1, price=4, downtime=none)
+
 ═══ 3-LAYER PATIENT REPORT (MIRROR_CONFIDENCE_PROMPT) ═══
 The patient report follows a 3-layer philosophy: Mirror → Confidence → Solution.
 
@@ -1070,7 +1102,9 @@ Required JSON fields:
 }
 
 CRITICAL RULES:
-1. You MUST recommend EXACTLY 3 EBD devices, EXACTLY 3 injectables, and EXACTLY 3 signature_solutions. Never return fewer than 3 for any category — this is a hard requirement
+1. You MUST recommend EXACTLY 3 EBD devices, EXACTLY 3 injectables, and EXACTLY 3 signature_solutions. Never return fewer than 3 for any category — this is a hard requirement.
+   STRICT SEPARATION: ebd_recommendations ONLY contains energy-based devices (lasers, RF, ultrasound, HIFU, etc.). NEVER include injectables like Sculptra, Rejuran, Botox, fillers in ebd_recommendations. injectable_recommendations ONLY contains injectable products from the INJECTABLE PRODUCT CATALOG. NEVER include energy-based devices in injectable_recommendations.
+   Each injectable MUST use a REAL product name from the INJECTABLE PRODUCT CATALOG above — NOT generic names like "Recommended Injectable 1".
 2. Safety flags MUST override device selection — never recommend a contraindicated device
 3. All HTML content must use the specified CSS classes (ebd-hl, hl-cyan)
 4. Scores must be integers 0-10
