@@ -318,7 +318,15 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
                 key="budget"
                 lang={lang}
                 country={demographics.detected_country}
-                onSubmit={submitBudget}
+                onSubmit={() => {
+                  // Skip stay_duration step if visit_plan branch already captured stay days
+                  if (fsm.branchResponses.visit_plan?.stay_days) {
+                    setStayDuration(fsm.branchResponses.visit_plan.stay_days);
+                    navigateTo('messenger');
+                  } else {
+                    submitBudget();
+                  }
+                }}
                 onBudgetChange={setBudget}
                 onEventChange={setEventInfo}
                 isLoading={isLoading}
