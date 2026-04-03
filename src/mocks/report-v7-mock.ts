@@ -352,6 +352,9 @@ export const MOCK_REPORT_V7: ReportV7Data = {
 
   // ─── Treatment Plan ────────────────────────────────────────
   treatmentPlan: {
+    title: '5일 체류 맞춤 시술 플랜',
+    totalVisits: 4,
+    totalDuration: '5일',
     phases: [
       {
         phase: 1,
@@ -381,6 +384,45 @@ export const MOCK_REPORT_V7: ReportV7Data = {
         treatments: ['Sylfirm X 유지 (현지 의원)', 'Rejuran 부스터'],
         goal: '기미 재발 방지 + 콜라겐 유지',
       },
+    ],
+    schedule: [
+      {
+        day: 'Day 1 (도착일)',
+        treatments: [
+          { type: 'consultation' as const, deviceOrProduct: 'Consultation + Skin Analysis', category: '', durationMinutes: 30, note: '피부 상태 정밀 분석 + 시술 계획 확정' },
+          { type: 'ebd' as const, deviceOrProduct: 'Sylfirm X', category: 'MN_RF', durationMinutes: 25, note: 'PW 모드 — 기미 집중 치료' },
+          { type: 'injectable' as const, deviceOrProduct: 'Rejuran Healer', category: 'PN', durationMinutes: 20, note: 'PDRN 피부 재생 부스터' },
+        ],
+        postCare: '냉찜질 20분, 세안 4시간 후 가능',
+      },
+      {
+        day: 'Day 3',
+        treatments: [
+          { type: 'ebd' as const, deviceOrProduct: 'Sofwave', category: 'HIFU', durationMinutes: 40, note: 'SMAS층 초음파 리프팅 — 턱선 + 중안면' },
+        ],
+        postCare: '약한 홍조 가능, 자외선 차단 필수',
+      },
+      {
+        day: 'Day 4',
+        treatments: [
+          { type: 'ebd' as const, deviceOrProduct: 'LaseMD Ultra', category: 'THULIUM', durationMinutes: 20, note: '표피 색소 정리 + 톤 개선' },
+          { type: 'injectable' as const, deviceOrProduct: 'Juvelook', category: 'PDLLA', durationMinutes: 15, note: '콜라겐 부스터 — 볼 탄력' },
+        ],
+        postCare: '보습 집중, 사우나/음주 3일간 금지',
+      },
+      {
+        day: 'Day 5 (출국일)',
+        treatments: [
+          { type: 'injectable' as const, deviceOrProduct: 'Botox (교근)', category: 'BTX', durationMinutes: 10, note: 'V라인 슬리밍 — 출국 전 마지막 시술' },
+        ],
+        postCare: '4시간 누우면 안 됨, 기내에서 보습 마스크 추천',
+      },
+    ],
+    precautions: [
+      'Sylfirm X 시술 후 24시간 세안 자제',
+      'Sofwave 시술 부위 3일간 뜨거운 물 금지',
+      '모든 시술 후 SPF 50+ 자외선 차단제 필수 (2시간마다 재도포)',
+      '귀국 후 1주일간 사우나, 찜질방, 격렬한 운동 금지',
     ],
   },
 

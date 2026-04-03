@@ -163,9 +163,28 @@ const TreatmentPhaseSchema = z.object({
   goal: z.string().default(''),
 });
 
+const ScheduleTreatmentSchema = z.object({
+  type: z.enum(['ebd', 'injectable', 'consultation']).default('ebd'),
+  deviceOrProduct: z.string().default(''),
+  category: z.string().default(''),
+  durationMinutes: z.number().default(0),
+  note: z.string().default(''),
+});
+
+const ScheduleDaySchema = z.object({
+  day: z.string().default(''),
+  treatments: z.array(ScheduleTreatmentSchema).default([]),
+  postCare: z.string().default(''),
+});
+
 const TreatmentPlanSchema = z.object({
+  title: z.string().default(''),
+  totalVisits: z.number().default(0),
+  totalDuration: z.string().default(''),
   phases: z.array(TreatmentPhaseSchema).default([]),
-}).default({ phases: [] });
+  schedule: z.array(ScheduleDaySchema).default([]),
+  precautions: z.array(z.string()).default([]),
+}).default({ title: '', totalVisits: 0, totalDuration: '', phases: [], schedule: [], precautions: [] });
 
 const HomecareGuideSchema = z.object({
   morning: z.array(z.string()).default([]),

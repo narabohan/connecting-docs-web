@@ -194,12 +194,36 @@ export interface TreatmentPhase {
   goal: string;
 }
 
+export interface ScheduleTreatment {
+  type: 'ebd' | 'injectable' | 'consultation';
+  deviceOrProduct: string;
+  category: string;
+  durationMinutes: number;
+  note: string;
+}
+
+export interface ScheduleDay {
+  day: string;
+  treatments: ScheduleTreatment[];
+  postCare: string;
+}
+
 export interface TreatmentPlan {
+  title: string;
+  totalVisits: number;
+  totalDuration: string;
   phases: TreatmentPhase[];
+  schedule: ScheduleDay[];
+  precautions: string[];
 }
 
 export const DEFAULT_TREATMENT_PLAN: TreatmentPlan = {
+  title: '',
+  totalVisits: 0,
+  totalDuration: '',
   phases: [],
+  schedule: [],
+  precautions: [],
 };
 
 // ─── Homecare ─────────────────────────────────────────────────

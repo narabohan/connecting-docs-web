@@ -248,6 +248,9 @@ function convertSignatureSolutions(items: OpusSignatureSolution[]): SignatureSol
 
 function convertTreatmentPlan(plan: OpusTreatmentPlan): TreatmentPlan {
   return {
+    title: plan.title ?? '',
+    totalVisits: plan.total_visits ?? 0,
+    totalDuration: plan.total_duration ?? '',
     phases: plan.phases.map((ph) => ({
       phase: ph.phase,
       name: ph.name,
@@ -255,6 +258,18 @@ function convertTreatmentPlan(plan: OpusTreatmentPlan): TreatmentPlan {
       treatments: ph.treatments,
       goal: ph.goal,
     })),
+    schedule: (plan.schedule ?? []).map((day) => ({
+      day: day.day,
+      treatments: day.treatments.map((tr) => ({
+        type: tr.type,
+        deviceOrProduct: tr.device_or_product,
+        category: tr.category,
+        durationMinutes: tr.duration_minutes,
+        note: tr.note,
+      })),
+      postCare: day.post_care,
+    })),
+    precautions: plan.precautions ?? [],
   };
 }
 

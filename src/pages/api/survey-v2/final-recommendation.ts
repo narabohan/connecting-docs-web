@@ -202,8 +202,27 @@ export interface OpusSignatureSolution {
   steps?: OpusSolutionStep[];
 }
 
+export interface OpusScheduleTreatment {
+  type: 'ebd' | 'injectable' | 'consultation';
+  device_or_product: string;
+  category: string;
+  duration_minutes: number;
+  note: string;
+}
+
+export interface OpusScheduleDay {
+  day: string;           // "Day 1", "Day 3", "마지막날"
+  treatments: OpusScheduleTreatment[];
+  post_care: string;
+}
+
 export interface OpusTreatmentPlan {
+  title?: string;
+  total_visits?: number;
+  total_duration?: string;
   phases: OpusTreatmentPhase[];
+  schedule?: OpusScheduleDay[];
+  precautions?: string[];
 }
 
 export interface OpusTreatmentPhase {
@@ -1492,7 +1511,7 @@ Output ONLY valid JSON.`,
           if (!recommendation.ebd_recommendations) recommendation.ebd_recommendations = [];
           if (!recommendation.injectable_recommendations) recommendation.injectable_recommendations = [];
           if (!recommendation.signature_solutions) recommendation.signature_solutions = [];
-          if (!recommendation.treatment_plan) recommendation.treatment_plan = { phases: [] };
+          if (!recommendation.treatment_plan) recommendation.treatment_plan = { phases: [], schedule: [], precautions: [] };
           if (!recommendation.homecare) {
             recommendation.homecare = { morning: [], evening: [], weekly: [], avoid: [] };
           }
