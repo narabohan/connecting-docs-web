@@ -236,7 +236,7 @@ export function InjectableCard({ recommendation: rec, isExpanded, onToggle, lang
   return (
     <div className={`rv7-rec-card rv7-inj-card${isExpanded ? ' rv7-active' : ''}`}>
       {/* ═══ Top Badge Row: Rank + Evidence ═══ */}
-      <div className="rv7-rec-badge" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div className="rv7-rec-badge" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
         <span className="rv7-neon-tag rv7-rose">#{rec.rank}</span>
         <EvidenceBadge level={rec.evidenceLevel} />
       </div>
@@ -246,8 +246,9 @@ export function InjectableCard({ recommendation: rec, isExpanded, onToggle, lang
         <div
           style={{
             fontSize: '17px', fontWeight: 700,
-            color: '#FF6B9D', // rose theme
+            color: '#FF6B9D',
             letterSpacing: '-0.3px', lineHeight: 1.3,
+            wordWrap: 'break-word', overflowWrap: 'break-word', minHeight: '24px',
           }}
         >
           {categoryName || rec.categoryLabel}
@@ -257,6 +258,7 @@ export function InjectableCard({ recommendation: rec, isExpanded, onToggle, lang
             style={{
               fontSize: '12px', color: 'var(--text-2, #94a3b8)',
               lineHeight: 1.6, marginTop: '4px',
+              wordWrap: 'break-word', overflowWrap: 'break-word',
             }}
           >
             {rec.categoryReason}
@@ -266,10 +268,10 @@ export function InjectableCard({ recommendation: rec, isExpanded, onToggle, lang
 
       {/* ═══ Layer 2: Representative Product ═══ */}
       <div className="rv7-rec-head" style={{ paddingTop: '10px' }}>
-        <div className="rv7-rec-title-area">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '10px', color: '#FF6B9D', opacity: 0.7 }}>&#9733;</span>
-            <div className="rv7-rec-name">{rec.name}</div>
+        <div className="rv7-rec-title-area" style={{ overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+            <span style={{ fontSize: '10px', color: '#FF6B9D', opacity: 0.7, flexShrink: 0, marginTop: '4px' }}>&#9733;</span>
+            <div className="rv7-rec-name" style={{ wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0 }}>{rec.name}</div>
           </div>
           <div className="rv7-rec-sub">{rec.subtitle}</div>
         </div>
