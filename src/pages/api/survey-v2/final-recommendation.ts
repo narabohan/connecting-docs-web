@@ -1091,7 +1091,17 @@ CRITICAL RULES:
     For each alternative, provide: name, one_liner (1 sentence differentiator), match_score (0-100), downtime_display, pain_level (1-5), price_tier (1-5).
     Example: If EBD#1 is Ultherapy (HIFU category) → alternative_devices: [Ultraformer MPT, Shrink, Sofwave].
     Example: If injectable#1 is Rejuran Healer (PN category) → alternative_products: [Rejuran S, LNDG].
-    NEVER return an empty alternative_devices or alternative_products array. If a category only has 1 device, list at least 1 off-label or next-generation alternative.`;
+    If a category has only 1 device (SAR, VSLS, HIFES, VDH), return empty array [].
+    Alternative devices should offer different trade-offs: one more affordable, one with less downtime/pain.
+    ═══ CATEGORY-DEVICE REFERENCE (from EBD_Category) ═══
+    HIFU: Ultherapy, Ultraformer MPT, Shrink Universe, Doublo, LIPOcel (6 devices)
+    MN_RF: Genius, Potenza, Sylfirm X, Secret RF, Virtue RF, Scarlet, Morpheus8 (7 devices)
+    MONO_RF: Thermage FLX, Volnewmer, Oligio, Titanium (5 devices)
+    PICO: PicoSure Pro, PicoPlus (+ others, 11 devices)
+    SAR: NeoSculpt (1 device — no alternatives)
+    VSLS: Reepot (1 device — no alternatives)
+    HIFES: Emface (1 device — no alternatives)
+    VDH: Alltite (1 device — no alternatives)`;
 
 // ─── Robust JSON Parse with multiple repair strategies ─────────
 type ParseResult =
