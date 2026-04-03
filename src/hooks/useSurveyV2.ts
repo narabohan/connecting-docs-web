@@ -100,6 +100,7 @@ function surveyReducer(state: SurveyV2State, action: SurveyAction): SurveyV2Stat
         haiku_analysis: action.payload,
         q1_primary_goal: action.payload.q1_primary_goal,
         q1_goal_secondary: action.payload.q1_goal_secondary,
+        q3_concern_area: action.payload.classified_concern ?? state.q3_concern_area,
       };
 
     case 'SET_SMART_CHIPS':

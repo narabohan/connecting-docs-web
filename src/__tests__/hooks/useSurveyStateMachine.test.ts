@@ -62,6 +62,7 @@ describe('Survey State Machine — getNextNode', () => {
         q1_primary_goal: 'wrinkle_reduction',
         q1_goal_secondary: null,
         concern_area_hint: 'wrinkle around eyes',
+        classified_concern: 'skin_tightening',
         emotion_tone: 'serious',
         prior_alignment: 'neutral',
         already_known_signals: [],

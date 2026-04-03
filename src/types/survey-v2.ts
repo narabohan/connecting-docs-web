@@ -50,6 +50,7 @@ export interface HaikuAnalysis {
   q1_primary_goal: string;
   q1_goal_secondary: string | null;
   concern_area_hint: string;
+  classified_concern: string | null;  // one of 15 concerns from CONCERN_TO_CATEGORY_MAP, or null
   emotion_tone: 'urgent' | 'casual' | 'serious' | 'exploratory';
   prior_alignment: 'aligned' | 'diverged' | 'neutral';
   already_known_signals: string[];

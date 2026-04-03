@@ -74,6 +74,7 @@ Output a JSON object with these fields:
 - q1_primary_goal: One of ["Contouring/lifting", "Volume/elasticity", "Brightening/radiance", "Skin texture/pores", "Anti-aging/prevention", "Acne/scarring"]
 - q1_goal_secondary: Same options or null
 - concern_area_hint: Comma-separated list of matched chip values from the CONCERN KEYWORD table above. Scan the patient text for keywords in ALL 4 languages, then output the matched chip value names. Example: "skin_tightening, jawline_lifting, melasma". If no clear match, output the closest chip values based on context. NEVER output free-form text here — only chip value names from the table.
+- classified_concern: The SINGLE best-matching concern from this enum: ["jawline_lifting", "skin_tightening", "volume_restoration", "melasma", "dark_spots", "freckles", "dull_skin", "large_pores", "acne_scars", "dryness", "redness", "mole_removal", "post_weight_loss_laxity", "lower_face_heavy_fat", "body_contouring_laxity"]. Pick the ONE that most closely matches the patient's PRIMARY complaint. This is used for category-based device mapping. If no single concern fits well, set to null.
 - emotion_tone: One of ["urgent", "casual", "serious", "exploratory"]
 - prior_alignment: Compare response with demographic priors. "aligned" if consistent, "diverged" if surprising, "neutral" if insufficient info
 - already_known_signals: Array of signal types clearly expressed (e.g., "q1_primary_goal", "concern_area", "pain_tolerance", "style", "scar_type", "pigment_detail")

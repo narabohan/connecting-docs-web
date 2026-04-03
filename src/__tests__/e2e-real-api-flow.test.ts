@@ -157,6 +157,7 @@ describeE2E('Step 2: generate-chips', () => {
     q1_primary_goal: 'Brightening/radiance',
     q1_goal_secondary: 'Skin texture/pores',
     concern_area_hint: 'melasma + post-partum pigmentation',
+    classified_concern: 'melasma',
     emotion_tone: 'serious',
     prior_alignment: 'aligned',
     already_known_signals: ['q1_primary_goal', 'concern_area'],

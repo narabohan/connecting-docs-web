@@ -157,6 +157,7 @@ function mockHaikuAnalysis(scenario: TestScenario): HaikuAnalysis {
     q1_primary_goal: goalMap[scenario.expected_primary_goal] || scenario.expected_primary_goal,
     q1_goal_secondary: null,
     concern_area_hint: 'Face',
+    classified_concern: null,
     emotion_tone: 'serious',
     prior_alignment: Object.keys(getPriors(scenario.demographics.detected_country)).length > 0 ? 'aligned' : 'neutral',
     already_known_signals: alreadyKnown,
