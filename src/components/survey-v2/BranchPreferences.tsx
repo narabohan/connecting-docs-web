@@ -4,7 +4,7 @@
 //  참조: SURVEY_CLINICAL_SPEC.md §8 PREFERENCES
 // ═══════════════════════════════════════════════════════════════
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import type { SurveyLang } from '@/types/survey-v2';
 import type { PreferencesBranch } from '@/hooks/useSurveyStateMachine';
@@ -12,6 +12,7 @@ import { SURVEY_V2_I18N } from '@/utils/survey-v2-i18n';
 
 interface BranchPreferencesProps {
   lang: SurveyLang;
+  stayDays?: number;
   initialData?: PreferencesBranch | null;
   onComplete: (data: PreferencesBranch) => void;
   onBack: () => void;
@@ -36,13 +37,28 @@ const BUDGET_OPTIONS: { value: BudgetOption; key: 'budget_value' | 'budget_mid' 
   { value: 'premium', key: 'budget_premium' },
 ];
 
-export default function BranchPreferences({ lang, initialData, onComplete, onBack }: BranchPreferencesProps) {
+export default function BranchPreferences({ lang, stayDays, initialData, onComplete, onBack }: BranchPreferencesProps) {
   const t = SURVEY_V2_I18N[lang].branch_preferences;
   const tc = SURVEY_V2_I18N[lang].common;
+
+  // ─── Downtime disable logic based on stay duration ──────────
+  const isDowntimeDisabled = (value: DowntimeOption): boolean => {
+    if (stayDays == null) return false;
+    if (stayDays >= 1 && stayDays <= 3) return value === '3-7' || value === '7+';
+    if (stayDays >= 4 && stayDays <= 7) return value === '7+';
+    return false;
+  };
 
   const [painTolerance, setPainTolerance] = useState<PainLevel>(initialData?.pain_tolerance ?? 3);
   const [downtime, setDowntime] = useState<DowntimeOption>(initialData?.downtime_preference ?? '1-3');
   const [budget, setBudget] = useState<BudgetOption>(initialData?.budget_segment ?? 'mid');
+
+  // Reset downtime if current selection becomes disabled by stayDays change
+  useEffect(() => {
+    if (isDowntimeDisabled(downtime)) {
+      setDowntime('0');
+    }
+  }, [stayDays]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isComplete = true; // All fields have defaults
 
@@ -91,19 +107,26 @@ export default function BranchPreferences({ lang, initialData, onComplete, onBac
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-3">{t.downtime_label}</label>
         <div className="grid grid-cols-2 gap-2">
-          {DOWNTIME_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setDowntime(opt.value)}
-              className={`px-4 py-3 rounded-xl text-center text-sm font-medium transition-all ${
-                downtime === opt.value
-                  ? 'bg-blue-50 border-blue-500 text-blue-600 border'
-                  : 'bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {t[opt.key]}
-            </button>
-          ))}
+          {DOWNTIME_OPTIONS.map((opt) => {
+            const disabled = isDowntimeDisabled(opt.value);
+            return (
+              <button
+                key={opt.value}
+                onClick={() => !disabled && setDowntime(opt.value)}
+                disabled={disabled}
+                title={disabled ? t.downtime_disabled_tooltip : undefined}
+                className={`px-4 py-3 rounded-xl text-center text-sm font-medium transition-all ${
+                  disabled
+                    ? 'bg-gray-100 border border-gray-200 text-gray-400 opacity-40 cursor-not-allowed'
+                    : downtime === opt.value
+                      ? 'bg-blue-50 border-blue-500 text-blue-600 border'
+                      : 'bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {t[opt.key]}
+              </button>
+            );
+          })}
         </div>
       </div>
 

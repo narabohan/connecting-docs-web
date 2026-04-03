@@ -124,6 +124,7 @@ export interface SurveyV2Translations {
     pain_1: string; pain_2: string; pain_3: string; pain_4: string; pain_5: string;
     downtime_label: string;
     downtime_0: string; downtime_1_3: string; downtime_3_7: string; downtime_7plus: string;
+    downtime_disabled_tooltip: string;
     budget_label: string;
     budget_value: string; budget_mid: string; budget_premium: string;
   };
@@ -288,6 +289,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       pain_1: '통증에 매우 민감', pain_2: '가벼운 통증까지 OK', pain_3: '마취크림 바르고 참을 수 있어요', pain_4: '마취 주사도 괜찮아요', pain_5: '수면마취도 고려',
       downtime_label: '시술 후 회복 기간(다운타임)은 어느 정도까지 허용되시나요?',
       downtime_0: '0일 (당일 일상 복귀)', downtime_1_3: '1~3일', downtime_3_7: '3~7일', downtime_7plus: '7일 이상 OK',
+      downtime_disabled_tooltip: '체류 기간에 비해 다운타임이 깁니다',
       budget_label: '어떤 방식의 피부 관리를 선호하시나요?',
       budget_value: '가성비 중시', budget_mid: '적정 가격 밸런스', budget_premium: '프리미엄/럭셔리',
     },
@@ -429,6 +431,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       pain_1: 'Very sensitive to pain', pain_2: 'Mild pain OK', pain_3: 'Moderate with numbing cream', pain_4: 'Local anesthesia OK', pain_5: 'IV sedation OK',
       downtime_label: 'How much downtime can you accept after treatment?',
       downtime_0: 'Same day recovery', downtime_1_3: '1-3 days', downtime_3_7: '3-7 days', downtime_7plus: '7+ days OK',
+      downtime_disabled_tooltip: 'Downtime exceeds your available stay duration',
       budget_label: 'What is your preferred approach to skin care?',
       budget_value: 'Best value', budget_mid: 'Mid-range balance', budget_premium: 'Premium experience',
     },
@@ -570,6 +573,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       pain_1: '痛みに非常に敏感', pain_2: '軽い痛みならOK', pain_3: '麻酔クリームで我慢できる', pain_4: '局所麻酔もOK', pain_5: '静脈麻酔も検討',
       downtime_label: '施術後のダウンタイムはどのくらい許容できますか？',
       downtime_0: '当日回復（0日）', downtime_1_3: '1〜3日', downtime_3_7: '3〜7日', downtime_7plus: '7日以上OK',
+      downtime_disabled_tooltip: '滞在期間に比べダウンタイムが長すぎます',
       budget_label: 'どのようなスキンケアを好みますか？',
       budget_value: 'コスパ重視', budget_mid: 'バランス型', budget_premium: 'プレミアム体験',
     },
@@ -711,6 +715,7 @@ export const SURVEY_V2_I18N: Record<SurveyLang, SurveyV2Translations> = {
       pain_1: '对疼痛非常敏感', pain_2: '轻微疼痛可以', pain_3: '涂麻醉膏能忍受', pain_4: '局部麻醉也可以', pain_5: '静脉麻醉也考虑',
       downtime_label: '治疗后您能接受多长的恢复期？',
       downtime_0: '当天恢复（0天）', downtime_1_3: '1-3天', downtime_3_7: '3-7天', downtime_7plus: '7天以上OK',
+      downtime_disabled_tooltip: '停留时间不够，恢复期过长',
       budget_label: '您偏好什么样的护肤方式？',
       budget_value: '高性价比', budget_mid: '中等平衡', budget_premium: '高端体验',
     },

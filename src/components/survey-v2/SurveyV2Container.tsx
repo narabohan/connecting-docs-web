@@ -71,6 +71,7 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
     setBudget,
     setEventInfo,
     submitBudget,
+    stayDuration,
     setStayDuration,
     submitStayDuration,
     setManagementFrequency,
@@ -256,6 +257,7 @@ export default function SurveyV2Container({ onComplete }: SurveyV2ContainerProps
               <BranchPreferences
                 key="preferences"
                 lang={lang}
+                stayDays={stayDuration ?? undefined}
                 initialData={fsm.branchResponses.preferences}
                 onComplete={(data) => handleBranchComplete('preferences', data)}
                 onBack={handleBranchBack}
