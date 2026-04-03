@@ -1077,7 +1077,7 @@ CRITICAL RULES:
 5. Confidence scores must reflect realistic accuracy (typically 80-95 range)
 6. Patient-facing content must be in the patient's language, doctor tab in bilingual KO+EN
 7. Respond ONLY with valid JSON, no other text
-8. CONCISENESS IS CRITICAL — keep EBD/injectable HTML fields to 1-2 short sentences max. Keep summary_html under 40 words, why_fit_html under 60 words, moa_description_html under 50 words. EXCEPTION: mirror.empathy_paragraphs (~800 tokens) and confidence.reason_why (~350 tokens) can be 2-3 paragraphs — these are the emotional core of the report. The complete JSON MUST fit within 8000 tokens.
+8. CONCISENESS IS CRITICAL — keep EBD/injectable HTML fields to 1-2 short sentences max. Keep summary_html under 40 words, why_fit_html under 60 words, moa_description_html under 50 words. EXCEPTION: mirror.empathy_paragraphs (~800 tokens) and confidence.reason_why (~350 tokens) can be 2-3 paragraphs — these are the emotional core of the report. The complete JSON MUST fit within 16000 tokens.
 9. TREND & POPULARITY SCORES ARE MANDATORY — every device and injectable must have realistic trend (0-10) and popularity (0-10) scores based on the rules in the TREND & POPULARITY WEIGHTING section. Use them as tiebreaker when confidence is within 5 points.
 10. MIRROR + CONFIDENCE + DOCTOR INTELLIGENCE ARE MANDATORY — mirror (headline, empathy_paragraphs, transition) and confidence (reason_why, social_proof, commitment) must be generated for every patient using the COUNTRY-SPECIFIC EMOTIONAL LANGUAGE LIBRARY and REASON WHY KNOWLEDGE BASE. doctor_tab.patient_intelligence and doctor_tab.consultation_strategy must be fully populated.
 11. GENERATE treatment_plan with a day-by-day schedule if the patient has stay_duration data.
@@ -1452,7 +1452,7 @@ export default async function handler(req: Request) {
         // Use streaming API (async iterable) for Edge compatibility
         const response = await anthropic.messages.create({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 5120,
+          max_tokens: 16000,
           temperature: 0.3,
           stream: true,
           system: [
@@ -1471,8 +1471,9 @@ export default async function handler(req: Request) {
               role: 'user',
               content: `Generate the treatment recommendation JSON (3-Layer: Mirror + Confidence + Solution) based on the patient data provided in the system prompt. Generate treatment_plan with schedule if stay_duration is provided. CURRENT_MONTH: ${new Date().getMonth() + 1}.
 
-TOKEN BUDGET RULES (CRITICAL — you MUST stay under 8000 tokens):
+TOKEN BUDGET RULES (CRITICAL — you MUST stay under 16000 tokens):
 - EXACTLY 3 EBD devices, EXACTLY 3 injectables, EXACTLY 3 signature solutions. NO EXCEPTIONS.
+- Output fields in THIS EXACT ORDER: lang, generated_at, model, patient, safety_flags, mirror, confidence, ebd_recommendations, injectable_recommendations, signature_solutions, treatment_plan, homecare, doctor_tab.
 - summary_html: 1 sentence max. why_fit_html: 2 short numbered reasons only. moa_description_html: 1 sentence.
 - ai_description_html: 1-2 sentences max.
 - Set homecare to { morning:[], evening:[], weekly:[], avoid:[] }.
