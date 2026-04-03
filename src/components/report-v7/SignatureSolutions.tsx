@@ -17,6 +17,18 @@ const LABELS: Record<string, Record<SurveyLang, string>> = {
   synergy: { KO: '시너지', EN: 'Synergy', JP: 'シナジー', 'ZH-CN': '协同' },
   steps: { KO: '시술 순서', EN: 'Treatment Steps', JP: '施術手順', 'ZH-CN': '治疗步骤' },
   synergyReason: { KO: '시너지 원리', EN: 'Why it works', JP: '相乗効果', 'ZH-CN': '协同原理' },
+  emptyMsg: {
+    KO: '시그니처 솔루션을 준비 중입니다.',
+    EN: 'Signature solutions are being prepared.',
+    JP: 'シグネチャーソリューションを準備中です。',
+    'ZH-CN': '正在准备签名方案。',
+  },
+  partialMsg: {
+    KO: '상담 시 추가 프로토콜을 추천해 드립니다.',
+    EN: 'Additional protocols will be recommended during consultation.',
+    JP: '診察時に追加プロトコルをご提案します。',
+    'ZH-CN': '咨询时将推荐更多方案。',
+  },
 };
 
 function l(key: string, lang: SurveyLang): string {
@@ -136,7 +148,31 @@ export function SignatureSolutions({ solutions, lang }: SignatureSolutionsProps)
     setOpenIndex((prev) => (prev === idx ? null : idx));
   }, []);
 
-  if (solutions.length === 0) return null;
+  // ─── Empty state: show preparing message ─────────────────
+  if (solutions.length === 0) {
+    return (
+      <div className="rv7-sig-section rv7-glass">
+        <div className="rv7-sig-header">
+          <div className="rv7-sig-header-title">
+            <span className="rv7-sig-crown">&#128081;</span>
+            <div>
+              <div className="rv7-sig-main-title">{t('section.signature')}</div>
+              <div className="rv7-sig-sub-title">EBD + Injectable Synergy</div>
+            </div>
+          </div>
+        </div>
+        <div style={{
+          textAlign: 'center',
+          padding: '24px 16px',
+          color: 'var(--text-2, #94a3b8)',
+          fontSize: '13px',
+          lineHeight: 1.6,
+        }}>
+          {l('emptyMsg', lang)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rv7-sig-section rv7-glass">
@@ -294,6 +330,19 @@ export function SignatureSolutions({ solutions, lang }: SignatureSolutionsProps)
           );
         })}
       </div>
+
+      {/* Partial fallback: 1-2 solutions → suggest consultation */}
+      {solutions.length < 3 && (
+        <div style={{
+          textAlign: 'center',
+          padding: '12px 16px',
+          color: 'var(--text-3, #64748b)',
+          fontSize: '12px',
+          borderTop: '1px solid rgba(255,255,255,0.05)',
+        }}>
+          {l('partialMsg', lang)}
+        </div>
+      )}
     </div>
   );
 }
