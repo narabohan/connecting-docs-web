@@ -217,6 +217,17 @@ Each: { name, description, devices[], injectables[], total_sessions, total_durat
 - devices: string[] (device IDs used)
 - injectables: string[] (injectable IDs used)
 
+═══ WITHIN EACH CATEGORY — 3-TIER DEVICE SELECTION RULES ═══
+Use DEVICE_SPECS data to assign tiers. DO NOT guess.
+★ PREMIUM PICK = device with HIGHEST price_tier in that category. If tied, pick higher pain_level (more aggressive = more premium).
+  Example: MN_RF → Genius (price=5, pain=5) is Premium, NOT Sylfirm X.
+☆ STANDARD = mid-range price_tier, balanced pain/downtime.
+  Example: MN_RF → Morpheus8 (price=4, pain=4) or Potenza (price=3, pain=3)
+☆ VALUE = lowest price_tier in category, most accessible.
+  Example: MN_RF → Secret RF (price=3, pain=3)
+Single-device categories (SAR=NeoSculpt, VSLS=Reepot, HIFES=Emface, VDH=Alltite): show device without tier label.
+CRITICAL: Tier is based on DEVICE_SPECS price_tier, NOT match_score. A VALUE device can have HIGH match_score.
+
 ═══ DOCTOR INTELLIGENCE ═══
 doctor_tab.patient_intelligence: expectation_tag(REALISTIC/AMBITIOUS/CAUTION from text tone), budget_timeline(Economy<1M/Standard 1-3M/Premium 3M+, decision_speed, stay_duration), communication_style(LOGICAL=mechanism-focused/EMOTIONAL=image-focused/ANXIOUS=risk-focused)
 consultation_strategy: recommended_order(3-4 steps), expected_complaints(2-3), scenario_summary(2-3 sentences)
