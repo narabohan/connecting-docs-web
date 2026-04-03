@@ -1471,8 +1471,8 @@ export default async function handler(req: Request) {
               role: 'user',
               content: `Generate the treatment recommendation JSON (3-Layer: Mirror + Confidence + Solution) based on the patient data provided in the system prompt. Generate treatment_plan with schedule if stay_duration is provided. CURRENT_MONTH: ${new Date().getMonth() + 1}.
 
-TOKEN BUDGET RULES (CRITICAL — you MUST stay under 4500 tokens):
-- Limit to top 2 EBD devices, top 2 injectables, top 1 signature solution.
+TOKEN BUDGET RULES (CRITICAL — you MUST stay under 8000 tokens):
+- EXACTLY 3 EBD devices, EXACTLY 3 injectables, EXACTLY 3 signature solutions. NO EXCEPTIONS.
 - summary_html: 1 sentence max. why_fit_html: 2 short numbered reasons only. moa_description_html: 1 sentence.
 - ai_description_html: 1-2 sentences max.
 - Set homecare to { morning:[], evening:[], weekly:[], avoid:[] }.
