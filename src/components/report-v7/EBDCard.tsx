@@ -295,17 +295,16 @@ export function EBDCard({ recommendation: rec, isExpanded, onToggle, lang }: EBD
       </div>
 
       {/* ═══ Layer 1: Category ═══ */}
-      <div style={{ padding: '10px 18px 0' }}>
+      <div style={{ padding: '6px 18px 0' }}>
         <div
           style={{
-            fontSize: '17px',
+            fontSize: '15px',
             fontWeight: 700,
             color: '#00E5FF',
             letterSpacing: '-0.3px',
-            lineHeight: 1.3,
+            lineHeight: 1.4,
             wordWrap: 'break-word',
             overflowWrap: 'break-word',
-            minHeight: '24px',
           }}
         >
           {categoryName || rec.moaCategoryLabel}
@@ -327,10 +326,10 @@ export function EBDCard({ recommendation: rec, isExpanded, onToggle, lang }: EBD
       </div>
 
       {/* ═══ Layer 2: Representative Device ═══ */}
-      <div className="rv7-rec-head" style={{ paddingTop: '10px' }}>
+      <div className="rv7-rec-head">
         <div className="rv7-rec-title-area" style={{ overflow: 'hidden' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-            <span style={{ fontSize: '10px', color: '#00E5FF', opacity: 0.7, flexShrink: 0, marginTop: '4px' }}>&#9733;</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '10px', color: '#00E5FF', opacity: 0.7, flexShrink: 0 }}>&#9733;</span>
             <div className="rv7-rec-name" style={{ wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0 }}>{rec.deviceName}</div>
           </div>
           <div className="rv7-rec-sub">{rec.subtitle}</div>

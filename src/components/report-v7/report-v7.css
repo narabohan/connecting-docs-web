@@ -143,8 +143,8 @@
 .rv7-sticky-bar .rv7-sb-chip.active-inj{border-color:rgba(251,113,133,0.25);color:var(--rose);background:var(--rose-dim);box-shadow:0 0 12px rgba(251,113,133,0.1);}
 .rv7-sticky-bar .rv7-sb-divider{width:1px;height:20px;background:var(--border);margin:0 4px;}
 
-.rv7-rec-badge{position:absolute;top:12px;left:12px;z-index:2;}
-.rv7-rec-head{padding:18px 18px 14px;padding-top:36px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
+.rv7-rec-badge{position:relative;top:auto;left:auto;z-index:2;padding:12px 18px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.rv7-rec-head{padding:8px 18px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
 .rv7-rec-thumb{width:56px;height:56px;border-radius:var(--radius-sm);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.08);}
 .rv7-rec-title-area{flex:1;min-width:0;}
 .rv7-rec-name{font-size:15px;font-weight:700;color:var(--text-hi);letter-spacing:-0.01em;}
@@ -851,7 +851,7 @@
   /* Recommendation cards */
   .rv7-rec-grid{gap:8px;padding-bottom:6px;}
   .rv7-rec-card{min-width:220px;max-width:260px;}
-  .rv7-rec-head{padding:14px 14px 10px;padding-top:32px;gap:8px;}
+  .rv7-rec-head{padding:8px 14px 10px;gap:8px;}
   .rv7-rec-thumb{width:44px;height:44px;}
   .rv7-rec-name{font-size:13px;}
   .rv7-rec-sub{font-size:11px;}
